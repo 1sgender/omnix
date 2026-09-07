@@ -4,7 +4,7 @@
 com.squareup.okhttp3:okhttp:4.12.0=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.squareup.okio:okio-jvm:3.6.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 com.squareup.okio:okio:3.6.0=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
-com.zaxxer:HikariCP:5.1.0=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+com.zaxxer:HikariCP:7.1.0=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 dev.drewhamilton.poko:poko-annotations-jvm:0.17.1=detekt
 dev.drewhamilton.poko:poko-annotations:0.17.1=detekt
 io.github.davidburstrom.contester:contester-breakpoint:0.2.0=detekt
@@ -119,6 +119,6 @@ org.ow2.asm:asm-commons:9.6=jacocoAnt
 org.ow2.asm:asm-tree:9.6=jacocoAnt
 org.ow2.asm:asm:9.6=jacocoAnt
 org.postgresql:postgresql:42.7.13=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
-org.slf4j:slf4j-api:1.7.36=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+org.slf4j:slf4j-api:2.0.17=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.snakeyaml:snakeyaml-engine:2.7=detekt
 empty=annotationProcessor,compileOnlyDependenciesMetadata,detektPlugins,intransitiveDependenciesMetadata,kotlinCompilerPluginClasspath,kotlinNativeCompilerPluginClasspath,kotlinScriptDef,kotlinScriptDefExtensions,testAnnotationProcessor,testApiDependenciesMetadata,testCompileOnlyDependenciesMetadata,testIntransitiveDependenciesMetadata,testKotlinScriptDef,testKotlinScriptDefExtensions
