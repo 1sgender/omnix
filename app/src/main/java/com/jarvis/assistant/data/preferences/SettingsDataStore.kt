@@ -27,6 +27,8 @@ class SettingsDataStore @Inject constructor(
         val SELECTED_MODEL = stringPreferencesKey("selected_model")
         val HEADSET_ONLY_MODE = booleanPreferencesKey("headset_only_mode")
         val WAKE_WORD_SENSITIVITY = floatPreferencesKey("wake_word_sensitivity")
+        val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
+        val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")
     }
 
     val userNameFlow: Flow<String> = context.dataStore.data

@@ -186,8 +186,4 @@ class DownloadManagerModelDownloader @Inject constructor(
     override fun cancel(downloadId: Long) {
         context.getSystemService(DownloadManager::class.java).remove(downloadId)
     }
-
-    @Suppress("unused")
-    private fun unusedEnvironmentRef(): File? =
-        context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
 }
