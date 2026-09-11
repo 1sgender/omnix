@@ -98,6 +98,8 @@ class VoiceLatencyMetrics @Inject constructor() {
     }
 
     companion object {
+        private const val TAG = "VoiceLatency"
+
         /** Ёмкость кольца на серию: последние 256 наблюдений. */
         const val CAPACITY = 256
 
@@ -132,6 +134,4 @@ class VoiceLatencyMetrics @Inject constructor() {
                 "cloud=${cloud?.let { "${it.p50Ms}/${it.p95Ms}/${it.p99Ms}ms" } ?: "-"}"
         )
     }
-
-    private const val TAG = "VoiceLatency"
 }

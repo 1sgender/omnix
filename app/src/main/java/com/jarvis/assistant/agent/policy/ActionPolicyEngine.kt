@@ -4,6 +4,7 @@ import com.jarvis.assistant.agent.core.JarvisTool
 import com.jarvis.assistant.agent.model.ToolCall
 import com.jarvis.assistant.agent.model.ToolRisk
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -172,11 +173,22 @@ class ActionPolicyEngine @Inject constructor(
 
     // ------------------------------------------------------------ helpers
 
-    private fun moneyInArguments(call: ToolCall): Long? =
-        call.arguments.values
-            .filterIsInstance<JsonPrimitive>()
-            .mapNotNull { if (it.isString) it.content else null }
-            .firstNotNullOfOrNull { MoneyAmountDetector.findAmount(it) }
+    private fun moneyInArguments(call: ToolCall): Long? {
+        // Структурная сумма: имя поля amount/sum/total/price/cost — само
+        // денежный контекст («15000» в поле amount — деньги, а не «номер 25»).
+        // Без этого подтверждение платежа слепое (сумма не показана) и риск
+        // занижен до HIGH вместо CRITICAL для крупных переводов.
+        for ((key, value) in call.arguments) {
+            if (value !is JsonPrimitive || !value.isString) continue
+            val text = value.content
+            MoneyAmountDetector.findAmount(text)?.let { return it }
+            if (key.lowercase() in MONEY_KEYS) {
+                text.replace(" ", "").replace("\u00A0", "")
+                    .trim().toDoubleOrNull()?.toLong()?.takeIf { it > 0 }?.let { return it }
+            }
+        }
+        return null
+    }
 
     // ------------------------------------------------------------ prompts
 
@@ -223,6 +235,9 @@ class ActionPolicyEngine @Inject constructor(
     }
 
     companion object {
+        /** Имена полей-сумм: их значение — деньги даже без валютного контекста. */
+        private val MONEY_KEYS = setOf("amount", "sum", "total", "price", "cost")
+
         /**
          * Категория по toolId — единственный вход риск-классификации,
          * недоступный для манипуляции со стороны модели (аргументы влияют

@@ -49,7 +49,7 @@ object ScreenTextSanitizer {
 
     /** Картоподобные группы: 13–19 цифр через пробелы/дефисы («4276 1600 1234 5678»). */
     private val CARD_LIKE = Regex(
-        "\\b\\d[\\d-]{${MIN_CARD_DIGITS - 1},${MAX_CARD_DIGITS - 1}}([ ]?\\d{3,4}){1,3}\\b"
+        "\\b\\d[\\d \\-]{${MIN_CARD_DIGITS - 1},${MAX_CARD_DIGITS - 1}}([ ]?\\d{3,4}){1,3}\\b"
     )
 
     /**

@@ -601,6 +601,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
         _currentMode.value = OrchestratorMode.AI_THINKING
         _assistantState.value = VoiceAssistantState.Thinking
         _lastQuery.value = clean
+        // Fresh query ⇒ the previous action display is stale: without this a
+        // follow-up inside the conversation window would re-render the old
+        // Executing/Success (the UI mapper keys off these two flows).
+        _currentToolCall.value = null
+        _lastToolResult.value = null
 
         aiJob?.cancel()
         val captureEpoch = sessionEpoch.get()

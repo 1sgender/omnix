@@ -53,9 +53,9 @@ class TextToSpeechManager @Inject constructor(
          * секундного чужого звука хуже, чем он его перекроет. JVM-тестируется
          * напрямую (TextToSpeechFocusPolicyTest).
          */
-        internal enum class FocusReaction { STOP_SPEECH, CONTINUE }
+        enum class FocusReaction { STOP_SPEECH, CONTINUE }
 
-        internal fun mapFocusChange(change: Int): FocusReaction =
+        fun mapFocusChange(change: Int): FocusReaction =
             if (change == AudioManager.AUDIOFOCUS_LOSS) FocusReaction.STOP_SPEECH
             else FocusReaction.CONTINUE
     }

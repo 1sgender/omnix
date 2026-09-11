@@ -142,11 +142,18 @@ class ClipAttestationService(
             val factory = KeyFactory.getInstance("EC")
             val key = factory.generatePublic(X509EncodedKeySpec(encoded))
             require(key.algorithm == "EC") { "public key must be EC" }
-            val spec = key.getParameter(java.security.spec.ECParameterSpec::class.java)
+            val ecKey = key as? java.security.interfaces.ECPublicKey
+                ?: error("public key must be EC")
+            val spec = ecKey.params
                 ?: error("public key must carry explicit EC parameters")
             // P-256: поле кривой 256 бит (переносимая проверка без парсинга
             // имён кривых, разных на JVM/Android).
-            require(spec.curve.field.size == 256) { "public key must be $EC_CURVE" }
+            val fieldBits = when (val field = spec.curve.field) {
+                is java.security.spec.ECFieldFp -> field.p.bitLength()
+                is java.security.spec.ECFieldF2m -> field.m
+                else -> error("public key uses an unsupported EC field")
+            }
+            require(fieldBits == 256) { "public key must be $EC_CURVE" }
             return key
         }
 

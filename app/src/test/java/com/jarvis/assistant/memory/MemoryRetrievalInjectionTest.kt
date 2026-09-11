@@ -103,7 +103,8 @@ class MemoryRetrievalInjectionTest {
         )
         val sysSlot = slot<String>()
         coVerify(exactly = 1) {
-            aiRepo.generateResponse(capture(sysSlot), any(), any(), any(), any(),
+            // systemPrompt — ВТОРОЙ параметр (первый — prompt).
+            aiRepo.generateResponse(any(), capture(sysSlot), any(), any(), any(),
                 cloudExplicitlyAllowed = any(), history = any(), requestId = any())
         }
         assertTrue(sysSlot.captured.contains("BASE-SYS"))
@@ -121,7 +122,8 @@ class MemoryRetrievalInjectionTest {
         )
         val sysSlot = slot<String>()
         coVerify(exactly = 1) {
-            aiRepo.generateResponse(capture(sysSlot), any(), any(), any(), any(),
+            // systemPrompt — ВТОРОЙ параметр (первый — prompt).
+            aiRepo.generateResponse(any(), capture(sysSlot), any(), any(), any(),
                 cloudExplicitlyAllowed = any(), history = any(), requestId = any())
         }
         assertEquals("BASE-SYS", sysSlot.captured)

@@ -65,7 +65,7 @@ class ClipAttestationManagerTest {
     @Before
     fun setUp() {
         trustStore = FakeTrustStore()
-        manager = ClipAttestationManager(FakeApi(), trustStore)
+        manager = ClipAttestationManager(ChallengeOnlyApi(), trustStore)
     }
 
     private fun newKey(): KeyPair =

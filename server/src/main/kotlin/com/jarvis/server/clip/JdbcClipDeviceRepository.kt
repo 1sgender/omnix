@@ -1,5 +1,7 @@
 package com.jarvis.server.clip
 
+import com.jarvis.server.persistence.getInstant
+import com.jarvis.server.persistence.setInstant
 import java.sql.Connection
 import java.time.Instant
 import java.util.UUID

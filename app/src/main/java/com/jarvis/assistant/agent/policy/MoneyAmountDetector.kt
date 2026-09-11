@@ -15,7 +15,7 @@ object MoneyAmountDetector {
      * сум, гривна, лей, дирхам, юань, фунт).
      */
     private val CURRENCY = Regex(
-        "(₽|\\$|€|£|рубл?\\.?|rub|тенге|tmt|manat|манат|сум\\w*|гривн\\w*|uah|лей\\w*|leu|дирхам\\w*|юан\\w*|cny|фунт\\w*)",
+        "(₽|\\$|€|£|\\b(?:рубл?\\.?|rub|тенге|tmt|manat|манат|сум\\w*|гривн\\w*|uah|лей\\w*|leu|дирхам\\w*|юан\\w*|cny|фунт\\w*))",
         RegexOption.IGNORE_CASE
     )
 
@@ -60,7 +60,8 @@ object MoneyAmountDetector {
             parseNumber(match.groupValues[1], multiplierFrom(match.groupValues[0]))?.let { return it }
         }
         CURRENCY_BEFORE_NUMBER.find(normalized)?.let { match ->
-            parseNumber(match.groupValues[1])?.let { return it }
+            // Группа 1 — валюта (вложенная группа CURRENCY), число — группа 2.
+            parseNumber(match.groupValues[2])?.let { return it }
         }
 
         // 2. Словесный множитель: «50 тысяч», «2 млн», «10k» — требует

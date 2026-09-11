@@ -116,8 +116,8 @@ class ToolContractConformanceTest {
         every { checker.missingPermissions(listOf("android.permission.SMS")) } returns listOf("android.permission.SMS")
         val manager = ToolPermissionManager(checker)
 
-        val tool = PlainDeclaredTool(required = listOf("android.permission.SMS"))
-        val verdict = manager.preflight(tool, com.jarvis.assistant.agent.model.ToolCall("plain.tool"))
+        val tool = PlainDeclaredTool(requiredPermissions = listOf("android.permission.SMS"))
+        val verdict = manager.preflight(tool, com.jarvis.assistant.agent.model.ToolCall("plain.tool", kotlinx.serialization.json.JsonObject(emptyMap())))
 
         assertTrue(verdict is PreflightVerdict.PermissionsMissing)
         assertEquals(listOf("android.permission.SMS"), (verdict as PreflightVerdict.PermissionsMissing).permissions)
@@ -129,8 +129,8 @@ class ToolContractConformanceTest {
         every { checker.missingPermissions(listOf("android.permission.SMS")) } returns emptyList()
         val manager = ToolPermissionManager(checker)
 
-        val tool = PlainDeclaredTool(required = listOf("android.permission.SMS"))
-        val verdict = manager.preflight(tool, com.jarvis.assistant.agent.model.ToolCall("plain.tool"))
+        val tool = PlainDeclaredTool(requiredPermissions = listOf("android.permission.SMS"))
+        val verdict = manager.preflight(tool, com.jarvis.assistant.agent.model.ToolCall("plain.tool", kotlinx.serialization.json.JsonObject(emptyMap())))
 
         assertEquals(PreflightVerdict.Allowed, verdict)
     }

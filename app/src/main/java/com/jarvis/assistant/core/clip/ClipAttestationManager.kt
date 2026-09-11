@@ -96,7 +96,7 @@ class ClipAttestationManager(
      * Локальная проверка владения без сети: nonce+время телефона → подпись
      * Clip → ECDSA закреплённым ключом + проверка свежести.
      */
-    fun verifyLocally(
+    suspend fun verifyLocally(
         clipSerial: String,
         transport: ClipTransport,
         nowMs: Long = clock.millis()
@@ -112,6 +112,10 @@ class ClipAttestationManager(
             ClipAttestationProtocol.newNonce(),
             issuedAtMs
         )
+        // Свежесть — на ОДНИХ часах: длительность подписания транспортом.
+        // (Раньше сравнивался clock.millis() с инжектированным nowMs — любой
+        // явный nowMs, включая серверное время, давал ложный ChallengeInvalid.)
+        val signStartedAt = clock.millis()
         val signature = when (val signed = transport.signAttestation(clipSerial, message)) {
             is ClipTransportResult.Signed -> signed.signatureBase64
             ClipTransportResult.Unavailable -> return Result.TransportUnavailable
@@ -119,9 +123,8 @@ class ClipAttestationManager(
         val valid = ClipIdentityVerifier.verify(publicKey, message, signature)
         if (!valid) return Result.BadSignature
 
-        // Подпись делалась над нашим issuedAtMs:Transport мог отвечать долго —
-        // допускаем ограниченный дрейф, старые/будущие подписи отвергаем.
-        val drift = kotlin.math.abs(clock.millis() - issuedAtMs)
+        // Транспорт мог отвечать долго — допускаем ограниченный дрейф.
+        val drift = kotlin.math.abs(clock.millis() - signStartedAt)
         if (drift > localFreshnessMs) return Result.ChallengeInvalid
 
         return Result.Verified(clipSerial.trim(), Result.Source.LOCAL, boundNow = false)

@@ -40,8 +40,10 @@ class IdleUnloadSchedulerTest {
         advanceUntilIdle()
         assertEquals(0, unloads.get()) // 299_999 < окна — ещё в окне
 
-        virtual = 300_000
-        advanceTimeBy(1) // delay(300_000) завершается; 300_000 - 0 >= окна
+        // Мимо границы на +1мс: задача, чей дедлайн ТОЧНО равен цели
+        // advanceTimeBy, в coroutines-test 1.8.1 без runCurrent() не стартует.
+        virtual = 300_001
+        advanceTimeBy(2) // delay(300_000) завершается; 300_001 - 0 >= окна
         advanceUntilIdle()
         assertEquals(1, unloads.get())
 
@@ -77,9 +79,10 @@ class IdleUnloadSchedulerTest {
         // внутри окна перенесло её.
         assertEquals(0, unloads.get())
 
-        // Перепланированный таймер истекает на 299_999 + 300_000 = 599_999.
-        virtual = 599_999
-        advanceTimeBy(299_999)
+        // Перепланированный таймер истекает на 299_999 + 300_000 = 599_999
+        // (проходим мимо границы на +1мс — см. комментарий выше).
+        virtual = 600_000
+        advanceTimeBy(300_000)
         advanceUntilIdle()
         assertEquals(1, unloads.get())
     }

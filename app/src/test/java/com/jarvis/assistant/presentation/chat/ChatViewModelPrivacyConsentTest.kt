@@ -132,7 +132,9 @@ class ChatViewModelPrivacyConsentTest {
                     userPrompt = any(),
                     source = any(),
                     privacyLevel = any(),
-                    cloudExplicitlyAllowed = capture(flags)
+                    cloudExplicitlyAllowed = capture(flags),
+                    originTimestampMs = any(),
+                    requestId = any()
                 )
             } coAnswers {
                 sendCalls++
@@ -179,7 +181,7 @@ class ChatViewModelPrivacyConsentTest {
 
         var sendCalls = 0
         coEvery {
-            sendPrompt.invoke(any(), any(), any(), any())
+            sendPrompt.invoke(any(), any(), any(), any(), any(), any())
         } coAnswers {
             sendCalls++
             Resource.NeedsConsent(

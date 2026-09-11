@@ -1,6 +1,5 @@
 package com.jarvis.assistant.voice.tts
 
-import com.jarvis.assistant.voice.tts.TextToSpeechManager.FocusReaction
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -17,7 +16,7 @@ class TextToSpeechFocusPolicyTest {
     @Test
     fun `permanent loss stops speech`() {
         assertEquals(
-            FocusReaction.STOP_SPEECH,
+            TextToSpeechManager.Companion.FocusReaction.STOP_SPEECH,
             TextToSpeechManager.mapFocusChange(android.media.AudioManager.AUDIOFOCUS_LOSS)
         )
     }
@@ -25,7 +24,7 @@ class TextToSpeechFocusPolicyTest {
     @Test
     fun `transient loss keeps speaking`() {
         assertEquals(
-            FocusReaction.CONTINUE,
+            TextToSpeechManager.Companion.FocusReaction.CONTINUE,
             TextToSpeechManager.mapFocusChange(android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
         )
     }
@@ -33,7 +32,7 @@ class TextToSpeechFocusPolicyTest {
     @Test
     fun `transient-duck loss keeps speaking`() {
         assertEquals(
-            FocusReaction.CONTINUE,
+            TextToSpeechManager.Companion.FocusReaction.CONTINUE,
             TextToSpeechManager.mapFocusChange(
                 android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK
             )
@@ -43,7 +42,7 @@ class TextToSpeechFocusPolicyTest {
     @Test
     fun `focus gain keeps speaking`() {
         assertEquals(
-            FocusReaction.CONTINUE,
+            TextToSpeechManager.Companion.FocusReaction.CONTINUE,
             TextToSpeechManager.mapFocusChange(android.media.AudioManager.AUDIOFOCUS_GAIN)
         )
     }

@@ -3,7 +3,6 @@ package com.jarvis.assistant.agent.tools.device
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
 import com.jarvis.assistant.agent.core.JarvisTool
 import com.jarvis.assistant.agent.core.ToolCategory
@@ -52,7 +51,10 @@ class DoNotDisturbTool @Inject constructor(
             ?: return ToolExecutionResult.failure("Служба уведомлений недоступна", "NO_NOTIFICATION_SERVICE")
 
         return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && nm.isNotificationPolicyAccessGranted) {
+            // minSdk=29: проверка SDK>=M вакуозна (на всех поддерживаемых
+            // устройствах всегда true), а в JVM-тестах SDK_INT=0 и уводила
+            // в неверную ветку. Единственный честный гейт — policy-доступ.
+            if (nm.isNotificationPolicyAccessGranted) {
                 val targetFilter = if (enabled) {
                     NotificationManager.INTERRUPTION_FILTER_PRIORITY
                 } else {
@@ -60,15 +62,17 @@ class DoNotDisturbTool @Inject constructor(
                 }
 
                 // ------------------------------------------------------ EXECUTE
-                // setInterruptionFilter возвращает применённый фильтр
-                // (INTERRUPTION_FILTER_UNKNOWN при отказе системы).
-                val appliedFilter = nm.setInterruptionFilter(targetFilter)
+                // setInterruptionFilter — void: применённое значение узнаём
+                // только read-back'ом currentInterruptionFilter ниже.
+                nm.setInterruptionFilter(targetFilter)
 
                 // ------------------------------------------------------ VERIFY
                 val currentFilter = ExecutionVerification.pollFor(
                     read = { nm.currentInterruptionFilter },
                     satisfied = { it == targetFilter }
                 )
+                // Единственное честное "applied" — подтверждённый read-back.
+                val appliedFilter: Int? = currentFilter
                 val data = buildJsonObject {
                     put("enabled", enabled)
                     put("target_filter", targetFilter)

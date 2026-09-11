@@ -68,7 +68,7 @@ object PrivacyClassifier : RequestPrivacyClassifier {
     private val credentialAssignment = Regex(
         """(?i)\b(?:password|passwd|pwd|парол\p{L}*|api[\s_-]*key|access[\s_-]*token|""" +
             """refresh[\s_-]*token|secret|секрет\p{L}*|токен\p{L}*|""" +
-            """pin[\s_-]*(?:code|код)?|пин[\s_-]*(?:код)?|seed[\s_-]*phrase|мнемоническ\p{L}*\s+фраз\p{L}*)\b""" +
+            """pin[\s_-]*(?:code|код)?|пин[\s_-]*(?:код)?|seed[\s_-]*phrase|мнемоническ\p{L}*\s+фраз\p{L}*)\b(?:\s+\p{L}{1,20}){0,3}""" +
             """["']?\s*(?::|=|—|\bis\b|\bэто\b)\s*["']?[^\s"',;]{4,}"""
     )
     private val ownedCredential = Regex(

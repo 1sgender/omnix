@@ -24,7 +24,7 @@ import javax.inject.Singleton
  * политика приложения). Для будильника, на который пользователь рассчитывает
  * проснуться, «не подтвердилось» ≠ «готово»:
  *
- *  - будильник: после отправки интента читается [AlarmManager.nextAlarmClockInfo]
+ *  - будильник: после отправки интента читается [AlarmManager.nextAlarmClock]
  *    (read-back); SUCCESS только если следующий будильник системы стоит на
  *    запрошенный час. Иначе — USER_ACTION_REQUIRED «проверьте в часах»;
  *  - таймер: публичного API для верификации системного таймера НЕТ, поэтому
@@ -91,7 +91,7 @@ class AlarmTimerTool @Inject constructor(
 
     /**
      * Будильник — фаза Execution: интент доставлен приложению часов, draft
-     * SUCCESS. Финальный вердикт — [verify] по read-back nextAlarmClockInfo.
+     * SUCCESS. Финальный вердикт — [verify] по read-back nextAlarmClock.
      */
     private fun setAlarmDraft(hour: Int, label: String): ToolExecutionResult {
         val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
@@ -147,7 +147,7 @@ class AlarmTimerTool @Inject constructor(
         val verifiedTrigger: Long? = ExecutionVerification.pollFor(
             attempts = ALARM_VERIFY_ATTEMPTS,
             stepMs = ALARM_VERIFY_STEP_MS,
-            read = { alarmManager.nextAlarmClockInfo?.triggerTime },
+            read = { alarmManager.nextAlarmClock?.triggerTime },
             satisfied = { ExecutionVerification.nextAlarmMatchesHour(it, now, hour) }
         )
         val verified = ExecutionVerification.nextAlarmMatchesHour(verifiedTrigger, now, hour)

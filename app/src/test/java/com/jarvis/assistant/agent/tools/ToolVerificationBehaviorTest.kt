@@ -32,7 +32,7 @@ import java.time.ZonedDateTime
 /**
  * Контракты честности (execute → verify → SUCCESS) для инструментов,
  * у которых Android может МОЛЧА не применить изменение:
- *  - DND: setInterruptionFilter возвращает UNKNOWN / фильтр не применяется;
+ *  - DND: setInterruptionFilter — void, фильтр может не примениться (проверяем read-back);
  *  - буфер обмена: с API 29 фоновая запись игнорируется системой;
  *  - будильник: ACTION_SET_ALARM — fire-and-forget, часы могут не сохранить.
  */
@@ -62,8 +62,8 @@ class ToolVerificationBehaviorTest {
         val nm = mockk<NotificationManager>()
         every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns nm
         every { nm.isNotificationPolicyAccessGranted } returns true
-        // Система отклонила: applied = INTERRUPTION_FILTER_UNKNOWN (0), read-back = ALL (1).
-        every { nm.setInterruptionFilter(any()) } returns NotificationManager.INTERRUPTION_FILTER_UNKNOWN
+        // Система не применила фильтр: read-back остался ALL (1) при цели PRIORITY (2).
+        every { nm.setInterruptionFilter(any()) } just runs
         every { nm.currentInterruptionFilter } returns NotificationManager.INTERRUPTION_FILTER_ALL
 
         val result = DoNotDisturbTool(context).execute(buildJsonObject { put("enabled", true) })
@@ -71,7 +71,10 @@ class ToolVerificationBehaviorTest {
         assertEquals(ToolExecutionStatus.FAILURE, result.status)
         assertEquals("DND_VERIFY_FAILED", result.error)
         // В data — фактические значения для диагностики, не выдуманный успех.
-        assertTrue(result.data?.get("applied_filter")?.jsonPrimitive?.int == 0)
+        assertTrue(
+            result.data?.get("applied_filter")?.jsonPrimitive?.int ==
+                NotificationManager.INTERRUPTION_FILTER_ALL
+        )
     }
 
     @Test
@@ -152,7 +155,7 @@ class ToolVerificationBehaviorTest {
         val info = mockk<AlarmManager.AlarmClockInfo>()
         every { info.triggerTime } returns candidate.toInstant().toEpochMilli()
         // Первое чтение — ещё старое состояние, второе — будильник появился.
-        every { am.nextAlarmClockInfo } returnsMany listOf(null, info)
+        every { am.nextAlarmClock } returnsMany listOf(null, info)
 
         val tool = AlarmTimerTool(context)
         val arguments = buildJsonObject { put("type", "alarm"); put("value", 7) }
@@ -179,7 +182,7 @@ class ToolVerificationBehaviorTest {
         every { pm.resolveActivity(any(), any<Int>()) } returns mockk<ResolveInfo>()
         every { context.startActivity(any()) } just runs
         // Часы не применили будильник: следующего будильника нет и не появилось.
-        every { am.nextAlarmClockInfo } returns null
+        every { am.nextAlarmClock } returns null
 
         val tool = AlarmTimerTool(context)
         val arguments = buildJsonObject { put("type", "alarm"); put("value", 7) }

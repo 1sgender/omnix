@@ -232,7 +232,8 @@ class AdminUiHandler(
     private fun licenses(principal: AdminPrincipal, status: com.jarvis.server.license.LicenseStatus?): String {
         val rows = queries.licenses(50, 0, status)
         // MVP-дерево Licenses: ALL | ACTIVE | EXPIRED | ... — быстрые вкладки.
-        val filterLinks = listOf<String?>(null) + com.jarvis.server.license.LicenseStatus.entries
+        val filterLinks =
+            listOf<com.jarvis.server.license.LicenseStatus?>(null) + com.jarvis.server.license.LicenseStatus.entries
         val filters = filterLinks.joinToString(" | ") { st ->
             val label = st?.name ?: "ALL"
             val isCurrent = (st == null && status == null) || (st != null && st == status)

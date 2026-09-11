@@ -59,7 +59,9 @@ class DatabaseMigrator(private val dataSource: DataSource) {
         Migration(3, "persistent license rate limits", "/db/migration/V003__persistent_license_rate_limits.sql"),
         Migration(4, "billing reconciliation guard", "/db/migration/V004__billing_reconciliation_guard.sql"),
         Migration(5, "shared AI usage", "/db/migration/V005__shared_ai_usage.sql"),
-        Migration(6, "control plane", "/db/migration/V006__control_plane.sql")
+        Migration(6, "control plane", "/db/migration/V006__control_plane.sql"),
+        Migration(7, "token device binding", "/db/migration/V007__token_device_binding.sql"),
+        Migration(8, "clip device identity", "/db/migration/V008__clip_device_identity.sql")
     )
 
     fun migrate() {
@@ -122,7 +124,13 @@ class DatabaseMigrator(private val dataSource: DataSource) {
         val previousAutoCommit = connection.autoCommit
         connection.autoCommit = false
         try {
-            sql.split(';')
+            // Строки-комментарии не участвуют в разбиении на стейтменты:
+            // ';' внутри комментария иначе разорвал бы SQL на куски
+            // (V007/V008). Чексумма считается по исходному файлу выше.
+            sql.lineSequence()
+                .filterNot { it.trimStart().startsWith("--") }
+                .joinToString("\n")
+                .split(';')
                 .map(String::trim)
                 .filter(String::isNotEmpty)
                 .forEach { statementSql ->

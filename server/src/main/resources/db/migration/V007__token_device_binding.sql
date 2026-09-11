@@ -7,7 +7,7 @@
 -- hasActiveEntitlement() — уровневая проверка аккаунта. Украденный токен
 -- давал вечный AI-доступ в обход устройства.
 --
--- Теперь токен привязывается к устройству при redeem; AI-путь
+-- Теперь токен привязывается к устройству при redeem, AI-путь
 -- (LicenseTokenAuthenticator.authenticate(header, deviceHeader)) сверяет
 -- X-Jarvis-Device с сохранённым хешем. NULL = legacy-токен до V007: на
 -- enforcement-пути отвергается (fail-closed) и само-залечивается при первом

@@ -44,7 +44,7 @@ class RepositoryCloudAiExecutorHistoryTest {
         coEvery {
             aiRepo.generateResponse(
                 any(), any(), any(), any(), any(),
-                cloudExplicitlyAllowed = any(), history = any()
+                cloudExplicitlyAllowed = any(), history = any(), requestId = any()
             )
         } returns Resource.Success("ok")
         executor = RepositoryCloudAiExecutor(aiRepo, settings, tools, network)
@@ -113,7 +113,7 @@ class RepositoryCloudAiExecutorHistoryTest {
         ))
         val sysSlot = mutableListOf<String>()
         val histSlot = mutableListOf<List<Message>>()
-        coVerify { aiRepo.generateResponse(any(), capture(sysSlot), any(), any(), any(), cloudExplicitlyAllowed = any(), history = capture(histSlot)) }
+        coVerify { aiRepo.generateResponse(any(), capture(sysSlot), any(), any(), any(), cloudExplicitlyAllowed = any(), history = capture(histSlot), requestId = any()) }
         assertTrue("sys prompt should contain BASE-SYS", sysSlot.single().contains("BASE-SYS"))
         assertTrue("sys prompt should contain TOOLS", sysSlot.single().contains("TOOLS"))
         assertTrue("history should not contain BASE-SYS",
@@ -137,7 +137,8 @@ class RepositoryCloudAiExecutorHistoryTest {
                 privacyLevel = PrivacyLevel.PRIVATE.name,
                 requiresWeb = true,
                 cloudExplicitlyAllowed = true,
-                history = any()
+                history = any(),
+                requestId = any()
             )
         }
     }

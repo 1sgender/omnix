@@ -59,16 +59,23 @@ class LicensePersistenceIntegrationTest : PostgresTestSupport() {
     @Test
     fun `clean database migrations are complete idempotent and constrained`() {
         val migrator = DatabaseMigrator(dataSource)
-        assertEquals(listOf(1, 2, 3, 4, 5, 6), migrator.appliedVersions())
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), migrator.appliedVersions())
         migrator.migrate()
-        assertEquals(listOf(1, 2, 3, 4, 5, 6), migrator.appliedVersions())
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), migrator.appliedVersions())
 
         val tables = dataSource.connection.use { connection ->
             connection.prepareStatement(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
             ).use { it.executeQuery().use { r -> buildSet { while (r.next()) add(r.getString(1)) } } }
         }
-        assertTrue(tables.containsAll(setOf("licenses", "api_tokens", "billing_orders", "billing_events", "admin_accounts", "admin_sessions", "admin_audit_log", "admin_settings", "feature_flags")))
+        assertTrue(tables.containsAll(setOf("licenses", "api_tokens", "billing_orders", "billing_events", "admin_accounts", "admin_sessions", "admin_audit_log", "admin_settings", "feature_flags", "clip_devices", "clip_attest_challenges")))
+        // V007: device binding column must exist (AI enforcement path depends on it).
+        val columns = dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='api_tokens'"
+            ).use { it.executeQuery().use { r -> buildSet { while (r.next()) add(r.getString(1)) } } }
+        }
+        assertTrue(columns.contains("device_hash"))
     }
 
     @Test

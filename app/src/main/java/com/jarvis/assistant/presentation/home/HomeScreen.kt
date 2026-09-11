@@ -196,7 +196,9 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
     is OmnixPhase.Speaking -> phase.text.ifBlank {
         stringResource(R.string.omnix_state_speaking)
     }
-    is OmnixPhase.Success -> phase.message
+    is OmnixPhase.Success -> phase.message.ifBlank {
+        stringResource(R.string.omnix_result_done)
+    }
     is OmnixPhase.Error -> stringResource(R.string.omnix_state_ready)
 }
 

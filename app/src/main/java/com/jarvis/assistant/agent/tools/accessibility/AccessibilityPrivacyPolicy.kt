@@ -158,7 +158,8 @@ class AccessibilityPrivacyPolicy(
             "paypal", "coinbase", "binance", "revolut", "venmo", "cashapp",
             "cash.app", "alipay", "paisa", "spay", "steam",
             // Банки с брендовыми пакетами без слова «bank».
-            "tinkoff", "sber", "privat24", "monobank", "yoomoney", "qiwi"
+            "tinkoff", "sber", "privat24", "monobank", "yoomoney", "qiwi",
+            "chase"
         )
     }
 }

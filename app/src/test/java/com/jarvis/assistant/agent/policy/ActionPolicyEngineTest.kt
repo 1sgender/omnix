@@ -140,7 +140,7 @@ class ActionPolicyEngineTest {
     @Test
     fun `fifty thousand transfer forces confirmation under money only policy`() {
         val e = engine(ActionPolicySettings(messagingPolicy = MessagingConfirmationPolicy.MONEY_ONLY))
-        val decision = e.evaluate(
+        val decision = e.decide(
             PolicyTestTool("communication.sms", ToolRisk.CONFIRMATION_REQUIRED),
             call("communication.sms", "recipient" to "Иван", "message" to "Отправь Ивану 50 000"),
             ActionOrigin.USER_REQUEST
@@ -155,7 +155,7 @@ class ActionPolicyEngineTest {
     @Test
     fun `money forces confirmation even when messaging policy is never`() {
         val e = engine(ActionPolicySettings(messagingPolicy = MessagingConfirmationPolicy.NEVER))
-        val decision = e.evaluate(
+        val decision = e.decide(
             PolicyTestTool("communication.telegram", ToolRisk.CONFIRMATION_REQUIRED),
             call("communication.telegram", "recipient" to "Иван", "message" to "переведу 5000 рублей"),
             ActionOrigin.USER_REQUEST
@@ -167,7 +167,7 @@ class ActionPolicyEngineTest {
     @Test
     fun `message without money executes under money only policy`() {
         val e = engine(ActionPolicySettings(messagingPolicy = MessagingConfirmationPolicy.MONEY_ONLY))
-        val decision = e.evaluate(
+        val decision = e.decide(
             PolicyTestTool("communication.sms", ToolRisk.CONFIRMATION_REQUIRED),
             call("communication.sms", "recipient" to "Иван", "message" to "встречаемся в 6 у входа"),
             ActionOrigin.USER_REQUEST
@@ -178,7 +178,7 @@ class ActionPolicyEngineTest {
     @Test
     fun `automation cannot message even with never policy`() {
         val e = engine(ActionPolicySettings(messagingPolicy = MessagingConfirmationPolicy.NEVER))
-        val decision = e.evaluate(
+        val decision = e.decide(
             PolicyTestTool("communication.sms", ToolRisk.CONFIRMATION_REQUIRED),
             call("communication.sms", "recipient" to "Иван", "message" to "привет"),
             ActionOrigin.AUTOMATION

@@ -8,7 +8,7 @@
 -- При подключении телефона: challenge (single-use, TTL) → Clip подписывает
 -- каноническое сообщение → сервер/локальный верификатор проверяет подпись
 -- зарегистрированным публичным ключом → VALID. Владелец привязывается при
--- первом успешном attest; REVOKED клип не проходит проверку никогда.
+-- первом успешном attest, REVOKED клип не проходит проверку никогда.
 CREATE TABLE clip_devices (
     id UUID PRIMARY KEY,
     clip_serial VARCHAR(64) NOT NULL UNIQUE,

@@ -9,6 +9,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
+import android.os.Handler
 import com.jarvis.assistant.agent.apps.AppResolution
 import com.jarvis.assistant.agent.apps.AppResolver
 import com.jarvis.assistant.agent.model.ToolExecutionStatus
@@ -213,14 +214,19 @@ class SystemAndDeviceToolsBehaviorTest {
         val rearChars = mockk<CameraCharacteristics>()
         every { camera.getCameraCharacteristics("front") } returns frontChars
         every { camera.getCameraCharacteristics("rear") } returns rearChars
-        every { frontChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns false
+        // JVM-тест: оба Key — null (поля android.jar-стаба), поэтому оба get()
+        // матчатся одним стабом — последним. FLASH идёт последним: выбор
+        // камеры идёт по наличию вспышки (front отпадает, rear берётся
+        // через fallback «любая со вспышкой»); предпочтение задней камеры
+        // на JVM непроверяемо (на устройстве ключи настоящие).
         every { frontChars.get(CameraCharacteristics.LENS_FACING) } returns CameraCharacteristics.LENS_FACING_FRONT
-        every { rearChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns true
+        every { frontChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns false
         every { rearChars.get(CameraCharacteristics.LENS_FACING) } returns CameraCharacteristics.LENS_FACING_BACK
+        every { rearChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns true
 
         var torchOn = false
         var torchCallback: CameraManager.TorchCallback? = null
-        every { camera.registerTorchCallback(any(), any()) } answers {
+        every { camera.registerTorchCallback(any<CameraManager.TorchCallback>(), any<Handler>()) } answers {
             torchCallback = firstArg<CameraManager.TorchCallback>()
             if (torchOn) torchCallback?.onTorchModeChanged("rear", true)
         }
@@ -254,9 +260,10 @@ class SystemAndDeviceToolsBehaviorTest {
         every { camera.cameraIdList } returns arrayOf("rear")
         val rearChars = mockk<CameraCharacteristics>()
         every { camera.getCameraCharacteristics("rear") } returns rearChars
-        every { rearChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns true
+        // Null-Key коллизия (см. выше): FLASH-стаб последний — побеждает.
         every { rearChars.get(CameraCharacteristics.LENS_FACING) } returns CameraCharacteristics.LENS_FACING_BACK
-        every { camera.registerTorchCallback(any(), any()) } just runs
+        every { rearChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns true
+        every { camera.registerTorchCallback(any<CameraManager.TorchCallback>(), any<Handler>()) } just runs
         every { camera.unregisterTorchCallback(any()) } just runs
         every { camera.setTorchMode(any(), any()) } just runs
 
@@ -279,9 +286,10 @@ class SystemAndDeviceToolsBehaviorTest {
         every { camera.cameraIdList } returns arrayOf("rear")
         val rearChars = mockk<CameraCharacteristics>()
         every { camera.getCameraCharacteristics("rear") } returns rearChars
-        every { rearChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns true
+        // Null-Key коллизия (см. выше): FLASH-стаб последний — побеждает.
         every { rearChars.get(CameraCharacteristics.LENS_FACING) } returns CameraCharacteristics.LENS_FACING_BACK
-        every { camera.registerTorchCallback(any(), any()) } just runs
+        every { rearChars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) } returns true
+        every { camera.registerTorchCallback(any<CameraManager.TorchCallback>(), any<Handler>()) } just runs
         every { camera.unregisterTorchCallback(any()) } just runs
         every { camera.setTorchMode("rear", any()) } throws SecurityException("denied")
         assertEquals("TORCH_ERROR", FlashlightTool(context).execute(JsonObject(emptyMap())).error)

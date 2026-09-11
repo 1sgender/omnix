@@ -36,17 +36,25 @@ class AuthInterceptor @Inject constructor(
         if (originalRequest.header("Authorization") != null && !isJarvisBackend) {
             throw IOException("Refusing to send Authorization outside the configured JARVIS origin")
         }
-        if (isJarvisBackend && originalRequest.header("Authorization") == null) {
-            val token = securityManager.getAccessToken().trim()
-            if (token.isNotEmpty()) {
-                requestBuilder.header("Authorization", "Bearer $token")
+        if (isJarvisBackend) {
+            if (originalRequest.header("Authorization") == null) {
+                val token = securityManager.getAccessToken().trim()
+                if (token.isNotEmpty()) {
+                    requestBuilder.header("Authorization", "Bearer $token")
+                }
             }
-            // V007: enforcement-путь сервера требует устройство — jrv_-токен
-            // сверяется с привязкой по X-Jarvis-Device. Тот же ID, что в
-            // redeem/validate (сервер хранит хеш и решает сам).
-            val deviceId = licenseManager.getDeviceId()
-            if (deviceId.isNotBlank()) {
-                requestBuilder.header("X-Jarvis-Device", deviceId)
+            // V007: enforcement-путь сервера требует устройство на КАЖДОМ
+            // backend-запросе — в том числе там, где Authorization уже
+            // выставлен вызывающим кодом (JarvisApiClient ставит его сам,
+            // поэтому привязка к наличию Authorization означала бы, что jrv_-токены
+            // отвергаются сервером fail-closed на AI-пути). Тот же ID,
+            // что в redeem/validate (сервер хранит хеш и решает сам).
+            // Явно выставленный вызывающим заголовок не перезаписываем.
+            if (originalRequest.header("X-Jarvis-Device") == null) {
+                val deviceId = licenseManager.getDeviceId()
+                if (deviceId.isNotBlank()) {
+                    requestBuilder.header("X-Jarvis-Device", deviceId)
+                }
             }
         }
 

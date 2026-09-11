@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -52,6 +54,16 @@ class OmnixViewModel @Inject constructor(
     /** Re-read after every permission result so the UI reflects reality. */
     private val microphoneGranted = MutableStateFlow(hasMicrophonePermission())
 
+    /**
+     * Success ~1 s hold (Executing -> Success -> Idle). The latch decides by
+     * clock; [successTick] only forces a recompute after the window lapses,
+     * because the underlying voice signals stay parked (and silent) while
+     * Success is on screen.
+     */
+    private val successLatch = OmnixSuccessLatch()
+    private val successTick = MutableStateFlow(0L)
+    private var successTickJob: Job? = null
+
     private val thresholds = MutableStateFlow(GuidanceThresholds())
 
     private val clip: StateFlow<ClipState> =
@@ -72,7 +84,7 @@ class OmnixViewModel @Inject constructor(
         val lastInteraction: LastInteraction?
     )
 
-    private val voiceSignals: StateFlow<VoiceSignals> = combine(
+    private val voiceSignalsBase: StateFlow<VoiceSignals> = combine(
         orchestrator.assistantState,
         orchestrator.currentMode,
         orchestrator.currentToolCall,
@@ -80,7 +92,7 @@ class OmnixViewModel @Inject constructor(
         orchestrator.audioLevel
     ) { assistantState, mode, toolCall, toolResult, level ->
         val online = isOnline.value
-        val phase = OmnixStateMapper.phaseOf(assistantState, mode, toolCall, online)
+        val phase = OmnixStateMapper.phaseOf(assistantState, mode, toolCall, online, toolResult)
         VoiceSignals(
             phase = phase,
             audioLevel = level,
@@ -93,6 +105,42 @@ class OmnixViewModel @Inject constructor(
         SharingStarted.WhileSubscribed(5_000),
         VoiceSignals(OmnixPhase.Idle, 0f, null, null, null)
     )
+
+    private val voiceSignals: StateFlow<VoiceSignals> = combine(
+        voiceSignalsBase,
+        successTick
+    ) { voice, _ ->
+        voice.copy(phase = successLatch.resolve(voice.phase))
+    }.onEach { voice ->
+        if (voice.phase is OmnixPhase.Success) scheduleSuccessExpiry() else cancelSuccessExpiry()
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        VoiceSignals(OmnixPhase.Idle, 0f, null, null, null)
+    )
+
+    /**
+     * One-shot recompute just after the Success window lapses so the latch
+     * can settle to Idle. Guarded: while Success is on screen the job is
+     * scheduled once, never restarted (otherwise the hold would stretch).
+     */
+    private fun scheduleSuccessExpiry() {
+        if (successTickJob?.isActive == true) return
+        successTickJob = viewModelScope.launch {
+            delay(OmnixSuccessLatch.DISPLAY_MS + SUCCESS_TICK_SLACK_MS)
+            successTick.value += 1
+        }
+    }
+
+    private fun cancelSuccessExpiry() {
+        successTickJob?.cancel()
+        successTickJob = null
+    }
+
+    companion object {
+        /** Slack so the recompute strictly lands after the latch window. */
+        private const val SUCCESS_TICK_SLACK_MS = 100L
+    }
 
     /** Stored experience signals that drive progressive disclosure (§10, §82). */
     private val guidance: StateFlow<GuidanceLevel> = combine(

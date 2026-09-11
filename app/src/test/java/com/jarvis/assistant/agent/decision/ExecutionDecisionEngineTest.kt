@@ -23,6 +23,7 @@ import com.jarvis.assistant.core.result.Resource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -745,7 +746,9 @@ class ExecutionDecisionEngineTest {
         val metrics = ExecutionRouterMetrics()
         val engine = buildEngine(localAi = local, cloudAi = cloud, metrics = metrics)
 
-        engine.execute(request("найди в интернете погоду в Ашхабаде", requiresWeb = true))
+        // (Текст намеренно без «погоды»: «погоду в X» перехватывает
+        // fast-ветка intelligence.weather, и запрос не доходит до облака.)
+        engine.execute(request("найди в интернете интересные факты про космос", requiresWeb = true))
 
         val snap = metrics.snapshot()
         assertEquals(1L, snap.cloudRequests)

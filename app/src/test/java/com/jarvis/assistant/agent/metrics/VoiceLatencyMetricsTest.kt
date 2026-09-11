@@ -35,9 +35,10 @@ class VoiceLatencyMetricsTest {
         val local = snap[VoiceLatencyMetrics.SeriesKey(VoiceLatencyMetrics.VoiceStage.AI, VoiceLatencyMetrics.VoiceLane.LOCAL)]!!
         val cloud = snap[VoiceLatencyMetrics.SeriesKey(VoiceLatencyMetrics.VoiceStage.AI, VoiceLatencyMetrics.VoiceLane.CLOUD)]!!
 
-        assertEquals(19L, local.p50Ms + 0) // медиана локального ряда
+        // ceil-семантика (см. тест выше): n=10 → индекс ceil(0.5*10)-1 = 4.
+        assertEquals(14L, local.p50Ms) // sorted[4] ряда 10..19
         assertTrue("local p95 (${local.p95Ms}) должен быть << cloud p50 (${cloud.p50Ms})", local.p95Ms < cloud.p50Ms)
-        assertEquals(1000L, cloud.p50Ms)
+        assertEquals(980L, cloud.p50Ms) // sorted[4] ряда 900..1080 шагом 20
     }
 
     @Test
