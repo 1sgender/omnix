@@ -6,13 +6,16 @@ version: 2
 updates:
   - package-ecosystem: gradle
     directory: /
+    open-pull-requests-limit: 0
     schedule:
       interval: weekly
   - package-ecosystem: github-actions
     directory: /
+    open-pull-requests-limit: 0
     schedule:
       interval: weekly
   - package-ecosystem: docker
     directory: /deploy
+    open-pull-requests-limit: 0
     schedule:
       interval: weekly
