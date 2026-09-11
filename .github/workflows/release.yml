@@ -26,6 +26,11 @@ on:
           - prod
         default: staging
         required: true
+      api_url:
+        description: "Staging API base URL (staging only; must be https)"
+        type: string
+        default: https://staging-api.jarvis.ai
+        required: false
 
 permissions:
   contents: read
@@ -99,7 +104,13 @@ jobs:
             bash ./gradlew :app:bundleProdRelease :app:assembleProdRelease \
               --stacktrace --no-daemon
           else
+            API_URL="${{ inputs.api_url }}"
+            case "$API_URL" in
+              https://*) ;;
+              *) echo "::error::staging api_url must be https, got: $API_URL"; exit 1 ;;
+            esac
             bash ./gradlew :app:bundleStagingRelease :app:assembleStagingRelease \
+              -PJARVIS_STAGING_API_BASE_URL="$API_URL" \
               --stacktrace --no-daemon
           fi
 
