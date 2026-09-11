@@ -14,7 +14,7 @@ CompositeLocalAiExecutor
         ├── WorkflowExecutor      — процедурная память (макросы, мгновенно)
         └── OnDeviceLocalAi       — локальная LLM
                 ↓
-        LocalModelManager         — lifecycle, lazy load, unload
+        LocalModelManager         — lifecycle, lazy load, unload, автозагрузка
                 ↓
         LocalModelRuntime         — интерфейс инференса
                 ↓
@@ -33,7 +33,7 @@ CompositeLocalAiExecutor
 | Полоса (spec) | Реализация в коде | Примеры |
 |---|---|---|
 | **LOCAL TOOL** | `FastCommandRouter.route()` → `ExecutionDecisionEngine.tryDeviceTool()` (P1, `DecisionReason.FAST_ROUTER_CONFIDENT`); без LLM вообще | «Открой Telegram», «Громкость 50%», «Поставь таймер», «Включи Bluetooth» |
-| **LOCAL AI** | `OnDeviceLocalAi` (Gemma, user-installed) + `WorkflowExecutor` (процедурные макросы) через `LocalAiExecutorAdapter` (P2); AGENT-полоса (P4, `CognitivePlanner` + локальные tools) — многошаговые планы тоже исполняются локально | классификация, простая интерпретация, **короткий перевод** (`LocalLlmTranslationProvider`), разрешение контекста (`WorkingMemory`/`AnaphoraContextEngine`), memory retrieval (локальная Room) |
+| **LOCAL AI** | `OnDeviceLocalAi` (Qwen, авто-загрузка) + `WorkflowExecutor` (процедурные макросы) через `LocalAiExecutorAdapter` (P2); AGENT-полоса (P4, `CognitivePlanner` + локальные tools) — многошаговые планы тоже исполняются локально | классификация, простая интерпретация, **короткий перевод** (`LocalLlmTranslationProvider`), разрешение контекста (`WorkingMemory`/`AnaphoraContextEngine`), memory retrieval (локальная Room) |
 | **CLOUD** | `runCloud()` (P3) + облачный `LlmTranslationProvider` | reasoning, research, long documents (перевод >500 символов), требует сеть (`requiresWeb`), большой контекст, всё, что локальные полосы честно не взяли |
 
 Ключевые свойства (все закреплены тестами/инвариантами):
@@ -48,9 +48,9 @@ CompositeLocalAiExecutor
   на устройстве.
 - **Приватность сохраняет приоритет**: PRIVATE/SENSITIVE без согласия
   не доходят до облака в любой полосе (privacy-гейты engine'а).
-- **Модель не в APK** (~529 МБ, user-installed): без модели локальные полосы
-  честно сообщают `Unsupported`/`ModelUnavailable`, продукт работает через
-  облако как раньше.
+- **Модель не в APK** (~521 МБ, скачивается сама): без модели и пока она
+  качается локальные полосы честно сообщают `Unsupported`, продукт работает
+  через облако как раньше.
 
 ### Метрики ExecutionRouter (`ExecutionRouterMetrics`)
 
@@ -102,7 +102,7 @@ Wake → STT → Router → AI → Tool → TTS
 
 | Runtime | Android | CPU | GPU/NPU | Модели | Интеграция с Kotlin | APK impact | Сложность | Лицензия | Вывод |
 |---|---|---|---|---|---|---|---|---|---|
-| **MediaPipe LLM Inference** (`tasks-genai`) | API 24+ | да | GPU (OpenCL), авто-fallback | Gemma 1/2/3, Phi-2, StableLM, Falcon | готовый Java/Kotlin API, AAR из Maven | ~26 МБ (arm64) | низкая | Apache 2.0 | **выбран** |
+| **MediaPipe LLM Inference** (`tasks-genai`) | API 24+ | да | GPU (OpenCL), авто-fallback | Gemma 1/2/3, Qwen2.5, Phi-2, StableLM, Falcon | готовый Java/Kotlin API, AAR из Maven | ~26 МБ (arm64) | низкая | Apache 2.0 | **выбран** |
 | llama.cpp (JNI) | любой | да, лучший на CPU | частично (Vulkan) | максимум форматов GGUF | нужен свой JNI-слой + NDK-сборка | 2-5 МБ + своя сборка | высокая | MIT | отклонён: нужен собственный C++/JNI и CI-сборка NDK |
 | ONNX Runtime Mobile | API 21+ | да | NNAPI/QNN | ONNX; LLM-путь сырой | Java API есть | 10-20 МБ | средняя | MIT | отклонён: генеративный LLM-путь заметно менее готов, чем classification |
 | MLC LLM / TVM | API 24+ | да | Vulkan | свой формат | нужна сборка из исходников | большой | высокая | Apache 2.0 | отклонён: сборка из исходников в CI, нет готового Maven-артефакта |
@@ -138,66 +138,90 @@ Wake → STT → Router → AI → Tool → TTS
 
 ---
 
-## 2. Выбор модели — Gemma 3 1B IT (int4, QAT)
+## 2. Выбор модели — Qwen2.5-0.5B-Instruct (dynamic-int8, multi-prefill)
 
 | Критерий | Значение |
 |---|---|
-| Размер файла | **529 МБ** (int4 QAT) |
-| RAM (RSS) | ~1.1 ГБ (CPU), ~1.2 ГБ (GPU) |
-| Контекст | 2048 токенов (в конфиге проекта) |
-| Decode | 47-56 ток/с |
-| Prefill | 322 ток/с (CPU) … 2585 ток/с (GPU) |
-| Time-to-first-token | ~3.1 с (CPU), ~4.5 с (GPU) |
-| Языки | 140+, включая русский |
-| Лицензия | Gemma Terms of Use |
+| Размер файла | **521 МБ** (546 660 344 байта) |
+| RAM (RSS) | ~1.36 ГБ (замер Google, CPU) |
+| Контекст | 1280 токенов (KV-кэш файла `ekv1280`) |
+| Decode | ~30 ток/с (CPU) |
+| Prefill | ~250 ток/с (CPU) |
+| Time-to-first-token | ~2.3 с (CPU) |
+| Языки | русский — штатно поддерживаемый |
+| Лицензия | **Apache 2.0** |
 
 Источник цифр — официальная карточка
-[litert-community/Gemma3-1B-IT](https://huggingface.co/litert-community/Gemma3-1B-IT).
+[litert-community/Qwen2.5-0.5B-Instruct](https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct)
+(замеры на Samsung S24 Ultra, multi-prefill).
 
-**Почему именно 1B, а не 2B/4B.** Ассистент работает в фоне рядом с STT, TTS,
-Room и Compose UI. Gemma 3 4B в int4 — это уже ~3 ГБ RSS, что на устройстве с
-6-8 ГБ приведёт к тому, что Android убьёт процесс в фоне. 1B укладывается в
-~1.1 ГБ и оставляет запас остальному приложению.
+**Почему Qwen2.5-0.5B, а не Gemma 3 1B.** Изначально планировалась Gemma 3 1B
+IT (529 МБ), но она распространяется через gated-репозиторий с обязательным
+click-through лицензии Gemma Terms of Use — приложение не может скачать её
+само, только разработчик вручную через adb. Qwen2.5-0.5B-Instruct под Apache 2.0
+лежит открыто и прямо заявлен как совместимый с MediaPipe LLM Inference API,
+поэтому выбран он: автозагрузка без ручных шагов важнее, чем разница в
+1B-параметрах для коротких ответов ассистента.
 
-**Альтернативы, которые рассматривались:** Qwen2.5 0.5B (лучше по русскому на
-своём размере, но заметно слабее в рассуждениях), Phi-3 mini (3.8B — слишком
-тяжёлая), Gemma 3n E2B (мультимодальная, избыточна для текстового этапа).
+**Почему именно 0.5B, а не 1.5B.** Ассистент работает в фоне рядом с STT, TTS,
+Room и Compose UI. Qwen2.5-1.5B в q8 — это ~1.5 ГБ файл и ~2.5+ ГБ RSS, что на
+устройстве с 6-8 ГБ приведёт к тому, что Android убьёт процесс в фоне. 0.5B
+укладывается в ~1.36 ГБ и оставляет запас остальному приложению.
 
 ---
 
-## 3. Модель НЕ входит в APK
+## 3. Модель НЕ входит в APK — приложение скачивает её само
 
-529 МБ нельзя класть в APK: лимит Google Play на AAB — 200 МБ для базового
+521 МБ нельзя класть в APK: лимит Google Play на AAB — 200 МБ для базового
 модуля, а размер загрузки критичен для пользователя.
 
-Отсутствие модели — **штатное состояние** `LocalModelState.NotInstalled`.
-В этом случае `LocalAi` возвращает `Unsupported`, и движок спокойно уходит в
-Cloud AI. Ошибки пользователь не увидит.
+Схема (реализована, а не запланирована):
 
-### Установка модели для разработки
-
-```bash
-# 1. Скачать (нужен доступ к gated-репозиторию Gemma на HuggingFace)
-#    https://huggingface.co/litert-community/Gemma3-1B-IT
-#    файл: gemma3-1b-it-int4.task
-
-# 2. Положить во внутреннее хранилище приложения
-adb push gemma3-1b-it-int4.task /data/local/tmp/
-adb shell run-as com.jarvis.assistant mkdir -p files/llm
-adb shell "cat /data/local/tmp/gemma3-1b-it-int4.task | run-as com.jarvis.assistant tee files/llm/gemma3-1b-it-int4.task > /dev/null"
-
-# 3. Проверить
-adb shell run-as com.jarvis.assistant ls -la files/llm/
+```
+после активации → одноразовый диалог (сейчас / по Wi-Fi / позже)
+        ↓ согласие дано
+DownloadManager качает 521 МБ → прогресс в шторке + в настройках
+        ↓ финиш
+сверка размера байт в байт → файл готов, грузится лениво при запросе
 ```
 
-Ожидаемый путь: `/data/data/com.jarvis.assistant/files/llm/gemma3-1b-it-int4.task`
+- **Одноразовое согласие** (`SettingsDataStore.localModelConsentFlow`):
+  `unasked / any / wifi / later`. Диалог показывается один раз после
+  активации (`MainActivity`); «Позже» больше не спрашивает — дальше
+  управление только из AI-раздела настроек.
+- **Загрузка переживает процесс**: очередь принадлежит системе. После
+  перезапуска менеджер переподключается по сохранённому downloadId.
+- **Wi-Fi-режим** реализован средствами DownloadManager
+  (`setAllowedOverMetered(false)`) — система сама ждёт unmetered-сеть.
+- **Целостность**: точный размер `expectedSizeBytes` из `LocalModelSpec`
+  сверяется после финиша; несовпадение → `DownloadFailed`, битый файл
+  удаляется и в рантайм не попадает.
+- **Пока качается** — запросы возвращают `Unsupported` и спокойно уходят в
+  Cloud AI (состояния `Downloading` / `DownloadFailed`).
 
-### Что делать в продакшене (вне Этапа 2)
+Отсутствие модели остаётся **штатным состоянием**
+`LocalModelState.NotInstalled`. Ошибки пользователь не увидит.
 
-Рекомендуемый вариант — **скачивание по требованию**: `DownloadManager` или
-Play Feature Delivery (`install-time: on-demand`) с прогрессом в настройках и
-проверкой SHA-256. Реализация вынесена за рамки этапа: пункт 25 ТЗ запрещает
-добавлять новые подсистемы, а загрузчик — это отдельный UX + сеть + storage.
+### Ручная установка для разработки (fallback)
+
+```bash
+# 1. Скачать (репозиторий открытый, логин не нужен)
+#    https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct
+#    файл: Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task
+
+# 2. Положить во внутреннее хранилище приложения
+adb push Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task /data/local/tmp/
+adb shell run-as com.jarvis.assistant mkdir -p files/llm
+adb shell "cat /data/local/tmp/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task | run-as com.jarvis.assistant tee files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task > /dev/null"
+
+# 3. Проверить (размер обязан совпасть байт в байт)
+adb shell run-as com.jarvis.assistant ls -la files/llm/
+# -rw-rw---- ... 546660344 ..._multi-prefill-seq_q8_ekv1280.task
+```
+
+Ожидаемый путь:
+`/data/data/com.jarvis.assistant/files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task`
+(для staging-сборки пакет — `com.jarvis.assistant.staging`).
 
 ---
 
@@ -207,10 +231,13 @@ Play Feature Delivery (`install-time: on-demand`) с прогрессом в н�
 первый Local AI запрос → initialize() → загрузка (~1-3 с) → Ready
         последующие запросы → инференс без перезагрузки
         onTrimMemory / onLowMemory → unload()
+        idle 5 мин → unload() (return idle, см. docs/BATTERY.md)
 ```
 
-- **Lazy**: при старте приложения модель НЕ грузится — иначе +1 ГБ RSS и
+- **Lazy**: при старте приложения модель НЕ грузится — иначе +1.3 ГБ RSS и
   секунды к startup у пользователей, которые локальной моделью не пользуются.
+  Скачанный файл тоже не грузится заранее: состояние `NotInitialized`
+  означает «файл есть, включится при первом запросе».
 - **Один экземпляр**: `Mutex` в `MediaPipeModelManager` не даёт параллельным
   запросам загрузить модель дважды.
 - **Memory pressure**: менеджер подписан на `ComponentCallbacks2`; при
@@ -229,6 +256,8 @@ Play Feature Delivery (`install-time: on-demand`) с прогрессом в н�
 | device-команда («Открой Telegram») | до Local AI не доходит — забирает FastCommandRouter | `DEVICE_TOOL` |
 | `privacyLevel = PRIVATE` | **обрабатывается локально** | `LOCAL_AI`, облако не вызывается |
 | модель не установлена | `Unsupported` | Cloud AI |
+| модель скачивается | `Unsupported` (с прогрессом в причине) | Cloud AI |
+| загрузка не удалась | `Unsupported` (повтор из настроек) | Cloud AI |
 | runtime упал | `Error` | `ExecutionResult.Error`, без эскалации в облако |
 | запрос > 1200 символов | `Unsupported` | Cloud AI |
 
@@ -248,6 +277,8 @@ Play Feature Delivery (`install-time: on-demand`) с прогрессом в н�
 - Инференс идёт на `dispatchers.default` (существующий `CoroutineDispatchers`),
   никогда на Main.
 - Загрузка модели — тоже на `default`.
+- Опрос DownloadManager — раз в секунду из `lifecycleScope`, только пока
+  идёт загрузка.
 - Отмена корутины → `session.cancelGenerateResponseAsync()` через
   `invokeOnCancellation`. `CancellationException` пробрасывается наружу, а не
   превращается в `Error`.
@@ -259,7 +290,9 @@ Play Feature Delivery (`install-time: on-demand`) с прогрессом в н�
 Тег `LocalAI`:
 
 ```
-model = gemma3-1b-it-int4 | runtime = mediapipe-llm | loaded = true | loadTimeMs = 1842
+model download started | id=42 | meteredOk=true
+model downloaded | bytes=546660344
+model = qwen2.5-0.5b-instruct-q8 | runtime = mediapipe-llm | loaded = true | loadTimeMs = 1842
 inference started | runtime=mediapipe-llm | source=VOICE | privacy=NORMAL | maxTokens=192
 inference completed | latencyMs=2310 | ttftMs=780 | promptChars=612 | responseChars=214 | ~tok/s=37.1
 ```
@@ -279,9 +312,9 @@ inference completed | latencyMs=2310 | ttftMs=780 | promptChars=612 | responseCh
 
 ```
 model load time      (ожидание: 1-3 с, зависит от storage)
-time to first token  (ожидание: 1-3 с CPU)
-decode tokens/sec    (ожидание: 40-55 CPU)
-peak RSS             (ожидание: ~1.1-1.2 ГБ)
+time to first token  (ожидание: ~2.3 с CPU)
+decode tokens/sec    (ожидание: ~30 CPU)
+peak RSS             (ожидание: ~1.36 ГБ)
 ```
 
 Метрики уже собираются в коде (`InferenceMetrics`) и пишутся в logcat — на
@@ -297,7 +330,7 @@ peak RSS             (ожидание: ~1.1-1.2 ГБ)
 | ABI | `arm64-v8a`, `armeabi-v7a`, `x86_64`; `x86` исключён |
 | Размер native libs | ~26 МБ arm64, ~19 МБ armeabi-v7a, ~29 МБ x86_64 |
 | APK impact | +26 МБ на arm64-устройстве (при использовании ABI splits) |
-| Модель в APK | нет — внешняя установка |
+| Модель в APK | нет — автозагрузка через DownloadManager (521 МБ) |
 | R8 / ProGuard | правила добавлены (JNI-классы MediaPipe, protobuf, Guava) |
 | Эмулятор | x86_64 поддержан; GPU-делегат на эмуляторе обычно недоступен → CPU |
 | Фоновая работа | инференс запускается только по запросу пользователя |
@@ -312,12 +345,17 @@ peak RSS             (ожидание: ~1.1-1.2 ГБ)
   `InferenceMetrics`, `LocalModelState`, `LocalModelSpec`
 - `agent/localai/LocalAiContracts.kt` — `LocalAi`, `LocalModelRuntime`,
   `LocalModelManager`, `LocalPromptBuilder`
-- `agent/localai/JarvisLocalPromptBuilder.kt` — chat-шаблон Gemma 3 + system prompt
+- `agent/localai/JarvisLocalPromptBuilder.kt` — ChatML-шаблон Qwen2.5 + system prompt
 - `agent/localai/OnDeviceLocalAi.kt` — правила и классификация исходов
-- `agent/localai/mediapipe/MediaPipeModelManager.kt` — lifecycle
+- `agent/localai/downloader/ModelDownloader.kt` — `ModelDownloader`,
+  `DownloadManagerModelDownloader`, `ModelDownloadPolicy`
+- `agent/localai/mediapipe/MediaPipeModelManager.kt` — lifecycle + автозагрузка
 - `agent/localai/mediapipe/MediaPipeLlmRuntime.kt` — инференс + отмена
+- `presentation/localmodel/LocalModelConsentDialog.kt` — одноразовый диалог согласия
+- `presentation/settings/LocalModelSettingsBlock.kt` — статус и управление в AI-разделе
 - `agent/decision/LocalAiExecutorAdapter.kt` — `CompositeLocalAiExecutor`
-- тесты: `OnDeviceLocalAiTest` (14), `LocalAiRoutingIntegrationTest` (8)
+- тесты: `OnDeviceLocalAiTest` (16), `LocalAiRoutingIntegrationTest` (8),
+  `ModelDownloadPolicyTest` (6)
 
 Изменено:
 
@@ -325,6 +363,10 @@ peak RSS             (ожидание: ~1.1-1.2 ГБ)
   `CompositeLocalAiExecutor`
 - `agent/decision/ExecutionAdapters.kt` — удалён `ProceduralLocalAiExecutor`
   (его роль поглотил `CompositeLocalAiExecutor`)
+- `data/preferences/SettingsDataStore.kt` — согласие + downloadId
+- `presentation/MainActivity.kt` — одноразовый диалог после активации
+- `presentation/settings/SettingsSectionRoute.kt`, `SettingsViewModel.kt` —
+  строка локальной модели в AI-разделе
 - `app/build.gradle.kts`, `gradle/libs.versions.toml` — зависимость + abiFilters
 - `app/proguard-rules.pro` — правила R8
 

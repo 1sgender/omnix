@@ -8,6 +8,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -85,6 +87,9 @@ class OnDeviceLocalAiTest {
     ) : LocalModelManager {
         val initCalls = AtomicInteger(0)
 
+        override val stateFlow: StateFlow<LocalModelState>
+            get() = MutableStateFlow(state)
+
         override suspend fun initialize(): LocalModelState {
             initCalls.incrementAndGet()
             throwOnInit?.let { throw it }
@@ -98,6 +103,10 @@ class OnDeviceLocalAiTest {
             throwOnInit?.let { throw it }
             return runtime
         }
+
+        override suspend fun ensureModel(): LocalModelState = state
+
+        override fun cancelDownload() = Unit
 
         override suspend fun unload() = Unit
     }
@@ -196,7 +205,7 @@ class OnDeviceLocalAiTest {
     fun `missing model yields unsupported not error`() = runBlocking {
         val manager = FakeModelManager(
             runtime = null,
-            state = LocalModelState.NotInstalled("/data/.../gemma3-1b-it-int4.task")
+            state = LocalModelState.NotInstalled("/data/.../Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task")
         )
         val localAi = buildLocalAi(manager)
 
@@ -322,7 +331,9 @@ class OnDeviceLocalAiTest {
         assertTrue(prompt.contains("НЕ управляешь устройством"))
         assertTrue(prompt.contains("НЕТ доступа в интернет"))
         assertTrue("Текст запроса должен попасть в промпт", prompt.contains("тест"))
-        assertTrue("Должен быть chat-шаблон Gemma", prompt.contains("<start_of_turn>"))
+        assertTrue("Должен быть ChatML-шаблон Qwen", prompt.contains("<|im_start|>user"))
+        assertTrue("Должен быть system-блок", prompt.contains("<|im_start|>system"))
+        assertTrue("Промпт должен заканчиваться ходом ассистента", prompt.trimEnd().endsWith("<|im_start|>assistant"))
     }
 
     /** Инференс не должен идти на Main-потоке. */
@@ -365,5 +376,40 @@ class OnDeviceLocalAiTest {
             threadNames.first().contains("DefaultDispatcher") ||
                 threadNames.first().contains("worker")
         )
+    }
+
+    /**
+     * Пока модель качается — запрос НЕ ждёт и НЕ падает: Unsupported
+     * спокойно уводит движок в Cloud AI.
+     */
+    @Test
+    fun `downloading model declines to cloud instead of failing`() = runBlocking {
+        val manager = FakeModelManager(
+            runtime = null,
+            state = LocalModelState.Downloading(
+                progressPercent = 42,
+                downloadedBytes = 42L,
+                totalBytes = 100L
+            )
+        )
+        val result = buildLocalAi(manager).execute(request())
+
+        assertTrue("Ожидался Unsupported, получен $result", result is LocalAiResult.Unsupported)
+        assertTrue(
+            "Причина должна содержать прогресс",
+            (result as LocalAiResult.Unsupported).reason.contains("42%")
+        )
+    }
+
+    /** Провал загрузки — тоже Unsupported (повтор из настроек), а не Error. */
+    @Test
+    fun `failed download declines to cloud instead of failing`() = runBlocking {
+        val manager = FakeModelManager(
+            runtime = null,
+            state = LocalModelState.DownloadFailed("Недостаточно места на устройстве")
+        )
+        val result = buildLocalAi(manager).execute(request())
+
+        assertTrue("Ожидался Unsupported, получен $result", result is LocalAiResult.Unsupported)
     }
 }

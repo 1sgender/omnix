@@ -223,6 +223,22 @@
     <string name="omnix_ai_personality">How OMNIX answers</string>
     <string name="omnix_ai_personality_body">Set the tone and instructions OMNIX follows.</string>
 
+    <string name="omnix_local_model_title">On-device model</string>
+    <string name="omnix_local_model_not_installed">Not downloaded · 521 MB</string>
+    <string name="omnix_local_model_not_installed_body">Answers without internet when the cloud is unreachable. Cloud answers while it downloads.</string>
+    <string name="omnix_local_model_download_now">Download now</string>
+    <string name="omnix_local_model_download_wifi">Download over Wi-Fi</string>
+    <string name="omnix_local_model_downloading">Downloading… %1$d%%</string>
+    <string name="omnix_local_model_downloaded">Downloaded, loads on first request</string>
+    <string name="omnix_local_model_loading">Loading into memory…</string>
+    <string name="omnix_local_model_ready">Ready for offline answers</string>
+    <string name="omnix_local_model_failed">Did not start: %1$s</string>
+    <string name="omnix_local_model_download_failed">Download failed: %1$s</string>
+    <string name="omnix_local_model_cancel">Cancel download</string>
+    <string name="omnix_local_model_consent_title">Download the on-device model?</string>
+    <string name="omnix_local_model_consent_body">521 MB. It answers without internet when the cloud is unreachable. Cloud answers as usual while it downloads.</string>
+    <string name="omnix_local_model_later">Later</string>
+
     <string name="omnix_language_title">Language</string>
     <string name="omnix_language_system">System</string>
 

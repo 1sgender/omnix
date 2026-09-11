@@ -34,7 +34,7 @@ interface MediaPipeRuntimeFactory {
  * Реальная фабрика: создаёт [MediaPipeLlmRuntime] поверх нативного движка.
  *
  * `LlmInference.createFromOptions` — тяжёлая блокирующая операция (загрузка
- * ~529 МБ весов), поэтому вызывается только из background-контекста
+ * ~521 МБ весов), поэтому вызывается только из background-контекста
  * (см. MediaPipeModelManager.initialize).
  */
 @Singleton

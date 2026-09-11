@@ -9,12 +9,21 @@ import com.jarvis.assistant.agent.localai.LocalModelManager
 import com.jarvis.assistant.agent.localai.LocalModelRuntime
 import com.jarvis.assistant.agent.localai.LocalModelSpec
 import com.jarvis.assistant.agent.localai.LocalModelState
+import com.jarvis.assistant.agent.localai.downloader.ModelDownloadPolicy
+import com.jarvis.assistant.agent.localai.downloader.ModelDownloadStatus
+import com.jarvis.assistant.agent.localai.downloader.ModelDownloader
 import com.jarvis.assistant.core.dispatcher.CoroutineDispatchers
+import com.jarvis.assistant.data.preferences.SettingsDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -43,16 +52,19 @@ import javax.inject.Singleton
  * Окно (5 минут) больше худшего инференса (инструментальные таймауты ≤ 4 с),
  * поэтому выгрузка не может закрыть нативный движок посреди генерации.
  *
- * Файл модели (~529 МБ) НЕ входит в APK — он ожидается во внутреннем хранилище
- * приложения. Отсутствие файла — штатное состояние [LocalModelState.NotInstalled],
- * а не ошибка. Подробности и команда установки — docs/LOCAL_AI.md.
+ * Файл модели (~521 МБ) НЕ входит в APK — приложение скачивает его само
+ * через системный DownloadManager после одноразового согласия пользователя.
+ * Отсутствие файла — штатное состояние [LocalModelState.NotInstalled],
+ * а не ошибка. Подробности — docs/LOCAL_AI.md.
  */
 @Singleton
 class MediaPipeModelManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dispatchers: CoroutineDispatchers,
     private val runtimeFactory: MediaPipeRuntimeFactory,
-    private val spec: LocalModelSpec
+    private val spec: LocalModelSpec,
+    private val downloader: ModelDownloader,
+    private val settings: SettingsDataStore
 ) : LocalModelManager {
 
     private companion object {
@@ -70,8 +82,20 @@ class MediaPipeModelManager @Inject constructor(
     @Volatile
     private var currentState: LocalModelState = LocalModelState.NotInitialized
 
+    private val _stateFlow = MutableStateFlow<LocalModelState>(currentState)
+
+    /** Единственная точка смены состояния — снимок и поток всегда синхронны. */
+    private fun setState(next: LocalModelState) {
+        currentState = next
+        _stateFlow.value = next
+    }
+
     @Volatile
     private var runtime: LocalModelRuntime? = null
+
+    /** Наблюдение за активной загрузкой (опрос DownloadManager). */
+    @Volatile
+    private var downloadJob: Job? = null
 
     /**
      * CR-24: держим сильную ссылку на зарегистрированный ComponentCallbacks2,
@@ -109,11 +133,16 @@ class MediaPipeModelManager @Inject constructor(
 
     override val state: LocalModelState get() = currentState
 
+    override val stateFlow: StateFlow<LocalModelState> get() = _stateFlow
+
     /** Путь, где ожидается файл модели. */
     val modelFile: File get() = File(File(context.filesDir, MODEL_DIR), spec.fileName)
 
     init {
         registerTrimMemoryCallback()
+        // Загрузка принадлежит системе и переживает смерть процесса:
+        // при старте переподключаемся к уже идущей очереди.
+        lifecycleScope.launch { runCatching { reattachDownload() } }
     }
 
     /**
@@ -157,6 +186,10 @@ class MediaPipeModelManager @Inject constructor(
         if (!closed.compareAndSet(false, true)) return
         Log.d(TAG, "close: releasing MediaPipe resources")
         idleUnloadScheduler.cancel()
+        downloadJob?.cancel()
+        downloadJob = null
+        // Системную загрузку НЕ отменяем: она принадлежит DownloadManager и
+        // переживёт процесс; при следующем старте переподключимся по stored id.
         lifecycleJob.cancel()
         trimMemoryCallback?.let { cb ->
             runCatching { context.unregisterComponentCallbacks(cb) }
@@ -183,19 +216,28 @@ class MediaPipeModelManager @Inject constructor(
         runtime?.let { return@withLock currentState }
 
         val file = modelFile
-        if (!file.exists() || file.length() == 0L) {
-            currentState = LocalModelState.NotInstalled(file.absolutePath)
+        if (!isModelFileValid(file)) {
+            if (file.exists()) {
+                // Частичный или битый остаток — в рантайм такое отдавать нельзя.
+                Log.w(TAG, "model file size mismatch | got=${file.length()} | want=${spec.expectedSizeBytes}")
+                runCatching { file.delete() }
+            }
+            // Если согласие уже дано (например, после перезапуска) — загрузка
+            // стартует сама; без согласия честно возвращаем NotInstalled.
+            val afterEnsure = ensureModelLocked()
+            if (afterEnsure is LocalModelState.Downloading) return@withLock afterEnsure
+            setState(LocalModelState.NotInstalled(file.absolutePath))
             Log.i(TAG, "model not installed | expected=${file.absolutePath}")
             return@withLock currentState
         }
 
         if (!hasEnoughMemory()) {
-            currentState = LocalModelState.Failed("Недостаточно свободной RAM для локальной модели")
+            setState(LocalModelState.Failed("Недостаточно свободной RAM для локальной модели"))
             Log.w(TAG, "model load skipped: недостаточно памяти (нужно ~${spec.minRuntimeMemoryMb} МБ)")
             return@withLock currentState
         }
 
-        currentState = LocalModelState.Loading
+        setState(LocalModelState.Loading)
         Log.i(TAG, "model loading | id=${spec.modelId} | sizeMb=${spec.approxSizeMb}")
 
         var createdDuringAttempt: LocalModelRuntime? = null
@@ -223,7 +265,7 @@ class MediaPipeModelManager @Inject constructor(
 
             runtime = created
             createdDuringAttempt = null // ownership transferred to the manager
-            currentState = LocalModelState.Ready(modelId = spec.modelId, loadTimeMs = loadTimeMs)
+            setState(LocalModelState.Ready(modelId = spec.modelId, loadTimeMs = loadTimeMs))
             idleUnloadScheduler.noteUsed()
             Log.i(
                 TAG,
@@ -235,14 +277,14 @@ class MediaPipeModelManager @Inject constructor(
             (createdDuringAttempt as? AutoCloseable)?.close()
             createdDuringAttempt = null
             runtime = null
-            currentState = LocalModelState.NotInitialized
+            setState(LocalModelState.NotInitialized)
             throw e
         } catch (e: Throwable) {
             // Ловим Throwable: нативная библиотека может кинуть UnsatisfiedLinkError
             // или OutOfMemoryError, и это не должно ронять приложение.
             runtime = null
             val reason = e.javaClass.simpleName
-            currentState = LocalModelState.Failed(reason)
+            setState(LocalModelState.Failed(reason))
             Log.e(TAG, "model load failed | id=${spec.modelId}", e)
             currentState
         }
@@ -252,10 +294,196 @@ class MediaPipeModelManager @Inject constructor(
         closeRuntime()
     }
 
+    // ------------------------------------------------------ model download
+
+    override suspend fun ensureModel(): LocalModelState = lifecycleMutex.withLock {
+        runtime?.let { return@withLock currentState }
+        ensureModelLocked()
+    }
+
+    /**
+     * Тело [ensureModel] без мьютекса — вызывается либо из [ensureModel],
+     * либо из [initialize], который мьютекс уже держит.
+     */
+    private suspend fun ensureModelLocked(): LocalModelState {
+        if (currentState is LocalModelState.Downloading) return currentState
+
+        val file = modelFile
+        if (isModelFileValid(file)) {
+            // Файл докачался раньше (например, пережив перезапуск) — грузиться
+            // будет лениво при первом запросе, память заранее не трогаем.
+            if (currentState !is LocalModelState.Ready &&
+                currentState !is LocalModelState.Loading
+            ) {
+                setState(LocalModelState.NotInitialized)
+            }
+            return currentState
+        }
+
+        val consent = settings.localModelConsentFlow.first()
+        if (!ModelDownloadPolicy.mayDownload(consent)) return currentState
+
+        // Переподключение к системной очереди (смерть процесса/перезагрузка).
+        val storedId = settings.localModelDownloadIdFlow.first()
+        if (storedId != ModelDownloadPolicy.NO_DOWNLOAD_ID) {
+            val obs = runCatching { downloader.observe(storedId) }.getOrNull()
+            if (obs != null &&
+                (obs.status == ModelDownloadStatus.RUNNING || obs.status == ModelDownloadStatus.PAUSED)
+            ) {
+                startObserving(storedId)
+                return currentState
+            }
+            if (obs != null && obs.status == ModelDownloadStatus.SUCCESS &&
+                isModelFileValid(file)
+            ) {
+                settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+                setState(LocalModelState.NotInitialized)
+                return currentState
+            }
+            // Протухший id — ниже встанем в очередь заново.
+        }
+
+        if (file.exists()) runCatching { file.delete() }
+        val id = try {
+            downloader.enqueue(
+                url = spec.downloadUrl,
+                destFile = file,
+                title = "JARVIS · локальная модель",
+                allowedOverMetered = ModelDownloadPolicy.allowedOverMetered(consent)
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "model download enqueue failed", e)
+            setState(LocalModelState.DownloadFailed("Не удалось начать загрузку"))
+            return currentState
+        }
+        settings.setLocalModelDownloadId(id)
+        Log.i(TAG, "model download started | id=$id | meteredOk=${ModelDownloadPolicy.allowedOverMetered(consent)}")
+        startObserving(id)
+        return currentState
+    }
+
+    override fun cancelDownload() {
+        downloadJob?.cancel()
+        downloadJob = null
+        lifecycleScope.launch {
+            val id = settings.localModelDownloadIdFlow.first()
+            if (id != ModelDownloadPolicy.NO_DOWNLOAD_ID) {
+                runCatching { downloader.cancel(id) }
+                settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+            }
+            if (currentState is LocalModelState.Downloading ||
+                currentState is LocalModelState.DownloadFailed
+            ) {
+                setState(LocalModelState.NotInstalled(modelFile.absolutePath))
+            }
+        }
+    }
+
+    /** Переподключение к системной загрузке при старте процесса. */
+    private suspend fun reattachDownload() {
+        if (currentState is LocalModelState.Downloading) return
+        val id = settings.localModelDownloadIdFlow.first()
+        if (id == ModelDownloadPolicy.NO_DOWNLOAD_ID) {
+            // Честное стартовое состояние: NotInitialized означает «файл есть,
+            // грузиться будет лениво», а не «не знаем, что происходит».
+            if (currentState is LocalModelState.NotInitialized && !isModelFileValid(modelFile)) {
+                setState(LocalModelState.NotInstalled(modelFile.absolutePath))
+            }
+            return
+        }
+        val obs = runCatching { downloader.observe(id) }.getOrNull()
+        when {
+            obs == null -> settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+            obs.status == ModelDownloadStatus.SUCCESS -> onDownloadSucceeded()
+            obs.status == ModelDownloadStatus.FAILED ->
+                onDownloadFailed(id, ModelDownloadPolicy.reasonText(obs.reason))
+
+            else -> startObserving(id)
+        }
+    }
+
+    private fun startObserving(downloadId: Long) {
+        downloadJob?.cancel()
+        setState(
+            LocalModelState.Downloading(
+                progressPercent = 0,
+                downloadedBytes = 0L,
+                totalBytes = spec.expectedSizeBytes
+            )
+        )
+        downloadJob = lifecycleScope.launch {
+            while (true) {
+                delay(ModelDownloadPolicy.POLL_INTERVAL_MS)
+                val obs = runCatching { downloader.observe(downloadId) }.getOrNull()
+                if (obs == null) {
+                    // Система забыла загрузку — не выдумываем успех.
+                    onDownloadFailed(downloadId, "Загрузка потеряна системой")
+                    return@launch
+                }
+                when (obs.status) {
+                    ModelDownloadStatus.RUNNING, ModelDownloadStatus.PAUSED -> {
+                        val total = if (obs.totalBytes > 0) obs.totalBytes else spec.expectedSizeBytes
+                        setState(
+                            LocalModelState.Downloading(
+                                progressPercent = ModelDownloadPolicy.progressPercent(
+                                    obs.downloadedBytes,
+                                    total
+                                ),
+                                downloadedBytes = obs.downloadedBytes,
+                                totalBytes = total
+                            )
+                        )
+                    }
+
+                    ModelDownloadStatus.SUCCESS -> {
+                        onDownloadSucceeded()
+                        return@launch
+                    }
+
+                    ModelDownloadStatus.FAILED -> {
+                        onDownloadFailed(downloadId, ModelDownloadPolicy.reasonText(obs.reason))
+                        return@launch
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun onDownloadSucceeded() {
+        settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+        val file = modelFile
+        if (isModelFileValid(file)) {
+            Log.i(TAG, "model downloaded | bytes=${file.length()}")
+            // Ленивая загрузка при первом запросе: 1.3 ГБ RSS без нужды не занимаем.
+            setState(LocalModelState.NotInitialized)
+        } else {
+            Log.w(
+                TAG,
+                "downloaded size mismatch | got=${if (file.exists()) file.length() else "missing"}" +
+                    " | want=${spec.expectedSizeBytes}"
+            )
+            if (file.exists()) runCatching { file.delete() }
+            setState(
+                LocalModelState.DownloadFailed("Скачанный файл повреждён (несовпадение размера)")
+            )
+        }
+    }
+
+    private suspend fun onDownloadFailed(downloadId: Long, reason: String) {
+        runCatching { downloader.cancel(downloadId) }
+        settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+        Log.w(TAG, "model download failed | $reason")
+        setState(LocalModelState.DownloadFailed(reason))
+    }
+
+    /** Файл валиден, только если размер совпал с ожидаемым байт в байт. */
+    private fun isModelFileValid(file: File): Boolean =
+        file.exists() && file.length() == spec.expectedSizeBytes
+
     private fun closeRuntime() {
         val current = runtime ?: return
         runtime = null
-        currentState = LocalModelState.NotInitialized
+        setState(LocalModelState.NotInitialized)
         try {
             (current as? AutoCloseable)?.close()
             Log.i(TAG, "model unloaded")

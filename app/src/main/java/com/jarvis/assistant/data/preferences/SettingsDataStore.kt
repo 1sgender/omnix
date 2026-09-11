@@ -127,6 +127,43 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
+    /**
+     * Одноразовое согласие на автозагрузку локальной модели (~521 МБ).
+     * Значения — [com.jarvis.assistant.agent.localai.downloader.ModelDownloadPolicy]:
+     * unasked / any / wifi / later.
+     */
+    val localModelConsentFlow: Flow<String> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[PreferencesKeys.LOCAL_MODEL_CONSENT] ?: "unasked"
+        }
+
+    suspend fun setLocalModelConsent(consent: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LOCAL_MODEL_CONSENT] = consent
+        }
+    }
+
+    /**
+     * Системный downloadId активной загрузки модели (-1 — нет).
+     * Переживает перезапуск: DownloadManager помнит очередь.
+     */
+    val localModelDownloadIdFlow: Flow<Long> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[PreferencesKeys.LOCAL_MODEL_DOWNLOAD_ID] ?: -1L
+        }
+
+    suspend fun setLocalModelDownloadId(downloadId: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LOCAL_MODEL_DOWNLOAD_ID] = downloadId
+        }
+    }
+
     suspend fun resetDefaults() {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.USER_NAME] = "Сэр"

@@ -98,13 +98,25 @@ class OnDeviceLocalAi @Inject constructor(
         }
 
         if (runtime == null) {
-            // Модель не установлена — это ОЖИДАЕМОЕ состояние (файл ~529 МБ
-            // не входит в APK), поэтому Unsupported, а не Error: движок
-            // спокойно уйдёт в Cloud AI.
+            // Модель не готова — это ОЖИДАЕМЫЕ состояния (файл ~521 МБ
+            // не входит в APK, а скачивается сам), поэтому Unsupported,
+            // а не Error: движок спокойно уйдёт в Cloud AI.
             return when (val state = modelManager.state) {
                 is LocalModelState.NotInstalled -> {
                     Log.i(TAG, "unsupported: модель не установлена (${state.expectedPath})")
                     LocalAiResult.Unsupported("Local model is not installed on this device")
+                }
+
+                is LocalModelState.Downloading -> {
+                    Log.i(TAG, "unsupported: модель скачивается (${state.progressPercent}%)")
+                    LocalAiResult.Unsupported(
+                        "Local model is downloading (${state.progressPercent}%)"
+                    )
+                }
+
+                is LocalModelState.DownloadFailed -> {
+                    Log.i(TAG, "unsupported: загрузка модели не удалась (${state.reason})")
+                    LocalAiResult.Unsupported("Local model download failed: ${state.reason}")
                 }
 
                 is LocalModelState.Failed -> {

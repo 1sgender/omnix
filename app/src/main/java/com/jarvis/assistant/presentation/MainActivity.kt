@@ -10,8 +10,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.jarvis.assistant.agent.localai.LocalModelManager
+import com.jarvis.assistant.agent.localai.LocalModelState
+import com.jarvis.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.jarvis.assistant.core.license.LicenseManager
+import com.jarvis.assistant.data.preferences.SettingsDataStore
 import com.jarvis.assistant.presentation.activation.ActivationScreen
+import com.jarvis.assistant.presentation.localmodel.LocalModelConsentDialog
 import com.jarvis.assistant.presentation.navigation.OmnixNavGraph
 import androidx.lifecycle.lifecycleScope
 import com.jarvis.assistant.data.preferences.OmnixExperienceStore
@@ -33,6 +38,12 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var experienceStore: OmnixExperienceStore
+
+    @Inject
+    lateinit var localModelManager: LocalModelManager
+
+    @Inject
+    lateinit var settingsDataStore: SettingsDataStore
 
     /** Guards the first frame while stored preferences are read. */
     private var splashHeld: Boolean by mutableStateOf(true)
@@ -110,6 +121,44 @@ class MainActivity : ComponentActivity() {
                         }
                         else -> {
                             OmnixNavGraph()
+                            // Одноразовый вопрос про локальную модель: только
+                            // после активации, только если файла нет и пользователя
+                            // ещё не спрашивали. Ответ записывается сразу —
+                            // диалог не всплывёт повторно ни при каких рекомпозициях.
+                            val modelState by localModelManager.stateFlow.collectAsState(
+                                initial = LocalModelState.NotInitialized
+                            )
+                            val modelConsent by settingsDataStore.localModelConsentFlow
+                                .collectAsState(initial = ModelDownloadPolicy.CONSENT_UNASKED)
+                            if (modelState is LocalModelState.NotInstalled &&
+                                modelConsent == ModelDownloadPolicy.CONSENT_UNASKED
+                            ) {
+                                LocalModelConsentDialog(
+                                    onDownloadAny = {
+                                        lifecycleScope.launch {
+                                            settingsDataStore.setLocalModelConsent(
+                                                ModelDownloadPolicy.CONSENT_ANY_NETWORK
+                                            )
+                                            localModelManager.ensureModel()
+                                        }
+                                    },
+                                    onDownloadWifi = {
+                                        lifecycleScope.launch {
+                                            settingsDataStore.setLocalModelConsent(
+                                                ModelDownloadPolicy.CONSENT_WIFI_ONLY
+                                            )
+                                            localModelManager.ensureModel()
+                                        }
+                                    },
+                                    onLater = {
+                                        lifecycleScope.launch {
+                                            settingsDataStore.setLocalModelConsent(
+                                                ModelDownloadPolicy.CONSENT_LATER
+                                            )
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }

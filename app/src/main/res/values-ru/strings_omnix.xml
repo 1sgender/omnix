@@ -221,6 +221,22 @@
     <string name="omnix_ai_personality">Как OMNIX отвечает</string>
     <string name="omnix_ai_personality_body">Задайте тон и указания, которым следует OMNIX.</string>
 
+    <string name="omnix_local_model_title">Локальная модель</string>
+    <string name="omnix_local_model_not_installed">Не скачана · 521 МБ</string>
+    <string name="omnix_local_model_not_installed_body">Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако.</string>
+    <string name="omnix_local_model_download_now">Скачать сейчас</string>
+    <string name="omnix_local_model_download_wifi">Скачать по Wi-Fi</string>
+    <string name="omnix_local_model_downloading">Загружается… %1$d%%</string>
+    <string name="omnix_local_model_downloaded">Скачана, включится при первом запросе</string>
+    <string name="omnix_local_model_loading">Загружается в память…</string>
+    <string name="omnix_local_model_ready">Готова к офлайн-ответам</string>
+    <string name="omnix_local_model_failed">Не запустилась: %1$s</string>
+    <string name="omnix_local_model_download_failed">Загрузка не удалась: %1$s</string>
+    <string name="omnix_local_model_cancel">Отменить загрузку</string>
+    <string name="omnix_local_model_consent_title">Скачать локальную модель?</string>
+    <string name="omnix_local_model_consent_body">521 МБ. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
+    <string name="omnix_local_model_later">Позже</string>
+
     <string name="omnix_language_title">Язык</string>
     <string name="omnix_language_system">Системный</string>
 

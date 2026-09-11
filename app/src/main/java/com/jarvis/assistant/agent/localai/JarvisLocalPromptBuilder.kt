@@ -8,10 +8,9 @@ import javax.inject.Singleton
 /**
  * Сборка промпта для локальной модели.
  *
- * Формат — chat-template Gemma 3 (`<start_of_turn>` / `<end_of_turn>`).
- * MediaPipe для Gemma-моделей НЕ подставляет служебные токены сам, поэтому
- * шаблон формируется здесь. Если модель заменят на другую — меняется только
- * этот класс.
+ * Формат — ChatML-шаблон Qwen2.5-Instruct (`<|im_start|>` / `<|im_end|>`).
+ * MediaPipe НЕ подставляет служебные токены сам, поэтому шаблон формируется
+ * здесь. Если модель заменят на другую — меняется только этот класс.
  *
  * System prompt намеренно жёстко ограничивает модель (пункты 10-12 ТЗ):
  * она не должна утверждать, что выполнила действие на устройстве, и не должна
@@ -21,8 +20,8 @@ import javax.inject.Singleton
 class JarvisLocalPromptBuilder @Inject constructor() : LocalPromptBuilder {
 
     private companion object {
-        const val TURN_START = "<start_of_turn>"
-        const val TURN_END = "<end_of_turn>"
+        const val IM_START = "<|im_start|>"
+        const val IM_END = "<|im_end|>"
 
         val SYSTEM_PROMPT = """
             Ты JARVIS — локальный офлайн AI-ассистент на устройстве пользователя.
@@ -48,19 +47,20 @@ class JarvisLocalPromptBuilder @Inject constructor() : LocalPromptBuilder {
         }
 
         // Контекст (пункт 14 ТЗ): system prompt + retrieval-память + запрос.
-        // История диалога локальной модели НЕ отправляется (контекст 2048
+        // История диалога локальной модели НЕ отправляется (контекст 1280
         // токенов); из памяти — только retrieved-блок ≤800 символов, поэтому
         // офлайн-модель тоже знает long-term факты («как зовут дочь?»).
         return buildString {
-            append(TURN_START).append("user\n")
+            append(IM_START).append("system\n")
             append(SYSTEM_PROMPT).append("\n")
-            append(styleHint).append("\n")
+            append(styleHint).append(IM_END).append("\n")
+            append(IM_START).append("user\n")
             val memory = request.memoryContext.trim()
             if (memory.isNotBlank()) {
                 append(memory).append("\n\n")
             }
-            append(request.text.trim()).append(TURN_END).append("\n")
-            append(TURN_START).append("model\n")
+            append(request.text.trim()).append(IM_END).append("\n")
+            append(IM_START).append("assistant\n")
         }
     }
 }

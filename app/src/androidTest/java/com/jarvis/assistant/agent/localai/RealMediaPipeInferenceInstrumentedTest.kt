@@ -39,7 +39,7 @@ class RealMediaPipeInferenceInstrumentedTest {
         val expectedSha = args.getString("modelExpectedSha256").orEmpty().lowercase()
         val expectedFile = java.io.File(
             java.io.File(context.filesDir, "llm"),
-            LocalModelSpec.GEMMA3_1B_IT_INT4.fileName
+            LocalModelSpec.QWEN2_5_0_5B_INSTRUCT_Q8.fileName
         )
         if (!expectedFile.exists()) {
             if (required) throw AssertionError("Required real model is absent at $expectedFile")

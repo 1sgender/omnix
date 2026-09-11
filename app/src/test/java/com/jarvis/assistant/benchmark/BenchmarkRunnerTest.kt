@@ -59,8 +59,8 @@ class BenchmarkRunnerTest {
             datasetSize = cases.size,
             appVersion = "0.2.0",
             serverVersion = "0.2.0 (JARVIS API module)",
-            localModelId = "gemma3-1b-it-int4",
-            localModelQuantization = "int4 QAT (dynamic, block 128)",
+            localModelId = "qwen2.5-0.5b-instruct-q8",
+            localModelQuantization = "dynamic-int8, multi-prefill",
             localRuntime = "MediaPipe LLM Inference 0.10.35 (SIMULATED on JVM)",
             providerModels = mapOf(
                 "GROQ" to "llama-3.3-70b-versatile",

@@ -6,6 +6,8 @@ import com.jarvis.assistant.agent.localai.LocalGeneration
 import com.jarvis.assistant.agent.localai.LocalModelManager
 import com.jarvis.assistant.agent.localai.LocalModelRuntime
 import com.jarvis.assistant.agent.localai.LocalModelState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -44,10 +46,14 @@ class LocalLlmTranslationProviderTest {
         private val runtime: LocalModelRuntime? = FakeRuntime()
     ) : LocalModelManager {
         override val state: LocalModelState =
-            if (ready) LocalModelState.Ready("gemma-test", 1L) else LocalModelState.NotInstalled("/models/gemma")
+            if (ready) LocalModelState.Ready("qwen-test", 1L) else LocalModelState.NotInstalled("/models/qwen")
+        override val stateFlow: StateFlow<LocalModelState>
+            get() = MutableStateFlow(state)
         override suspend fun initialize(): LocalModelState = state
         override fun isReady(): Boolean = ready
         override suspend fun runtimeOrNull(): LocalModelRuntime? = runtime
+        override suspend fun ensureModel(): LocalModelState = state
+        override fun cancelDownload() = Unit
         override suspend fun unload() = Unit
     }
 

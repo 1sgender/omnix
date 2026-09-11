@@ -67,6 +67,9 @@ interface LocalModelManager {
 
     val state: LocalModelState
 
+    /** Наблюдаемое состояние — для прогресса загрузки в настройках. */
+    val stateFlow: kotlinx.coroutines.flow.StateFlow<LocalModelState>
+
     /** Идемпотентная инициализация: повторные вызовы не грузят модель заново. */
     suspend fun initialize(): LocalModelState
 
@@ -74,6 +77,17 @@ interface LocalModelManager {
 
     /** Возвращает готовый runtime или null, если модель недоступна. */
     suspend fun runtimeOrNull(): LocalModelRuntime?
+
+    /**
+     * Гарантирует наличие файла модели: если его нет и пользователь дал
+     * одноразовое согласие — ставит загрузку в очередь и возвращает
+     * [LocalModelState.Downloading]. Без согласия возвращает текущее
+     * состояние, ничего не начиная. Идемпотентен.
+     */
+    suspend fun ensureModel(): LocalModelState
+
+    /** Отменяет активную загрузку. После отмены — [LocalModelState.NotInstalled]. */
+    fun cancelDownload()
 
     /** Освобождает нативные ресурсы (memory pressure, выход из приложения). */
     suspend fun unload()

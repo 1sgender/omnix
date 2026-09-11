@@ -31,6 +31,8 @@ import com.jarvis.assistant.core.dispatcher.CoroutineDispatchers
 import com.jarvis.assistant.core.result.Resource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -84,9 +86,14 @@ class LocalAiRoutingIntegrationTest {
             if (runtime != null) LocalModelState.Ready("test", 1)
             else LocalModelState.NotInstalled("/nowhere/model.task")
 
+        override val stateFlow: StateFlow<LocalModelState>
+            get() = MutableStateFlow(state)
+
         override suspend fun initialize() = state
         override fun isReady() = runtime != null
         override suspend fun runtimeOrNull() = runtime
+        override suspend fun ensureModel(): LocalModelState = state
+        override fun cancelDownload() = Unit
         override suspend fun unload() = Unit
     }
 

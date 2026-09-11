@@ -2,6 +2,8 @@ package com.jarvis.assistant.presentation.settings
 
 import com.jarvis.assistant.agent.automation.dao.AutomationDao
 import com.jarvis.assistant.agent.automation.entity.AutomationEntity
+import com.jarvis.assistant.agent.localai.LocalModelManager
+import com.jarvis.assistant.agent.localai.LocalModelState
 import com.jarvis.assistant.core.license.ActivationResult
 import com.jarvis.assistant.core.license.LicenseInfo
 import com.jarvis.assistant.core.license.LicenseManager
@@ -130,7 +132,17 @@ class SettingsViewModelTest {
         SaveSettingsUseCase(repository),
         security,
         dao,
-        license
+        license,
+        mockk {
+            every { stateFlow } returns MutableStateFlow(LocalModelState.NotInitialized)
+            coEvery { ensureModel() } returns LocalModelState.NotInitialized
+        },
+        mockk {
+            every { localModelConsentFlow } returns flowOf("unasked")
+            every { localModelDownloadIdFlow } returns flowOf(-1L)
+            coEvery { setLocalModelConsent(any()) } returns Unit
+            coEvery { setLocalModelDownloadId(any()) } returns Unit
+        }
     )
 
     private fun mockDao(rules: List<AutomationEntity> = emptyList()): AutomationDao = mockk {

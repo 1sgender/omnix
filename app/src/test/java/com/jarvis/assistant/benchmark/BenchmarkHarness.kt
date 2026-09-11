@@ -42,6 +42,8 @@ import com.jarvis.assistant.core.result.Resource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -166,10 +168,14 @@ object BenchmarkHarness {
 
     /** Менеджер модели: модель «установлена» и готова. */
     class ReadyModelManager(private val runtime: LocalModelRuntime) : LocalModelManager {
-        override val state = LocalModelState.Ready("gemma3-1b-it-int4", 0)
+        override val state = LocalModelState.Ready("qwen2.5-0.5b-instruct-q8", 0)
+        override val stateFlow: StateFlow<LocalModelState>
+            get() = MutableStateFlow(state)
         override suspend fun initialize() = state
         override fun isReady() = true
         override suspend fun runtimeOrNull() = runtime
+        override suspend fun ensureModel(): LocalModelState = state
+        override fun cancelDownload() = Unit
         override suspend fun unload() = Unit
     }
 

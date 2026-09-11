@@ -19,6 +19,8 @@ import com.jarvis.assistant.agent.localai.LocalModelSpec
 import com.jarvis.assistant.agent.localai.LocalPromptBuilder
 import com.jarvis.assistant.agent.localai.JarvisLocalPromptBuilder
 import com.jarvis.assistant.agent.localai.OnDeviceLocalAi
+import com.jarvis.assistant.agent.localai.downloader.DownloadManagerModelDownloader
+import com.jarvis.assistant.agent.localai.downloader.ModelDownloader
 import com.jarvis.assistant.agent.localai.mediapipe.DefaultMediaPipeRuntimeFactory
 import com.jarvis.assistant.agent.localai.mediapipe.MediaPipeModelManager
 import com.jarvis.assistant.agent.localai.mediapipe.MediaPipeRuntimeFactory
@@ -392,6 +394,12 @@ abstract class LocalAiModule {
         impl: DefaultMediaPipeRuntimeFactory
     ): MediaPipeRuntimeFactory
 
+    @Binds
+    @Singleton
+    abstract fun bindModelDownloader(
+        impl: DownloadManagerModelDownloader
+    ): ModelDownloader
+
     companion object {
         /**
          * Спецификация локальной модели вынесена в DI: заменить модель можно
@@ -399,6 +407,6 @@ abstract class LocalAiModule {
          */
         @Provides
         @Singleton
-        fun provideLocalModelSpec(): LocalModelSpec = LocalModelSpec.GEMMA3_1B_IT_INT4
+        fun provideLocalModelSpec(): LocalModelSpec = LocalModelSpec.QWEN2_5_0_5B_INSTRUCT_Q8
     }
 }

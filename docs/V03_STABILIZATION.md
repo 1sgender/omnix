@@ -18,7 +18,7 @@ BLOCKED/NOT TESTED — где нет окружения; ничего не си�
 | Android / API | minSdk 29 / target 34 / compile 34 | `app/build.gradle.kts:101-106` |
 | Device model / RAM / CPU | **NOT TESTED** — sandbox без Android-окружения (нет JDK/SDK/adb/emulator) | среда |
 | Backend | один JVM-процесс (`server/`), Kotlin 1.9.24, Postgres-миграции V001–V008 | repo |
-| Локальная модель | ~529 МБ в `files/llm/`, вне APK, lazy-load + idle-unload 5 мин | `MediaPipeModelManager` |
+| Локальная модель | ~521 МБ в `files/llm/`, автозагрузка, вне APK, lazy-load + idle-unload 5 мин | `MediaPipeModelManager` |
 
 Baseline не менялся: все шесть коммитов сессии — аддитивные; стабильный v0.2.0
 поведения (маршруты, контракты, guardrails) сохранён (инварианты 153 PASS).

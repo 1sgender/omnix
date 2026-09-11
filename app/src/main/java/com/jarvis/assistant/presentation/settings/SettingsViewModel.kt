@@ -4,17 +4,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jarvis.assistant.agent.automation.dao.AutomationDao
 import com.jarvis.assistant.agent.automation.entity.AutomationEntity
+import com.jarvis.assistant.agent.localai.LocalModelManager
+import com.jarvis.assistant.agent.localai.LocalModelState
+import com.jarvis.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.jarvis.assistant.core.license.LicenseInfo
 import com.jarvis.assistant.core.license.LicenseManager
 import com.jarvis.assistant.core.security.AccessTokenPolicy
 import com.jarvis.assistant.core.security.SecurityManager
+import com.jarvis.assistant.data.preferences.SettingsDataStore
 import com.jarvis.assistant.domain.usecases.GetSettingsUseCase
 import com.jarvis.assistant.domain.usecases.SaveSettingsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,11 +48,19 @@ class SettingsViewModel @Inject constructor(
     private val saveSettingsUseCase: SaveSettingsUseCase,
     private val securityManager: SecurityManager,
     private val automationDao: AutomationDao,
-    private val licenseManager: LicenseManager
+    private val licenseManager: LicenseManager,
+    private val localModelManager: LocalModelManager,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState(licenseInfo = licenseManager.getLicenseInfo()))
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    /** Состояние локальной модели — для строки статуса и прогресса в AI-разделе. */
+    val localModelState: StateFlow<LocalModelState> = localModelManager.stateFlow
+
+    val localModelConsent: StateFlow<String> = settingsDataStore.localModelConsentFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ModelDownloadPolicy.CONSENT_UNASKED)
 
     init {
         loadSettings()
@@ -155,6 +169,24 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             saveSettingsUseCase.saveWakeWordSensitivity(sensitivity)
         }
+    }
+
+    /**
+     * Запуск загрузки локальной модели из настроек. Явное действие
+     * пользователя — фиксирует согласие и ставит файл в очередь.
+     */
+    fun downloadLocalModel(overMetered: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setLocalModelConsent(
+                if (overMetered) ModelDownloadPolicy.CONSENT_ANY_NETWORK
+                else ModelDownloadPolicy.CONSENT_WIFI_ONLY
+            )
+            localModelManager.ensureModel()
+        }
+    }
+
+    fun cancelLocalModelDownload() {
+        localModelManager.cancelDownload()
     }
 
     fun saveAllSettings() {

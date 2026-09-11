@@ -110,7 +110,8 @@ preflight-тесты падают при утечке; `ToolExecutorBehaviorTest
 |---|---|---|
 | Local success | LOCAL_AIHandled, латентность в LOCAL-перцентили | AUTO `OnDeviceLocalAiTest` |
 | Local failure (модель сломалась) | честный Error, НЕ эскалация в облако (приватность) | AUTO `CompositeLocalAiExecutor` контракт |
-| Local not installed | Unsupported → облако; ~529MB файл вне APK | AUTO |
+| Local not installed | Unsupported → облако; ~521MB файл, автозагрузка вне APK | AUTO |
+| Local downloading / failed | Unsupported → облако (запрос не ждёт, повтор из настроек) | AUTO `OnDeviceLocalAiTest` + `ModelDownloadPolicyTest` |
 | Local idle >5 мин | unload → ленивый reload ~1–3 c | AUTO `IdleUnloadSchedulerTest` + DEVICE замер |
 | Cloud success | CLOUD_AI + metadata.request_id | AUTO движок + PG |
 | Cloud timeout | менеджер обрывает висящего провайдера → fallback | PG `ProviderResilienceTest` |

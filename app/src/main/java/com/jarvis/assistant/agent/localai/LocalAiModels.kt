@@ -107,9 +107,26 @@ sealed class LocalModelState {
 
     /**
      * Файла модели нет на устройстве. Это ОЖИДАЕМОЕ состояние: модель весит
-     * ~529 МБ и не входит в APK (см. docs/LOCAL_AI.md).
+     * ~521 МБ и не входит в APK — приложение скачивает её само после
+     * одноразового согласия пользователя (см. docs/LOCAL_AI.md).
      */
     data class NotInstalled(val expectedPath: String) : LocalModelState()
+
+    /**
+     * Файл модели скачивается через системный DownloadManager.
+     * Запросы в это время честно уходят в Cloud AI (Unsupported), а не ждут.
+     */
+    data class Downloading(
+        val progressPercent: Int,
+        val downloadedBytes: Long,
+        val totalBytes: Long
+    ) : LocalModelState()
+
+    /**
+     * Скачивание не удалось (сеть, место, несовпадение размера).
+     * Состояние повторяемое: из настроек можно запустить загрузку заново.
+     */
+    data class DownloadFailed(val reason: String) : LocalModelState()
 
     /** Модель есть, но инициализация упала — это уже ошибка. */
     data class Failed(val reason: String) : LocalModelState()
@@ -127,22 +144,34 @@ data class LocalModelSpec(
     val approxSizeMb: Int,
     val contextTokens: Int,
     /** Минимум свободной RAM, при котором вообще есть смысл грузить модель. */
-    val minRuntimeMemoryMb: Int
+    val minRuntimeMemoryMb: Int,
+    /** Прямая ссылка для автозагрузки. Должна быть доступна БЕЗ авторизации. */
+    val downloadUrl: String,
+    /** Точный размер файла в байтах — проверка целостности после скачивания. */
+    val expectedSizeBytes: Long
 ) {
     companion object {
         /**
-         * Gemma 3 1B IT, int4 QAT, формат MediaPipe `.task`.
+         * Qwen2.5-0.5B-Instruct, dynamic-int8, multi-prefill, формат MediaPipe `.task`.
          *
-         * Обоснование выбора — docs/LOCAL_AI.md. Кратко: 529 МБ, ~1.1-1.2 ГБ RSS,
-         * 47-56 tok/s decode на мобильном GPU/CPU, 140+ языков (русский —
-         * штатно поддерживаемый), лицензия Gemma Terms of Use.
+         * Обоснование выбора — docs/LOCAL_AI.md. Кратко: 521 МБ, ~1.36 ГБ RSS
+         * (замер Google на S24 Ultra), ~30 tok/s decode на CPU, русский —
+         * штатно поддерживаемый, лицензия Apache 2.0 (допускает автозагрузку
+         * без click-through, в отличие от Gemma Terms of Use).
+         *
+         * Размер сверен с Hugging Face (Content-Length, 2026-09-11):
+         * 546660344 байта. Если апстрим обновит файл — загрузка честно
+         * упадёт в DownloadFailed, а не подсунет битый файл в рантайм.
          */
-        val GEMMA3_1B_IT_INT4 = LocalModelSpec(
-            modelId = "gemma3-1b-it-int4",
-            fileName = "gemma3-1b-it-int4.task",
-            approxSizeMb = 529,
-            contextTokens = 2048,
-            minRuntimeMemoryMb = 1536
+        val QWEN2_5_0_5B_INSTRUCT_Q8 = LocalModelSpec(
+            modelId = "qwen2.5-0.5b-instruct-q8",
+            fileName = "Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
+            approxSizeMb = 521,
+            contextTokens = 1280,
+            minRuntimeMemoryMb = 1536,
+            downloadUrl = "https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct/" +
+                "resolve/main/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
+            expectedSizeBytes = 546660344L
         )
     }
 }

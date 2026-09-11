@@ -70,14 +70,23 @@ fun SettingsSectionRoute(
             onCommitChanges = viewModel::saveAllSettings
         )
 
-        SECTION_AI -> AiSettingsScreen(
-            modifier = modifier,
-            onBack = onBack,
-            systemPrompt = state.systemPrompt,
-            onSystemPromptChange = viewModel::onSystemPromptChanged,
-            onSave = viewModel::saveAllSettings,
-            saved = state.isSavedSuccess
-        )
+        SECTION_AI -> {
+            val modelState by viewModel.localModelState.collectAsState(
+                initial = com.jarvis.assistant.agent.localai.LocalModelState.NotInitialized
+            )
+            AiSettingsScreen(
+                modifier = modifier,
+                onBack = onBack,
+                systemPrompt = state.systemPrompt,
+                onSystemPromptChange = viewModel::onSystemPromptChanged,
+                onSave = viewModel::saveAllSettings,
+                saved = state.isSavedSuccess,
+                modelState = modelState,
+                onDownloadAny = { viewModel.downloadLocalModel(overMetered = true) },
+                onDownloadWifi = { viewModel.downloadLocalModel(overMetered = false) },
+                onCancelDownload = viewModel::cancelLocalModelDownload
+            )
+        }
 
         SECTION_APPEARANCE -> AppearanceScreen(
             modifier = modifier,
@@ -208,6 +217,10 @@ private fun AiSettingsScreen(
     onSystemPromptChange: (String) -> Unit,
     onSave: () -> Unit,
     saved: Boolean,
+    modelState: com.jarvis.assistant.agent.localai.LocalModelState,
+    onDownloadAny: () -> Unit,
+    onDownloadWifi: () -> Unit,
+    onCancelDownload: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
@@ -220,6 +233,13 @@ private fun AiSettingsScreen(
             value = systemPrompt,
             onValueChange = onSystemPromptChange,
             singleLine = false
+        )
+        com.jarvis.assistant.presentation.components.OmnixDivider()
+        LocalModelSettingsBlock(
+            state = modelState,
+            onDownloadAny = onDownloadAny,
+            onDownloadWifi = onDownloadWifi,
+            onCancelDownload = onCancelDownload
         )
         SaveRow(saved = saved, onSave = onSave)
     }
