@@ -54,7 +54,6 @@ import com.jarvis.assistant.presentation.state.OmnixUiState
 fun HomeScreen(
     state: OmnixUiState,
     modifier: Modifier = Modifier,
-    onCoreTap: () -> Unit = {},
     onClipTap: () -> Unit = {},
     onSystemStateAction: () -> Unit = {}
 ) {

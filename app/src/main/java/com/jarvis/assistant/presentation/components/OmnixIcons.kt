@@ -27,9 +27,6 @@ object OmnixIcons {
 
     /** Default optical size for navigation icons. */
     val NavSize: Dp = 22.dp
-
-    /** Line weight, matched to the Core's hairline family. */
-    private const val STROKE_RATIO = 0.085f
 }
 
 /** A clock: the History destination. */
