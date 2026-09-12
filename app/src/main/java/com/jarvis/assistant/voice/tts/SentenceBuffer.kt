@@ -60,6 +60,14 @@ class SentenceBuffer(
         if (rest.isNotEmpty()) onSentence(rest)
     }
 
+    /**
+     * Сбросить неозвученный остаток БЕЗ эмита (barge-in/отмена генерации):
+     * недосказанное не должно договариваться позднее.
+     */
+    fun reset() {
+        buf.clear()
+    }
+
     /** Текущий неосвобождённый остаток (для диагностики, не для UI). */
     fun bufferedLength(): Int = buf.length
 

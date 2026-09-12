@@ -131,4 +131,16 @@ class SentenceBufferTest {
         }
         assertEquals(listOf("Стой!", "Ты уверен?", "Да!"), out)
     }
+
+    @Test
+    fun `reset drops remainder without emitting`() {
+        val out = collect {
+            push("Готово. ")
+            push("Недосказанное")
+            reset()
+            push("Новое.")
+            flush()
+        }
+        assertEquals(listOf("Готово.", "Новое."), out)
+    }
 }
