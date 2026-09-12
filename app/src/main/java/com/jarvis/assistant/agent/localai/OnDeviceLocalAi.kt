@@ -3,6 +3,7 @@ package com.jarvis.assistant.agent.localai
 import android.util.Log
 import com.jarvis.assistant.agent.decision.ExecutionRequest
 import com.jarvis.assistant.core.dispatcher.CoroutineDispatchers
+import com.jarvis.assistant.voice.tts.SentenceBuffer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -144,7 +145,30 @@ class OnDeviceLocalAi @Inject constructor(
         return try {
             // Инференс — на Default (CPU-bound), не на Main.
             val generation = withContext(dispatchers.default) {
-                runtime.generate(prompt = prompt, config = config)
+                val sentenceCb = request.onSentence
+                if (sentenceCb == null) {
+                    runtime.generate(prompt = prompt, config = config)
+                } else {
+                    // §13 ТЗ: TTS-стриминг — предложения уходят в голос
+                    // по мере генерации, не дожидаясь полного ответа.
+                    // Рантайм шлёт дельты в onToken (см. MediaPipeLlmRuntime),
+                    // отмена корутины останавливает генерацию там же.
+                    val buffer = SentenceBuffer(onSentence = sentenceCb)
+                    val gen = try {
+                        runtime.generate(
+                            prompt = prompt,
+                            config = config,
+                            onToken = buffer::push
+                        )
+                    } catch (ce: CancellationException) {
+                        // Barge-in: недосказанное не договаривать.
+                        buffer.reset()
+                        throw ce
+                    }
+                    // Хвост без точки тоже озвучить (только при успехе).
+                    buffer.flush()
+                    gen
+                }
             }
 
             val text = generation.text.trim()

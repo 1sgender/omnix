@@ -412,4 +412,107 @@ class OnDeviceLocalAiTest {
 
         assertTrue("Ожидался Unsupported, получен $result", result is LocalAiResult.Unsupported)
     }
+
+    // ------------------------------------------------- streaming (§13 ТЗ)
+
+    /**
+     * Рантайм, эмулирующий MediaPipe: шлёт дельты в onToken по одной, затем
+     * возвращает склеенный текст. suspendAfter = индекс токена, после
+     * которого генерация «зависает» до отмены (для теста barge-in).
+     */
+    private fun streamingRuntime(
+        tokens: List<String>,
+        suspendAfter: Int = -1
+    ) = object : LocalModelRuntime {
+        override val runtimeId = "streaming-fake"
+        override suspend fun generate(
+            prompt: String,
+            config: GenerationConfig,
+            onToken: ((String) -> Unit)?
+        ): LocalGeneration {
+            tokens.forEachIndexed { i, token ->
+                onToken?.invoke(token)
+                if (i == suspendAfter) delay(10_000)
+            }
+            return LocalGeneration(
+                text = tokens.joinToString(""),
+                metrics = InferenceMetrics()
+            )
+        }
+    }
+
+    /** Фрагменты токенов собираются в предложения; полный текст цел. */
+    @Test
+    fun `streaming emits sentences while full text stays intact`() = runBlocking {
+        val sentences = mutableListOf<String>()
+        val runtime = streamingRuntime(listOf("Пер", "вое предло", "жение. ", "Вто", "рое!"))
+        val localAi = buildLocalAi(FakeModelManager(runtime))
+
+        val result = localAi.execute(request("расскажи").copy(onSentence = sentences::add))
+
+        assertTrue("Ожидался Success, получено: $result", result is LocalAiResult.Success)
+        assertEquals("Первое предложение. Второе!", (result as LocalAiResult.Success).text)
+        assertEquals(listOf("Первое предложение.", "Второе!"), sentences)
+    }
+
+    /** Хвост без точки озвучивается через flush, а не теряется. */
+    @Test
+    fun `streaming flushes tail without terminator`() = runBlocking {
+        val sentences = mutableListOf<String>()
+        val runtime = streamingRuntime(listOf("Одно. ", "Хвост"))
+        val localAi = buildLocalAi(FakeModelManager(runtime))
+
+        val result = localAi.execute(request("тест").copy(onSentence = sentences::add))
+
+        assertTrue(result is LocalAiResult.Success)
+        assertEquals(listOf("Одно.", "Хвост"), sentences)
+    }
+
+    /** Отмена mid-stream: сказанное остаётся, недосказанное не договаривается. */
+    @Test
+    fun `cancellation mid-stream drops unspoken remainder`() = runBlocking {
+        // Потокобезопасный список: onToken приходит с потока генерации.
+        val sentences = java.util.concurrent.CopyOnWriteArrayList<String>()
+        val runtime = streamingRuntime(listOf("Первое. ", "Втор"), suspendAfter = 1)
+        val localAi = buildLocalAi(FakeModelManager(runtime))
+
+        val job = launch(Dispatchers.Default) {
+            try {
+                localAi.execute(request("тест").copy(onSentence = sentences::add))
+            } catch (e: CancellationException) {
+                // Ожидаемо: barge-in.
+            }
+        }
+
+        // Ждём первое озвученное предложение, затем рвём генерацию.
+        var spins = 0
+        while (sentences.isEmpty() && spins++ < 1000) delay(5)
+        job.cancelAndJoin()
+
+        assertEquals(listOf("Первое."), sentences.toList())
+    }
+
+    /** Без onSentence стрим не включается: onToken=null, но текст цел. */
+    @Test
+    fun `no callback means no streaming but full text returned`() = runBlocking {
+        var tokenCallbackSeen: ((String) -> Unit)? = null
+        val runtime = object : LocalModelRuntime {
+            override val runtimeId = "probe-fake"
+            override suspend fun generate(
+                prompt: String,
+                config: GenerationConfig,
+                onToken: ((String) -> Unit)?
+            ): LocalGeneration {
+                tokenCallbackSeen = onToken
+                return LocalGeneration("А. Б.", InferenceMetrics())
+            }
+        }
+        val localAi = buildLocalAi(FakeModelManager(runtime))
+
+        val result = localAi.execute(request("тест"))
+
+        assertTrue(result is LocalAiResult.Success)
+        assertEquals("А. Б.", (result as LocalAiResult.Success).text)
+        assertEquals("onToken должен быть null без подписчика", null, tokenCallbackSeen)
+    }
 }

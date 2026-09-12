@@ -608,7 +608,14 @@ class VoiceInteractionOrchestrator @Inject constructor(
         _lastToolResult.value = null
 
         aiJob?.cancel()
+        // §13: новый запрос останавливает очередь TTS — недосказанное
+        // от прошлого ответа не должно доигрываться поверх нового.
+        textToSpeechManager.stop()
         val captureEpoch = sessionEpoch.get()
+        // §13: счётчик предложений, уже озвученных стримом (см. onSentence
+        // ниже). Если > 0 — финальный speak целиком пропускаем, чтобы не
+        // дублировать ответ.
+        val streamedSentences = AtomicInteger(0)
         aiJob = scope.launch {
             try {
                 // CR-07: если пользователь успел перейти в standby до отправки запроса,
@@ -626,7 +633,16 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     source = RequestSource.VOICE,
                     privacyLevel = quickClassification.level,
                     originTimestampMs = sttFinalAtMs,
-                    requestId = voiceRequestId
+                    requestId = voiceRequestId,
+                    // §13 ТЗ: TTS-стриминг — каждое готовое предложение
+                    // локального ответа озвучивается сразу (QUEUE_ADD, без
+                    // прерывания). Вызывается НЕ на Main — speakQueued
+                    // потокобезопасен. Облако стрим не поддерживает:
+                    // там onSentence не вызывается и ответ звучит целиком.
+                    onSentence = { sentence ->
+                        streamedSentences.incrementAndGet()
+                        textToSpeechManager.speakQueued(sentence, speechRate, speechPitch)
+                    }
                 )
                 val resultReceivedAt = latencyMetrics.nowMs()
 
@@ -692,7 +708,10 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 )
                                 _currentMode.value = OrchestratorMode.TTS_SPEAKING
                                 _assistantState.value = VoiceAssistantState.Speaking(answer)
-                                textToSpeechManager.speak(answer, speechRate, speechPitch)
+                                // §13: стрим уже озвучил ответ — целиком не повторяем.
+                                if (streamedSentences.get() == 0) {
+                                    textToSpeechManager.speak(answer, speechRate, speechPitch)
+                                }
                             }
                         }
                     }
@@ -918,6 +937,10 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 _assistantState.value = VoiceAssistantState.Thinking
 
                 aiJob?.cancel()
+                // §13: повтор после consent — тоже новый запрос: очередь TTS
+                // останавливаем, счётчик стрим-предложений заводим заново.
+                textToSpeechManager.stop()
+                val consentStreamedSentences = AtomicInteger(0)
 
                 aiJob = scope.launch {
                     // Важно: после «да» контекст/эпоха должны совпадать с той,
@@ -932,7 +955,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         userPrompt = consentQuery,
                         source = RequestSource.VOICE,
                         privacyLevel = consentLevel,
-                        cloudExplicitlyAllowed = true
+                        cloudExplicitlyAllowed = true,
+                        // §13: тот же TTS-стриминг, что и в основном пути.
+                        onSentence = { sentence ->
+                            consentStreamedSentences.incrementAndGet()
+                            textToSpeechManager.speakQueued(sentence, speechRate, speechPitch)
+                        }
                     )
                     if (sessionEpoch.get() != consentCaptureEpoch) return@launch
 
@@ -959,7 +987,10 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                     _lastAnswer.value = execution.text
                                     _currentMode.value = OrchestratorMode.TTS_SPEAKING
                                     _assistantState.value = VoiceAssistantState.Speaking(execution.text)
-                                    textToSpeechManager.speak(execution.text, speechRate, speechPitch)
+                                    // §13: стрим уже озвучил ответ — целиком не повторяем.
+                                    if (consentStreamedSentences.get() == 0) {
+                                        textToSpeechManager.speak(execution.text, speechRate, speechPitch)
+                                    }
                                 }
                             }
                         }

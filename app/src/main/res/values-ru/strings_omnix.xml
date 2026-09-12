@@ -310,4 +310,23 @@
     <string name="omnix_level_normal">Обычная</string>
     <string name="omnix_level_high">Быстрее</string>
     <string name="omnix_level_highest">Самая быстрая</string>
+    <!-- OMNIX DIAGNOSTICS (§21) -->
+    <string name="omnix_settings_diagnostics">Диагностика</string>
+    <string name="omnix_diagnostics_title">OMNIX DIAGNOSTICS</string>
+    <string name="omnix_diagnostics_run">ЗАПУСТИТЬ ВСЕ ТЕСТЫ</string>
+    <string name="omnix_diagnostics_running">ТЕСТ %1$d/%2$d</string>
+    <string name="omnix_diagnostics_export">ЭКСПОРТ ОТЧЁТА</string>
+    <string name="omnix_diagnostics_share_title">Отправить отчёт диагностики</string>
+    <string name="omnix_diag_mic">Микрофон</string>
+    <string name="omnix_diag_stt">Распознавание речи</string>
+    <string name="omnix_diag_local_ai">Локальный ИИ</string>
+    <string name="omnix_diag_cloud_ai">Облачный ИИ</string>
+    <string name="omnix_diag_bluetooth">Bluetooth</string>
+    <string name="omnix_diag_clip">Clip</string>
+    <string name="omnix_diag_accessibility">Спецвозможности</string>
+    <string name="omnix_diag_permissions">Разрешения</string>
+    <string name="omnix_diag_tts">Синтез речи</string>
+    <string name="omnix_diag_license">Лицензия</string>
+    <string name="omnix_diag_network">Сеть</string>
+    <string name="omnix_diag_battery">Батарея</string>
 </resources>

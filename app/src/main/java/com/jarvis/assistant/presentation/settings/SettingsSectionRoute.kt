@@ -140,6 +140,11 @@ fun SettingsSectionRoute(
             }
         )
 
+        SECTION_DIAGNOSTICS -> DiagnosticsScreen(
+            modifier = modifier,
+            onBack = onBack
+        )
+
         else -> SectionScaffold(stringResource(R.string.omnix_settings_title), modifier, onBack) {}
     }
 }

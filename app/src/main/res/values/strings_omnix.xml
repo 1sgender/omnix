@@ -313,4 +313,23 @@
     <string name="omnix_level_normal">Normal</string>
     <string name="omnix_level_high">Faster</string>
     <string name="omnix_level_highest">Fastest</string>
+    <!-- OMNIX DIAGNOSTICS (§21) -->
+    <string name="omnix_settings_diagnostics">Diagnostics</string>
+    <string name="omnix_diagnostics_title">OMNIX DIAGNOSTICS</string>
+    <string name="omnix_diagnostics_run">RUN FULL TEST</string>
+    <string name="omnix_diagnostics_running">RUNNING %1$d/%2$d</string>
+    <string name="omnix_diagnostics_export">EXPORT REPORT</string>
+    <string name="omnix_diagnostics_share_title">Share diagnostics report</string>
+    <string name="omnix_diag_mic">Microphone</string>
+    <string name="omnix_diag_stt">Speech recognition</string>
+    <string name="omnix_diag_local_ai">Local AI</string>
+    <string name="omnix_diag_cloud_ai">Cloud AI</string>
+    <string name="omnix_diag_bluetooth">Bluetooth</string>
+    <string name="omnix_diag_clip">Clip</string>
+    <string name="omnix_diag_accessibility">Accessibility service</string>
+    <string name="omnix_diag_permissions">Permissions</string>
+    <string name="omnix_diag_tts">Text to speech</string>
+    <string name="omnix_diag_license">License</string>
+    <string name="omnix_diag_network">Network</string>
+    <string name="omnix_diag_battery">Battery</string>
 </resources>

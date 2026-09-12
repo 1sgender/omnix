@@ -117,7 +117,18 @@ data class ExecutionRequest(
      * defense-in-depth); that is intentional and out of scope here.
      */
     val privacyClassification: PrivacyClassification =
-        PrivacyClassifier.classifySafely(PrivacyContent.from(text, history))
+        PrivacyClassifier.classifySafely(PrivacyContent.from(text, history)),
+    /**
+     * TTS-стриминг (§13 ТЗ): вызывается для каждого готового предложения
+     * локального ответа по мере генерации (через [com.jarvis.assistant.voice.tts.SentenceBuffer]).
+     * null = стриминга нет (чат, переводчик, тесты): ответ возвращается
+     * целиком как раньше. Поле переживает copy() — проброс через движок
+     * и адаптеры не требует изменения их сигнатур.
+     *
+     * Контракт: вызывается НЕ на Main-потоке, обязан не бросать исключений
+     * и не ходить в сеть (предложения уходят в локальный TTS-движок).
+     */
+    val onSentence: ((String) -> Unit)? = null
 ) {
     /** Автоматически обнаруженный уровень, вычисленный до логирования/роутинга. */
     val detectedPrivacyLevel: PrivacyLevel = privacyClassification.level
@@ -158,7 +169,8 @@ data class ExecutionRequest(
             cloudExplicitlyAllowed: Boolean = false,
             originTimestampMs: Long? = null,
             memoryContext: String = "",
-            requestId: String = RequestIds.newId()
+            requestId: String = RequestIds.newId(),
+            onSentence: ((String) -> Unit)? = null
         ): ExecutionRequest {
             val classification = PrivacyClassifier.classifySafely(
                 PrivacyContent(
@@ -182,7 +194,8 @@ data class ExecutionRequest(
                 privacyClassification = classification,
                 originTimestampMs = originTimestampMs,
                 memoryContext = memoryContext,
-                requestId = requestId
+                requestId = requestId,
+                onSentence = onSentence
             )
         }
 

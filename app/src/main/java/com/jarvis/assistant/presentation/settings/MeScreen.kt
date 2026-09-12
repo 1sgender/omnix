@@ -112,6 +112,10 @@ fun MeScreen(
             title = stringResource(R.string.omnix_settings_about),
             onClick = { onOpenSection(OmnixDestination.SettingsSection(SECTION_ABOUT)) }
         )
+        OmnixSettingRow(
+            title = stringResource(R.string.omnix_settings_diagnostics),
+            onClick = { onOpenSection(OmnixDestination.SettingsSection(SECTION_DIAGNOSTICS)) }
+        )
 
         Spacer(Modifier.height(spacing.lg))
         OmnixDivider()
@@ -133,3 +137,4 @@ const val SECTION_NOTIFICATIONS = "notifications"
 const val SECTION_APPEARANCE = "appearance"
 const val SECTION_ABOUT = "about"
 const val SECTION_ADVANCED = "advanced"
+const val SECTION_DIAGNOSTICS = "diagnostics"

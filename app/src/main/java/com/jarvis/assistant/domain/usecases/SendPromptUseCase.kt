@@ -52,7 +52,8 @@ class SendPromptUseCase @Inject constructor(
         privacyLevel: PrivacyLevel = PrivacyLevel.UNKNOWN,
         cloudExplicitlyAllowed: Boolean = false,
         originTimestampMs: Long? = null,
-        requestId: String = RequestIds.newId()
+        requestId: String = RequestIds.newId(),
+        onSentence: ((String) -> Unit)? = null
     ): Resource<PromptExecutionResult> {
         val trimmedPrompt = userPrompt.trim()
         if (trimmedPrompt.isEmpty()) {
@@ -111,7 +112,8 @@ class SendPromptUseCase @Inject constructor(
             cloudExplicitlyAllowed = cloudExplicitlyAllowed,
             originTimestampMs = originTimestampMs,
             memoryContext = memoryContext,
-            requestId = requestId
+            requestId = requestId,
+            onSentence = onSentence
         )
 
         val effective = effectiveRequest.effectivePrivacyLevel
