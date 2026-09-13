@@ -133,6 +133,21 @@ jobs:
           bash ./gradlew :app:assembleStagingRelease \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
+      # PAD: debug-бандл тянет 521 МБ модель в install-time пак и проверяет,
+      # что пак реально внутри AAB. Единственное автоматическое доказательство
+      # wiring'а доставки модели (release-workflow запускается только вручную).
+      - name: PAD bundle check (localmodel pack inside AAB)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ./gradlew :app:bundleDevDebug \
+            --stacktrace --no-daemon --no-parallel --max-workers=2
+          AAB=$(find app/build/outputs/bundle -name '*.aab' | head -n 1)
+          [ -n "$AAB" ] || { echo "::error::AAB не собран"; exit 1; }
+          unzip -l "$AAB" | grep -q 'localmodel/' \
+            || { echo "::error::install-time пак localmodel отсутствует в AAB"; exit 1; }
+          echo "PAD OK: localmodel pack present in $AAB"
+
       - name: JARVIS benchmark regression
         shell: bash
         run: |

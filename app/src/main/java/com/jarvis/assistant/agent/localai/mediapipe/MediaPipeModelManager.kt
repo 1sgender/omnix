@@ -12,6 +12,7 @@ import com.jarvis.assistant.agent.localai.LocalModelState
 import com.jarvis.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.jarvis.assistant.agent.localai.downloader.ModelDownloadStatus
 import com.jarvis.assistant.agent.localai.downloader.ModelDownloader
+import com.jarvis.assistant.agent.localai.pack.PackModelLocator
 import com.jarvis.assistant.core.dispatcher.CoroutineDispatchers
 import com.jarvis.assistant.data.preferences.SettingsDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -52,9 +53,12 @@ import javax.inject.Singleton
  * Окно (5 минут) больше худшего инференса (инструментальные таймауты ≤ 4 с),
  * поэтому выгрузка не может закрыть нативный движок посреди генерации.
  *
- * Файл модели (~521 МБ) НЕ входит в APK — приложение скачивает его само
- * через системный DownloadManager после одноразового согласия пользователя.
- * Отсутствие файла — штатное состояние [LocalModelState.NotInstalled],
+ * Доставка файла модели (~521 МБ) — двумя путями:
+ * Play-установка везёт install-time asset pack `localmodel` (в базу Play
+ * файл не влезает — лимит 200 МБ), менеджер ставит его локально при старте
+ * без сети и без согласия ([PackModelLocator]). Sideload-APK пака не имеет:
+ * там файл качается через системный DownloadManager после одноразового
+ * согласия. Отсутствие файла — штатное [LocalModelState.NotInstalled],
  * а не ошибка. Подробности — docs/LOCAL_AI.md.
  */
 @Singleton
@@ -64,7 +68,8 @@ class MediaPipeModelManager @Inject constructor(
     private val runtimeFactory: MediaPipeRuntimeFactory,
     private val spec: LocalModelSpec,
     private val downloader: ModelDownloader,
-    private val settings: SettingsDataStore
+    private val settings: SettingsDataStore,
+    private val packLocator: PackModelLocator
 ) : LocalModelManager {
 
     private companion object {
@@ -320,6 +325,17 @@ class MediaPipeModelManager @Inject constructor(
             return currentState
         }
 
+        // Play-установка: пак ставится локально вместо сетевой загрузки
+        // (перестраховка на случай, если стартовый reattach не сработал).
+        if (packLocator.installFromPackIfPresent(file, spec.expectedSizeBytes)) {
+            if (currentState !is LocalModelState.Ready &&
+                currentState !is LocalModelState.Loading
+            ) {
+                setState(LocalModelState.NotInitialized)
+            }
+            return currentState
+        }
+
         val consent = settings.localModelConsentFlow.first()
         if (!ModelDownloadPolicy.mayDownload(consent)) return currentState
 
@@ -384,6 +400,17 @@ class MediaPipeModelManager @Inject constructor(
         if (currentState is LocalModelState.Downloading) return
         val id = settings.localModelDownloadIdFlow.first()
         if (id == ModelDownloadPolicy.NO_DOWNLOAD_ID) {
+            // Play-установка: модель лежит в install-time паке — ставим её
+            // локально без сети и без согласия (трафика нет, capacity ноль
+            // действий пользователя). Sideload-APK: метод вернёт false.
+            if (packLocator.installFromPackIfPresent(modelFile, spec.expectedSizeBytes)) {
+                if (currentState is LocalModelState.NotInstalled ||
+                    currentState is LocalModelState.NotInitialized
+                ) {
+                    setState(LocalModelState.NotInitialized)
+                }
+                return
+            }
             // Честное стартовое состояние: NotInitialized означает «файл есть,
             // грузиться будет лениво», а не «не знаем, что происходит».
             if (currentState is LocalModelState.NotInitialized && !isModelFileValid(modelFile)) {

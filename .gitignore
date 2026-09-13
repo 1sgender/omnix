@@ -49,3 +49,8 @@ captures/
 # Logs & dumps
 *.log
 *.hprof
+
+# Play Asset Delivery: 521 МБ LLM качается в пак на CI (downloadLocalModel),
+# в git не коммитится.
+assetpacks/localmodel/src/main/assets/*.task
+assetpacks/localmodel/src/main/assets/*.part

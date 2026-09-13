@@ -23,6 +23,8 @@ import com.jarvis.assistant.agent.localai.downloader.DownloadManagerModelDownloa
 import com.jarvis.assistant.agent.localai.downloader.ModelDownloader
 import com.jarvis.assistant.agent.localai.mediapipe.DefaultMediaPipeRuntimeFactory
 import com.jarvis.assistant.agent.localai.mediapipe.MediaPipeModelManager
+import com.jarvis.assistant.agent.localai.pack.AssetManagerPackModelLocator
+import com.jarvis.assistant.agent.localai.pack.PackModelLocator
 import com.jarvis.assistant.agent.localai.mediapipe.MediaPipeRuntimeFactory
 import com.jarvis.assistant.agent.location.LocationProvider
 import com.jarvis.assistant.agent.location.SystemLocationProvider
@@ -387,6 +389,12 @@ abstract class LocalAiModule {
     @Binds
     @Singleton
     abstract fun bindLocalModelManager(impl: MediaPipeModelManager): LocalModelManager
+
+    @Binds
+    @Singleton
+    abstract fun bindPackModelLocator(
+        impl: AssetManagerPackModelLocator
+    ): PackModelLocator
 
     @Binds
     @Singleton

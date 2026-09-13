@@ -126,6 +126,16 @@ jobs:
           "$APKSIGNER" verify --print-certs "$APK"
           echo "Signed APK verified: $APK"
 
+      - name: Verify localmodel asset pack inside AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAB=$(find app/build/outputs/bundle -name '*.aab' | head -n 1)
+          [ -n "$AAB" ] || { echo "::error::AAB не собран"; exit 1; }
+          unzip -l "$AAB" | grep -q 'localmodel/' \
+            || { echo "::error::install-time пак localmodel отсутствует в AAB"; exit 1; }
+          echo "PAD OK: localmodel pack present in $AAB"
+
       - name: Upload release artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

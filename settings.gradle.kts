@@ -16,6 +16,10 @@ dependencyResolutionManagement {
 rootProject.name = "JARVIS"
 include(":app")
 
+// Play Asset Delivery: 521 МБ LLM в install-time паке (в базу Play не влезть —
+// лимит 200 МБ). Sideload-APK пак не везут: там работает сетевая докачка.
+include(":assetpacks:localmodel")
+
 // Этап 3 — JARVIS API (server-side AI orchestration).
 // Android-сборка (:app) от этого модуля не зависит и собирается независимо.
 include(":server")

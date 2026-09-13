@@ -100,6 +100,10 @@ android {
     namespace = "com.jarvis.assistant"
     compileSdk = 34
 
+    // Play Asset Delivery: 521 МБ LLM в install-time паке (см. assetpacks/).
+    // APK-сборки пак не включают — там работает сетевая докачка.
+    assetPacks += listOf(":assetpacks:localmodel")
+
     defaultConfig {
         applicationId = "com.jarvis.assistant"
         minSdk = 29

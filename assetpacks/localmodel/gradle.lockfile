@@ -1,0 +1,7 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+# NOTE: the asset pack has no external dependencies (only the 521 MB .task
+# file downloaded by :assetpacks:localmodel:downloadLocalModel), so this
+# lockfile is intentionally entry-free. If CI --write-locks adds entries
+# here, commit the generated result (AGP classpath change).
