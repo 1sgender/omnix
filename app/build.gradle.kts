@@ -457,3 +457,11 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.runner)
 }
+
+// PAD: любая задача, потребляющая asset pack (assetPack*PreBundleTask и др.),
+// обязана идти ПОСЛЕ скачивания 521 МБ модели в пак. Потребление происходит
+// в :app-тасках, поэтому wiring здесь, а не только в модуле пака. Debug-APK
+// assetPack-тасков не запускают — модель тянут только bundle-сборки.
+tasks.matching { it.name.contains("assetPack", ignoreCase = true) }.configureEach {
+    dependsOn(":assetpacks:localmodel:downloadLocalModel")
+}
