@@ -19,7 +19,13 @@ data class ProviderConfig(
     val model: String,
     val baseUrl: String,
     val connectTimeoutMs: Long,
-    val requestTimeoutMs: Long
+    val requestTimeoutMs: Long,
+    /**
+     * Пул ключей для ротации при 429 (через запятую в *_API_KEY).
+     * Дефолт — из legacy apiKey, чтобы старые конструкции/тесты
+     * с одним ключом работали без изменений.
+     */
+    val apiKeys: List<String> = listOfNotNull(apiKey?.takeIf { it.isNotBlank() })
 ) {
     init {
         require(model.isNotBlank()) { "provider model must not be blank" }
@@ -28,7 +34,7 @@ data class ProviderConfig(
         require(requestTimeoutMs > 0) { "requestTimeoutMs must be positive" }
     }
 
-    val hasKey: Boolean get() = !apiKey.isNullOrBlank()
+    val hasKey: Boolean get() = apiKeys.isNotEmpty()
 }
 
 /** Пороги circuit breaker (пункт 24 ТЗ). */
@@ -222,6 +228,10 @@ data class ServerConfig(
                     else -> throw IllegalArgumentException("$key must be true or false")
                 }
             } ?: def
+            /** Пул ключей: один или через запятую (ротация при 429). */
+            fun keyList(key: String): List<String> =
+                str(key)?.split(",")?.map(String::trim)?.filter(String::isNotEmpty)
+                    ?: emptyList()
 
             val environment = DeploymentEnvironment.parse(str("APP_ENV") ?: "development")
             if (environment == DeploymentEnvironment.PRODUCTION) {
@@ -248,7 +258,8 @@ data class ServerConfig(
                     id = ProviderId.GROQ,
                     enabled = bool("GROQ_ENABLED", true),
                     priority = int("GROQ_PRIORITY", 1),
-                    apiKey = str("GROQ_API_KEY"),
+                    apiKey = keyList("GROQ_API_KEY").firstOrNull(),
+                    apiKeys = keyList("GROQ_API_KEY"),
                     model = str("GROQ_MODEL") ?: "llama-3.3-70b-versatile",
                     baseUrl = str("GROQ_BASE_URL") ?: "https://api.groq.com/openai/v1/chat/completions",
                     connectTimeoutMs = long("GROQ_CONNECT_TIMEOUT_MS", 2_000),
@@ -260,7 +271,8 @@ data class ServerConfig(
                     id = ProviderId.GEMINI,
                     enabled = bool("GEMINI_ENABLED", true),
                     priority = int("GEMINI_PRIORITY", 2),
-                    apiKey = str("GEMINI_API_KEY"),
+                    apiKey = keyList("GEMINI_API_KEY").firstOrNull(),
+                    apiKeys = keyList("GEMINI_API_KEY"),
                     model = str("GEMINI_MODEL") ?: "gemini-1.5-flash",
                     baseUrl = str("GEMINI_BASE_URL")
                         ?: "https://generativelanguage.googleapis.com/v1beta/models",
@@ -271,7 +283,8 @@ data class ServerConfig(
                     id = ProviderId.OPENROUTER,
                     enabled = bool("OPENROUTER_ENABLED", true),
                     priority = int("OPENROUTER_PRIORITY", 3),
-                    apiKey = str("OPENROUTER_API_KEY"),
+                    apiKey = keyList("OPENROUTER_API_KEY").firstOrNull(),
+                    apiKeys = keyList("OPENROUTER_API_KEY"),
                     model = str("OPENROUTER_MODEL") ?: "meta-llama/llama-3.3-70b-instruct",
                     baseUrl = str("OPENROUTER_BASE_URL") ?: "https://openrouter.ai/api/v1/chat/completions",
                     connectTimeoutMs = long("OPENROUTER_CONNECT_TIMEOUT_MS", 2_000),

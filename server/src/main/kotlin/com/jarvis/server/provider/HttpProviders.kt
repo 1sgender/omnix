@@ -1,6 +1,7 @@
 package com.jarvis.server.provider
 
 import com.jarvis.server.config.ProviderConfig
+import com.jarvis.server.observability.StructuredLogger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -139,7 +140,8 @@ private data class GemResponse(
 abstract class BaseHttpProvider(
     protected val config: ProviderConfig,
     protected val transport: HttpTransport,
-    protected val json: Json
+    protected val json: Json,
+    protected val logger: StructuredLogger? = null
 ) : AiProvider {
 
     companion object {
@@ -148,7 +150,17 @@ abstract class BaseHttpProvider(
          * 24 KB на историю + 8 KB на systemPrompt+prompt+обвязку.
          */
         const val HISTORY_BUDGET_BYTES: Int = 24 * 1024
+
+        /**
+         * Потолок попыток с разными ключами за один execute. Каждый ретрай —
+         * полный HTTP round-trip внутри таймаута провайдера; больше трёх —
+         * уже работа ProviderManager (failover на другой провайдер).
+         */
+        const val MAX_KEY_ATTEMPTS = 3
     }
+
+    /** Пул живёт в синглтоне провайдера — состояние делят все запросы. */
+    protected val keyPool = ApiKeyPool(config.apiKeys)
 
     override fun isConfigured(): Boolean = config.enabled && config.hasKey
 
@@ -160,10 +172,41 @@ abstract class BaseHttpProvider(
             )
         }
 
+        // Ротация ключей: только 429 перебирает пул (сеть/таймаут/AUTH
+        // другим ключом не чинятся — отдаём сразу, без сжигания латентности).
+        val attempts = minOf(keyPool.size.coerceAtLeast(1), MAX_KEY_ATTEMPTS)
+        repeat(attempts) { attempt ->
+            val key = keyPool.current()
+                ?: return ProviderResult.Failure(
+                    kind = ProviderFailureKind.NOT_CONFIGURED,
+                    detail = "provider ${id.name} has no API key"
+                )
+            val outcome = tryExecuteOnce(request, key)
+            if (outcome !is ProviderResult.Failure || outcome.kind != ProviderFailureKind.RATE_LIMITED) {
+                if (outcome !is ProviderResult.Failure) keyPool.reportSuccess(key)
+                return outcome
+            }
+            // 429: ключ в cooldown, пробуем следующий (кроме последней попытки).
+            keyPool.reportRateLimited(key)
+            if (attempt + 1 < attempts) {
+                logger?.info(
+                    "provider key rate limited, rotating",
+                    "provider" to id.name,
+                    "keyIndex" to keyPool.indexOf(key).toString(),
+                    "requestId" to request.requestId
+                )
+            } else {
+                return outcome
+            }
+        }
+        error("unreachable: attempts >= 1")
+    }
+
+    private suspend fun tryExecuteOnce(request: ProviderRequest, key: String): ProviderResult {
         return try {
             val response = transport.post(
                 url = endpointUrl(),
-                headers = headers(),
+                headers = headers(key),
                 body = buildBody(request),
                 connectTimeoutMs = config.connectTimeoutMs,
                 requestTimeoutMs = config.requestTimeoutMs
@@ -192,7 +235,7 @@ abstract class BaseHttpProvider(
     }
 
     protected abstract fun endpointUrl(): String
-    protected abstract fun headers(): Map<String, String>
+    protected abstract fun headers(apiKey: String?): Map<String, String>
     protected abstract fun buildBody(request: ProviderRequest): String
     protected abstract fun parseSuccess(body: String): ProviderResult
 
@@ -281,8 +324,9 @@ abstract class BaseHttpProvider(
 class GroqProvider(
     config: ProviderConfig,
     transport: HttpTransport,
-    json: Json
-) : BaseHttpProvider(config, transport, json) {
+    json: Json,
+    logger: StructuredLogger? = null
+) : BaseHttpProvider(config, transport, json, logger) {
 
     override val id = ProviderId.GROQ
 
@@ -295,8 +339,8 @@ class GroqProvider(
 
     override fun endpointUrl() = config.baseUrl
 
-    override fun headers() = mapOf(
-        "Authorization" to "Bearer ${config.apiKey}",
+    override fun headers(apiKey: String?) = mapOf(
+        "Authorization" to "Bearer $apiKey",
         "Content-Type" to "application/json"
     )
 
@@ -312,8 +356,9 @@ class GroqProvider(
 class OpenRouterProvider(
     config: ProviderConfig,
     transport: HttpTransport,
-    json: Json
-) : BaseHttpProvider(config, transport, json) {
+    json: Json,
+    logger: StructuredLogger? = null
+) : BaseHttpProvider(config, transport, json, logger) {
 
     override val id = ProviderId.OPENROUTER
 
@@ -326,8 +371,8 @@ class OpenRouterProvider(
 
     override fun endpointUrl() = config.baseUrl
 
-    override fun headers() = mapOf(
-        "Authorization" to "Bearer ${config.apiKey}",
+    override fun headers(apiKey: String?) = mapOf(
+        "Authorization" to "Bearer $apiKey",
         "Content-Type" to "application/json",
         "HTTP-Referer" to "https://jarvis.ai",
         "X-Title" to "JARVIS"
@@ -348,15 +393,16 @@ class OpenRouterProvider(
 class GeminiProvider(
     config: ProviderConfig,
     transport: HttpTransport,
-    json: Json
-) : BaseHttpProvider(config, transport, json) {
+    json: Json,
+    logger: StructuredLogger? = null
+) : BaseHttpProvider(config, transport, json, logger) {
 
     override val id = ProviderId.GEMINI
 
     override fun endpointUrl() = "${config.baseUrl}/${config.model}:generateContent"
 
-    override fun headers() = mapOf(
-        "x-goog-api-key" to (config.apiKey ?: ""),
+    override fun headers(apiKey: String?) = mapOf(
+        "x-goog-api-key" to (apiKey ?: ""),
         "Content-Type" to "application/json"
     )
 

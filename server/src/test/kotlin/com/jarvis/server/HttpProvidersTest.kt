@@ -376,4 +376,76 @@ class HttpProvidersTest {
         }
         assertTrue(cancelled)
     }
+
+    /** Транспорт со scripted-очередью ответов (для ротации ключей). */
+    private class ScriptedTransport(
+        private val script: ArrayDeque<HttpTransportResponse>
+    ) : HttpTransport {
+        val usedAuthorizations = mutableListOf<String?>()
+
+        override suspend fun post(
+            url: String,
+            headers: Map<String, String>,
+            body: String,
+            connectTimeoutMs: Long,
+            requestTimeoutMs: Long
+        ): HttpTransportResponse {
+            usedAuthorizations.add(headers["Authorization"])
+            return script.removeFirst()
+        }
+    }
+
+    private fun multiKeyConfig() = config(ProviderId.GROQ).copy(
+        apiKey = "k1",
+        apiKeys = listOf("k1", "k2")
+    )
+
+    private fun okResponse() = HttpTransportResponse(
+        200,
+        """{"choices":[{"message":{"role":"assistant","content":"ok"}}]}"""
+    )
+
+    @Test
+    fun `429 rotates to next key and succeeds`() = runBlocking {
+        val transport = ScriptedTransport(
+            ArrayDeque(listOf(HttpTransportResponse(429, "rate limited"), okResponse()))
+        )
+        val result = GroqProvider(multiKeyConfig(), transport, json).execute(request())
+
+        assertTrue(result is ProviderResult.Success)
+        assertEquals("ok", (result as ProviderResult.Success).text)
+        // Первый запрос k1 → 429, ретрай уже k2.
+        assertEquals(listOf("Bearer k1", "Bearer k2"), transport.usedAuthorizations)
+    }
+
+    @Test
+    fun `all keys rate limited returns honest 429`() = runBlocking {
+        val transport = ScriptedTransport(
+            ArrayDeque(
+                listOf(
+                    HttpTransportResponse(429, "slow down"),
+                    HttpTransportResponse(429, "slow down")
+                )
+            )
+        )
+        val result = GroqProvider(multiKeyConfig(), transport, json).execute(request())
+            as ProviderResult.Failure
+
+        assertEquals(ProviderFailureKind.RATE_LIMITED, result.kind)
+        assertEquals(429, result.httpStatus)
+        assertEquals(listOf("Bearer k1", "Bearer k2"), transport.usedAuthorizations)
+    }
+
+    @Test
+    fun `non-429 failures do not rotate keys`() = runBlocking {
+        val transport = ScriptedTransport(
+            ArrayDeque(listOf(HttpTransportResponse(500, "boom")))
+        )
+        val result = GroqProvider(multiKeyConfig(), transport, json).execute(request())
+
+        assertTrue(result is ProviderResult.Failure)
+        assertEquals(ProviderFailureKind.SERVER_ERROR, (result as ProviderResult.Failure).kind)
+        // Один запрос — ретрая другим ключом нет.
+        assertEquals(listOf("Bearer k1"), transport.usedAuthorizations)
+    }
 }

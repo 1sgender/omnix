@@ -265,11 +265,11 @@ object ServerBootstrap {
         val providers = config.providers.map { providerConfig ->
             when (providerConfig.id) {
                 com.jarvis.server.provider.ProviderId.GROQ ->
-                    GroqProvider(providerConfig, transport, json)
+                    GroqProvider(providerConfig, transport, json, logger)
                 com.jarvis.server.provider.ProviderId.GEMINI ->
-                    GeminiProvider(providerConfig, transport, json)
+                    GeminiProvider(providerConfig, transport, json, logger)
                 com.jarvis.server.provider.ProviderId.OPENROUTER ->
-                    OpenRouterProvider(providerConfig, transport, json)
+                    OpenRouterProvider(providerConfig, transport, json, logger)
             }
         }
 
