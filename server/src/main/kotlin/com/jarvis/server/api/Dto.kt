@@ -141,6 +141,7 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     UNAUTHORIZED(401, "Authentication required"),
     FORBIDDEN(403, "Client is not allowed to perform this operation"),
     RATE_LIMITED(429, "Rate limit exceeded"),
+    QUOTA_EXCEEDED(429, "Daily plan quota exceeded"),
     PRIVACY_POLICY_VIOLATION(403, "Request privacy level forbids cloud execution"),
     LICENSE_NOT_REDEEMABLE(404, "License cannot be redeemed"),
     LICENSE_EXPIRED(410, "License expired"),

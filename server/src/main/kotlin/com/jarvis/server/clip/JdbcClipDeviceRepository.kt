@@ -47,6 +47,22 @@ class JdbcClipDeviceRepository(private val dataSource: DataSource) {
         )
     }
 
+    /**
+     * Активные клипы аккаунта для soft-привязки в validate-ответе.
+     * Информативно: отсутствие клипа AI не блокирует (часть 2).
+     */
+    fun countActiveForAccount(accountId: UUID): Int = transaction { connection ->
+        connection.prepareStatement(
+            "SELECT COUNT(*) FROM clip_devices WHERE owner_account_id = ? AND status = 'ACTIVE'"
+        ).use { statement ->
+            statement.setObject(1, accountId)
+            statement.executeQuery().use { result ->
+                result.next()
+                result.getInt(1)
+            }
+        }
+    }
+
     fun findBySerial(clipSerial: String): ClipDevice? = transaction { connection ->
         findBySerial(connection, clipSerial)
     }

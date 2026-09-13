@@ -3,6 +3,8 @@ package com.jarvis.assistant.agent.translator
 import android.util.Log
 import com.jarvis.assistant.agent.decision.PrivacyClassifier
 import com.jarvis.assistant.agent.decision.PrivacyContent
+import com.jarvis.assistant.core.license.ClientPlanGate
+import com.jarvis.assistant.core.license.ClientQuotaFeature
 import com.jarvis.assistant.core.network.NetworkMonitor
 import com.jarvis.assistant.core.result.Resource
 import com.jarvis.assistant.domain.repository.AIRepository
@@ -106,7 +108,12 @@ class LlmTranslationProvider @Inject constructor(
  */
 @Singleton
 class LiveTranslatorEngine @Inject constructor(
-    private val providers: Set<@JvmSuppressWildcards TranslationProvider>
+    private val providers: Set<@JvmSuppressWildcards TranslationProvider>,
+    /**
+     * Гейт тарифа. Hilt в проде инжектит всегда; null = JVM-юнит-тесты
+     * (без Context/SharedPreferences) — квота не считается.
+     */
+    private val planGate: ClientPlanGate? = null
 ) {
     companion object {
         private const val TAG = "LiveTranslatorEngine"
@@ -125,6 +132,17 @@ class LiveTranslatorEngine @Inject constructor(
     ): TranslationResult {
         val clean = text.trim()
         if (clean.isEmpty()) return TranslationResult.Error("Пустой текст")
+
+        // Квота тарифа (часть 2): остаток проверяем до работы, списываем
+        // только за УСПЕШНЫЙ перевод (план тратится на пользу, не на ошибки).
+        val gate = planGate
+        val units = gate?.translationUnitsFor(clean) ?: 0
+        if (gate != null && gate.remaining(ClientQuotaFeature.TRANSLATION_UNITS) < units) {
+            Log.i(TAG, "translation quota exhausted")
+            return TranslationResult.Error(
+                "Дневной лимит перевода исчерпан. Продолжим завтра, сэр."
+            )
+        }
 
         val capable = providers.filter { it.supports(sourceLang, targetLang) }
         if (capable.isEmpty()) {
@@ -150,7 +168,10 @@ class LiveTranslatorEngine @Inject constructor(
             }
 
             when (val result = provider.translate(clean, sourceLang, targetLang)) {
-                is TranslationResult.Success -> return result
+                is TranslationResult.Success -> {
+                    gate?.tryConsume(ClientQuotaFeature.TRANSLATION_UNITS, units)
+                    return result
+                }
                 else -> {
                     Log.w(
                         TAG,

@@ -3,10 +3,13 @@ package com.jarvis.server.router
 import com.jarvis.server.api.AiExecutionRequest
 import com.jarvis.server.api.ApiErrorCode
 import com.jarvis.server.api.ApiPrivacyLevel
+import com.jarvis.server.api.ApiRequestSource
 import com.jarvis.server.auth.AuthenticatedClient
 import com.jarvis.server.config.AiGenerationConfig
 import com.jarvis.server.config.PrivacyPolicyConfig
 import com.jarvis.server.config.ValidationConfig
+import com.jarvis.server.license.PlanFeature
+import com.jarvis.server.license.PlanQuotaGate
 import com.jarvis.server.observability.LogSanitizer
 import com.jarvis.server.observability.Metrics
 import com.jarvis.server.observability.StructuredLogger
@@ -55,7 +58,9 @@ class AiRouter(
     private val logger: StructuredLogger,
     private val metrics: Metrics,
     private val privacyClassifier: ServerPrivacyClassifier = PromptPrivacyClassifier,
-    private val clock: () -> Long = System::currentTimeMillis
+    private val clock: () -> Long = System::currentTimeMillis,
+    /** Дневные квоты тарифа; null = гейт отключён (тесты без квот). */
+    private val planQuotaGate: PlanQuotaGate? = null
 ) {
     init {
         require(usageRepository != null || usageTracker != null) {
@@ -103,6 +108,34 @@ class AiRouter(
                     return RouterResult.Failure(ApiErrorCode.RATE_LIMITED, requestId)
                 }
                 UsageLimitResult.Allowed -> Unit
+            }
+        }
+
+        // Дневная квота тарифа (voice_ai / base_ai по source запроса).
+        // После AR-05 (fail-fast дешёвых проверок), до privacy: отклонённые
+        // здесь запросы НЕ пишутся в usage и НЕ тратят квоту.
+        if (planQuotaGate != null) {
+            val feature = if (request.source == ApiRequestSource.VOICE) {
+                PlanFeature.VOICE_AI
+            } else {
+                PlanFeature.BASE_AI
+            }
+            when (val quota = planQuotaGate.check(client, feature)) {
+                is PlanQuotaGate.Verdict.Limited -> {
+                    logger.warn(
+                        "plan quota exceeded",
+                        "requestId" to requestId,
+                        "clientId" to client.clientId,
+                        "planId" to (client.planId ?: "free"),
+                        "feature" to feature.key,
+                        "used" to quota.used.toString(),
+                        "limit" to quota.limit.toString(),
+                        "retryAfter" to quota.retryAfterSeconds.toString()
+                    )
+                    metrics.recordFailure()
+                    return RouterResult.Failure(ApiErrorCode.QUOTA_EXCEEDED, requestId)
+                }
+                PlanQuotaGate.Verdict.Allowed -> Unit
             }
         }
 
@@ -370,7 +403,13 @@ class AiRouter(
             // Сохраняем только размеры, не сам текст (privacy).
             promptChars = request.text.length,
             responseChars = responseChars,
-            timestamp = Instant.ofEpochMilli(clock())
+            timestamp = Instant.ofEpochMilli(clock()),
+            // Корзина квоты: голос и чат считаются раздельно.
+            feature = if (request.source == ApiRequestSource.VOICE) {
+                PlanFeature.VOICE_AI.key
+            } else {
+                PlanFeature.BASE_AI.key
+            }
         )
         // AR-05: предпочитаем асинхронный pipeline; если он не подключён
         // (тесты/старый wiring), используем синхронный repository.

@@ -35,6 +35,11 @@ class AsyncUsageTrackerTest {
             }
             override suspend fun recentFor(clientId: String, limit: Int) = emptyList<AiUsageRecord>()
             override suspend fun all() = records.toList()
+            override suspend fun countSince(clientId: String, since: Instant, feature: String): Long =
+                records.count {
+                    it.clientId == clientId && !it.timestamp.isBefore(since) && it.success &&
+                        (it.feature == feature || it.feature == null)
+                }.toLong()
         } to records
     }
 
@@ -86,6 +91,7 @@ class AsyncUsageTrackerTest {
             }
             override suspend fun recentFor(clientId: String, limit: Int) = emptyList<AiUsageRecord>()
             override suspend fun all() = emptyList<AiUsageRecord>()
+            override suspend fun countSince(clientId: String, since: Instant, feature: String): Long = 0
         }
         val tracker = AsyncUsageTracker(blockedRepo, UsageLimitConfig(), TokenCostConfig(), logger, metrics)
         tracker.start()

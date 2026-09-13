@@ -24,7 +24,12 @@ data class AiUsageRecord(
     val errorCode: String?,
     val promptChars: Int,
     val responseChars: Int,
-    val timestamp: Instant
+    val timestamp: Instant,
+    /**
+     * Корзина квоты: voice_ai / base_ai (см. PlanFeature.key).
+     * null = записи до V009, гейт засчитывает их консервативно.
+     */
+    val feature: String? = null
 )
 
 /**
@@ -37,6 +42,12 @@ interface UsageRepository {
     suspend fun record(usage: AiUsageRecord)
     suspend fun recentFor(clientId: String, limit: Int = 100): List<AiUsageRecord>
     suspend fun all(): List<AiUsageRecord>
+
+    /**
+     * Успешные запросы клиента в корзине [feature] с момента [since].
+     * Наследие с feature=NULL засчитывается (консервативно, см. PlanQuotaGate).
+     */
+    suspend fun countSince(clientId: String, since: Instant, feature: String): Long
 }
 
 /**
@@ -81,6 +92,14 @@ class InMemoryUsageRepository(
         }
 
     override suspend fun all(): List<AiUsageRecord> = synchronized(records) { records.toList() }
+
+    override suspend fun countSince(clientId: String, since: Instant, feature: String): Long =
+        synchronized(records) {
+            records.count {
+                it.clientId == clientId && !it.timestamp.isBefore(since) && it.success &&
+                    (it.feature == feature || it.feature == null)
+            }.toLong()
+        }
 
     fun size(): Int = recordCount.get()
 }

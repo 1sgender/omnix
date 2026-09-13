@@ -27,7 +27,9 @@ data class ServerLicenseRecord(
     val productId: String,
     val startsAt: Instant,
     val expiresAt: Instant,
-    val billingStatus: String
+    val billingStatus: String,
+    val entitlements: PlanEntitlements = PlanEntitlements.FREE,
+    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN
 )
 
 sealed interface ServerRedemptionResult {
@@ -84,7 +86,10 @@ private data class ValidateResponse(
     @SerialName("product_id") val productId: String,
     @SerialName("starts_at") val startsAt: String,
     @SerialName("expires_at") val expiresAt: String,
-    @SerialName("billing_status") val billingStatus: String
+    @SerialName("billing_status") val billingStatus: String,
+    /** null = старый сервер → FREE (fail-closed, см. ClientPlanGate). */
+    @SerialName("entitlements") val entitlements: PlanEntitlements? = null,
+    @SerialName("clip") val clip: ClipBindingState? = null
 )
 
 @Serializable
@@ -190,7 +195,9 @@ class HttpLicenseServerValidator @Inject constructor(
         ServerLicenseValidationResult.Valid(
             parseRecord(
                 parsed.planId, parsed.productId, parsed.startsAt, parsed.expiresAt,
-                parsed.billingStatus, null
+                parsed.billingStatus, null,
+                parsed.entitlements ?: PlanEntitlements.FREE,
+                parsed.clip ?: ClipBindingState.UNKNOWN
             )
         )
     }.getOrElse { ServerLicenseValidationResult.ServiceUnavailable }
@@ -201,7 +208,9 @@ class HttpLicenseServerValidator @Inject constructor(
         startsAtRaw: String,
         expiresAtRaw: String,
         billingStatus: String,
-        accessToken: String?
+        accessToken: String?,
+        entitlements: PlanEntitlements = PlanEntitlements.FREE,
+        clipBinding: ClipBindingState = ClipBindingState.UNKNOWN
     ): ServerLicenseRecord {
         require(planId.matches(Regex("[a-z0-9][a-z0-9_-]{1,63}")))
         require(productId.matches(Regex("[a-z0-9][a-z0-9_-]{1,63}")))
@@ -209,7 +218,10 @@ class HttpLicenseServerValidator @Inject constructor(
         val expiresAt = Instant.parse(expiresAtRaw)
         require(expiresAt.isAfter(startsAt))
         require(billingStatus in setOf("GRANTED", "PAID", "CANCELED"))
-        return ServerLicenseRecord(accessToken, planId, productId, startsAt, expiresAt, billingStatus)
+        return ServerLicenseRecord(
+            accessToken, planId, productId, startsAt, expiresAt, billingStatus,
+            entitlements, clipBinding
+        )
     }
 
     private fun errorCode(body: String): String = runCatching {

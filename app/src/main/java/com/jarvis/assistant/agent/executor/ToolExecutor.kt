@@ -10,6 +10,8 @@ import com.jarvis.assistant.agent.model.ToolExecutionResult
 import com.jarvis.assistant.agent.policy.ActionOrigin
 import com.jarvis.assistant.agent.registry.ToolRegistry
 import com.jarvis.assistant.agent.safety.PreflightVerdict
+import com.jarvis.assistant.core.license.ClientPlanGate
+import com.jarvis.assistant.core.license.ClientQuotaFeature
 import com.jarvis.assistant.agent.safety.ToolPermissionManager
 import kotlinx.coroutines.*
 import java.util.UUID
@@ -48,7 +50,12 @@ data class PendingConfirmationRequest(
 @Singleton
 class ToolExecutor @Inject constructor(
     private val registry: ToolRegistry,
-    private val permissionManager: ToolPermissionManager
+    private val permissionManager: ToolPermissionManager,
+    /**
+     * Гейт тарифа. Hilt в проде инжектит всегда; null = JVM-юнит-тесты
+     * (без Context/SharedPreferences) — гейты пропускаются.
+     */
+    private val planGate: ClientPlanGate? = null
 ) {
     companion object {
         private const val TAG = "ToolExecutor"
@@ -279,9 +286,21 @@ class ToolExecutor @Inject constructor(
         call: ToolCall,
         startTime: Long
     ): ToolExecutionResult = try {
+        // Bypass-путь идёт сюда напрямую, минуя execute(): гейт дешёвый,
+        // перепроверяем (тариф могли понизить между validate).
+        if (planGate?.isToolAllowed(tool.toolId) == false) {
+            return ToolExecutionResult.failure(
+                summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план, сэр.",
+                error = ClientPlanGate.ERROR_PLAN_LIMIT
+            )
+        }
         withTimeout(tool.executionTimeoutMs) {
             val draft = tool.execute(call.arguments)
             val verified = if (draft.isSuccess) tool.verify(call.arguments, draft) else draft
+            // Квоту тратят только УСПЕШНЫЕ вызовы (как серверные voice/base).
+            // Гонка check-then-act даёт максимум +1 сверх лимита — допустимо
+            // для клиентских soft-квот (сервер их вообще не считает).
+            if (verified.isSuccess) consumeQuota(tool.toolId)
             verified.copy(executionTimeMs = System.currentTimeMillis() - startTime)
         }
     } catch (e: TimeoutCancellationException) {
@@ -291,6 +310,24 @@ class ToolExecutor @Inject constructor(
     } catch (e: Exception) {
         val duration = System.currentTimeMillis() - startTime
         tool.mapError(call.arguments, e).copy(executionTimeMs = duration)
+    }
+
+    /**
+     * Списание дневных квот за успешный вызов.
+     * Каждый tool = 1 agent action; web-поиск дополнительно ест свою корзину.
+     * Ear-минуты здесь НЕ списываем: там минуты, а не вызовы — их отчитывает
+     * EarBriefingTool через [ClientPlanGate.tryConsume].
+     */
+    private fun consumeQuota(toolId: String) {
+        val gate = planGate ?: return
+        if (!gate.tryConsume(ClientQuotaFeature.AGENT_ACTIONS)) {
+            Log.i(TAG, "agent actions quota exhausted | tool=$toolId")
+        }
+        if (toolId == "intelligence.web_search" &&
+            !gate.tryConsume(ClientQuotaFeature.WEB_SEARCH)
+        ) {
+            Log.i(TAG, "web search quota exhausted")
+        }
     }
 
     /**
@@ -309,6 +346,16 @@ class ToolExecutor @Inject constructor(
                 summary = "Инструмент '${call.toolId}' не зарегистрирован в системе",
                 error = "TOOL_NOT_FOUND"
             )
+        // Гейт тарифа (часть 2): чтение экрана / управление UI — только на
+        // платных тарифах. Fail-fast до permission-префлайта и подтверждений.
+        // planGate==null только в JVM-тестах — там гейты пропускаются.
+        if (planGate?.isToolAllowed(tool.toolId) == false) {
+            Log.i(TAG, "tool blocked by plan gate | tool=${tool.toolId}")
+            return@withContext ToolExecutionResult.failure(
+                summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план, сэр.",
+                error = ClientPlanGate.ERROR_PLAN_LIMIT
+            )
+        }
         privacyBlockForExternalTool(tool, call)?.let { return@withContext it }
 
         when (val preflight = permissionManager.preflight(tool, call, origin)) {

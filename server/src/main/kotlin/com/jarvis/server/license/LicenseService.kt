@@ -85,6 +85,10 @@ class LicenseService(
     fun hasActiveEntitlement(accountId: UUID): Boolean =
         repository.hasActiveEntitlement(accountId, clock.instant())
 
+    /** Активный тариф аккаунта для квот, null = FREE (см. PlanQuotaGate). */
+    fun activePlanId(accountId: UUID): String? =
+        repository.activePlanId(accountId, clock.instant())
+
     fun revoke(
         licenseId: UUID,
         reason: String,

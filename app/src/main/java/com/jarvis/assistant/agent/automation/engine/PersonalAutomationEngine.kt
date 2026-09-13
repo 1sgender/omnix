@@ -8,6 +8,7 @@ import com.jarvis.assistant.agent.automation.model.TimeRangeCondition
 import com.jarvis.assistant.agent.automation.scheduler.AutomationScheduleManager
 import com.jarvis.assistant.agent.executor.ToolExecutor
 import com.jarvis.assistant.agent.model.ToolCall
+import com.jarvis.assistant.core.license.ClientPlanGate
 import com.jarvis.assistant.voice.tts.TextToSpeechManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -31,13 +32,18 @@ import javax.inject.Singleton
  * - Улучшенная обработка ошибок
  */
 @Singleton
+/** Исчерпан лимит автоматизаций тарифа (маппится в честный failure tool). */
+class AutomationLimitReachedException(val max: Int) :
+    IllegalStateException("План позволяет максимум $max автоматизаций")
+
 class PersonalAutomationEngine @Inject constructor(
     private val automationDao: AutomationDao,
     private val toolExecutor: ToolExecutor,
     private val textToSpeechManager: TextToSpeechManager,
     private val ruleMatcher: AutomationRuleMatcher,
     private val scheduleManager: AutomationScheduleManager,
-    private val json: Json
+    private val json: Json,
+    private val planGate: ClientPlanGate
 ) {
     companion object {
         private const val TAG = "AutomationEngine"
@@ -393,6 +399,15 @@ class PersonalAutomationEngine @Inject constructor(
         cooldownMs: Long = DEFAULT_COOLDOWN_MS,
         triggerParam: String = ""
     ): Long = withContext(Dispatchers.IO) {
+        // Лимит тарифа (часть 2): считаем ВСЕ правила, включая выключенные
+        // (иначе лимит обходится toggle'ом). Дефолтные правила движка тоже
+        // в счётчике — честно: они занимают слоты тарифа.
+        val currentCount = automationDao.getAllAutomations().size
+        if (!planGate.canCreateAutomation(currentCount)) {
+            val max = planGate.entitlements().maxAutomations
+            Log.i(TAG, "automation limit reached | count=$currentCount max=$max")
+            throw AutomationLimitReachedException(max)
+        }
         val ruleId = "user_${UUID.randomUUID()}"
         
         val actionsArray = buildJsonArray {

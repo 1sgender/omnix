@@ -1,5 +1,6 @@
 package com.jarvis.assistant.agent.tools.productivity
 
+import com.jarvis.assistant.agent.automation.engine.AutomationLimitReachedException
 import com.jarvis.assistant.agent.automation.engine.PersonalAutomationEngine
 import com.jarvis.assistant.agent.automation.model.AutomationTriggerType
 import com.jarvis.assistant.agent.core.JarvisTool
@@ -7,6 +8,7 @@ import com.jarvis.assistant.agent.core.ToolCategory
 import com.jarvis.assistant.agent.model.ToolCall
 import com.jarvis.assistant.agent.model.ToolExecutionResult
 import com.jarvis.assistant.agent.model.ToolRisk
+import com.jarvis.assistant.core.license.ClientPlanGate
 import kotlinx.serialization.json.*
 import javax.inject.Inject
 import javax.inject.Provider
@@ -93,6 +95,12 @@ class CreateAutomationTool @Inject constructor(
                     put("trigger", triggerType.name)
                     put("action", toolAction)
                 }
+            )
+        } catch (e: AutomationLimitReachedException) {
+            ToolExecutionResult.failure(
+                "Лимит автоматизаций тарифа исчерпан (максимум ${e.max}). " +
+                    "Удалите лишние или обновите план, сэр.",
+                ClientPlanGate.ERROR_PLAN_LIMIT
             )
         } catch (e: Exception) {
             ToolExecutionResult.failure("Не удалось создать автоматизацию: ${e.localizedMessage}", "AUTOMATION_ERROR")

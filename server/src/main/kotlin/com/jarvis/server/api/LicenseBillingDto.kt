@@ -1,5 +1,6 @@
 package com.jarvis.server.api
 
+import com.jarvis.server.license.PlanLimits
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -63,7 +64,57 @@ data class LicenseValidateResponse(
     @SerialName("starts_at") val startsAt: String,
     @SerialName("expires_at") val expiresAt: String,
     @SerialName("billing_status") val billingStatus: String,
-    @SerialName("request_id") val requestId: String
+    @SerialName("request_id") val requestId: String,
+    /**
+     * Квоты и гейты тарифа для КЛИЕНТСКОГО enforcement (часть 2).
+     * Сервер считает только voice/base (AiRouter); остальное считает клиент.
+     * Старые клиенты игнорируют поле (ignoreUnknownKeys).
+     */
+    @SerialName("entitlements") val entitlements: PlanEntitlementsDto,
+    /**
+     * Soft-привязка Clip: информативно, AI НЕ блокируется без клипа.
+     * null = сервер не смог проверить (repo не подключён, только тесты).
+     */
+    @SerialName("clip") val clip: ClipBindingDto? = null
+)
+
+/** Зеркало PlanLimits для validate-ответа (см. PlanCatalog). */
+@Serializable
+data class PlanEntitlementsDto(
+    @SerialName("daily_voice_ai") val dailyVoiceAi: Int,
+    @SerialName("daily_base_ai") val dailyBaseAi: Int,
+    @SerialName("daily_agent_actions") val dailyAgentActions: Int,
+    @SerialName("daily_web_search") val dailyWebSearch: Int,
+    @SerialName("daily_translation_units") val dailyTranslationUnits: Int,
+    @SerialName("daily_ear_minutes") val dailyEarMinutes: Int,
+    @SerialName("max_automations") val maxAutomations: Int,
+    @SerialName("screen_reading") val screenReading: Boolean,
+    @SerialName("ui_control") val uiControl: Boolean,
+    @SerialName("priority_routing") val priorityRouting: Boolean,
+    @SerialName("premium_models") val premiumModels: Boolean,
+    @SerialName("max_clips") val maxClips: Int
+)
+
+/** Маппинг PlanLimits → DTO (api зависит от license, не наоборот). */
+fun PlanLimits.toDto(): PlanEntitlementsDto = PlanEntitlementsDto(
+    dailyVoiceAi = dailyVoiceAi,
+    dailyBaseAi = dailyBaseAi,
+    dailyWebSearch = dailyWebSearch,
+    dailyAgentActions = dailyAgentActions,
+    dailyTranslationUnits = dailyTranslationUnits,
+    dailyEarMinutes = dailyEarMinutes,
+    maxAutomations = maxAutomations,
+    screenReading = screenReading,
+    uiControl = uiControl,
+    priorityRouting = priorityRouting,
+    premiumModels = premiumModels,
+    maxClips = maxClips
+)
+
+@Serializable
+data class ClipBindingDto(
+    @SerialName("has_bound_clip") val hasBoundClip: Boolean,
+    @SerialName("bound_clip_count") val boundClipCount: Int
 )
 
 @Serializable

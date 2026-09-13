@@ -4,6 +4,7 @@ import com.jarvis.server.api.ApiErrorCode
 import com.jarvis.server.api.BillingCheckoutRequest
 import com.jarvis.server.api.BillingCheckoutResponse
 import com.jarvis.server.api.BillingWebhookResponse
+import com.jarvis.server.api.ClipBindingDto
 import com.jarvis.server.api.LicenseIssueRequest
 import com.jarvis.server.api.LicenseIssueResponse
 import com.jarvis.server.api.LicenseRedeemRequest
@@ -11,6 +12,7 @@ import com.jarvis.server.api.LicenseRedeemResponse
 import com.jarvis.server.api.LicenseRevokeRequest
 import com.jarvis.server.api.LicenseValidateRequest
 import com.jarvis.server.api.LicenseValidateResponse
+import com.jarvis.server.api.toDto
 import com.jarvis.server.auth.AuthResult
 import com.jarvis.server.auth.AuthenticatedClient
 import com.jarvis.server.auth.Authenticator
@@ -24,10 +26,12 @@ import com.jarvis.server.billing.CreateCheckoutOutcome
 import com.jarvis.server.billing.HeleketWebhookVerifier
 import com.jarvis.server.billing.PaddleWebhookVerifier
 import com.jarvis.server.billing.WebhookVerificationResult
+import com.jarvis.server.clip.JdbcClipDeviceRepository
 import com.jarvis.server.config.ValidationConfig
 import com.jarvis.server.license.IssueLicenseCommand
 import com.jarvis.server.license.LicenseService
 import com.jarvis.server.license.LicenseValidationOutcome
+import com.jarvis.server.license.PlanCatalog
 import com.jarvis.server.license.RedeemOutcome
 import com.jarvis.server.license.ValidationFailure
 import com.jarvis.server.observability.StructuredLogger
@@ -51,7 +55,12 @@ class LicenseBillingHttpHandler(
     private val webhookRateLimiter: RateLimiter,
     private val validation: ValidationConfig,
     private val logger: StructuredLogger,
-    private val json: Json
+    private val json: Json,
+    /**
+     * Репозиторий Clip для soft-привязки в validate-ответе.
+     * null = не подключён (юнит-тесты) → поле clip=null (unknown).
+     */
+    private val clipDevices: JdbcClipDeviceRepository? = null
 ) {
     companion object {
         const val PATH_ISSUE = "/v1/admin/licenses/issue"
@@ -223,6 +232,13 @@ class LicenseBillingHttpHandler(
                 // legacy-токен (до миграции) к устройству, чтобы enforcement-путь
                 // (AI) начал его принимать. Одноразовая привязка (IS NULL).
                 bearerLicenseToken(request)?.let { licenseService.bindTokenDevice(it, parsed.deviceId) }
+                // Часть 2: entitlements тарифа + soft-привязка Clip для клиента.
+                // Неизвестный planId → лимиты FREE (тот же fail-closed, что у гейта).
+                val entitlements = PlanCatalog.forPlanId(result.planId).toDto()
+                val clip = clipDevices?.let { repo ->
+                    val count = repo.countActiveForAccount(accountId)
+                    ClipBindingDto(hasBoundClip = count > 0, boundClipCount = count)
+                }
                 HttpResponseContext(
                     200,
                     json.encodeToString(
@@ -233,7 +249,9 @@ class LicenseBillingHttpHandler(
                             startsAt = result.startsAt.toString(),
                             expiresAt = result.expiresAt.toString(),
                             billingStatus = result.billingStatus.name,
-                            requestId = requestId
+                            requestId = requestId,
+                            entitlements = entitlements,
+                            clip = clip
                         )
                     ),
                     headers = mapOf("Cache-Control" to "no-store")

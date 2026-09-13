@@ -14,6 +14,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
@@ -31,7 +33,13 @@ data class LicenseInfo(
     val isExpired: Boolean = false,
     val hardwareSerial: String = "",
     val billingStatus: String = "",
-    val verifiedAt: Long = 0L
+    val verifiedAt: Long = 0L,
+    /**
+     * Квоты тарифа из validate-ответа. До первого успешного validate
+     * в этом процессе — FREE (fail-closed, см. ClientPlanGate).
+     */
+    val entitlements: PlanEntitlements = PlanEntitlements.FREE,
+    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN
 )
 
 sealed interface ActivationResult {
@@ -86,6 +94,8 @@ class LicenseManagerImpl @Inject constructor(
         private const val KEY_HARDWARE_ID = "hardware_id"
         private const val KEY_BILLING_STATUS = "billing_status"
         private const val KEY_VERIFIED_AT = "verified_at"
+        private const val KEY_ENTITLEMENTS = "entitlements_json"
+        private const val KEY_CLIP_BINDING = "clip_binding_json"
         private const val LEGACY_KEY_CODE = "activation_code"
         private const val DAY_IN_MS = 24L * 60 * 60 * 1000L
     }
@@ -100,6 +110,7 @@ class LicenseManagerImpl @Inject constructor(
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
+    private val json = Json { ignoreUnknownKeys = true }
 
     // Persisted state is display-only until independently revalidated this process.
     private val _licenseFlow = MutableStateFlow(loadCachedInfo().copy(isActivated = false))
@@ -219,6 +230,8 @@ class LicenseManagerImpl @Inject constructor(
                 .putString(KEY_HARDWARE_ID, hardwareId)
                 .putString(KEY_BILLING_STATUS, record.billingStatus)
                 .putLong(KEY_VERIFIED_AT, verifiedAt)
+                .putString(KEY_ENTITLEMENTS, json.encodeToString(record.entitlements))
+                .putString(KEY_CLIP_BINDING, json.encodeToString(record.clipBinding))
                 .remove(LEGACY_KEY_CODE)
                 .commit()
         ) { "Could not persist server license state" }
@@ -237,6 +250,13 @@ class LicenseManagerImpl @Inject constructor(
         val expiresAt = securePrefs.getLong(KEY_EXPIRY_DATE, 0L)
         val now = System.currentTimeMillis()
         val remainingMs = max(0L, expiresAt - now)
+        // Битый кэш entitlements → FREE (fail-closed), не краш.
+        val entitlements = securePrefs.getString(KEY_ENTITLEMENTS, null)
+            ?.let { runCatching { json.decodeFromString(PlanEntitlements.serializer(), it) }.getOrNull() }
+            ?: PlanEntitlements.FREE
+        val clipBinding = securePrefs.getString(KEY_CLIP_BINDING, null)
+            ?.let { runCatching { json.decodeFromString(ClipBindingState.serializer(), it) }.getOrNull() }
+            ?: ClipBindingState.UNKNOWN
         return LicenseInfo(
             isActivated = serverActivated,
             planId = securePrefs.getString(KEY_PLAN_ID, "").orEmpty(),
@@ -247,7 +267,9 @@ class LicenseManagerImpl @Inject constructor(
             isExpired = serverActivated && now >= expiresAt,
             hardwareSerial = securePrefs.getString(KEY_HARDWARE_ID, "").orEmpty(),
             billingStatus = securePrefs.getString(KEY_BILLING_STATUS, "").orEmpty(),
-            verifiedAt = securePrefs.getLong(KEY_VERIFIED_AT, 0L)
+            verifiedAt = securePrefs.getLong(KEY_VERIFIED_AT, 0L),
+            entitlements = entitlements,
+            clipBinding = clipBinding
         )
     }
 

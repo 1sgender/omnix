@@ -385,6 +385,34 @@ class JdbcLicenseRepository(
             }
         }
 
+    /**
+     * ID активного тарифа аккаунта для квот PlanQuotaGate.
+     * Тот же критерий активности, что и hasActiveEntitlement; при нескольких
+     * берём с самым поздним expires_at. null = нет активной лицензии → FREE.
+     */
+    fun activePlanId(accountId: UUID, now: Instant = Instant.now()): String? =
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                """
+                SELECT l.plan_id FROM licenses l
+                JOIN billing_plans p ON p.id = l.plan_id
+                JOIN accounts a ON a.id = l.account_id
+                WHERE l.account_id = ? AND l.status = 'ACTIVE' AND a.status = 'ACTIVE'
+                  AND p.active = TRUE AND l.starts_at <= ? AND l.expires_at > ?
+                  AND l.billing_status IN ('GRANTED', 'PAID', 'CANCELED')
+                ORDER BY l.expires_at DESC
+                LIMIT 1
+                """.trimIndent()
+            ).use { statement ->
+                statement.setObject(1, accountId)
+                statement.setInstant(2, now)
+                statement.setInstant(3, now)
+                statement.executeQuery().use { result ->
+                    if (result.next()) result.getString(1) else null
+                }
+            }
+        }
+
     fun revoke(
         licenseId: UUID,
         reason: String,

@@ -7,6 +7,7 @@ import java.sql.ResultSet
 import java.sql.Types
 import java.time.Clock
 import java.time.Duration
+import java.time.Instant
 import javax.sql.DataSource
 
 /**
@@ -32,8 +33,8 @@ class JdbcUsageRepository(
                 INSERT INTO ai_usage_records(
                     request_id, client_id, provider, model, latency_ms,
                     input_tokens, output_tokens, total_tokens, success, error_code,
-                    prompt_chars, response_chars, occurred_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    prompt_chars, response_chars, occurred_at, feature
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT (client_id, request_id) DO NOTHING
                 """.trimIndent()
             ).use { statement ->
@@ -50,6 +51,7 @@ class JdbcUsageRepository(
                 statement.setInt(11, usage.promptChars)
                 statement.setInt(12, usage.responseChars)
                 statement.setInstant(13, usage.timestamp)
+                statement.setString(14, usage.feature)
                 statement.executeUpdate()
             }
             connection.prepareStatement(
@@ -92,6 +94,25 @@ class JdbcUsageRepository(
         }
     }
 
+    override suspend fun countSince(clientId: String, since: Instant, feature: String): Long =
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                """
+                SELECT COUNT(*) FROM ai_usage_records
+                WHERE client_id = ? AND occurred_at >= ? AND success = TRUE
+                  AND (feature = ? OR feature IS NULL)
+                """.trimIndent()
+            ).use { statement ->
+                statement.setString(1, clientId)
+                statement.setInstant(2, since)
+                statement.setString(3, feature)
+                statement.executeQuery().use { result ->
+                    result.next()
+                    result.getLong(1)
+                }
+            }
+        }
+
     private fun <T> transaction(block: (Connection) -> T): T = dataSource.connection.use { connection ->
         connection.autoCommit = false
         try {
@@ -126,6 +147,7 @@ class JdbcUsageRepository(
         errorCode = getString("error_code"),
         promptChars = getInt("prompt_chars"),
         responseChars = getInt("response_chars"),
-        timestamp = requireNotNull(getInstant("occurred_at"))
+        timestamp = requireNotNull(getInstant("occurred_at")),
+        feature = getString("feature")
     )
 }

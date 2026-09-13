@@ -30,6 +30,7 @@ class AsyncUsageTrackerPruneTest {
         override suspend fun record(usage: AiUsageRecord) = Unit
         override suspend fun recentFor(clientId: String, limit: Int) = emptyList<AiUsageRecord>()
         override suspend fun all() = emptyList<AiUsageRecord>()
+        override suspend fun countSince(clientId: String, since: Instant, feature: String): Long = 0
     }
 
     private fun clockAt(isoUtc: String) =

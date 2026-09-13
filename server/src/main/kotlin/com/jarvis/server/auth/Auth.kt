@@ -39,7 +39,13 @@ data class AuthenticatedClient(
     val clientId: String,
     val tier: ClientTier,
     val accountId: UUID? = null,
-    val authSource: AuthSource = AuthSource.STATIC
+    val authSource: AuthSource = AuthSource.STATIC,
+    /**
+     * Активный тариф (billing_plans.id) для дневных квот PlanQuotaGate.
+     * null = нет активной лицензии / static-токен → лимиты FREE
+     * (кроме STATIC ADMIN/INTERNAL — у них bypass).
+     */
+    val planId: String? = null
 )
 
 /** Ошибки аутентификации. Различаем «нет токена» и «токен неизвестен». */
@@ -163,7 +169,9 @@ class LicenseTokenAuthenticator(
                 clientId = account.accountId.toString(),
                 tier = ClientTier.PRO,
                 accountId = account.accountId,
-                authSource = AuthSource.LICENSE_TOKEN
+                authSource = AuthSource.LICENSE_TOKEN,
+                // Тариф для дневных квот: +1 SELECT за запрос. Нет лицензии → null → FREE.
+                planId = licenseService.activePlanId(account.accountId)
             )
         )
     }

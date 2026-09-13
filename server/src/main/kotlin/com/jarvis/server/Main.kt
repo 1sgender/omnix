@@ -27,6 +27,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import com.jarvis.server.license.JdbcLicenseRepository
 import com.jarvis.server.license.LicenseCrypto
 import com.jarvis.server.license.LicenseService
+import com.jarvis.server.license.PlanQuotaGate
 import com.jarvis.server.observability.ConsoleStructuredLogger
 import com.jarvis.server.observability.StructuredLogger
 import com.jarvis.server.persistence.DatabaseFactory
@@ -335,7 +336,9 @@ object ServerBootstrap {
             privacyPolicy = config.privacy,
             generation = config.generation,
             logger = logger,
-            metrics = metrics
+            metrics = metrics,
+            // Дневные квоты тарифа поверх Postgres (authoritative подсчёт).
+            planQuotaGate = PlanQuotaGate(usageRepository)
         )
 
         val licenseCrypto = LicenseCrypto(licenseConfig.codePepper)
@@ -396,11 +399,13 @@ object ServerBootstrap {
         val authorizer = TierAuthorizer()
         // OMNIX Clip: криптографическая привязка устройства (V008) — тот же
         // composite authenticator; challenge/attest привязывают клип к аккаунту.
+        // Репозиторий общий: attest-путь + soft-привязка в validate-ответе.
+        val clipDevices = com.jarvis.server.clip.JdbcClipDeviceRepository(dataSource)
         val clipHttpHandler = com.jarvis.server.clip.ClipHttpHandler(
             authenticator = authenticator,
             authorizer = authorizer,
             attestationService = com.jarvis.server.clip.ClipAttestationService(
-                com.jarvis.server.clip.JdbcClipDeviceRepository(dataSource)
+                clipDevices
             ),
             rateLimiter = PostgresRateLimiter(
                 dataSource, "clip_attest", licenseConfig.authenticatedRateLimit
@@ -427,7 +432,8 @@ object ServerBootstrap {
             ),
             validation = config.validation,
             logger = logger,
-            json = json
+            json = json,
+            clipDevices = clipDevices
         )
 
         // CR-15: health-лямбда и metrics-лямбда вынесены в явные функции для
