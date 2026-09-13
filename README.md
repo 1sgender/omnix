@@ -87,8 +87,10 @@ APK: `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
 - License migrations автоматически применяются с checksum и PostgreSQL
   advisory lock. Для запуска server tests задайте `JARVIS_TEST_DATABASE_*`.
 - `local.properties` (путь к Android SDK) в Git не хранится — создаётся локально.
-- Локальная LLM-модель не входит в APK; порядок установки описан в
-  `docs/LOCAL_AI.md`.
+- Локальная LLM-модель (~521 МБ) едет install-time asset pack'ом `localmodel`
+  вместе с установкой из Play (в базу AAB не влезает — лимит 200 МБ) и
+  ставится без действий пользователя. Sideload-APK (GitHub-сборки) пака
+  не содержат — там работает докачка по согласию. Детали — `docs/LOCAL_AI.md`.
 
 ## Production deployment и TLS
 
