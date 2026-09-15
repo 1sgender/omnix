@@ -10,7 +10,7 @@ import android.os.Process
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.jarvis.assistant.data.settings.SettingsDataStore
+import com.jarvis.assistant.data.preferences.SettingsDataStore
 import com.jarvis.assistant.voice.wakeword.oww.OpenWakeWordPipeline
 import com.jarvis.assistant.voice.wakeword.oww.OrtOwwSessions
 import dagger.hilt.android.qualifiers.ApplicationContext
