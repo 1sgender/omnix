@@ -289,19 +289,20 @@ class ToolExecutor @Inject constructor(
         // Bypass-путь идёт сюда напрямую, минуя execute(): гейт дешёвый,
         // перепроверяем (тариф могли понизить между validate).
         if (planGate?.isToolAllowed(tool.toolId) == false) {
-            return ToolExecutionResult.failure(
+            ToolExecutionResult.failure(
                 summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план, сэр.",
                 error = ClientPlanGate.ERROR_PLAN_LIMIT
             )
-        }
-        withTimeout(tool.executionTimeoutMs) {
-            val draft = tool.execute(call.arguments)
-            val verified = if (draft.isSuccess) tool.verify(call.arguments, draft) else draft
-            // Квоту тратят только УСПЕШНЫЕ вызовы (как серверные voice/base).
-            // Гонка check-then-act даёт максимум +1 сверх лимита — допустимо
-            // для клиентских soft-квот (сервер их вообще не считает).
-            if (verified.isSuccess) consumeQuota(tool.toolId)
-            verified.copy(executionTimeMs = System.currentTimeMillis() - startTime)
+        } else {
+            withTimeout(tool.executionTimeoutMs) {
+                val draft = tool.execute(call.arguments)
+                val verified = if (draft.isSuccess) tool.verify(call.arguments, draft) else draft
+                // Квоту тратят только УСПЕШНЫЕ вызовы (как серверные voice/base).
+                // Гонка check-then-act даёт максимум +1 сверх лимита — допустимо
+                // для клиентских soft-квот (сервер их вообще не считает).
+                if (verified.isSuccess) consumeQuota(tool.toolId)
+                verified.copy(executionTimeMs = System.currentTimeMillis() - startTime)
+            }
         }
     } catch (e: TimeoutCancellationException) {
         ToolExecutionResult.timeout(tool.name, tool.executionTimeoutMs)
