@@ -17,7 +17,9 @@ import com.jarvis.assistant.voice.wakeword.WakeWordDetection
 import com.jarvis.assistant.voice.wakeword.WakeWordEngine
 import com.jarvis.assistant.voice.wakeword.WakeWordEngineError
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,6 +88,13 @@ class WakeWordHandoffTest {
         every { stt.speechState } returns MutableStateFlow(SpeechRecognitionEvent.Idle)
         every { stt.audioLevel } returns MutableStateFlow(0f)
         every { tts.ttsState } returns MutableStateFlow(TtsState.Idle)
+        every { engine.start() } just Runs
+        every { engine.stop() } just Runs
+        every { stt.startListening() } just Runs
+        every { stt.stopListening() } just Runs
+        every { bluetooth.routeAudioToSpeaker() } just Runs
+        every { bluetooth.restoreDefaultRouting() } just Runs
+        every { toolExecutor.clearPendingConfirmation() } just Runs
         every { bluetooth.isHeadsetPlugged } returns MutableStateFlow(false)
         every { getSettings() } returns flowOf(VoiceSettings())
 
@@ -109,7 +118,7 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `detection в STANDBY останавливает движок и стартует STT на команду`() = runTest {
+    fun `detection в STANDBY останавливает движок и стартует STT на команду`() = runTest(testDispatcher) {
         runCurrent()
         assertTrue(detections.tryEmit(WakeWordDetection("Hey Jarvis", 0.9f, 12345L)))
         runCurrent()
@@ -120,7 +129,7 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `дубликат детекции вне STANDBY игнорируется`() = runTest {
+    fun `дубликат детекции вне STANDBY игнорируется`() = runTest(testDispatcher) {
         runCurrent()
         assertTrue(detections.tryEmit(WakeWordDetection("Hey Jarvis", 0.9f, 12345L)))
         runCurrent()
@@ -133,7 +142,7 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `ModelMissing показывает ошибку ассистента`() = runTest {
+    fun `ModelMissing показывает ошибку ассистента`() = runTest(testDispatcher) {
         runCurrent()
         assertTrue(engineErrors.tryEmit(WakeWordEngineError.ModelMissing("wakeword/x.onnx")))
         runCurrent()
@@ -142,7 +151,7 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `возврат в STANDBY после активации перезапускает движок`() = runTest {
+    fun `возврат в STANDBY после активации перезапускает движок`() = runTest(testDispatcher) {
         every { bluetooth.checkHeadsetConnection() } returns true
         every { bluetooth.isHeadsetConnected() } returns false
         runCurrent()
