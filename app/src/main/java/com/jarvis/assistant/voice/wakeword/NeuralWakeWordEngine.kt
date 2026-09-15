@@ -144,7 +144,16 @@ class NeuralWakeWordEngine @Inject constructor(
 
         try {
             Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
-            record.startRecording()
+            try {
+                record.startRecording()
+            } catch (e: SecurityException) {
+                // Гонка: пермишен отозвали между проверкой и стартом.
+                // Громко в errors, без тихой смерти (§21); release в finally ниже.
+                Log.e(TAG, "startRecording denied", e)
+                _errors.emit(WakeWordEngineError.PermissionDenied)
+                running.set(false)
+                return
+            }
             val chunk = ShortArray(OpenWakeWordPipeline.CHUNK_SAMPLES)
             var chunkIndex = 0L
             while (running.get()) {
@@ -222,6 +231,9 @@ class NeuralWakeWordEngine @Inject constructor(
                 AudioFormat.ENCODING_PCM_16BIT,
                 maxOf(minBuf, OpenWakeWordPipeline.CHUNK_SAMPLES * 8),
             )
+        } catch (e: SecurityException) {
+            Log.e(TAG, "AudioRecord create denied (RECORD_AUDIO revoked?)", e)
+            null
         } catch (e: Exception) {
             Log.e(TAG, "AudioRecord create failed", e)
             null
