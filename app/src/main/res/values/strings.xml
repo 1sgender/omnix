@@ -74,4 +74,5 @@
     <string name="cloud_consent_voice_sensitive">Запрос содержит чувствительные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
     <string name="cloud_consent_declined">Понял, обрабатываю локально, сэр.</string>
     <string name="cloud_consent_timeout">Время ожидания истекло, обрабатываю локально.</string>
+    <string name="wakeword_engine_unavailable">Голосовая активация недоступна</string>
 </resources>

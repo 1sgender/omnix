@@ -17,10 +17,15 @@ Runtime dependencies (Android app)
 - OkHttp — Square — Apache License 2.0
 - Kotlinx Serialization — JetBrains — Apache License 2.0
 - MediaPipe LLM Inference (tasks-genai) — Google — Apache License 2.0
+- ONNX Runtime (onnxruntime-android) — Microsoft — MIT License
 - Material Design Icons — Google — Apache License 2.0
 
 On-device model
 ---------------
+- openWakeWord models (melspectrogram.onnx, embedding_model.onnx,
+  hey_jarvis_v0.1.onnx, v0.5.1) — dscripka/openWakeWord —
+  Apache License 2.0. Bundled under app/src/main/assets/wakeword/.
+  SHA256 pins: see SHA256SUMS in the same directory.
 - Gemma (on-device LLM used via MediaPipe, optional user-installed model) is
   governed by the Google Gemma Terms of Use and Gemma Prohibited Use Policy:
   https://ai.google.dev/gemma/terms

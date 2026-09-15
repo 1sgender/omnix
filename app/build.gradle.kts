@@ -441,6 +441,10 @@ dependencies {
     // BOOT_COMPLETED (вместо sendBroadcast на каждый холодный старт процесса).
     implementation(libs.androidx.work.runtime.ktx)
 
+    // Neural wake word: ONNX Runtime для openWakeWord-моделей (assets/wakeword).
+    // AAR ~28.5 МБ; POM без транзитивных зависимостей. Модели ~3.7 МБ в APK.
+    implementation(libs.onnxruntime.android)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)

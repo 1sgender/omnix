@@ -13,7 +13,7 @@ import com.jarvis.assistant.voice.orchestrator.VoiceInteractionOrchestrator
 import com.jarvis.assistant.voice.stt.SpeechRecognitionEvent
 import com.jarvis.assistant.voice.stt.SpeechRecognizerManager
 import com.jarvis.assistant.voice.tts.TextToSpeechManager
-import com.jarvis.assistant.voice.wakeword.WakeWordDetector
+import com.jarvis.assistant.voice.wakeword.WakeWordEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -58,7 +58,7 @@ class LiveInterpreterViewModel @Inject constructor(
     private val speechRecognizerManager: SpeechRecognizerManager,
     private val textToSpeechManager: TextToSpeechManager,
     private val bluetoothAudioRouter: BluetoothAudioRouter,
-    private val wakeWordDetector: WakeWordDetector,
+    private val wakeWordEngine: WakeWordEngine,
     private val orchestrator: VoiceInteractionOrchestrator
 ) : ViewModel() {
 
@@ -115,7 +115,7 @@ class LiveInterpreterViewModel @Inject constructor(
                         if (orchestrator.currentMode.value == OrchestratorMode.PAUSED_CALL_OR_SLEEP) {
                             return@launch
                         }
-                        wakeWordDetector.stopListening()
+                        wakeWordEngine.stop()
                         _uiState.update { it.copy(isListening = true) }
                         speechRecognizerManager.startListening(
                             languageTag = listeningLanguageTag(),
@@ -238,7 +238,7 @@ class LiveInterpreterViewModel @Inject constructor(
             // с Android 10 фактический приоритет получает один захватчик, и пока
             // wake-движок держит AudioRecord, распознавание переводчика деградирует
             // (а wake-word ловит тишину поверх SCO).
-            wakeWordDetector.stopListening()
+            wakeWordEngine.stop()
             micTakenFromWakeWord = true
             _uiState.update { it.copy(isListening = true) }
             // Непрерывный режим прослушивания собеседника (continuous = true)
@@ -258,7 +258,7 @@ class LiveInterpreterViewModel @Inject constructor(
         if (!micTakenFromWakeWord) return
         micTakenFromWakeWord = false
         if (orchestrator.currentMode.value == OrchestratorMode.STANDBY_WAKE_WORD) {
-            wakeWordDetector.startListening()
+            wakeWordEngine.start()
         }
     }
 

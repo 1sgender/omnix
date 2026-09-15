@@ -339,7 +339,6 @@ class JarvisVoiceService : Service() {
             orchestrator.currentMode.collectLatest { mode ->
                 val statusText = when (mode) {
                     OrchestratorMode.STANDBY_WAKE_WORD -> getString(R.string.jarvis_slushaet_v_naushnike)
-                    OrchestratorMode.VERIFYING_KEYWORD -> getString(R.string.analiz_golosa)
                     OrchestratorMode.LISTENING_USER_QUERY -> "Слушаю ваш запрос..."
                     OrchestratorMode.CONTINUOUS_CONVERSATION -> getString(R.string.slushayu_prodolzhenie_dialoga)
                     OrchestratorMode.AI_THINKING -> "Выполнение команды..."

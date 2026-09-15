@@ -460,7 +460,7 @@ check "EAR-MODE: pause/sleep releases communication audio" \
       "bluetoothAudioRouter.routeAudioToSpeaker()" \
       "$APP/java/com/jarvis/assistant/voice/orchestrator/VoiceInteractionOrchestrator.kt"
 check "EAR-MODE: interpreter screen takes mic from wake-word" \
-      "wakeWordDetector.stopListening()" \
+      "wakeWordEngine.stop()" \
       "$APP/java/com/jarvis/assistant/presentation/translator/LiveInterpreterViewModel.kt"
 check "EAR-MODE: interpreter screen pauses on phone call" \
       "PAUSED_CALL_OR_SLEEP" \

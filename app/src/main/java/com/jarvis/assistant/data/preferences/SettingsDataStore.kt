@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.jarvis.assistant.core.constants.AppConstants
+import com.jarvis.assistant.voice.wakeword.WakeWordConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -27,6 +28,11 @@ class SettingsDataStore @Inject constructor(
         val SELECTED_MODEL = stringPreferencesKey("selected_model")
         val HEADSET_ONLY_MODE = booleanPreferencesKey("headset_only_mode")
         val WAKE_WORD_SENSITIVITY = floatPreferencesKey("wake_word_sensitivity")
+        val WAKEWORD_ENABLED = booleanPreferencesKey("wakeword.enabled")
+        val WAKEWORD_THRESHOLD = floatPreferencesKey("wakeword.threshold")
+        val WAKEWORD_PATIENCE = intPreferencesKey("wakeword.patience_frames")
+        val WAKEWORD_COOLDOWN_MS = longPreferencesKey("wakeword.cooldown_ms")
+        val WAKEWORD_DEBUG = booleanPreferencesKey("wakeword.debug_logging")
         val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
         val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")
     }
@@ -130,6 +136,54 @@ class SettingsDataStore @Inject constructor(
     }
 
     /**
+     * Neural wake-word конфиг (§11 ТЗ). Дефолты совпадают с [WakeWordConfig].
+     * Legacy-ключ wake_word_sensitivity оставлен нетронутым для совместимости.
+     */
+    val wakeWordConfig: Flow<WakeWordConfig> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            WakeWordConfig(
+                enabled = preferences[PreferencesKeys.WAKEWORD_ENABLED] ?: true,
+                threshold = preferences[PreferencesKeys.WAKEWORD_THRESHOLD] ?: 0.5f,
+                patienceFrames = preferences[PreferencesKeys.WAKEWORD_PATIENCE] ?: 2,
+                cooldownMs = preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] ?: 2000L,
+                debugLogging = preferences[PreferencesKeys.WAKEWORD_DEBUG] ?: false,
+            )
+        }
+
+    suspend fun setWakeWordEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setWakeWordThreshold(threshold: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_THRESHOLD] = threshold
+        }
+    }
+
+    suspend fun setWakeWordPatience(frames: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_PATIENCE] = frames
+        }
+    }
+
+    suspend fun setWakeWordCooldownMs(cooldownMs: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] = cooldownMs
+        }
+    }
+
+    suspend fun setWakeWordDebugLogging(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_DEBUG] = enabled
+        }
+    }
+
+    /**
      * Одноразовое согласие на автозагрузку локальной модели (~521 МБ).
      * Значения — [com.jarvis.assistant.agent.localai.downloader.ModelDownloadPolicy]:
      * unasked / any / wifi / later.
@@ -175,6 +229,11 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.SELECTED_MODEL] = AppConstants.DEFAULT_MODEL
             preferences[PreferencesKeys.HEADSET_ONLY_MODE] = false
             preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY] = 0.65f
+            preferences[PreferencesKeys.WAKEWORD_ENABLED] = true
+            preferences[PreferencesKeys.WAKEWORD_THRESHOLD] = 0.5f
+            preferences[PreferencesKeys.WAKEWORD_PATIENCE] = 2
+            preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] = 2000L
+            preferences[PreferencesKeys.WAKEWORD_DEBUG] = false
         }
     }
 }

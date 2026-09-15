@@ -27,8 +27,9 @@ APK: CI-артефакт JARVIS-v0.2-dev.apk (devDebug) ИЛИ локально 
    + заполнение RESULTS_TEMPLATE.md §5–8, 22 (20+ повторений на сценарий)
 5. ./04-resources-battery.sh            → resources-*.txt  (§17–18: RAM/CPU/battery)
 6. ./05-interruption-recovery.sh        → recovery.txt     (§13–14, 19)
-7. Ручные BT/A11y/security сценарии     → RESULTS_TEMPLATE.md §15–16, 20
-8. Свести матрицу, проставить latency по logcat-epoch
+7. ./06-wakeword-metrics.sh             → results-wakeword-* (wake FAR/FRR/infer/battery)
+8. Ручные BT/A11y/security сценарии     → RESULTS_TEMPLATE.md §15–16, 20
+9. Свести матрицу, проставить latency по logcat-epoch
 ```
 
 ## Замер latency по логам
@@ -38,7 +39,7 @@ APK: CI-артефакт JARVIS-v0.2-dev.apk (devDebug) ИЛИ локально 
 | Стадия | Маркер (tag: текст) |
 |---|---|
 | Wake listening start | `WakeWord*: startListening` |
-| Wake detected | переход в VERIFYING_KEYWORD (orchestrator) / wake-событие |
+| Wake detected | chime + переход в LISTENING_USER_QUERY (orchestrator) / wake-событие |
 | STT start | `SpeechRecognizerManager: startListening session=…` |
 | STT result | финальный результат распознавания (mode-переход AI_THINKING) |
 | Router decision | `DecisionEngine: route=$type \| reason=… \| confidence=…` |

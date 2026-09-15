@@ -15,7 +15,7 @@ Idle → lightweight wake detection → user speaks → heavy processing → ret
 | Фаза | Что происходит | Статус | Якоря |
 |---|---|---|---|
 | **Idle** | FGS `microphone` в STANDBY держит STT-частичные результаты для wake-word (системный `SpeechRecognizer` = lightweight detection делегирован системе); **тяжёлая модель НЕ в памяти** (не грузится на старте; теперь выгружается по idle — см. ниже) | FIX | `JarvisVoiceService`, `MediaPipeModelManager` |
-| **Wake-word** | детект → `VERIFYING_KEYWORD` (anti-false-trigger) → `LISTENING_USER_QUERY`; часы `VoiceLatencyMetrics` фиксируют сегмент | OK | `VoiceInteractionOrchestrator` |
+| **Wake-word** | neural-детект (openWakeWord) → сразу `LISTENING_USER_QUERY`; часы `VoiceLatencyMetrics` фиксируют сегмент от метки детекции | OK | `NeuralWakeWordEngine`, `VoiceInteractionOrchestrator` |
 | **Listening** | запись запроса системным STT, silence-таймеры закрывают фазу | OK | `SpeechRecognizerManager`, `SILENCE_AFTER_PARTIAL_MS` |
 | **Local inference** | ленивая загрузка модели (~1–3 c) → инференс → **после 5 минут неактивности автоматическая выгрузка** (`IdleUnloadScheduler`); окно больше худшего tool-таймаута (≤4 c) — выгрузка не закроет движок посреди генерации; memory pressure остаётся немедленной выгрузкой | FIX | `MediaPipeModelManager.modelIdleUnloadMs`, `runtimeOrNull()` → `noteUsed()` |
 | **Bluetooth** | SCO/`setCommunicationDevice` только в активных фазах ( Ear Interpreter / разговор); отключение отслеживается ACL disconnect → `Disconnected` | NOT MEASURED | `BluetoothAudioRouter` |

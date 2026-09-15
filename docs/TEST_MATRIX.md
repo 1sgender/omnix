@@ -22,7 +22,7 @@ hard-run в build.yml) + device-validation 01–05.
 
 | # | Команда / сценарий | Ожидаемый маршрут | Статус / якорь |
 |---|---|---|---|
-| 1 | «Джарвис» → верификация | STANDBY → VERIFYING_KEYWORD → LISTENING | DEVICE (03-voice-loop) + `VoiceInteractionOrchestrator` |
+| 1 | «Hey Jarvis» → команда | STANDBY → chime → LISTENING (STT-верификация удалена: детект подтверждает neural-движок) | DEVICE (03-voice-loop, 06-wakeword-metrics) + `VoiceInteractionOrchestrator` |
 | 2 | «Открой Telegram» | DEVICE_TOOL conf .95, без агента | AUTO `FastCommandRouterTest` |
 | 3 | «Открой YouTube и найди UFC» | AGENT: open→click→type→verify(4 шага) | AUTO `CognitivePlannerTest` |
 | 4 | «Включи фонарик» / «выключи» | device.flashlight on/off | AUTO |
@@ -144,6 +144,21 @@ preflight-тесты падают при утечке; `ToolExecutorBehaviorTest
 
 ---
 
+## Neural wake word (§4–§13 ТЗ)
+
+| # | Проверка | Ожидание | Покрытие |
+|---|----------|----------|----------|
+| W01 | DetectionPolicy: patience | срабатывание только после N хитов подряд; одиночный всплеск молчит | PG (`DetectionPolicyTest`) |
+| W02 | DetectionPolicy: threshold+cooldown | ниже порога — сброс серии; дубликат в cooldown молчит | PG (`DetectionPolicyTest`) |
+| W03 | OpenWakeWordPipeline: шейпы | mel [1,N]→[T,32], emb [1,76,32,1]→[B,96], clf [1,16,96]→скор; чанки 1280/480/76/8/16 | PG (`OpenWakeWordPipelineTest`, фейковые сессии) |
+| W04 | OpenWakeWordPipeline: холодный старт | первые кадры без контекста не детектят; reset() чистит буферы | PG (`OpenWakeWordPipelineTest`) |
+| W05 | AudioRingBuffer | кольцо 640 мс, snapshotLast, clear без аллокаций на запись | PG (`AudioRingBufferTest`) |
+| W06 | WakeWordMetrics | счётчики кадров/детекций, maxScore, средние задержки стадий | PG (`WakeWordMetricsTest`) |
+| W07 | Orchestrator handoff | detection → engine.stop() → chime → STT; после STT — engine.start(); защита от дублей (stale) | PG (`WakeWordHandoffTest`, mockk) |
+| W08 | FAR/FRR на устройстве | протокол + порог по `device-validation/06-wakeword-metrics.sh` | DEVICE (NOT TESTED до прогона) |
+| W09 | Батарея/CPU в standby | <2%/ч деградация vs baseline, инференс <80 мс чанка | DEVICE (NOT TESTED до прогона) |
+
+---
 ## Правила прогона
 
 1. `./gradlew test` (app) + `./gradlew :server:test` — AUTO/PG.

@@ -29,8 +29,9 @@ import com.jarvis.assistant.voice.stt.SpeechRecognitionEvent
 import com.jarvis.assistant.voice.stt.SpeechRecognizerManager
 import com.jarvis.assistant.voice.tts.TextToSpeechManager
 import com.jarvis.assistant.voice.tts.TtsState
-import com.jarvis.assistant.voice.wakeword.WakeWordDetector
-import com.jarvis.assistant.voice.wakeword.WakeWordEvent
+import com.jarvis.assistant.voice.wakeword.WakeWordDetection
+import com.jarvis.assistant.voice.wakeword.WakeWordEngine
+import com.jarvis.assistant.voice.wakeword.WakeWordEngineError
 import com.jarvis.assistant.voice.wakeword.WakeWordExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -42,7 +43,6 @@ import javax.inject.Singleton
 
 enum class OrchestratorMode {
     STANDBY_WAKE_WORD,        // Ожидание «Джарвис»
-    VERIFYING_KEYWORD,        // Верификация ключевого слова (anti-false-trigger)
     LISTENING_USER_QUERY,     // Запись голоса
     CONTINUOUS_CONVERSATION,  // Диалоговое окно (без повтора «Джарвис»)
     AI_THINKING,              // Запрос AI / Fast Router
@@ -56,7 +56,7 @@ enum class OrchestratorMode {
 @Singleton
 class VoiceInteractionOrchestrator @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val wakeWordDetector: WakeWordDetector,
+    private val wakeWordEngine: WakeWordEngine,
     private val speechRecognizerManager: SpeechRecognizerManager,
     private val textToSpeechManager: TextToSpeechManager,
     private val bluetoothAudioRouter: BluetoothAudioRouter,
@@ -69,7 +69,6 @@ class VoiceInteractionOrchestrator @Inject constructor(
     companion object {
         private const val TAG = "VoiceOrchestrator"
         
-        private const val KEYWORD_VERIFICATION_TIMEOUT_MS = 3000L
         private const val SILENCE_AFTER_PARTIAL_MS = 1200L
         private const val FOLLOW_UP_WINDOW_MS = 8000L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
@@ -82,7 +81,6 @@ class VoiceInteractionOrchestrator @Inject constructor(
          * «оживающим» ответам и несанкционированным AI/TTS вызовам.
          */
         private val ALLOWED_FINAL_RESULT_MODES = setOf(
-            OrchestratorMode.VERIFYING_KEYWORD,
             OrchestratorMode.LISTENING_USER_QUERY,
             OrchestratorMode.CONTINUOUS_CONVERSATION,
             OrchestratorMode.AWAITING_CONFIRMATION,
@@ -200,7 +198,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun observePipelines() {
         observeSettings()
         observeHeadsetPlugging()
-        observeWakeDetector()
+        observeWakeEngine()
         observeSpeechRecognizer()
         observeTtsEngine()
     }
@@ -282,13 +280,25 @@ class VoiceInteractionOrchestrator @Inject constructor(
         }
     }
 
-    private fun observeWakeDetector() {
+    private fun observeWakeEngine() {
         scope.launch {
-            wakeWordDetector.events.collectLatest { event ->
-                if (event is WakeWordEvent.VoiceActivityDetected && _currentMode.value == OrchestratorMode.STANDBY_WAKE_WORD) {
+            wakeWordEngine.detections.collectLatest { detection ->
+                if (_currentMode.value == OrchestratorMode.STANDBY_WAKE_WORD) {
                     if (!isHeadsetOnlyMode || bluetoothAudioRouter.isHeadsetConnected()) {
-                        startKeywordVerification()
+                        onWakeWordDetected(detection)
                     }
+                }
+            }
+        }
+        scope.launch {
+            wakeWordEngine.errors.collectLatest { error ->
+                Log.e(TAG, "wakeword engine error: $error")
+                if (error is WakeWordEngineError.ModelMissing ||
+                    error is WakeWordEngineError.PermissionDenied
+                ) {
+                    _assistantState.value = VoiceAssistantState.Error(
+                        context.getString(R.string.wakeword_engine_unavailable),
+                    )
                 }
             }
         }
@@ -335,7 +345,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         _currentMode.value = OrchestratorMode.STANDBY_WAKE_WORD
         _assistantState.value = VoiceAssistantState.Idle
         speechRecognizerManager.stopListening()
-        wakeWordDetector.startListening()
+        wakeWordEngine.start()
     }
 
     fun startLiveEarInterpreter() {
@@ -346,7 +356,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         // вошёл в переводчик, пока старый ещё жив.
         translationJob?.cancel()
         translationJob = null
-        wakeWordDetector.stopListening()
+        wakeWordEngine.stop()
 
         _currentMode.value = OrchestratorMode.LIVE_EAR_INTERPRETER
         val msg = context.getString(R.string.rezhim_perevodchika_aktivirovan)
@@ -365,24 +375,29 @@ class VoiceInteractionOrchestrator @Inject constructor(
     /** Voice Latency: момент финального STT-результата текущего запроса. */
     private var sttFinalAtMs: Long = 0L
 
-    private fun startKeywordVerification() {
-        wakeWordDetector.stopListening()
-        wakeDetectedAtMs = latencyMetrics.nowMs()
-        _currentMode.value = OrchestratorMode.VERIFYING_KEYWORD
+    /**
+     * Neural wake word подтверждён движком — STT-верификация больше не нужна:
+     * сразу chime и слушаем КОМАНДУ. Микрофон: движок останавливается ПЕРЕД
+     * chime и STT — двух захватов нет по построению.
+     */
+    private fun onWakeWordDetected(detection: WakeWordDetection) {
+        wakeWordEngine.stop()
+        // Voice Latency: сегмент «Wake → STT» начинается меткой детекции
+        // (elapsedRealtime, те же часы, что latencyMetrics.nowMs()).
+        wakeDetectedAtMs = detection.timestampMs
+        _currentMode.value = OrchestratorMode.LISTENING_USER_QUERY
         _assistantState.value = VoiceAssistantState.Listening
+        playWakeChime()
+        Log.i(
+            TAG,
+            "wakeword '${detection.wakeWord}' score=${detection.score} " +
+                "infer=${detection.inferenceLatencyMs}ms",
+        )
         speechRecognizerManager.startListening()
-
-        silenceJob?.cancel()
-        silenceJob = scope.launch {
-            delay(KEYWORD_VERIFICATION_TIMEOUT_MS)
-            if (_currentMode.value == OrchestratorMode.VERIFYING_KEYWORD) {
-                startStandbyMode()
-            }
-        }
     }
 
     private fun switchToSpeechRecognition() {
-        wakeWordDetector.stopListening()
+        wakeWordEngine.stop()
         wakeDetectedAtMs = latencyMetrics.nowMs()
         _currentMode.value = OrchestratorMode.LISTENING_USER_QUERY
         _assistantState.value = VoiceAssistantState.Listening
@@ -394,33 +409,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
             speechRecognizerManager.speechState.collectLatest { event ->
                 when (event) {
                     is SpeechRecognitionEvent.PartialResult -> {
-                        val partial = event.partialText.lowercase().trim()
-
-                        if (_currentMode.value == OrchestratorMode.VERIFYING_KEYWORD) {
-                            if (WakeWordExtractor.containsWakeWord(partial, wakeKeywords)) {
-                                silenceJob?.cancel()
-                                playWakeChime()
-                                val query = WakeWordExtractor.extractQuery(event.partialText, wakeKeywords)
-                                if (query != null) {
-                                    _currentMode.value = OrchestratorMode.LISTENING_USER_QUERY
-                                    _assistantState.value = VoiceAssistantState.Recognizing(query)
-                                    _lastQuery.value = query
-
-                                    silenceJob = scope.launch {
-                                        delay(SILENCE_AFTER_PARTIAL_MS)
-                                        if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY) {
-                                            speechRecognizerManager.stopListening()
-                                            processUserQuery(query)
-                                        }
-                                    }
-                                } else {
-                                    // CR-02: прозвучало ТОЛЬКО wake-word — переходим в LISTENING
-                                    // за командой, не запуская processUserQuery с пустым текстом.
-                                    _currentMode.value = OrchestratorMode.LISTENING_USER_QUERY
-                                    _assistantState.value = VoiceAssistantState.Listening
-                                }
-                            }
-                        } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
+                        if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
                             val cleaned = WakeWordExtractor.extractQuery(event.partialText, wakeKeywords) ?: event.partialText
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
@@ -499,23 +488,6 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             return@collectLatest
                         }
 
-                        if (_currentMode.value == OrchestratorMode.VERIFYING_KEYWORD) {
-                            if (WakeWordExtractor.containsWakeWord(text, wakeKeywords)) {
-                                playWakeChime()
-                                // CR-02: extractQuery вернёт null, если после wake-word ничего нет
-                                // → переключаемся на LISTENING_USER_QUERY вместо processUserQuery("Джарвис").
-                                val query = WakeWordExtractor.extractQuery(text, wakeKeywords)
-                                if (query != null) {
-                                    processUserQuery(query)
-                                } else {
-                                    switchToSpeechRecognition()
-                                }
-                            } else {
-                                startStandbyMode()
-                            }
-                            return@collectLatest
-                        }
-
                         // CR-02: вместо чистки с ifEmpty { raw } используем extractQuery,
                         // который возвращает null при пустом результате — не дёргаем
                         // processUserQuery с сырым wake-word.
@@ -536,8 +508,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                                 speechRecognizerManager.startListening()
                             }
-                        } else if (_currentMode.value == OrchestratorMode.VERIFYING_KEYWORD ||
-                            _currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
+                        } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
                             delay(300)
                             startStandbyMode()
@@ -1056,17 +1027,17 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 openContinuousConversationWindow()
                             }
                             OrchestratorMode.AWAITING_CONFIRMATION -> {
-                                wakeWordDetector.stopListening()
+                                wakeWordEngine.stop()
                                 speechRecognizerManager.startListening()
                             }
                             // C-02: после фразы «отправить в облако?» начинаем слушать ответ.
                             OrchestratorMode.AWAITING_PRIVACY_CONSENT -> {
-                                wakeWordDetector.stopListening()
+                                wakeWordEngine.stop()
                                 speechRecognizerManager.startListening()
                             }
                             OrchestratorMode.LIVE_EAR_INTERPRETER -> {
                                 // После нашёптывания перевода в ухо мгновенно продолжаем слушать собеседника!
-                                wakeWordDetector.stopListening()
+                                wakeWordEngine.stop()
                                 speechRecognizerManager.startListening()
                             }
                             else -> Unit
@@ -1087,7 +1058,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         if (!isServiceActive) return
         _currentMode.value = OrchestratorMode.CONTINUOUS_CONVERSATION
         _assistantState.value = VoiceAssistantState.Idle
-        wakeWordDetector.stopListening()
+        wakeWordEngine.stop()
         speechRecognizerManager.startListening()
 
         followUpWindowJob?.cancel()
@@ -1174,7 +1145,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         pendingConfirmationToken = null
         toolExecutor.clearPendingConfirmation()
         isProcessingQuery.set(false)
-        wakeWordDetector.stopListening()
+        wakeWordEngine.stop()
         speechRecognizerManager.stopListening()
         textToSpeechManager.stop()
     }
@@ -1186,8 +1157,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
         // CR-12: каскадный dispose. Порядок: сначала компоненты, которые могут
         // порождать новые вызовы (wake/STT/TTS), потом аудио-маршрутизация,
         // потом генератор тонов (самый низкоуровневый ресурс).
-        runCatching { wakeWordDetector.destroy() }
-            .onFailure { Log.e(TAG, "destroy: wakeWordDetector.destroy() failed", it) }
+        runCatching { wakeWordEngine.destroy() }
+            .onFailure { Log.e(TAG, "destroy: wakeWordEngine.destroy() failed", it) }
         runCatching { speechRecognizerManager.destroy() }
             .onFailure { Log.e(TAG, "destroy: speechRecognizerManager.destroy() failed", it) }
         runCatching { textToSpeechManager.shutdown() }
