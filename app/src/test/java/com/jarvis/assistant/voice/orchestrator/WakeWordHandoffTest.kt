@@ -48,8 +48,6 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class WakeWordHandoffTest {
 
-    private val testDispatcher = StandardTestDispatcher()
-
     private lateinit var context: Context
     private lateinit var engine: WakeWordEngine
     private lateinit var stt: SpeechRecognizerManager
@@ -67,7 +65,6 @@ class WakeWordHandoffTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(testDispatcher)
         context = mockk()
         engine = mockk()
         stt = mockk()
@@ -98,6 +95,20 @@ class WakeWordHandoffTest {
         every { bluetooth.isHeadsetPlugged } returns MutableStateFlow(false)
         every { getSettings() } returns flowOf(VoiceSettings())
 
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    /**
+     * Оркестратор конструируется ВНУТРИ runTest после setMain(testScheduler):
+     * его коллекторы встают на тот же шедулер, что прокачивает runCurrent().
+     * Конструирование в @Before вешало их на чужой шедулер — tryEmit терялся.
+     */
+    private fun buildOrchestrator() {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler = testScheduler))
         orchestrator = VoiceInteractionOrchestrator(
             context,
             engine,
@@ -112,13 +123,9 @@ class WakeWordHandoffTest {
         )
     }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
     @Test
-    fun `detection в STANDBY останавливает движок и стартует STT на команду`() = runTest(testDispatcher) {
+    fun `detection в STANDBY останавливает движок и стартует STT на команду`() = runTest {
+        buildOrchestrator()
         runCurrent()
         assertTrue(detections.tryEmit(WakeWordDetection("Hey Jarvis", 0.9f, 12345L)))
         runCurrent()
@@ -129,7 +136,8 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `дубликат детекции вне STANDBY игнорируется`() = runTest(testDispatcher) {
+    fun `дубликат детекции вне STANDBY игнорируется`() = runTest {
+        buildOrchestrator()
         runCurrent()
         assertTrue(detections.tryEmit(WakeWordDetection("Hey Jarvis", 0.9f, 12345L)))
         runCurrent()
@@ -142,7 +150,8 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `ModelMissing показывает ошибку ассистента`() = runTest(testDispatcher) {
+    fun `ModelMissing показывает ошибку ассистента`() = runTest {
+        buildOrchestrator()
         runCurrent()
         assertTrue(engineErrors.tryEmit(WakeWordEngineError.ModelMissing("wakeword/x.onnx")))
         runCurrent()
@@ -151,7 +160,8 @@ class WakeWordHandoffTest {
     }
 
     @Test
-    fun `возврат в STANDBY после активации перезапускает движок`() = runTest(testDispatcher) {
+    fun `возврат в STANDBY после активации перезапускает движок`() = runTest {
+        buildOrchestrator()
         every { bluetooth.checkHeadsetConnection() } returns true
         every { bluetooth.isHeadsetConnected() } returns false
         runCurrent()
