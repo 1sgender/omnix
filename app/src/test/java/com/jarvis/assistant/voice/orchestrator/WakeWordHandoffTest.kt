@@ -77,8 +77,10 @@ class WakeWordHandoffTest {
         translator = mockk()
         latency = mockk()
 
-        detections = MutableSharedFlow()
-        engineErrors = MutableSharedFlow()
+        // replay=1 как в проде (там extraBufferCapacity): событие переживает
+        // подписку коллектора. Строгие проверки ниже — режим и verify вызовов.
+        detections = MutableSharedFlow(replay = 1)
+        engineErrors = MutableSharedFlow(replay = 1)
 
         every { context.getString(any()) } returns ""
         every { engine.detections } returns detections
