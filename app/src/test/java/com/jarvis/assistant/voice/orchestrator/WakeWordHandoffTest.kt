@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -107,8 +108,8 @@ class WakeWordHandoffTest {
      * его коллекторы встают на тот же шедулер, что прокачивает runCurrent().
      * Конструирование в @Before вешало их на чужой шедулер — tryEmit терялся.
      */
-    private fun buildOrchestrator() {
-        Dispatchers.setMain(StandardTestDispatcher(testScheduler = testScheduler))
+    private fun TestScope.buildOrchestrator() {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         orchestrator = VoiceInteractionOrchestrator(
             context,
             engine,
