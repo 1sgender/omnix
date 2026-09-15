@@ -59,9 +59,9 @@ class LicensePersistenceIntegrationTest : PostgresTestSupport() {
     @Test
     fun `clean database migrations are complete idempotent and constrained`() {
         val migrator = DatabaseMigrator(dataSource)
-        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), migrator.appliedVersions())
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9), migrator.appliedVersions())
         migrator.migrate()
-        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), migrator.appliedVersions())
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9), migrator.appliedVersions())
 
         val tables = dataSource.connection.use { connection ->
             connection.prepareStatement(

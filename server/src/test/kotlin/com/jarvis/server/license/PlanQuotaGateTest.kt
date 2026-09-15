@@ -161,7 +161,7 @@ class PlanQuotaGateTest {
     @Test
     fun `yesterday usage does not count`() = runBlocking {
         val usage = InMemoryUsageRepository()
-        val yesterday = LocalDate.now(ZoneOffset.UTC).minusDays(1)
+        val yesterday = LocalDate.now(clock).minusDays(1)
             .atStartOfDay(ZoneOffset.UTC).toInstant().plusSeconds(3600)
         repeat(100) { usage.record(record("acct-1", "voice_ai", at = yesterday)) }
         val gate = PlanQuotaGate(usage, clock)
