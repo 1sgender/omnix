@@ -23,6 +23,10 @@
     <!-- AlarmClock ACTION_SET_ALARM требует это normal-permission. -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
 
+    <!-- Самообновление staging-сборок: установка скачанного APK.
+         Пользователь подтверждает каждую установку системным диалогом. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Bluetooth SCO / Ear Mode -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
@@ -126,6 +130,17 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Самообновление: отдаёт APK системному установщику (см. update_file_paths). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.update-provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_file_paths" />
+        </provider>
 
         <!-- Optional Deep Accessibility Control Service -->
         <service

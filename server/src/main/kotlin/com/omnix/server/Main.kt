@@ -19,6 +19,7 @@ import com.omnix.server.config.ServerConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.omnix.server.http.HttpRequestContext
 import com.omnix.server.http.HttpResponseContext
+import com.omnix.server.http.AppUpdateHttpHandler
 import com.omnix.server.http.OmnixApiHandler
 import com.omnix.server.http.LicenseBillingHttpHandler
 import com.omnix.server.http.ProxyRequestSecurity
@@ -508,6 +509,7 @@ object ServerBootstrap {
         adminHttpHandler.applyOverrides(adminSettings.ai())
         bootstrapAdminAccount(adminAccountRepository, adminAuditLog, logger)
 
+        val appUpdateHandler = AppUpdateHttpHandler()
         val handler = OmnixApiHandler(
             authenticator = authenticator,
             authorizer = authorizer,
@@ -533,6 +535,7 @@ object ServerBootstrap {
             extensionHandler = { request ->
                 adminHttpHandler.handle(request) ?:
                     licenseHttpHandler.handle(request) ?:
+                    appUpdateHandler.handle(request) ?:
                     clipHttpHandler.handle(request)
             },
             // Публикуем healthProvider для внешнего kickoff в main().

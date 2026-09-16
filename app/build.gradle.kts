@@ -39,7 +39,7 @@ val devApiUrl = validatedApiUrl(
 val stagingApiUrl = validatedApiUrl(
     "OMNIX_STAGING_API_BASE_URL",
     providers.gradleProperty("OMNIX_STAGING_API_BASE_URL")
-        .orElse("https://staging-api.omnix.ai").get(),
+        .orElse("https://omnix.144.31.14.236.sslip.io").get(),
     allowHttp = false
 )
 val productionApiUrl = "https://api.omnix.ai"
@@ -108,7 +108,9 @@ android {
         applicationId = "com.omnix.assistant"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
+        // OTA-сравнение версий: CI передаёт -POMNIX_VERSION_CODE=<run_number>
+        // (монотонно растёт внутри release-пайплайна). Локально — 1.
+        versionCode = (findProperty("OMNIX_VERSION_CODE") as String?)?.toIntOrNull() ?: 1
         versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

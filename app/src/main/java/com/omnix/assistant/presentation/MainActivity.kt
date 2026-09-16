@@ -18,6 +18,7 @@ import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.localmodel.LocalModelConsentDialog
 import com.omnix.assistant.presentation.navigation.OmnixNavGraph
+import com.omnix.assistant.update.AppUpdatePrompt
 import androidx.lifecycle.lifecycleScope
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.presentation.core.CoreState
@@ -159,6 +160,9 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+                            // Самообновление staging-сборок: проверка раз за
+                            // холодный старт, на остальных флейворах молчит.
+                            AppUpdatePrompt()
                         }
                     }
                 }
