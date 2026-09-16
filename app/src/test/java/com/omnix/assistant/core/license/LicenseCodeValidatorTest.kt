@@ -45,6 +45,14 @@ class LicenseCodeValidatorTest {
     }
 
     @Test
+    fun `no connection surfaces as its own verdict, not generic outage`() {
+        assertEquals(
+            LicenseCodeValidator.CodeVerdict.NoConnection,
+            redeem("OMX-ABCDE-FGHJK-LMNPQ-RSTUV", ServerRedemptionResult.NoConnection)
+        )
+    }
+
+    @Test
     fun `server redemption preserves authoritative entitlement`() {
         val license = record(30)
         assertEquals(

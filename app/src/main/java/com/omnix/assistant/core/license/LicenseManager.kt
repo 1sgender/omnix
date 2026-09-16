@@ -182,6 +182,9 @@ class LicenseManagerImpl @Inject constructor(
             LicenseCodeValidator.CodeVerdict.ServiceUnavailable -> ActivationResult.ServiceUnavailable(
                 context.getString(R.string.server_licenziy_nedostupen)
             )
+            LicenseCodeValidator.CodeVerdict.NoConnection -> ActivationResult.ServiceUnavailable(
+                context.getString(R.string.proverte_internet)
+            )
             is LicenseCodeValidator.CodeVerdict.BoxCodeValid -> {
                 val record = verdict.license
                 val token = record.accessToken

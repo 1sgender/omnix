@@ -323,6 +323,34 @@ class LicenseApiIntegrationTest : PostgresTestSupport() {
         return json.decodeFromString(LicenseIssueResponse.serializer(), response.body).code
     }
 
+    @Test
+    fun `same device redeem retry reissues token instead of burning code`() = runBlocking {
+        val code = issueCode()
+        val first = json.decodeFromString(
+            LicenseRedeemResponse.serializer(), redeemCode(code).body
+        )
+        // Повтор с того же устройства (таймаут после коммита): снова Success.
+        val retry = json.decodeFromString(
+            LicenseRedeemResponse.serializer(), redeemCode(code).body
+        )
+        assertEquals(first.planId, retry.planId)
+        assertTrue(retry.accessToken.startsWith("omx_"))
+        assertTrue(first.accessToken != retry.accessToken)
+    }
+
+    @Test
+    fun `different device redeem after activation stays rejected`() = runBlocking {
+        val code = issueCode()
+        redeemCode(code)
+        val response = handler.handle(
+            request(
+                LicenseBillingHttpHandler.PATH_REDEEM,
+                body = """{"code":"$code","device_id":"device-xyz98765"}"""
+            )
+        )!!
+        assertEquals(404, response.status)
+    }
+
     private suspend fun redeemCode(code: String) = handler.handle(
         request(
             LicenseBillingHttpHandler.PATH_REDEEM,

@@ -8,6 +8,7 @@ class LicenseCodeValidator {
         data class BoxCodeValid(val license: ServerLicenseRecord) : CodeVerdict
         data object RateLimited : CodeVerdict
         data object ServiceUnavailable : CodeVerdict
+        data object NoConnection : CodeVerdict
         data object Invalid : CodeVerdict
     }
 
@@ -31,6 +32,7 @@ class LicenseCodeValidator {
             }
             ServerRedemptionResult.NotRedeemable -> CodeVerdict.Invalid
             ServerRedemptionResult.RateLimited -> CodeVerdict.RateLimited
+            ServerRedemptionResult.NoConnection -> CodeVerdict.NoConnection
             ServerRedemptionResult.ServiceUnavailable -> CodeVerdict.ServiceUnavailable
         }
     }

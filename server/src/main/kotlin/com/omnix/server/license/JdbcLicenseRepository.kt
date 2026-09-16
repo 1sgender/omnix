@@ -133,6 +133,7 @@ class JdbcLicenseRepository(
                 """
                 SELECT l.id, l.status, l.billing_status, l.starts_at, l.expires_at,
                        l.account_id, l.redeemed_at, l.revoked_at, l.plan_id,
+                       l.redeemed_device_hash,
                        p.product_id, p.duration_days, p.active AS plan_active,
                        a.status AS account_status
                 FROM licenses l
@@ -146,14 +147,33 @@ class JdbcLicenseRepository(
                 statement.executeQuery().use { result -> if (result.next()) RedemptionRow.from(result) else null }
             } ?: return@transaction RedeemOutcome.InvalidOrUnknown
 
+            // Идемпотентный повтор с того же устройства: клиент мог не получить
+            // ответ (таймаут после коммита) — перевыпускаем токен, а не сжигаем
+            // код. Чужое устройство — по-прежнему AlreadyRedeemed (one-time).
+            fun sameDevice(): Boolean =
+                row.redeemedDeviceHash != null && row.redeemedDeviceHash.contentEquals(deviceHash)
             when (row.status) {
                 LicenseStatus.REVOKED, LicenseStatus.DISABLED ->
                     return@transaction RedeemOutcome.RevokedOrDisabled
                 LicenseStatus.EXPIRED -> return@transaction RedeemOutcome.Expired
-                LicenseStatus.ACTIVE -> return@transaction RedeemOutcome.AlreadyRedeemed
+                LicenseStatus.ACTIVE ->
+                    if (sameDevice()) {
+                        return@transaction reissueForSameDevice(
+                            connection, row, deviceHash, requestId, remoteAddress, now
+                        )
+                    } else {
+                        return@transaction RedeemOutcome.AlreadyRedeemed
+                    }
                 LicenseStatus.ISSUED -> Unit
             }
-            if (row.redeemedAt != null) return@transaction RedeemOutcome.AlreadyRedeemed
+            if (row.redeemedAt != null) {
+                if (sameDevice()) {
+                    return@transaction reissueForSameDevice(
+                        connection, row, deviceHash, requestId, remoteAddress, now
+                    )
+                }
+                return@transaction RedeemOutcome.AlreadyRedeemed
+            }
             if (!row.planActive || row.durationDays !in 1..3650) return@transaction RedeemOutcome.InvalidPlan
             if (row.accountStatus != null && row.accountStatus != "ACTIVE") {
                 return@transaction RedeemOutcome.RevokedOrDisabled
@@ -210,6 +230,45 @@ class JdbcLicenseRepository(
                 billingStatus = row.billingStatus
             )
         }
+    }
+
+    /**
+     * Перевыпуск токена при идемпотентном повторе redeem с того же устройства.
+     *
+     * Старый (возможно недоставленный) токен остаётся валидным: он привязан к
+     * тому же устройству и аккаунту, новых прав не даёт. Отзыв не нужен.
+     */
+    private fun reissueForSameDevice(
+        connection: Connection,
+        row: RedemptionRow,
+        deviceHash: ByteArray,
+        requestId: String,
+        remoteAddress: String?,
+        now: Instant
+    ): RedeemOutcome {
+        if (row.expiresAt != null && !row.expiresAt.isAfter(now)) {
+            markExpired(connection, row.id, now)
+            return RedeemOutcome.Expired
+        }
+        val accountId = row.accountId ?: createAccount(connection, now)
+        val startsAt = row.startsAt ?: now
+        val expiresAt = row.expiresAt ?: startsAt.plus(row.durationDays.toLong(), ChronoUnit.DAYS)
+        val accessToken = crypto.generateAccessToken()
+        insertApiToken(connection, accountId, accessToken, now, null, deviceHash)
+        audit(
+            connection, "DEVICE", null, "LICENSE_REDEEM_RETRY", "LICENSE", row.id,
+            requestId, remoteAddress, "{}", now
+        )
+        return RedeemOutcome.Success(
+            accountId = accountId,
+            licenseId = row.id,
+            accessToken = accessToken,
+            planId = row.planId,
+            productId = row.productId,
+            startsAt = startsAt,
+            expiresAt = expiresAt,
+            billingStatus = row.billingStatus
+        )
     }
 
     /**
@@ -632,6 +691,7 @@ class JdbcLicenseRepository(
         val expiresAt: Instant?,
         val accountId: UUID?,
         val redeemedAt: Instant?,
+        val redeemedDeviceHash: ByteArray?,
         val planId: String,
         val productId: String,
         val durationDays: Int,
@@ -647,6 +707,7 @@ class JdbcLicenseRepository(
                 expiresAt = result.getInstant("expires_at"),
                 accountId = result.getObject("account_id", UUID::class.java),
                 redeemedAt = result.getInstant("redeemed_at"),
+                redeemedDeviceHash = result.getBytes("redeemed_device_hash"),
                 planId = result.getString("plan_id"),
                 productId = result.getString("product_id"),
                 durationDays = result.getInt("duration_days"),
