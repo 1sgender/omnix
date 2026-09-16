@@ -346,7 +346,7 @@
     <string name="omnix_update_ready_body">Build %1$d is ready to install.</string>
     <string name="omnix_update_action_install">Install</string>
     <string name="omnix_update_failed_title">Update failed</string>
-    <string name="omnix_update_failed_body">Build %1$d failed to download. Check your connection and try again.</string>
+    <string name="omnix_update_failed_body">Download failed for build %1$d. Check your connection and try again.</string>
     <string name="omnix_update_action_retry">Retry</string>
     <string name="omnix_update_download_title">OMNIX: update</string>
     <string name="omnix_update_download_desc">Downloading a new build</string>
