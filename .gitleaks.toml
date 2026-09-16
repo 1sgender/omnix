@@ -4,7 +4,7 @@
 title = "OMNIX gitleaks config"
 
 [allowlist]
-description = "Заведомо фиктивный токен в unit-тесте (следующим коммитом литерал заменён программной сборкой)."
-fingerprints = [
-    "32b17daaa428419510efcc6b229b8544dd1dd38f:app/src/test/java/com/omnix/assistant/core/license/HttpLicenseServerValidatorTest.kt:generic-api-key:72",
+description = "Коммит с заведомо фиктивным токеном в unit-тесте (следующим коммитом литерал заменён программной сборкой)."
+commits = [
+    "32b17daaa428419510efcc6b229b8544dd1dd38f",
 ]

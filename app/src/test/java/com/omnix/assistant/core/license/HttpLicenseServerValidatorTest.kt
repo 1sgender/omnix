@@ -39,7 +39,11 @@ class HttpLicenseServerValidatorTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 return if (attempts.incrementAndGet() == 1) {
-                    MockResponse().apply { socketPolicy = SocketPolicy.DISCONNECT_AT_START }
+                    // DISCONNECT_AT_START здесь не годится: MockWebServer 4.x
+                    // читает его только через dispatcher.peek() (очередь), а из
+                    // dispatch() он игнорируется — ушёл бы обычный 200 с пустым
+                    // телом. AFTER_REQUEST рвёт соединение без ответа всегда.
+                    MockResponse().apply { socketPolicy = SocketPolicy.DISCONNECT_AFTER_REQUEST }
                 } else {
                     MockResponse().setResponseCode(200).setBody(SUCCESS_JSON)
                 }
