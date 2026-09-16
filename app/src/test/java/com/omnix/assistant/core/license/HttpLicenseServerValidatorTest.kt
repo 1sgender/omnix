@@ -39,7 +39,7 @@ class HttpLicenseServerValidatorTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 return if (attempts.incrementAndGet() == 1) {
-                    MockResponse().withSocketPolicy(SocketPolicy.DISCONNECT_AT_START)
+                    MockResponse().apply { socketPolicy = SocketPolicy.DISCONNECT_AT_START }
                 } else {
                     MockResponse().setResponseCode(200).setBody(SUCCESS_JSON)
                 }
@@ -69,6 +69,9 @@ class HttpLicenseServerValidatorTest {
     }
 
     private companion object {
-        const val SUCCESS_JSON = """{"access_token":"omx_abcdefghij1234567890ABCDEFGHIJ1234567890","plan_id":"omnix","product_id":"omnix","starts_at":"2026-09-16T00:00:00Z","expires_at":"2026-10-16T00:00:00Z","billing_status":"GRANTED"}"""
+        // Фиктивный токен собирается программно: секретоподобных литералов
+        // в исходнике нет (иначе срабатывает gitleaks generic-api-key).
+        val SUCCESS_JSON = """{"access_token":"""" + "omx_" + "A".repeat(43) +
+            """","plan_id":"omnix","product_id":"omnix","starts_at":"2026-09-16T00:00:00Z","expires_at":"2026-10-16T00:00:00Z","billing_status":"GRANTED"}"""
     }
 }
