@@ -68,7 +68,7 @@ services:
       GROQ_ENABLED: ${GROQ_ENABLED:-true}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       # Groq retires models regularly; override when the default 404s.
-      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
       GEMINI_ENABLED: ${GEMINI_ENABLED:-true}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENROUTER_ENABLED: ${OPENROUTER_ENABLED:-true}

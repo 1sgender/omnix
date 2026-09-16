@@ -260,7 +260,7 @@ data class ServerConfig(
                     priority = int("GROQ_PRIORITY", 1),
                     apiKey = keyList("GROQ_API_KEY").firstOrNull(),
                     apiKeys = keyList("GROQ_API_KEY"),
-                    model = str("GROQ_MODEL") ?: "llama-3.3-70b-versatile",
+                    model = str("GROQ_MODEL") ?: "openai/gpt-oss-120b",
                     baseUrl = str("GROQ_BASE_URL") ?: "https://api.groq.com/openai/v1/chat/completions",
                     connectTimeoutMs = long("GROQ_CONNECT_TIMEOUT_MS", 2_000),
                     // CR-06: request timeout ≤ budget/maxAttempts (28s/2 = 14s,
