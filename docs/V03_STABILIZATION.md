@@ -89,7 +89,7 @@ cognitive loop не даёт «Открыл YouTube» без текста на �
 REQUIRES_USER_CONFIRMATION,
 REQUIRES_SYSTEM_PANEL, **PERMISSION_REQUIRED** (+`missingPermissions`),
 **USER_ACTION_REQUIRED**, **UNSUPPORTED** — все шесть исходов протокола
-покрыты. `JarvisTool` = execute() + verify() + executionTimeoutMs (per-call
+покрыты. `OmniTool` = execute() + verify() + executionTimeoutMs (per-call
 4 с) + mapError. Новая abstraction не добавлялась (правило 8 протокола).
 
 ## PHASE 9–10 — TOOL VALIDATION / PLATFORM LIMITS

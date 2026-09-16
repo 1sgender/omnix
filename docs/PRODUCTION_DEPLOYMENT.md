@@ -15,7 +15,7 @@ HTTP deployment.
 ```text
 Internet
   -> TCP/UDP 443 (TLS 1.2/1.3) -> Caddy (certificate + automatic renewal)
-  -> private Docker network HTTP -> jarvis-server:8080
+  -> private Docker network HTTP -> omnix-server:8080
   -> private Docker network -> PostgreSQL:5432
 
 Internet -> TCP 80 -> Caddy 308 redirect only (never reverse_proxy)
@@ -63,7 +63,7 @@ health check.
 ## 3. DNS и сертификат
 
 1. Создайте `A`/`AAAA` record `PUBLIC_DOMAIN`, направленный на production host.
-   Для текущего shipped Android build это обязано быть `api.jarvis.ai`; origin
+   Для текущего shipped Android build это обязано быть `api.omnix.ai`; origin
    задан единственной compile-time константой и защищён exact-host policy.
 2. Разрешите 80/TCP и 443/TCP до Caddy. Для HTTP/3 разрешите 443/UDP.
 3. Задайте `ACME_EMAIL` для уведомлений об expiry.
@@ -153,7 +153,7 @@ cleartext traffic запрещён Android network security policy.
 Bearer tokens:
 
 - передаются только в `Authorization` header, не в URL/query;
-- Android interceptor добавляет token только для exact JARVIS host;
+- Android interceptor добавляет token только для exact OMNIX host;
 - Android release logging выключен, debug logger redacts `Authorization`;
 - application logger не логирует request headers/body/token;
 - Caddy access-log filter полностью удаляет `request.headers`, поэтому
@@ -175,7 +175,7 @@ health URL.
 
 ```bash
 docker compose --env-file deploy/.env.production \
-  -f deploy/docker-compose.production.yml logs --no-color caddy jarvis-server
+  -f deploy/docker-compose.production.yml logs --no-color caddy omnix-server
 ```
 
 Проверьте отсутствие реального token, activation code, `Authorization: Bearer`
@@ -192,7 +192,7 @@ bash deploy/verify-production-config.sh
 После DNS/certificate deployment:
 
 ```bash
-export PUBLIC_API_URL=https://api.jarvis.ai
+export PUBLIC_API_URL=https://api.omnix.ai
 export SMOKE_BEARER_TOKEN='<read from secret manager; never pass as CLI arg>'
 export APP_DIRECT_URL=http://private-or-public-host:8080  # optional negative test
 bash deploy/smoke-production-tls.sh

@@ -3,7 +3,7 @@
 # после listening 5м, после active 15м, после long 30м+. → resources-<label>.txt
 set -euo pipefail
 LABEL="${1:?usage: 04-resources-battery.sh <label: start|idle|listening|active|long>}"
-PKG=com.jarvis.assistant.dev
+PKG=com.omnix.assistant.dev
 exec > >(tee "resources-$LABEL.txt") 2>&1
 echo "=== SNAPSHOT: $LABEL @ $(date -Is) ==="
 echo "--- battery ---"
@@ -21,6 +21,6 @@ else
   echo "процесс не запущен"
 fi
 echo "--- wakelocks приложения ---"
-adb shell dumpsys power | grep -i jarvis | head -5 | tr -d '\r' || echo "wakelocks не найдены"
+adb shell dumpsys power | grep -i omnix | head -5 | tr -d '\r' || echo "wakelocks не найдены"
 echo "--- foreground service ---"
 adb shell dumpsys activity services "$PKG" | grep -E "ServiceRecord|foreground" | head -5 | tr -d '\r' || true

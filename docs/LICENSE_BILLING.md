@@ -25,10 +25,10 @@ Android code + device ID
   -> POST /v1/license/redeem (rate limited by remote peer)
   -> SELECT ... FOR UPDATE
   -> atomic ISSUED -> ACTIVE transition
-  -> account + opaque jrv_ Bearer token created
+  -> account + opaque omx_ Bearer token created
   -> repeated/concurrent redemption rejected
 
-jrv_ Bearer token + device ID
+omx_ Bearer token + device ID
   -> POST /v1/license/validate
   -> token/account/device/license/plan/billing/expiry checked in PostgreSQL
   -> current server entitlement returned
@@ -54,7 +54,7 @@ and the AI execution path enforces device binding **per request**:
 
 ```text
 redeem  -> api_tokens.device_hash = H(device_id)  (bound at issuance)
-AI call -> Bearer jrv_... + X-Jarvis-Device: <device_id>
+AI call -> Bearer omx_... + X-Omnix-Device: <device_id>
            LicenseTokenAuthenticator.authenticate(header, deviceHeader)
            -> token row must be bound AND hash must match (constant-time)
            -> then entitlementChecker(account) re-reads license/billing/expiry
@@ -84,8 +84,8 @@ Rules:
 | POST | `/v1/admin/licenses/issue` | static ADMIN Bearer | Issue one-time code |
 | POST | `/v1/admin/licenses/revoke` | static ADMIN Bearer | Revoke license and its tokens |
 | POST | `/v1/license/redeem` | activation code in body, IP rate limit | Atomic first activation |
-| POST | `/v1/license/validate` | DB-backed `jrv_` Bearer | Validate account/device entitlement |
-| POST | `/v1/billing/checkout` | DB-backed `jrv_` Bearer | Create idempotent provider checkout |
+| POST | `/v1/license/validate` | DB-backed `omx_` Bearer | Validate account/device entitlement |
+| POST | `/v1/billing/checkout` | DB-backed `omx_` Bearer | Create idempotent provider checkout |
 | POST | `/v1/billing/webhooks/paddle` | Paddle HMAC signature | Paddle lifecycle events |
 | POST | `/v1/billing/webhooks/heleket` | HELEKET signature + IP allowlist | Crypto payment events |
 
@@ -114,7 +114,7 @@ deleting or choosing between conflicting payment records.
 
 ## Stored security properties
 
-- Activation codes: 100 random bits, formatted as `JRV-XXXXX-...`.
+- Activation codes: 100 random bits, formatted as `OMX-XXXXX-...`.
 - Plain activation code: returned once, never persisted.
 - Code/token/device representation: HMAC-SHA256 with an external pepper.
 - API token: 256 random bits, only keyed hash stored.
@@ -193,7 +193,7 @@ to the target crypto currency.
 
 1. PostgreSQL with TLS/network policy and backups.
 2. Unique 32+ byte `LICENSE_CODE_PEPPER` from a secret manager.
-3. At least one static ADMIN token and `JARVIS_ADMIN_CLIENTS` entry.
+3. At least one static ADMIN token and `OMNIX_ADMIN_CLIENTS` entry.
 4. Paddle sandbox/live credentials and notification destination.
 5. HELEKET merchant/API key and direct callback reachability.
 6. Mandatory HTTPS reverse proxy/TLS termination from

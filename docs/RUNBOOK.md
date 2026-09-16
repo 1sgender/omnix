@@ -1,4 +1,4 @@
-# Операционный ранбук JARVIS API
+# Операционный ранбук OMNIX API
 
 Кому: дежурный/владелец. Цель — диагностировать и устранить инцидент за
 5–10 минут. Дополняется по мере появления реальных инцидентов.
@@ -10,17 +10,17 @@
 | Liveness/health | `GET /v1/health` (без auth, кэш 2 с, circuit-статусы провайдеров) |
 | Метрики JSON | `GET /v1/admin/metrics` (Bearer + VIEW_ADMIN) |
 | Метрики Prometheus | `GET /v1/admin/metrics/prometheus` (Bearer + VIEW_ADMIN, `text/plain; version=0.0.4`) |
-| Логи | stdout контейнера (`docker logs jarvis-server`), формат `ts level msg k=v` |
+| Логи | stdout контейнера (`docker logs omnix-server`), формат `ts level msg k=v` |
 
 Ключевые метрики (имена стабильны — используются в алертах):
 
-- `jarvis_requests_total / jarvis_requests_success_total / jarvis_requests_failed_total`
-- `jarvis_requests_rate_limited_total`, `jarvis_requests_unauthorized_total`,
-  `jarvis_requests_privacy_blocked_total`
-- `jarvis_provider_success_total{provider}`, `jarvis_provider_failure_total{provider}`,
-  `jarvis_provider_latency_ms_sum{provider}`
-- `jarvis_provider_failure_kind_total{kind}` (TIMEOUT / UNAVAILABLE / ERROR / …)
-- `jarvis_named_*` — внутренние счётчики (usage_dropped, usage_retry, …)
+- `omnix_requests_total / omnix_requests_success_total / omnix_requests_failed_total`
+- `omnix_requests_rate_limited_total`, `omnix_requests_unauthorized_total`,
+  `omnix_requests_privacy_blocked_total`
+- `omnix_provider_success_total{provider}`, `omnix_provider_failure_total{provider}`,
+  `omnix_provider_latency_ms_sum{provider}`
+- `omnix_provider_failure_kind_total{kind}` (TIMEOUT / UNAVAILABLE / ERROR / …)
+- `omnix_named_*` — внутренние счётчики (usage_dropped, usage_retry, …)
 
 Пример scrape-конфига — `deploy/prometheus/prometheus.yml`,
 правила алертов — `deploy/prometheus/alerts.yml`.
@@ -29,11 +29,11 @@
 
 | Алерт | Условие | Первое действие |
 |---|---|---|
-| HighRequestFailureRate | `rate(jarvis_requests_failed_total[5m]) > 0.2 * rate(jarvis_requests_total[5m])` | §3.1 |
-| AllProvidersFailing | `rate(jarvis_provider_failure_kind_total[5m]) > 0` у ВСЕХ провайдеров и успехов нет | §3.2 |
-| RateLimitSaturation | `increase(jarvis_requests_rate_limited_total[15m]) > 100` | §3.3 |
-| UnauthorizedSpike | `increase(jarvis_requests_unauthorized_total[15m]) > 50` | §3.4 |
-| UsageDropped | `increase(jarvis_named_usage_dropped[15m]) > 0` | §3.5 |
+| HighRequestFailureRate | `rate(omnix_requests_failed_total[5m]) > 0.2 * rate(omnix_requests_total[5m])` | §3.1 |
+| AllProvidersFailing | `rate(omnix_provider_failure_kind_total[5m]) > 0` у ВСЕХ провайдеров и успехов нет | §3.2 |
+| RateLimitSaturation | `increase(omnix_requests_rate_limited_total[15m]) > 100` | §3.3 |
+| UnauthorizedSpike | `increase(omnix_requests_unauthorized_total[15m]) > 50` | §3.4 |
+| UsageDropped | `increase(omnix_named_usage_dropped[15m]) > 0` | §3.5 |
 | InstanceDown | health-check не отвечает 1 мин | §3.6 |
 
 ## 3. Плейбуки
@@ -41,12 +41,12 @@
 ### 3.1 Высокая доля ошибок запросов
 
 1. `GET /v1/health` — статус circuit-брейкеров провайдеров.
-2. `jarvis_provider_failure_kind_total` — какой kind преобладает:
+2. `omnix_provider_failure_kind_total` — какой kind преобладает:
    - `TIMEOUT` — провайдеры медленные: проверить статус-страницы провайдеров;
      при устойчивом деградировании снизить нагрузку (rate-limit) или временно
      отключить провайдера (`*_ENABLED=false` + рестарт);
    - `UNAVAILABLE`/5xx — инцидент на стороне провайдера;
-   - рост `jarvis_requests_privacy_blocked_total` — всплеск приватных запросов
+   - рост `omnix_requests_privacy_blocked_total` — всплеск приватных запросов
      (не инцидент доступности).
 3. Проверить последние деплои (`git log`), при регрессии — rollback по §3.7.
 
@@ -69,8 +69,8 @@
 ### 3.4 Всплеск 401
 
 1. Взять request_id из логов; проверить, не утёк ли токен (git/logs/билд-артефакты).
-2. При подозрении — ротация: `JARVIS_CLIENT_TOKENS` (статические) или отзыв
-   DB-backed `jrv_` токена в БД (`api_tokens`).
+2. При подозрении — ротация: `OMNIX_CLIENT_TOKENS` (статические) или отзыв
+   DB-backed `omx_` токена в БД (`api_tokens`).
 3. Всплеск после релиза клиента — проверить, что клиент шлёт `Authorization`.
 
 ### 3.5 usage_dropped > 0
@@ -81,7 +81,7 @@
 
 ### 3.6 Инстанс не отвечает
 
-1. `docker ps`, `docker logs --tail 200 jarvis-server`.
+1. `docker ps`, `docker logs --tail 200 omnix-server`.
 2. OOM → проверить память хоста; контейнер рестартует compose-политикой.
 3. Postgres недоступен → §3.5.1.
 4. После рестарта: in-memory circuit/метрики сбрасываются (single-instance решение) —
@@ -115,9 +115,9 @@ docker compose ... image: ghcr.io/...@<previous-digest>
 
 ### 3.8 Ротация скомпрометированного токена
 
-1. Статический клиент: изменить `JARVIS_CLIENT_TOKENS` (новый token:clientId),
+1. Статический клиент: изменить `OMNIX_CLIENT_TOKENS` (новый token:clientId),
    рестарт. Старый токен перестаёт действовать немедленно.
-2. DB-backed `jrv_` токен: `DELETE FROM api_tokens WHERE token_hash = ...`
+2. DB-backed `omx_` токен: `DELETE FROM api_tokens WHERE token_hash = ...`
    (или пометить отозванным, если схема поддерживает) — клиент получит 401
    и перейдёт на повторный redeem лицензии.
 3. Инцидент-процедура — SECURITY.md.

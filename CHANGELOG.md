@@ -12,6 +12,15 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+- Ребрендинг JARVIS → OMNIX / OMNI: пакеты `com.omnix.*`, applicationId
+  `com.omnix.assistant`, классы `Omni*` (AI-слой) / `Omnix*` (продукт),
+  env `OMNIX_*`, метрики `omnix_*`, коды лицензий `OMX-` (legacy `JRV-`
+  принимаются), артефакт `OMNIX-v0.2-dev.apk`. Намеренно сохранено:
+  `hey_jarvis_v0.1.onnx` (акустика v0.1 детектирует legacy-фразу «Hey Jarvis»;
+  целевая фраза «Omni», phase-2 retrain — BLOCKER),
+  `JARVIS-CLIP-ATTEST-v1` (домен-разделитель общий с firmware Clip),
+  фолбэк `JARVIS_*`-секретов в release-пайплайне.
+
 - v0.3 Stabilization (docs/V03_STABILIZATION.md): ветка
   release/v0.3-stabilization от main@122ba09, baseline v0.2.0 зафиксирован,
   22 фазы протокола сведены к честным статусам (PASS с evidence / BLOCKED —
@@ -32,7 +41,7 @@ must be added only when the repository owner creates an actual release.
 - Observability: единый request ID (`omx_01J…`, ULID: время+случайность,
   лексикографическая сортировка) сквозь весь путь запроса —
   Voice → Router → Tool → AI → Server → Provider (docs/OBSERVABILITY.md).
-  Раньше JarvisApiClient рождал отдельный UUID на каждый HTTP-вызов —
+  Раньше OmnixApiClient рождал отдельный UUID на каждый HTTP-вызов —
   клиентский и серверный следы одного запроса не коррелировали. Теперь id
   генерируется один раз (оркестратор на финальном STT / SendPromptUseCase),
   несётся в `ExecutionRequest.requestId` (copy-стабилен), пишется в каждый
@@ -167,15 +176,15 @@ must be added only when the repository owner creates an actual release.
   интеграция на реальном Postgres (6 сценариев), JVM-тесты Android-стека;
   8 CLIP-инвариантов. См. docs/OMNIX_CLIP_BINDING.md.
 - Device binding API-токенов (server V007): клиент — не источник истины.
-  jrv_-токен привязывается к устройству при redeem (`api_tokens.device_hash`);
-  AI-исполнение проверяет `X-Jarvis-Device` на КАЖДОМ запросе
+  omx_-токен привязывается к устройству при redeem (`api_tokens.device_hash`);
+  AI-исполнение проверяет `X-Omnix-Device` на КАЖДОМ запросе
   (`LicenseTokenAuthenticator.authenticate(header, deviceHeader)`): нет
   заголовка — отказ, чужое устройство — отказ, украденный токен бесполезен.
   Legacy-токены (до V007) на AI-пути отвергаются и само-залечиваются при
   первом успешном `/v1/license/validate` (клиент всегда проходит его до
   разблокировки UI); привязка одноразовая. entitlement по-прежнему
   перечитывается с сервера на каждом запросе (лицензия/план/биллинг/срок).
-  Клиент: `AuthInterceptor` шлёт `X-Jarvis-Device` (тот же device id, что в
+  Клиент: `AuthInterceptor` шлёт `X-Omnix-Device` (тот же device id, что в
   redeem/validate). Тесты: биндинг + само-залечивание в
   LicenseApiIntegrationTest; 6 LICENSE-инвариантов. См. docs/LICENSE_BILLING.md.
 - Accessibility Lockdown: экранный контент не покидает устройство — пайплайн
@@ -206,7 +215,7 @@ must be added only when the repository owner creates an actual release.
   разрешения → политика), `ActionOrigin` протянут через `ToolExecutor.execute/
   executeAll`, `PersonalAutomationEngine` объявляет AUTOMATION. Документация —
   `docs/ACTION_POLICY.md`; 20+ JVM-тестов контрактов политики.
-- Единый контракт Tool Registry 2.0 (`JarvisTool`): `requiredPermissions`
+- Единый контракт Tool Registry 2.0 (`OmniTool`): `requiredPermissions`
   (контрактный член; CapabilityAwareTool выводит его из capability-контракта,
   preflight блокирует plain-инструменты с невыданными разрешениями),
   `verify(arguments, draft)` (фаза Verification: ToolExecutor вызывает её после
@@ -247,7 +256,7 @@ must be added only when the repository owner creates an actual release.
 - Инвариант H-04 актуализирован после удаления `ManualWakeWordTrigger`/
   `MainViewModel` frontend-rebuild'ом `0e9bf4b` (до фикса CI-шаг инвариантов
   падал на HEAD): проверка теперь требует, чтобы пайплайн запускался только
-  через `JarvisVoiceService`, а presentation-слой не вызывал его напрямую.
+  через `OmnixVoiceService`, а presentation-слой не вызывал его напрямую.
 - `docs/ANDROID_CAPABILITIES.md`: раздел «Верификация результата» с таблицей
   механизма подтверждения и честного отказа по каждому инструменту.
 
@@ -283,8 +292,8 @@ must be added only when the repository owner creates an actual release.
 
 
 - Release signing pipeline: env/keystore.properties-driven `signingConfig`,
-  manual "Release JARVIS (signed)" workflow (AAB+APK, `apksigner verify`),
-  `JARVIS_REQUIRE_SIGNED_RELEASE` fail-fast, R8 release smoke on every PR,
+  manual "Release OMNIX (signed)" workflow (AAB+APK, `apksigner verify`),
+  `OMNIX_REQUIRE_SIGNED_RELEASE` fail-fast, R8 release smoke on every PR,
   `docs/RELEASE.md`.
 - Accessibility privacy boundary: per-package policy
   (`AccessibilityPrivacyPolicy` + `AccessibilityPrivacyStore`), lock-screen/system
@@ -293,7 +302,7 @@ must be added only when the repository owner creates an actual release.
   `APP_BLOCKED_BY_PRIVACY_POLICY` / `PASSWORD_FIELD_USER_INPUT_REQUIRED`
   results, package-only audit logging, 16 JVM policy tests.
 - Prometheus metrics export: `GET /v1/admin/metrics/prometheus`
-  (Bearer + VIEW_ADMIN, `text/plain; version=0.0.4`), stable `jarvis_*`
+  (Bearer + VIEW_ADMIN, `text/plain; version=0.0.4`), stable `omnix_*`
   metric names, endpoint and format tests.
 - Operational runbook `docs/RUNBOOK.md` (metrics map, alert table,
   provider/rate-limit/401/usage/Postgres/rollback playbooks, backup RPO/RTO,
@@ -333,7 +342,7 @@ must be added only when the repository owner creates an actual release.
 - Detekt static analysis with a reviewed high-signal rule configuration and
   HTML/XML/SARIF reports.
 - Behavioral tests for activation ViewModel, settings ViewModel, repositories,
-  JARVIS API network handling, and Android system/device tools.
+  OMNIX API network handling, and Android system/device tools.
 - Android instrumentation tests for encrypted `LicenseManagerImpl`, DataStore
   persistence, and Compose component semantics.
 - Repository security disclosure process in `SECURITY.md`.
@@ -390,7 +399,7 @@ must be added only when the repository owner creates an actual release.
 - Dead `BluetoothAudioManager` (superseded by `BluetoothAudioRouter`),
   unused `AutomationRuleDto`/`AutomationActionDto` DTOs (superseded by
   `AutomationEntity` plus explicit JSON), `ObserveNetworkStateUseCase`,
-  the `ExecutionStep` typealias, the `JarvisGreenGlow` color, the unused
+  the `ExecutionStep` typealias, the `OmnixGreenGlow` color, the unused
   server `ApiException`, and 39 verified-unused Kotlin imports.
 - Eight unused legacy string resources (`status_*`, `btn_*`) together with
   their eight `UnusedResources` lint-baseline entries; the deterministic lint

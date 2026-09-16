@@ -56,7 +56,7 @@
 | `ClipAttestationProtocol` | каноническое сообщение + nonce (зеркало сервера) |
 | `ClipIdentityVerifier` | чистая ECDSA-проверка, fail-closed |
 | `ClipTrustStore` (`EncryptedClipTrustStore`) | ключ закрепляется ТОЛЬКО из ответов сервера — офлайн-проверка с серверным якорем |
-| `ClipAttestationApi` / `HttpClipAttestationApi` | challenge/attest (bearer jrv_, паттерн HttpLicenseServerValidator) |
+| `ClipAttestationApi` / `HttpClipAttestationApi` | challenge/attest (bearer omx_, паттерн HttpLicenseServerValidator) |
 | `ClipAttestationManager` | онлайн (сервер) / офлайн (закреплённый ключ + свежесть ±90с) |
 | `ClipTransport` | **контракт для firmware** (см. ниже) |
 

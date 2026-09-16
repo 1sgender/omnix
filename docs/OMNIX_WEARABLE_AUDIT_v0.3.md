@@ -18,13 +18,13 @@
 |---|---|---|
 | Voice pipeline | `VoiceInteractionOrchestrator.kt` (1040 строк) | 9 режимов: STANDBY_WAKE_WORD → VERIFYING_KEYWORD → LISTENING_USER_QUERY → AI_THINKING → TTS_SPEAKING → CONTINUOUS_CONVERSATION; + AWAITING_CONFIRMATION, AWAITING_PRIVACY_CONSENT, LIVE_EAR_INTERPRETER |
 | Wake word | `AlisaStyleWakeWordEngine.kt` + `WakeWordExtractor` | STANDBY-режим FGS-microphone, частичные результаты STT + извлечение wake-слова/запроса |
-| Microphone service | `JarvisVoiceService.kt` (449) | foregroundServiceType=«microphone», START_STICKY + CR-11 guard, boot-restart (RECEIVE_BOOT_COMPLETED), PhoneStateListener/TelephonyCallback (звонки) |
+| Microphone service | `OmnixVoiceService.kt` (449) | foregroundServiceType=«microphone», START_STICKY + CR-11 guard, boot-restart (RECEIVE_BOOT_COMPLETED), PhoneStateListener/TelephonyCallback (звонки) |
 | STT | `SpeechRecognizerManager.kt` (302) | системный `SpeechRecognizer`, FREE_FORM, partial results, языковой тег. **On-device НЕ форсируется** (`EXTRA_PREFER_OFFLINE`/`createOnDeviceSpeechRecognizer` отсутствуют) |
 | Local AI | `agent/localai/` (MediaPipe LLM runtime) | `isReady()` = модель найдена локально; модель **не поставляется с APK** (user-installed) |
 | Routing | `ExecutionDecisionEngine` | P1 DEVICE → P4 AGENT → P2 LOCAL → P3 CLOUD, privacy-гейты (закрытый пункт аудита) |
 | Fast path | `FastCommandRouter` | route→Tool **без LLM** (закрытый пункт) |
 | Agent core | `pipeline/`, `planner/`, `observation/` | Plan→Act→Observe→Re-plan (закрытый пункт) |
-| Tool system | 39 JarvisTool | wifi, bt, brightness, volume, apps, sms, calls, screenshot, a11y (UiClick/UiType/ScreenReader), notifications, calendar, alarms, media, clipboard, share, translate, weather, web, location, flashlight, dnd, battery, time, device-info, network, contacts, telegram, **memory.remember/recall/forget**, **ear.briefing**, heart-rate, steps, wear-os, sleep, create-automation, vision |
+| Tool system | 39 OmniTool | wifi, bt, brightness, volume, apps, sms, calls, screenshot, a11y (UiClick/UiType/ScreenReader), notifications, calendar, alarms, media, clipboard, share, translate, weather, web, location, flashlight, dnd, battery, time, device-info, network, contacts, telegram, **memory.remember/recall/forget**, **ear.briefing**, heart-rate, steps, wear-os, sleep, create-automation, vision |
 | TTS | `TextToSpeechManager.kt` (344) | QUEUE_FLUSH по умолчанию, буфер+re-init, обработка «Russian TTS not available» |
 | Bluetooth audio | `BluetoothAudioRouter.kt` (364) | SCO / A2DP / BLE_HEADSET / wired / USB, `setCommunicationDevice`, `routeAudioToEarbud()`, **headset-only mode** (`isHeadsetOnlyMode` в оркестраторе: без наушников работа блокируется) |
 | Accessibility | `AccessibilityPrivacyPolicy` | банк/пароль/2FA = BLOCK (закрытый пункт) |
@@ -96,7 +96,7 @@ instrumented, но **ни один этап не измерен и не дока
 | TTS-маршрут в наушники | ✅ код | routeAudioToEarbud + setCommunicationDevice |
 | Phone locked / screen off | PARTIAL | FGS-microphone + WAKE_LOCK + boot-restart есть в коде; **поведение на устройстве BLOCKED** (вендорские ограничения Doze/FGS-mic — самая рискованная зона Android) |
 
-**Ответ на ключевой вопрос §3** («может ли пользователь сказать "JARVIS, …" с
+**Ответ на ключевой вопрос §3** («может ли пользователь сказать "OMNIX, …" с
 заблокированным телефоном»): по коду — да, FGS+boot+wake реализованы; по фактам —
 **NOT PROVEN (BLOCKED)**: это ровно тот сценарий, который вендоры ограничивают
 агрессивнее всего, и который нельзя подтвердить без физического устройства.
@@ -172,7 +172,7 @@ OMNIX_TRACE-инструментации (6–8 точек) либо logcat-epoc
 |---|---|---|
 | Слишком длинные ответы? | PARTIAL | device-tools: короткое «summary, сэр.»; **cloud-ответы — полной длины LLM**, ограничений/тримминга для голоса нет |
 | Подтреждения нужны? | ✅ | AWAITING_CONFIRMATION: да/нет голосом, таймаут, очередь (ToolExecutor pending confirmation) |
-| Может ли перебить JARVIS? | ⚠️ **ОГРАНИЧЕНО** | во время TTS_SPEAKING FinalResult игнорируется (CR-01) → **голое «Стоп» во время ответа НЕ работает**; перебивание — только через wake-слово (медленнее) или по коду не гарантировано. **Это ключевой UX-гэп wearable** |
+| Может ли перебить OMNIX? | ⚠️ **ОГРАНИЧЕНО** | во время TTS_SPEAKING FinalResult игнорируется (CR-01) → **голое «Стоп» во время ответа НЕ работает**; перебивание — только через wake-слово (медленнее) или по коду не гарантировано. **Это ключевой UX-гэп wearable** |
 | «Нет»/«Отмена»/«Стоп» | ✅ в слушающих режимах | «стоп/хватит/отмена/джарвис стоп/выйти» (orchestrator:401) + ConfirmationIntent |
 | Follow-up без wake word | ⚠️ PARTIAL | CONTINUOUS_CONVERSATION: окно 8 с (FOLLOW_UP_WINDOW_MS) после каждого ответа — **работает**; но |
 | «Какая погода?» → «А завтра?» | ❌ **FAKE COMPLETE** | `ConversationContext`/`ReferenceResolver`/`WorkingMemory.context` существуют, но **не вызываются из голосового пути** (grep: WorkingMemory используют только decision/observation engines). Разрешение анафоры («он», «а завтра», «его») в голосе не подключено |
@@ -249,7 +249,7 @@ BLOCKED (§4). Важное правило уже зашито: USER_ACTION_REQU
 | Low-latency interaction | Partially (epoch-discard, flush-TTS — софтверно; измерений нет) |
 | Custom wake mechanism | **Not implemented** (софтверный wake) |
 | Дополнительные сенсоры Clip | **Not implemented** |
-| Ear Briefing при надевании | **Partially/Fake-complete**: движок есть (15-сек брифинг «JARVIS Earclip»), но автотриггер «при надевании» в коде не найден — вызывается только голосом (EarBriefingTool) |
+| Ear Briefing при надевании | **Partially/Fake-complete**: движок есть (15-сек брифинг «OMNIX Clip»), но автотриггер «при надевании» в коде не найден — вызывается только голосом (EarBriefingTool) |
 | Live Ear Interpreter | **Implemented (код)** — full-duplex перевод «в ухо», CR-22 last-wins; уникальная софтверная фича, но работает с любыми наушниками |
 
 ```text
@@ -335,7 +335,7 @@ runtime-доказательство — BLOCKED (§4). STT-канал венд�
 
 | Требование | Статус | Факт |
 |---|---|---|
-| remember («Запомни, мою машину зовут Tesla») | ✅ код | `memory.remember` (isOffline, key→value) → JarvisMemoryManager → **Room (FactDao/FactEntity), локально** |
+| remember («Запомни, мою машину зовут Tesla») | ✅ код | `memory.remember` (isOffline, key→value) → OmniMemoryManager → **Room (FactDao/FactEntity), локально** |
 | retrieve («Какая машина у меня?») | ✅ код | `memory.recall` + word-overlap semantic matching (EmbeddingProvider неактивен — гэп B-4) |
 | forget | ✅ код | `memory.forget` + ForgetResult |
 | voice-вызов | ⚠️ | вызов идёт через LLM/agent (нужен tool-call) или fast router — на устройстве не доказан (BLOCKED) |
@@ -438,7 +438,7 @@ TTS, audio focus, кнопка/жесты, телеметрия/батарея �
 | Privacy | 6/10 (сильные гейты; STT-канал открыт) |
 | Security | 7/10 (закрытые аудиты; runtime BLOCKED) |
 | Reliability | 2/10 (гвасты/эпохи в коде; runtime BLOCKED) |
-| **Overall JARVIS readiness** | **≈2.5/10** |
+| **Overall OMNIX readiness** | **≈2.5/10** |
 
 ## 23. Главный KPI Report
 
@@ -458,7 +458,7 @@ Battery Drain:                NOT MEASURED
 
 ## 24. Финальный вопрос
 
-> **Может ли сегодняшний JARVIS реально заменить доставание телефона для значимой части повседневных задач?**
+> **Может ли сегодняшний OMNIX реально заменить доставание телефона для значимой части повседневных задач?**
 
 ```text
 NO

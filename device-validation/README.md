@@ -9,7 +9,7 @@
 
 ```text
 adb в PATH, USB-отладка включена, один подключённый девайс
-APK: CI-артефакт JARVIS-v0.2-dev.apk (devDebug) ИЛИ локально собранный
+APK: CI-артефакт OMNIX-v0.2-dev.apk (devDebug) ИЛИ локально собранный
      release после настройки подписи (docs/RELEASE.md)
 Сервер: развёрнутый инстанс (см. docs/PRODUCTION_DEPLOYMENT.md) —
         БЕЗ него activation/cloud-сценарии = BLOCKED

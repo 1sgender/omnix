@@ -1,0 +1,300 @@
+package com.omnix.assistant.agent.decision
+
+import com.omnix.assistant.agent.model.ToolCall
+import com.omnix.assistant.core.request.RequestIds
+import com.omnix.assistant.domain.models.Message
+
+/**
+ * Источник запроса: голос (STT → VoiceInteractionOrchestrator) или текстовый чат.
+ */
+enum class RequestSource {
+    VOICE,
+    CHAT
+}
+
+/**
+ * Уровень приватности запроса.
+ *
+ * Правило проекта (см. [ExecutionDecisionEngine]): PRIVATE и SENSITIVE НИКОГДА
+ * не уходят в облачную модель без явного разрешения пользователя
+ * ([ExecutionRequest.cloudExplicitlyAllowed]).
+ *
+ * Явная метка вызывающего слоя усиливается локальным [PrivacyClassifier]:
+ * автоматически обнаруженный PRIVATE/SENSITIVE нельзя понизить до NORMAL.
+ */
+enum class PrivacyLevel {
+    /** Classification отсутствует, завершилась ошибкой или не может быть доверенной. */
+    UNKNOWN,
+    NORMAL,
+    PRIVATE,
+    SENSITIVE;
+
+    /** UNKNOWN также блокирует cloud: отсутствие решения не является разрешением. */
+    val isCloudRestricted: Boolean get() = this != NORMAL
+}
+
+/**
+ * Единый контракт запроса на выполнение (v0.2).
+ *
+ * Заменяет «голую строку» в качестве входа агентского конвейера: теперь вместе
+ * с текстом передаются ограничения, влияющие на выбор пути выполнения.
+ *
+ * @param text            распознанный/введённый текст запроса.
+ * @param source          голос или чат.
+ * @param requiresWeb     запросу нужны актуальные данные из сети. Локальный
+ *                        офлайн-слой НЕ имеет права имитировать их выполнение.
+ * @param requiresDeviceControl подсказка вызывающего слоя, что запрос — про
+ *                        управление устройством. Не подменяет FastCommandRouter,
+ *                        а только повышает приоритет device-пути.
+ * @param privacyLevel    политика приватности запроса.
+ * @param cloudExplicitlyAllowed явное разрешение пользователя отправить
+ *                        приватный запрос в облако (по умолчанию — нет).
+ * @param history         история диалога для облачной модели (технически
+ *                        необходима: существующий AIRepository принимает её).
+ */
+data class ExecutionRequest(
+    val text: String,
+    val source: RequestSource,
+    val requiresWeb: Boolean = false,
+    val requiresDeviceControl: Boolean = false,
+    /** Client/UI hint only. UNKNOWN forces local classification before routing. */
+    val privacyLevel: PrivacyLevel = PrivacyLevel.UNKNOWN,
+    val cloudExplicitlyAllowed: Boolean = false,
+    val history: List<Message> = emptyList(),
+    /**
+     * MEMORY: релевантные воспоминания для ЭТОГО запроса («relevant memories
+     * only»). Заполняет [com.omnix.assistant.domain.usecases.SendPromptUseCase]
+     * через `OmniMemoryManager.buildPromptMemoryContext(query)`: top-K по
+     * гибридному скору (cosine + TF-IDF + importance + recency), бюджет ~800
+     * символов. В LLM уходит НЕ вся память, а только retrieved-подмножество под
+     * текущего запроса; пусто = retrieval ничего не нашёл (не отправляем заглушку).
+     *
+     * ВАЖНО: включается в privacy-классификацию ([withContextualClassification]) —
+     * память выведена из реплик пользователя, и приватный факт в памяти не
+     * должен уйти в облако под «безобидным» запросом.
+     */
+    val memoryContext: String = "",
+    /**
+     * OBSERVABILITY: единый request id (`omx_01J…`, [RequestIds]) на весь путь
+     * Voice → Router → Tool → AI → Server → Provider. Генерируется ОДИН РАЗ на
+     * пользовательский запрос (SendPromptUseCase / оркестратор); copy() и
+     * downstream-контракты сохраняют его; сервер пишет его в
+     * `ai_usage_records.request_id` и возвращает эхом. Пустая строка
+     * недопустима в проде: конструктор генерирует сам — пустым бывает только
+     * legacy-вызов, и `OmnixApiClient` подставит свой.
+     */
+    val requestId: String = RequestIds.newId(),
+    /**
+     * Voice Latency: timestamp финального STT-результата
+     * ([android.os.SystemClock.elapsedRealtime]) — точка «STT → Router».
+     * null = запрос не голосовой (чат) — сегмент не измеряется.
+     */
+    val originTimestampMs: Long? = null,
+    /**
+     * Privacy classification result that accompanies this request.
+     *
+     * H-02 / Refactor #3: this is the SINGLE source of truth for privacy
+     * classification on the outbound request path. [SendPromptUseCase] is
+     * the only production entry-point that computes it (via
+     * [withContextualClassification], passing the full context: user
+     * prompt + systemPrompt + recent history). Downstream layers
+     * ([ExecutionDecisionEngine], adapters, repositories, network client)
+     * read [effectivePrivacyLevel] directly and MUST NOT re-run
+     * [PrivacyClassifier.classifySafely] on the same payload — that caused
+     * 3–5 duplicate classifications per request and opened the door to
+     * drift between layers.
+     *
+     * Default is a cheap contextual classification (prompt + history; no
+     * systemPrompt). This is used by tests, internal convenience overloads
+     * (see [AgentPipeline.process(String)]), and direct construction — so
+     * that a benign-looking "continue our discussion" request cannot ship
+     * sensitive history to the cloud just because the caller skipped
+     * [withContextualClassification]. Production requests MUST go through
+     * [withContextualClassification] (or supply an explicit classification)
+     * so that the systemPrompt participates in the decision too.
+     *
+     * The server still re-classifies in `AiRouter` (trust-boundary /
+     * defense-in-depth); that is intentional and out of scope here.
+     */
+    val privacyClassification: PrivacyClassification =
+        PrivacyClassifier.classifySafely(PrivacyContent.from(text, history)),
+    /**
+     * TTS-стриминг (§13 ТЗ): вызывается для каждого готового предложения
+     * локального ответа по мере генерации (через [com.omnix.assistant.voice.tts.SentenceBuffer]).
+     * null = стриминга нет (чат, переводчик, тесты): ответ возвращается
+     * целиком как раньше. Поле переживает copy() — проброс через движок
+     * и адаптеры не требует изменения их сигнатур.
+     *
+     * Контракт: вызывается НЕ на Main-потоке, обязан не бросать исключений
+     * и не ходить в сеть (предложения уходят в локальный TTS-движок).
+     */
+    val onSentence: ((String) -> Unit)? = null
+) {
+    /** Автоматически обнаруженный уровень, вычисленный до логирования/роутинга. */
+    val detectedPrivacyLevel: PrivacyLevel = privacyClassification.level
+
+    /** UNKNOWN/failure не может быть ослаблен declared NORMAL. */
+    val effectivePrivacyLevel: PrivacyLevel =
+        PrivacyClassifier.effective(privacyLevel, privacyClassification)
+
+    /** Явное consent не преодолевает UNKNOWN/classifier failure. */
+    val isCloudAllowed: Boolean
+        get() = when (effectivePrivacyLevel) {
+            PrivacyLevel.NORMAL -> true
+            PrivacyLevel.PRIVATE, PrivacyLevel.SENSITIVE -> cloudExplicitlyAllowed
+            PrivacyLevel.UNKNOWN -> false
+        }
+
+    /** Prompt plaintext никогда не нужен в routing logs, даже при NORMAL. */
+    val loggableText: String
+        get() = "<redacted:${text.length} chars>"
+
+    companion object {
+        /**
+         * Build an [ExecutionRequest] with a context-aware privacy
+         * classification (user text + system prompt + related/history
+         * content). This is the single production entry point — use it
+         * from [SendPromptUseCase] (and any future non-chat entry points)
+         * to guarantee one, consistent classification per request.
+         */
+        fun withContextualClassification(
+            text: String,
+            source: RequestSource,
+            declaredLevel: PrivacyLevel = PrivacyLevel.UNKNOWN,
+            systemPrompt: String = "",
+            relatedContent: List<String> = emptyList(),
+            history: List<Message> = emptyList(),
+            requiresWeb: Boolean = false,
+            requiresDeviceControl: Boolean = false,
+            cloudExplicitlyAllowed: Boolean = false,
+            originTimestampMs: Long? = null,
+            memoryContext: String = "",
+            requestId: String = RequestIds.newId(),
+            onSentence: ((String) -> Unit)? = null
+        ): ExecutionRequest {
+            val classification = PrivacyClassifier.classifySafely(
+                PrivacyContent(
+                    text = text,
+                    // MEMORY: память участвует в классификации наравне с
+                    // systemPrompt и историей (defense-in-depth: сервер всё
+                    // равно переклассифицирует).
+                    relatedContent =
+                        (listOf(systemPrompt, memoryContext).filter(String::isNotBlank)) +
+                        relatedContent
+                )
+            )
+            return ExecutionRequest(
+                text = text,
+                source = source,
+                requiresWeb = requiresWeb,
+                requiresDeviceControl = requiresDeviceControl,
+                privacyLevel = declaredLevel,
+                cloudExplicitlyAllowed = cloudExplicitlyAllowed,
+                history = history,
+                privacyClassification = classification,
+                originTimestampMs = originTimestampMs,
+                memoryContext = memoryContext,
+                requestId = requestId,
+                onSentence = onSentence
+            )
+        }
+
+    }
+}
+
+/**
+ * Каким механизмом был выполнен запрос.
+ */
+enum class ExecutionType {
+    /** Локальная команда устройства: FastCommandRouter → ToolExecutor → OmniTool. */
+    DEVICE_TOOL,
+
+    /**
+     * Локальный офлайн-слой: on-device Gemma (если модель установлена) и
+     * процедурная память / сохранённые пользовательские сценарии.
+     */
+    LOCAL_AI,
+
+    /** Облачная LLM через AIRepository / OmnixApiAiClient / OMNIX API. */
+    CLOUD_AI,
+
+    /** Многошаговый план: CognitivePlanner → AgentCognitiveLoop. */
+    AGENT
+}
+
+/**
+ * Почему был выбран путь выполнения — для структурированных логов и тестов.
+ */
+enum class DecisionReason {
+    FAST_ROUTER_CONFIDENT,
+    FAST_ROUTER_UNCERTAIN,
+    COMPLEX_MULTI_STEP,
+    LOCAL_AI_HANDLED,
+    LOCAL_AI_UNCERTAIN,
+    LOCAL_AI_NO_WEB_CAPABILITY,
+    CLOUD_BLOCKED_BY_PRIVACY,
+    EXTERNAL_TOOL_BLOCKED_BY_PRIVACY,
+    CLOUD_FAILED,
+    CLOUD_PLAN_DETECTED,
+
+    /** AGENT-CORE: ровно один tool_call из ответа модели — Tool, не Agent. */
+    CLOUD_PLAN_SINGLE_TOOL,
+    DEVICE_TOOL_FAILED,
+    INVALID_REQUEST,
+    CLARIFICATION_REQUIRED,
+    UNEXPECTED_ERROR
+}
+
+/**
+ * Единый результат выполнения (v0.2).
+ *
+ * [ConfirmationRequired] — необходимое техническое расширение контракта:
+ * в проекте уже существует поток подтверждения опасных действий
+ * (ToolExecutor → PendingConfirmationRequest → голосовое «да/нет» / UI-карточка).
+ * Без этой ветки существующие consumers сломались бы.
+ */
+sealed class ExecutionResult {
+
+    data class Success(
+        val text: String,
+        val executionType: ExecutionType,
+        /**
+         * Accessibility Lockdown: true, когда текст получен чтением экрана
+         * (accessibility.screen_reader). Точки персистентности обязаны
+         * сохранить placeholder вместо текста — экральный контент не течёт
+         * в историю чата и дальше в облачный LLM. См. ScreenContentPrivacy.
+         */
+        val containsScreenContent: Boolean = false,
+        /** Технические детали (reason, tool_id, confidence) — не для пользователя. */
+        val metadata: Map<String, String> = emptyMap()
+    ) : ExecutionResult()
+
+    data class Error(
+        val message: String,
+        val reason: DecisionReason = DecisionReason.UNEXPECTED_ERROR
+    ) : ExecutionResult()
+
+    /** Не хватает объекта/критерия — нужно уточнение, а не выдуманный ответ. */
+    data class ClarificationRequired(
+        val promptMessage: String
+    ) : ExecutionResult()
+
+    /** Действие требует явного подтверждения пользователя (SMS, звонок и т. п.). */
+    data class ConfirmationRequired(
+        val toolCall: ToolCall,
+        val promptMessage: String
+    ) : ExecutionResult()
+}
+
+/**
+ * Конфигурация решения. Вынесена отдельно, потому что в проекте до этого
+ * НЕ существовало числового порога уверенности роутинга.
+ *
+ * TODO: [deviceConfidenceThreshold] требует калибровки на реальных логах.
+ *  Текущее значение подобрано так, чтобы полностью сохранить существующее
+ *  поведение: FastCommandRouter.HandledLocally(toolCall != null) = 0.95,
+ *  HandledLocally без toolCall (реплика-ответ) = 0.80, ForwardToLlm = 0.0.
+ */
+data class ExecutionDecisionConfig(
+    val deviceConfidenceThreshold: Float = 0.75f
+)

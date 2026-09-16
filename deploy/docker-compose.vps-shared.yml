@@ -11,10 +11,10 @@
 #   }
 #
 # Start: docker compose -f docker-compose.vps-shared.yml --env-file .env.production up -d --build
-name: jarvis-shared
+name: omnix-shared
 
 services:
-  jarvis-server:
+  omnix-server:
     build:
       context: ..
       dockerfile: deploy/server.Dockerfile
@@ -32,12 +32,12 @@ services:
       # Small-box heap cap (Gradle build uses its own flags in server.Dockerfile).
       JAVA_OPTS: "-Xmx448m -XX:MaxMetaspaceSize=192m"
 
-      JARVIS_CLIENT_TOKENS: ${JARVIS_CLIENT_TOKENS:?Load static tokens from a secret manager}
-      JARVIS_ADMIN_CLIENTS: ${JARVIS_ADMIN_CLIENTS:?Set explicit admin client IDs}
-      JARVIS_ADMIN_BOOTSTRAP_USERNAME: ${JARVIS_ADMIN_BOOTSTRAP_USERNAME:-}
-      JARVIS_ADMIN_BOOTSTRAP_PASSWORD: ${JARVIS_ADMIN_BOOTSTRAP_PASSWORD:-}
+      OMNIX_CLIENT_TOKENS: ${OMNIX_CLIENT_TOKENS:?Load static tokens from a secret manager}
+      OMNIX_ADMIN_CLIENTS: ${OMNIX_ADMIN_CLIENTS:?Set explicit admin client IDs}
+      OMNIX_ADMIN_BOOTSTRAP_USERNAME: ${OMNIX_ADMIN_BOOTSTRAP_USERNAME:-}
+      OMNIX_ADMIN_BOOTSTRAP_PASSWORD: ${OMNIX_ADMIN_BOOTSTRAP_PASSWORD:-}
 
-      DATABASE_URL: jdbc:postgresql://postgres:5432/jarvis
+      DATABASE_URL: jdbc:postgresql://postgres:5432/omnix
       DATABASE_USER: ${DATABASE_USER:?Set DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Load DATABASE_PASSWORD from a secret manager}
       DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-8}
@@ -93,7 +93,7 @@ services:
     image: postgres:17.10-bookworm@sha256:9b18b78397054fce88a9552e9d5a3ad5bb7fd258c5b3cc1c5028e46373d6ea8f
     restart: unless-stopped
     environment:
-      POSTGRES_DB: jarvis
+      POSTGRES_DB: omnix
       POSTGRES_USER: ${DATABASE_USER:?Set DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Load DATABASE_PASSWORD from a secret manager}
     volumes:

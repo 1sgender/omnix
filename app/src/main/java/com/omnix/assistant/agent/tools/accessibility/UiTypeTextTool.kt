@@ -1,0 +1,152 @@
+package com.omnix.assistant.agent.tools.accessibility
+
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import com.omnix.assistant.agent.capability.DangerLevel
+import com.omnix.assistant.agent.capability.DeviceCapability
+import com.omnix.assistant.agent.capability.OmniCapability
+import com.omnix.assistant.agent.capability.ToolCapabilityContract
+import com.omnix.assistant.agent.core.CapabilityAwareTool
+import com.omnix.assistant.agent.core.ToolCategory
+import com.omnix.assistant.agent.model.ToolExecutionResult
+import com.omnix.assistant.agent.model.ToolRisk
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.serialization.json.*
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Ввод текста в сфокусированное поле (ACTION_SET_TEXT через Accessibility).
+ *
+ * Звено цепочки «открой приложение → найди поле поиска → введи запрос →
+ * проверь результат». Как и другие accessibility-инструменты, честно
+ * сообщает USER_ACTION_REQUIRED, если служба специальных возможностей
+ * не включена, и FAILURE, если редактируемого поля на экране нет.
+ */
+@Singleton
+class UiTypeTextTool @Inject constructor(
+    @ApplicationContext private val context: Context
+) : CapabilityAwareTool {
+
+    override val toolId: String = "accessibility.type_text"
+    override val description: String = "Вводит текст в поле поиска или ввода на текущем экране (требует включения Accessibility Service)"
+    override val category: ToolCategory = ToolCategory.DEVICE
+    override val riskLevel: ToolRisk = ToolRisk.CONFIRMATION_REQUIRED
+    override val isOffline: Boolean = true
+    override val mayDiscloseUserContentExternally: Boolean = true
+    override val requiresForeground: Boolean = true
+    override val executionTimeoutMs: Long = 5000L
+
+    override val capabilityContract = ToolCapabilityContract(
+        capabilities = setOf(DeviceCapability.USE_ACCESSIBILITY_SERVICE),
+        dangerLevel = DangerLevel.MEDIUM,
+        confirmationRequired = true
+    )
+    override val capability: OmniCapability = OmniCapability.Accessibility
+
+    override val parametersSchema: JsonObject = buildJsonObject {
+        put("type", "object")
+        putJsonObject("properties") {
+            putJsonObject("text") {
+                put("type", "string")
+                put("description", "Текст для ввода в поле поиска (например: 'UFC')")
+            }
+        }
+        put("required", buildJsonArray { add("text") })
+    }
+
+    override suspend fun execute(arguments: JsonObject): ToolExecutionResult {
+        val text = arguments["text"]?.jsonPrimitive?.contentOrNull?.trim().orEmpty()
+        if (text.isEmpty()) {
+            return ToolExecutionResult.failure(
+                summary = "Не указан текст для ввода",
+                error = "MISSING_TEXT"
+            )
+        }
+        if (text.length > 10_000) {
+            return ToolExecutionResult.failure(
+                summary = "Текст для ввода слишком длинный",
+                error = "TEXT_TOO_LONG"
+            )
+        }
+
+        // КРИТИЧНО: проверяем, включён ли Accessibility Service.
+        if (!OmnixAccessibilityService.isServiceRunning()) {
+            val opened = try {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+                true
+            } catch (_: Exception) {
+                false
+            }
+
+            // Честный статус: действие НЕ выполнено, нужен пользователь в системном UI.
+            return ToolExecutionResult.userActionRequired(
+                summary = if (opened) {
+                    "Для ввода текста необходимо включить OMNIX Accessibility Service. Открыл настройки специальных возможностей."
+                } else {
+                    "Для ввода текста необходимо включить OMNIX Accessibility Service в настройках."
+                },
+                reason = "ACCESSIBILITY_SERVICE_DISABLED",
+                data = buildJsonObject { put("opened_settings", opened) }
+            )
+        }
+
+        return try {
+            when (val result = OmnixAccessibilityService.typeText(text)) {
+                is AccessibilityActionResult.Performed ->
+                    ToolExecutionResult.success(
+                        // Не дублируем потенциальный пароль/токен в observation,
+                        // TTS и последующих cloud-промптах.
+                        summary = "Ввёл текст в поле ввода",
+                        data = buildJsonObject {
+                            put("text_length", text.length)
+                            put("typed", true)
+                        }
+                    )
+
+                AccessibilityActionResult.PasswordFieldBlocked ->
+                    // Пароль, продиктованный голосом, остался бы в логах STT —
+                    // вводим только руками пользователя.
+                    ToolExecutionResult.userActionRequired(
+                        summary = "Это поле пароля — ввод через ассистента запрещён. Введите пароль вручную.",
+                        reason = "PASSWORD_FIELD_USER_INPUT_REQUIRED",
+                        data = buildJsonObject { put("typed", false) }
+                    )
+
+                is AccessibilityActionResult.PrivacyBlocked ->
+                    ToolExecutionResult.failure(
+                        summary = "Приложение ${result.decision.packageName ?: "на экране"} защищено privacy-политикой — ввод текста запрещён.",
+                        error = "APP_BLOCKED_BY_PRIVACY_POLICY",
+                        data = buildJsonObject { put("blocked_reason", result.decision.reason.name) }
+                    )
+
+                AccessibilityActionResult.NotFound ->
+                    ToolExecutionResult.failure(
+                        summary = "Не нашёл редактируемого поля на экране — текст не введён",
+                        error = "NO_EDITABLE_FIELD"
+                    )
+
+                AccessibilityActionResult.Failed ->
+                    ToolExecutionResult.failure(
+                        summary = "Система не выполнила ввод текста в поле",
+                        error = "TYPE_TEXT_REJECTED"
+                    )
+
+                AccessibilityActionResult.Unavailable ->
+                    ToolExecutionResult.failure(
+                        summary = "Активное окно недоступно — текст не введён",
+                        error = "NO_ACTIVE_WINDOW"
+                    )
+            }
+        } catch (e: Exception) {
+            ToolExecutionResult.failure(
+                summary = "Ошибка при вводе текста: ${e.localizedMessage}",
+                error = "TYPE_TEXT_ERROR"
+            )
+        }
+    }
+}

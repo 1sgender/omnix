@@ -12,7 +12,7 @@ Conversation Memory      последние N реплик диалога (ок�
         ↓                → request.history → messages[] провайдера
 Session Memory           WorkingMemory: слоты диалога (приложение/контакт/
         ↓                человек/место/тема), анафора, LRU-кэш TTL 30 мин
-Long-term Memory         JarvisMemoryManager: Room memories/facts/preferences,
+Long-term Memory         OmniMemoryManager: Room memories/facts/preferences,
                          hybrid retrieval (cosine + TF-IDF + importance +
                          recency + frequency), дедупликация, forget
 ```
@@ -21,7 +21,7 @@ Long-term Memory         JarvisMemoryManager: Room memories/facts/preferences,
 |---|---|---|---|
 | Conversation | `MessageRepository.getRecentMessages(limit=10)` (SendPromptUseCase) | `ExecutionRequest.history` → `AIRepository` → `messages[]` | окно 10, не вся история |
 | Session | `WorkingMemory` ( WorkingMemory.kt): `resolveContextualQuery` (анофора ДО модели), `getWorkingContextSummary()` | сводка слотов внутри retrieval-блока | слоты, LRU-128, TTL 30 мин |
-| Long-term | `JarvisMemoryManager.recall()` | `buildPromptMemoryContext(query)` → `ExecutionRequest.memoryContext` | top-3, бюджет ~180 слов / ≤800 симв. |
+| Long-term | `OmniMemoryManager.recall()` | `buildPromptMemoryContext(query)` → `ExecutionRequest.memoryContext` | top-3, бюджет ~180 слов / ≤800 симв. |
 
 ## Retrieval-стадия (главный фикс)
 
@@ -39,7 +39,7 @@ SendPromptUseCase:
                          │
         ┌────────────────┴─────────────────┐
         ▼ CLOUD                            ▼ LOCAL
-RepositoryCloudAiExecutor:        JarvisLocalPromptBuilder:
+RepositoryCloudAiExecutor:        OmniLocalPromptBuilder:
 +блок к systemPrompt               +блок перед запросом
 (токены = деньги → bounded)        (офлайн-модель знает факты:
                                    «как зовут дочь?» без сети)

@@ -1,0 +1,111 @@
+package com.omnix.assistant.agent.briefing
+
+import android.content.Context
+import android.os.BatteryManager
+import android.content.Intent
+import android.content.IntentFilter
+import android.util.Log
+import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
+import com.omnix.assistant.agent.tools.intelligence.WeatherTool
+import com.omnix.assistant.core.network.NetworkMonitor
+import com.omnix.assistant.domain.repository.SettingsRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import java.text.SimpleDateFormat
+import java.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Proactive Ear Briefing Engine (OMNIX Clip)
+ * 
+ * Автоматически генерирует структурированный 15-секундный аудио-брифинг прямо в ухо при надевании наушника:
+ * 1. Персональное приветствие («Доброе утро/день, сэр»)
+ * 2. Точное время и день недели
+ * 3. Заряд батареи и статус питания
+ * 4. Статус сети (Wi-Fi / LTE)
+ * 5. Погода и свежие факты
+ */
+@Singleton
+class ProactiveEarBriefingEngine @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val settingsRepository: SettingsRepository,
+    private val memoryManager: OmniMemoryManager,
+    private val networkMonitor: NetworkMonitor,
+    private val weatherTool: WeatherTool
+) {
+    private val TAG = "EarBriefing"
+
+    suspend fun generateBriefing(): String = withContext(Dispatchers.IO) {
+        val userName = settingsRepository.userNameFlow.first().ifBlank { "сэр" }
+        val locale = Locale("ru", "RU")
+        val now = Date()
+
+        val calendar = Calendar.getInstance(locale)
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+
+        val greeting = when (hour) {
+            in 5..11 -> "Доброе утро"
+            in 12..17 -> "Добрый день"
+            in 18..22 -> "Добрый вечер"
+            else -> "Доброй ночи"
+        }
+
+        val timeFormat = SimpleDateFormat("HH:mm", locale)
+        val dayFormat = SimpleDateFormat("EEEE, d MMMM", locale)
+        val timeStr = timeFormat.format(now)
+        val dayStr = dayFormat.format(now)
+
+        val batteryPercent = getBatteryPercent()
+        val isOnline = networkMonitor.isCurrentlyOnline()
+
+        val sb = StringBuilder()
+        sb.append("$greeting, $userName. ")
+        sb.append("Сейчас $timeStr, $dayStr. ")
+        // Если система не отдала уровень заряда — не подставляем выдуманное число.
+        if (batteryPercent >= 0) {
+            sb.append("Заряд аккумулятора: $batteryPercent%. ")
+        }
+
+        if (isOnline) {
+            sb.append("Системы онлайн. ")
+            // Погода по ТЕКУЩЕМУ местоположению: город не зашит в код.
+            // Если местоположение недоступно, брифинг просто не содержит погоду —
+            // выдумывать её нельзя.
+            val weatherResult = weatherTool.execute(JsonObject(emptyMap()))
+            if (weatherResult.isSuccess && weatherResult.summary.isNotBlank()) {
+                sb.append("Погода: ${weatherResult.summary.take(140)}. ")
+            }
+        } else {
+            sb.append("Работаем в автономном режиме. ")
+        }
+
+        // Добавляем напоминания или факты из памяти
+        try {
+            val memories = memoryManager.recall("сегодня планы важные", limit = 1)
+            if (memories.isNotEmpty()) {
+                sb.append("Напоминание: ${memories.first().content}. ")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "buildBriefing: не удалось получить напоминания", e)
+        }
+
+        sb.append("Я готов к работе.")
+        return@withContext sb.toString().trim()
+    }
+
+    private fun getBatteryPercent(): Int {
+        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+
+        return if (level != -1 && scale > 0) {
+            (level * 100 / scale.toFloat()).toInt()
+        } else {
+            -1 // Неизвестно: вызывающий код обязан это учесть, а не показать фейк
+        }
+    }
+}

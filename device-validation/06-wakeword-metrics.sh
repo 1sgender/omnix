@@ -18,6 +18,8 @@ echo "out: $OUT"
 echo "== 1. батарея baseline (standby БЕЗ движка): выключите wakeword.enabled, подождите 10 мин, введите уровень =="
 adb shell dumpsys battery | grep -E "level|temperature" | tee "$OUT/battery-baseline.txt"
 
+# Фраза v0.1: акустика hey_jarvis_v0.1.onnx детектирует legacy-фразу «Hey Jarvis»;
+# целевая фраза «Omni» — после phase-2 retrain (training/README.md).
 echo "== 2. включите wakeword.enabled + debug_logging, скажите 'Hey Jarvis' 10 раз с паузами 5с =="
 echo "нажмите Enter когда готовы (пишем logcat 120с)"; read -r
 adb logcat -c

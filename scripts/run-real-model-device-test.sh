@@ -3,7 +3,7 @@ set -euo pipefail
 
 : "${MODEL_FILE:?Set MODEL_FILE to the licensed Gemma .task path}"
 : "${MODEL_SHA256:?Set MODEL_SHA256 to the reviewed model SHA-256}"
-PACKAGE=${ANDROID_TEST_PACKAGE:-com.jarvis.assistant.dev}
+PACKAGE=${ANDROID_TEST_PACKAGE:-com.omnix.assistant.dev}
 VARIANT=${ANDROID_TEST_VARIANT:-DevDebug}
 ADB=(adb)
 if [[ -n "${ADB_SERIAL:-}" ]]; then ADB+=( -s "$ADB_SERIAL" ); fi
@@ -30,7 +30,7 @@ TASK=":app:connected${VARIANT}AndroidTest"
 for pass in initial post-force-stop; do
   echo "running real-model instrumentation pass: $pass"
   bash ./gradlew "$TASK" \
-    -Pandroid.testInstrumentationRunnerArguments.class=com.jarvis.assistant.agent.localai.RealMediaPipeInferenceInstrumentedTest \
+    -Pandroid.testInstrumentationRunnerArguments.class=com.omnix.assistant.agent.localai.RealMediaPipeInferenceInstrumentedTest \
     -Pandroid.testInstrumentationRunnerArguments.requireRealModel=true \
     -Pandroid.testInstrumentationRunnerArguments.modelExpectedSha256="$MODEL_SHA256" \
     --no-daemon

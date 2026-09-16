@@ -13,17 +13,17 @@ strings "$TMP"/classes*.dex >"$TMP/strings.txt"
 case "$FLAVOR" in
   dev)
     grep -Fq 'http://10.0.2.2:8080' "$TMP/strings.txt"
-    ! grep -Fq 'https://staging-api.jarvis.ai' "$TMP/strings.txt"
+    ! grep -Fq 'https://staging-api.omnix.ai' "$TMP/strings.txt"
     ;;
   staging)
-    grep -Fq 'https://staging-api.jarvis.ai' "$TMP/strings.txt"
+    grep -Fq 'https://staging-api.omnix.ai' "$TMP/strings.txt"
     ! grep -Fq 'http://10.0.2.2:8080' "$TMP/strings.txt"
-    ! grep -Fq 'https://api.jarvis.ai' "$TMP/strings.txt"
+    ! grep -Fq 'https://api.omnix.ai' "$TMP/strings.txt"
     ;;
   prod)
-    grep -Fq 'https://api.jarvis.ai' "$TMP/strings.txt"
+    grep -Fq 'https://api.omnix.ai' "$TMP/strings.txt"
     ! grep -Fq 'http://10.0.2.2:8080' "$TMP/strings.txt"
-    ! grep -Fq 'https://staging-api.jarvis.ai' "$TMP/strings.txt"
+    ! grep -Fq 'https://staging-api.omnix.ai' "$TMP/strings.txt"
     ;;
   *)
     echo "unknown flavor: $FLAVOR" >&2

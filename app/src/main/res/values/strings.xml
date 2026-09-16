@@ -3,7 +3,7 @@
 
     
     <!-- ===== Исходные строки приложения ===== -->
-    <string name="app_name">JARVIS</string>
+    <string name="app_name">OMNIX</string>
 
     <!-- ===== Presentation layer (audit #17: полный вынос строк) ===== -->
     <string name="podklyuchite_naushniki_dlya_raboty">● Подключите наушники для работы</string>
@@ -18,9 +18,9 @@
     <string name="pozhaluysta_vvedite_kod">Пожалуйста, введите код активации со скретч-карты из коробки.</string>
 
     <!-- ===== Voice layer (audit #17) ===== -->
-    <string name="jarvis_na_pauze">JARVIS на паузе</string>
-    <string name="jarvis_slushaet_v_naushnike">JARVIS слушает (в наушнике)…</string>
-    <string name="jarvis_slushaet">JARVIS слушает…</string>
+    <string name="omnix_na_pauze">OMNIX на паузе</string>
+    <string name="omnix_slushaet_v_naushnike">OMNIX слушает (в наушнике)…</string>
+    <string name="omnix_slushaet">OMNIX слушает…</string>
     <string name="vremya_ozhidaniya_isteklo">Время ожидания истекло. Операция отменена, сэр.</string>
     <string name="vy_nichego_ne_skazali">Вы ничего не сказали.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Наушники отключены. Ожидание…</string>
@@ -45,7 +45,7 @@
     <string name="nevernyy_kod_aktivacii">Неверный код активации. Проверьте код на карточке в коробке наушников.</string>
     <string name="server_licenziy_nedostupen">Сервер активации временно недоступен. Код не был активирован — повторите позже.</string>
     <string name="slishkom_mnogo_popytok_aktivacii">Слишком много попыток активации. Подождите и повторите позже.</string>
-    <string name="jarvis_uspeshno_aktivirovan">JARVIS Earclip успешно активирован! Первые 30 дней использования включены бесплатно, сэр.</string>
+    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip успешно активирован! Первые 30 дней использования включены бесплатно, сэр.</string>
     <string name="pustoy_zapros">Пустой запрос</string>
     <string name="zapros_ne_mozhet_byt_pustym">Запрос не может быть пустым</string>
 
@@ -67,8 +67,8 @@
     <string name="chtoby_upravlyat_bluetooth">Чтобы управлять Bluetooth, нужно разрешение на доступ к Bluetooth</string>
 
     <!-- C-02: privacy consent UI -->
-    <string name="cloud_consent_private_prompt">Запрос содержит приватные данные (email/телефон/адрес и т.п.). Без вашего разрешения JARVIS не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
-    <string name="cloud_consent_sensitive_prompt">Запрос содержит чувствительные данные (пароли, паспортные данные, платёжную информацию). Без вашего разрешения JARVIS не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
+    <string name="cloud_consent_private_prompt">Запрос содержит приватные данные (email/телефон/адрес и т.п.). Без вашего разрешения OMNIX не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
+    <string name="cloud_consent_sensitive_prompt">Запрос содержит чувствительные данные (пароли, паспортные данные, платёжную информацию). Без вашего разрешения OMNIX не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
     <string name="cloud_consent_voice_private">Запрос содержит приватные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
     <string name="cloud_consent_voice_sensitive">Запрос содержит чувствительные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
     <string name="cloud_consent_declined">Понял, обрабатываю локально, сэр.</string>

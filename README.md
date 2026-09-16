@@ -1,4 +1,4 @@
-# JARVIS — голосовой AI-ассистент для Android
+# OMNIX — голосовой AI-ассистент для Android
 
 Персональный голосовой AI-ассистент для Android (minSdk 29 / targetSdk 34).
 Проект реализует голосовое взаимодействие, агентную систему с набором
@@ -63,9 +63,9 @@ APK: `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
 
 ## Структура
 
-- `app/src/main/java/com/jarvis/assistant/`
+- `app/src/main/java/com/omnix/assistant/`
   - `agent/` — агентное ядро: планировщик, роутер, память, инструменты
-  - `ai/` — клиент JARVIS API (без ключей AI-провайдеров на устройстве)
+  - `ai/` — клиент OMNIX API (без ключей AI-провайдеров на устройстве)
   - `data/` — Room, DataStore, сетевые DTO
   - `domain/` — модели и use cases
   - `presentation/` — Compose UI (chat, настройки, активация, перевод)
@@ -78,14 +78,14 @@ APK: `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
 
 ## Конфигурация
 
-- Android хранит только Bearer-токен доступа JARVIS в
+- Android хранит только Bearer-токен доступа OMNIX в
   `EncryptedSharedPreferences` (Android Keystore). Ключи Groq/Gemini/OpenRouter
   на устройство не передаются.
 - PostgreSQL URL/password, HMAC pepper, admin tokens, plan catalog и provider
   secrets задаются environment variables; пример — `server/.env.example`.
   `.env` и другие секреты Git игнорирует.
 - License migrations автоматически применяются с checksum и PostgreSQL
-  advisory lock. Для запуска server tests задайте `JARVIS_TEST_DATABASE_*`.
+  advisory lock. Для запуска server tests задайте `OMNIX_TEST_DATABASE_*`.
 - `local.properties` (путь к Android SDK) в Git не хранится — создаётся локально.
 - Локальная LLM-модель (~521 МБ) едет install-time asset pack'ом `localmodel`
   вместе с установкой из Play (в базу AAB не влезает — лимит 200 МБ) и
@@ -99,7 +99,7 @@ APK: `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
 Поддерживаемая topology:
 
 ```text
-Internet -> Caddy HTTPS :443 -> private jarvis-server HTTP :8080
+Internet -> Caddy HTTPS :443 -> private omnix-server HTTP :8080
                               -> private PostgreSQL :5432
 ```
 

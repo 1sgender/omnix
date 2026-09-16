@@ -49,7 +49,7 @@ Required Changes (минимальный шов в существующий ко
   как SUPER_ADMIN — существующие `/v1/admin/licenses/*` не сломаны.
 
 Bootstrap: при пустой `admin_accounts` и заданных
-`JARVIS_ADMIN_BOOTSTRAP_USERNAME/PASSWORD` (≥12 симв., иначе fail-fast)
+`OMNIX_ADMIN_BOOTSTRAP_USERNAME/PASSWORD` (≥12 симв., иначе fail-fast)
 создаётся единственный SUPER_ADMIN; событие — в audit.
 
 ## 3. RBAC

@@ -1,4 +1,4 @@
-# Contributing to JARVIS
+# Contributing to OMNIX
 
 Спасибо за интерес к проекту. Проект проприетарный (см. [LICENSE](LICENSE)) —
 вклад принимается через pull request'ы в этот репозиторий, что означает согласие

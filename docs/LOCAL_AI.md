@@ -218,17 +218,17 @@ DownloadManager качает 521 МБ → прогресс в шторке + в 
 
 # 2. Положить во внутреннее хранилище приложения
 adb push Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task /data/local/tmp/
-adb shell run-as com.jarvis.assistant mkdir -p files/llm
-adb shell "cat /data/local/tmp/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task | run-as com.jarvis.assistant tee files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task > /dev/null"
+adb shell run-as com.omnix.assistant mkdir -p files/llm
+adb shell "cat /data/local/tmp/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task | run-as com.omnix.assistant tee files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task > /dev/null"
 
 # 3. Проверить (размер обязан совпасть байт в байт)
-adb shell run-as com.jarvis.assistant ls -la files/llm/
+adb shell run-as com.omnix.assistant ls -la files/llm/
 # -rw-rw---- ... 546660344 ..._multi-prefill-seq_q8_ekv1280.task
 ```
 
 Ожидаемый путь:
-`/data/data/com.jarvis.assistant/files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task`
-(для staging-сборки пакет — `com.jarvis.assistant.staging`).
+`/data/data/com.omnix.assistant/files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task`
+(для staging-сборки пакет — `com.omnix.assistant.staging`).
 
 ---
 
@@ -352,7 +352,7 @@ peak RSS             (ожидание: ~1.36 ГБ)
   `InferenceMetrics`, `LocalModelState`, `LocalModelSpec`
 - `agent/localai/LocalAiContracts.kt` — `LocalAi`, `LocalModelRuntime`,
   `LocalModelManager`, `LocalPromptBuilder`
-- `agent/localai/JarvisLocalPromptBuilder.kt` — ChatML-шаблон Qwen2.5 + system prompt
+- `agent/localai/OmniLocalPromptBuilder.kt` — ChatML-шаблон Qwen2.5 + system prompt
 - `agent/localai/OnDeviceLocalAi.kt` — правила и классификация исходов
 - `agent/localai/downloader/ModelDownloader.kt` — `ModelDownloader`,
   `DownloadManagerModelDownloader`, `ModelDownloadPolicy`
@@ -378,4 +378,4 @@ peak RSS             (ожидание: ~1.36 ГБ)
 - `app/proguard-rules.pro` — правила R8
 
 **Не изменялись:** `ExecutionDecisionEngine`, `FastCommandRouter`,
-`ToolExecutor`, `JarvisTool`, `AgentCognitiveLoop`, `CognitivePlanner`, STT, TTS.
+`ToolExecutor`, `OmniTool`, `AgentCognitiveLoop`, `CognitivePlanner`, STT, TTS.

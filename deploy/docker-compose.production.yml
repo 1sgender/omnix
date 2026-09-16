@@ -1,4 +1,4 @@
-name: jarvis-production
+name: omnix-production
 
 services:
   caddy:
@@ -21,14 +21,14 @@ services:
       proxy_backend:
         ipv4_address: 172.30.0.2
     depends_on:
-      jarvis-server:
+      omnix-server:
         condition: service_healthy
     security_opt:
       - no-new-privileges:true
     tmpfs:
       - /tmp
 
-  jarvis-server:
+  omnix-server:
     build:
       context: ..
       dockerfile: deploy/server.Dockerfile
@@ -44,13 +44,13 @@ services:
       TRUSTED_PROXY_CIDRS: 172.30.0.2/32
       PUBLIC_BASE_URL: https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN}
 
-      JARVIS_CLIENT_TOKENS: ${JARVIS_CLIENT_TOKENS:?Load static tokens from a secret manager}
-      JARVIS_ADMIN_CLIENTS: ${JARVIS_ADMIN_CLIENTS:?Set explicit admin client IDs}
+      OMNIX_CLIENT_TOKENS: ${OMNIX_CLIENT_TOKENS:?Load static tokens from a secret manager}
+      OMNIX_ADMIN_CLIENTS: ${OMNIX_ADMIN_CLIENTS:?Set explicit admin client IDs}
       # Control Plane bootstrap (one-time; создаёт SUPER_ADMIN только если admin_accounts пуст):
-      JARVIS_ADMIN_BOOTSTRAP_USERNAME: ${JARVIS_ADMIN_BOOTSTRAP_USERNAME:-}
-      JARVIS_ADMIN_BOOTSTRAP_PASSWORD: ${JARVIS_ADMIN_BOOTSTRAP_PASSWORD:-}
+      OMNIX_ADMIN_BOOTSTRAP_USERNAME: ${OMNIX_ADMIN_BOOTSTRAP_USERNAME:-}
+      OMNIX_ADMIN_BOOTSTRAP_PASSWORD: ${OMNIX_ADMIN_BOOTSTRAP_PASSWORD:-}
 
-      DATABASE_URL: jdbc:postgresql://postgres:5432/jarvis
+      DATABASE_URL: jdbc:postgresql://postgres:5432/omnix
       DATABASE_USER: ${DATABASE_USER:?Set DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Load DATABASE_PASSWORD from a secret manager}
       DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-8}
@@ -105,7 +105,7 @@ services:
     image: postgres:17.10-bookworm@sha256:9b18b78397054fce88a9552e9d5a3ad5bb7fd258c5b3cc1c5028e46373d6ea8f
     restart: unless-stopped
     environment:
-      POSTGRES_DB: jarvis
+      POSTGRES_DB: omnix
       POSTGRES_USER: ${DATABASE_USER:?Set DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Load DATABASE_PASSWORD from a secret manager}
     volumes:

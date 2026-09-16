@@ -16,12 +16,12 @@ fi
 
 export PUBLIC_DOMAIN=${PUBLIC_DOMAIN:-api.example.com}
 export ACME_EMAIL=${ACME_EMAIL:-security@example.com}
-export DATABASE_USER=${DATABASE_USER:-jarvis}
+export DATABASE_USER=${DATABASE_USER:-omnix}
 export DATABASE_PASSWORD=${DATABASE_PASSWORD:-configuration-validation-only}
 export LICENSE_CODE_PEPPER=${LICENSE_CODE_PEPPER:-$(printf 'p%.0s' {1..64})}
-export BILLING_PLANS=${BILLING_PLANS:-'earclip-monthly|jarvis-earclip|Monthly|30|1400|USD|pri_1234567890|USDT'}
-export JARVIS_CLIENT_TOKENS=${JARVIS_CLIENT_TOKENS:-"$(printf 'a%.0s' {1..64}):operations"}
-export JARVIS_ADMIN_CLIENTS=${JARVIS_ADMIN_CLIENTS:-operations}
+export BILLING_PLANS=${BILLING_PLANS:-'earclip-monthly|omnix-clip|Monthly|30|1400|USD|pri_1234567890|USDT'}
+export OMNIX_CLIENT_TOKENS=${OMNIX_CLIENT_TOKENS:-"$(printf 'a%.0s' {1..64}):operations"}
+export OMNIX_ADMIN_CLIENTS=${OMNIX_ADMIN_CLIENTS:-operations}
 
 CONFIG_JSON=$(mktemp)
 trap 'rm -f "$CONFIG_JSON"' EXIT
@@ -31,13 +31,13 @@ python3 - "$CONFIG_JSON" <<'PY'
 import json, sys
 config = json.load(open(sys.argv[1], encoding="utf-8"))
 services = config["services"]
-assert set(services) == {"caddy", "jarvis-server", "postgres"}
-assert services["jarvis-server"].get("ports") in (None, []), "application port must not be published"
+assert set(services) == {"caddy", "omnix-server", "postgres"}
+assert services["omnix-server"].get("ports") in (None, []), "application port must not be published"
 assert services["postgres"].get("ports") in (None, []), "database port must not be published"
 ports = services["caddy"].get("ports", [])
 published = {int(item["published"]) for item in ports}
 assert published == {80, 443}, f"only 80/443 may be public, got {published}"
-env = services["jarvis-server"]["environment"]
+env = services["omnix-server"]["environment"]
 assert str(env["APP_ENV"]).lower() == "production"
 assert str(env["APPLICATION_REPLICA_COUNT"]) == "1", "single-instance decision requires exactly one app replica"
 assert str(env["PRODUCTION_TLS_TERMINATED"]).lower() == "true"

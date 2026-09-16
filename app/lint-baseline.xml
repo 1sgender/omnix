@@ -7,7 +7,7 @@
         errorLine1="                it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || it.type == AudioDeviceInfo.TYPE_BLE_HEADSET "
         errorLine2="                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/audio/BluetoothAudioManager.kt"
+            file="src/main/java/com/omnix/assistant/voice/audio/BluetoothAudioManager.kt"
             line="53"
             column="77"/>
     </issue>
@@ -18,7 +18,7 @@
         errorLine1="                it.type == AudioDeviceInfo.TYPE_BLE_HEADSET ||"
         errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/audio/BluetoothAudioRouter.kt"
+            file="src/main/java/com/omnix/assistant/voice/audio/BluetoothAudioRouter.kt"
             line="153"
             column="28"/>
     </issue>
@@ -29,7 +29,7 @@
         errorLine1="                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/service/JarvisVoiceService.kt"
+            file="src/main/java/com/omnix/assistant/voice/service/OmnixVoiceService.kt"
             line="255"
             column="17"/>
     </issue>
@@ -40,7 +40,7 @@
         errorLine1="                permission = Manifest.permission.POST_NOTIFICATIONS,"
         errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/presentation/permissions/PermissionsScreen.kt"
+            file="src/main/java/com/omnix/assistant/presentation/permissions/PermissionsScreen.kt"
             line="101"
             column="30"/>
     </issue>
@@ -62,7 +62,7 @@
         errorLine1="    modifier: Modifier = Modifier"
         errorLine2="    ~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/presentation/navigation/JarvisNavGraph.kt"
+            file="src/main/java/com/omnix/assistant/presentation/navigation/OmnixNavGraph.kt"
             line="20"
             column="5"/>
     </issue>
@@ -73,7 +73,7 @@
         errorLine1="    modifier: Modifier = Modifier"
         errorLine2="    ~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/presentation/components/MessageItem.kt"
+            file="src/main/java/com/omnix/assistant/presentation/components/MessageItem.kt"
             line="52"
             column="5"/>
     </issue>
@@ -95,7 +95,7 @@
         errorLine1="        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/core/battery/BatteryOptimizationHelper.kt"
+            file="src/main/java/com/omnix/assistant/core/battery/BatteryOptimizationHelper.kt"
             line="19"
             column="20"/>
     </issue>
@@ -106,7 +106,7 @@
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/core/battery/BatteryOptimizationHelper.kt"
+            file="src/main/java/com/omnix/assistant/core/battery/BatteryOptimizationHelper.kt"
             line="28"
             column="13"/>
     </issue>
@@ -117,7 +117,7 @@
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/audio/BluetoothAudioManager.kt"
+            file="src/main/java/com/omnix/assistant/voice/audio/BluetoothAudioManager.kt"
             line="50"
             column="13"/>
     </issue>
@@ -128,7 +128,7 @@
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/audio/BluetoothAudioRouter.kt"
+            file="src/main/java/com/omnix/assistant/voice/audio/BluetoothAudioRouter.kt"
             line="148"
             column="13"/>
     </issue>
@@ -139,7 +139,7 @@
         errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &amp;&amp; nm.isNotificationPolicyAccessGranted) {"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/agent/tools/device/DoNotDisturbTool.kt"
+            file="src/main/java/com/omnix/assistant/agent/tools/device/DoNotDisturbTool.kt"
             line="45"
             column="17"/>
     </issue>
@@ -150,7 +150,7 @@
         errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/service/JarvisVoiceService.kt"
+            file="src/main/java/com/omnix/assistant/voice/service/OmnixVoiceService.kt"
             line="86"
             column="21"/>
     </issue>
@@ -161,7 +161,7 @@
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/service/JarvisVoiceService.kt"
+            file="src/main/java/com/omnix/assistant/voice/service/OmnixVoiceService.kt"
             line="251"
             column="13"/>
     </issue>
@@ -172,7 +172,7 @@
         errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/voice/service/JarvisVoiceService.kt"
+            file="src/main/java/com/omnix/assistant/voice/service/OmnixVoiceService.kt"
             line="309"
             column="13"/>
     </issue>
@@ -183,7 +183,7 @@
         errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/jarvis/assistant/agent/tools/device/WifiTool.kt"
+            file="src/main/java/com/omnix/assistant/agent/tools/device/WifiTool.kt"
             line="214"
             column="17"/>
     </issue>

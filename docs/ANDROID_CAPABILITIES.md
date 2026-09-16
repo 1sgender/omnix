@@ -1,4 +1,4 @@
-# JARVIS v0.2 — что реально может Android
+# OMNIX v0.2 — что реально может Android
 
 Документ фиксирует **фактические** возможности инструментов на современном
 Android. Правило проекта:
@@ -25,7 +25,7 @@ Android фактически не подтвердил изменение сос
 `Tool → exception → «Готово»`; только `Tool → execute → verify → SUCCESS`
 или `Tool → execute → failure → ERROR`.
 
-Механика — единый контракт Tool Registry 2.0 (`agent/core/JarvisTool.kt`):
+Механика — единый контракт Tool Registry 2.0 (`agent/core/OmniTool.kt`):
 
 ```
 Tool: id · description · permissions · execute() · verify() · timeout · error mapping
@@ -66,9 +66,9 @@ tool-таймаута 4 с), чтобы не ловить асинхроннос
 
 ---
 
-## Android Capability Layer (`JarvisCapability`)
+## Android Capability Layer (`OmniCapability`)
 
-Отдельный слой возможностей устройства — `agent/capability/JarvisCapability.kt`.
+Отдельный слой возможностей устройства — `agent/capability/OmniCapability.kt`.
 Группа (домен) → набор листовых проверок (`DeviceCapability`), которые реально
 выполняет `DeviceCapabilityRegistry` (API-level, hardware, permission model):
 
@@ -82,7 +82,7 @@ tool-таймаута 4 с), чтобы не ловить асинхроннос
 | `communication.sms` | прямая отправка (`SEND_SMS`), композер |
 | `communication.call` | прямой вызов (`CALL_PHONE`), номеронабиратель |
 | `media` | управление воспроизведением |
-| `accessibility` | служба специальных возможностей JARVIS |
+| `accessibility` | служба специальных возможностей OMNIX |
 | `location` | определение местоположения (`LocationProvider`) |
 
 Каждый инструмент домена реализует `CapabilityAwareTool` и объявляет:
@@ -114,10 +114,10 @@ tool-таймаута 4 с), чтобы не ловить асинхроннос
 
 ```
 Пользователь: Джарвис, включи Bluetooth
-JARVIS:       Bluetooth сейчас выключен. Открываю настройки Bluetooth — переключите его там, сэр.
+OMNIX:       Bluetooth сейчас выключен. Открываю настройки Bluetooth — переключите его там, сэр.
 ```
 
-JARVIS никогда не возвращает `SUCCESS` для переключения, если оно не выполнено:
+OMNIX никогда не возвращает `SUCCESS` для переключения, если оно не выполнено:
 `BluetoothAdapter.enable()` запрещён сторонним приложениям на Android 13+.
 Accessibility-клики по шторке быстрых настроек как способ обхода **удалены**:
 это обход системной модели безопасности, а не легальная capability.
@@ -135,7 +135,7 @@ Accessibility-клики по шторке быстрых настроек ка�
 
 ```
 Пользователь: Джарвис, включи Wi-Fi
-JARVIS:       Wi-Fi сейчас выключен. Открываю панель Wi-Fi — переключите его там, сэр.
+OMNIX:       Wi-Fi сейчас выключен. Открываю панель Wi-Fi — переключите его там, сэр.
 ```
 
 ## Яркость (`device.brightness`)
@@ -173,7 +173,7 @@ NO  → USER_ACTION_REQUIRED + открыть ACTION_MANAGE_WRITE_SETTINGS
 
 | API-level | Статус |
 |---|---|
-| Android 11+ (API 30+) с включённой службой JARVIS | ✅ `GLOBAL_ACTION_TAKE_SCREENSHOT` |
+| Android 11+ (API 30+) с включённой службой OMNIX | ✅ `GLOBAL_ACTION_TAKE_SCREENSHOT` |
 | Android 11+ без включённой службы | ⚠️ `USER_ACTION_REQUIRED` + экран спец. возможностей |
 | Android 10 (minSdk 29) | ❌ `UNSUPPORTED` — системного API для этого нет |
 | Окно с `FLAG_SECURE` | ❌ `FAILURE` (система отклоняет), не тихий успех |
@@ -204,12 +204,12 @@ DangerLevel: **HIGH**, подтверждение обязательно.
 
 ```
 Пользователь:  Отправь маме: «Я буду через 20 минут»
-JARVIS:        Отправить маме сообщение «Я буду через 20 минут»? Подтвердите, сэр.
+OMNIX:        Отправить маме сообщение «Я буду через 20 минут»? Подтвердите, сэр.
                (REQUIRES_USER_CONFIRMATION — выполнение ещё не началось)
 Пользователь:  Да.
-JARVIS:        (resolveContact → permission check → отправка) → SUCCESS
+OMNIX:        (resolveContact → permission check → отправка) → SUCCESS
 Пользователь:  Нет. / таймаут 30 c
-JARVIS:        Операция отменена, сэр. — ничего не отправлено
+OMNIX:        Операция отменена, сэр. — ничего не отправлено
 ```
 
 Подтверждение обрабатывается голосом («Да»/«Нет»/«подтверждаю»/«отмена»…)
@@ -257,10 +257,10 @@ DangerLevel: **MEDIUM**, подтверждение обязательно.
 
 ## Архитектура агента (AgentPipeline)
 
-Единый конвейер JARVIS — `agent/pipeline/AgentPipeline.kt`:
+Единый конвейер OMNIX — `agent/pipeline/AgentPipeline.kt`:
 
 ```
-                JARVIS
+                OMNIX
                    │
           ┌────────▼────────┐
           │ FastCommandRouter│  TIER 0: локальный NLU (<10 мс, офлайн)
@@ -371,7 +371,7 @@ Lock screen / Settings / Play / GMS → заблокированы, НИКОГД
 
 Audit-логирует только пакет + действие + решение — без содержимого экрана
 и вводимого текста. Пользовательское управление — `AccessibilityPrivacyStore`
-(SharedPreferences `jarvis_accessibility_privacy`: режим, block/allow-списки).
+(SharedPreferences `omnix_accessibility_privacy`: режим, block/allow-списки).
 
 ## AutomationEngine (Event → RuleMatcher → List<AutomationRule> → execute all)
 
@@ -495,7 +495,7 @@ Entity
 Контекст диалога: `lastPerson`, `lastApp`, `lastLocation`, `lastMessage`,
 `lastAction`, `lastContact`, `lastConversation`. Regex используется только
 для **детекции** ссылки («ей/ему/там/это»); решение принимается по слотам,
-а при отсутствии слота JARVIS честно задаёт уточняющий вопрос.
+а при отсутствии слота OMNIX честно задаёт уточняющий вопрос.
 
 ```
 «Позвони маме.»  → lastContact = мама
@@ -537,10 +537,10 @@ EmbeddingProvider
 бросает исключение вместо молчаливого стирания данных.
 
 Любое изменение схемы БД обязано сопровождаться:
-1. `version++` в `JarvisDatabase`;
-2. миграцией `MIGRATION_X_Y` в `JarvisMigrations.ALL`;
+1. `version++` в `OmnixDatabase`;
+2. миграцией `MIGRATION_X_Y` в `OmnixMigrations.ALL`;
 3. обновлённой экспортированной схемой (`app/schemas/…/N.json`);
-4. тестом в `JarvisDatabaseMigrationTest` (`MigrationTestHelper`).
+4. тестом в `OmnixDatabaseMigrationTest` (`MigrationTestHelper`).
 
 Проверка миграций — инструментальные тесты: `./gradlew connectedDebugAndroidTest`
 (нужен эмулятор/устройство; в CI добавляется отдельным job'ом).
@@ -548,7 +548,7 @@ EmbeddingProvider
 ## Инструментальные тесты (androidTest)
 
 Критичные потоки покрыты instrumented-тестами (пункт аудита #11):
-- `JarvisDatabaseMigrationTest` — миграции Room (MigrationTestHelper);
+- `OmnixDatabaseMigrationTest` — миграции Room (MigrationTestHelper);
 - `CallSmsHonestyInstrumentedTest` — звонки/SMS без разрешений возвращают
   PERMISSION_REQUIRED / USER_ACTION_REQUIRED, а НЕ SUCCESS;
 - `AccessibilityHonestyInstrumentedTest` — без включённой службы спец.

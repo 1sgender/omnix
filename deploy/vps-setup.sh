@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# JARVIS production deploy on a fresh VPS (Ubuntu 22.04/24.04, 2+ GB RAM).
+# OMNIX production deploy on a fresh VPS (Ubuntu 22.04/24.04, 2+ GB RAM).
 # Idempotent: safe to re-run (existing .env.production is never overwritten).
 #
 # Usage:
 #   sudo bash vps-setup.sh <public-domain> <acme-email> [git-ref]
 #
 # Example:
-#   sudo bash vps-setup.sh jarvis-xxxxx.duckdns.org admin@example.com main
+#   sudo bash vps-setup.sh omnix-xxxxx.duckdns.org admin@example.com main
 #
 # Prerequisites (done by the owner before running):
 #   1. DNS A-record <public-domain> -> this server's public IP (ports 80/443 open).
@@ -16,8 +16,8 @@ set -euo pipefail
 DOMAIN="${1:?Usage: sudo bash vps-setup.sh <public-domain> <acme-email> [git-ref]}"
 EMAIL="${2:?Usage: sudo bash vps-setup.sh <public-domain> <acme-email> [git-ref]}"
 REF="${3:-main}"
-INSTALL_DIR="/opt/jarvis"
-CREDS_FILE="/root/jarvis-credentials.txt"
+INSTALL_DIR="/opt/omnix"
+CREDS_FILE="/root/omnix-credentials.txt"
 
 if [ "$(id -u)" != "0" ]; then
   echo "ERROR: run as root (sudo)." >&2
@@ -68,12 +68,12 @@ else
       -e "s|^ACME_EMAIL=.*|ACME_EMAIL=$EMAIL|" \
       -e "s|^DATABASE_PASSWORD=.*|DATABASE_PASSWORD=$DB_PASS|" \
       -e "s|^LICENSE_CODE_PEPPER=.*|LICENSE_CODE_PEPPER=$PEPPER|" \
-      -e "s|^JARVIS_CLIENT_TOKENS=.*|JARVIS_CLIENT_TOKENS=$CLIENT_TOKEN:operations|" \
-      -e "s|^JARVIS_ADMIN_BOOTSTRAP_PASSWORD=.*|JARVIS_ADMIN_BOOTSTRAP_PASSWORD=$ADMIN_PASS|" \
+      -e "s|^OMNIX_CLIENT_TOKENS=.*|OMNIX_CLIENT_TOKENS=$CLIENT_TOKEN:operations|" \
+      -e "s|^OMNIX_ADMIN_BOOTSTRAP_PASSWORD=.*|OMNIX_ADMIN_BOOTSTRAP_PASSWORD=$ADMIN_PASS|" \
       .env.production.example > .env.production
   chmod 600 .env.production
   cat > "$CREDS_FILE" <<EOF
-# JARVIS credentials (generated $(date -u +%FT%TZ), stored ONLY on this server).
+# OMNIX credentials (generated $(date -u +%FT%TZ), stored ONLY on this server).
 # Admin UI: https://$DOMAIN/v1/admin/ui  (login: admin)
 ADMIN_PASSWORD=$ADMIN_PASS
 # Static operations token (also in $INSTALL_DIR/deploy/.env.production):

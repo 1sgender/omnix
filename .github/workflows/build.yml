@@ -1,4 +1,4 @@
-name: Build JARVIS APK
+name: Build OMNIX APK
 
 permissions:
   contents: read
@@ -57,21 +57,21 @@ jobs:
         # PostgreSQL 17.10 Bookworm — immutable multi-arch manifest digest.
         image: postgres:17.10-bookworm@sha256:9b18b78397054fce88a9552e9d5a3ad5bb7fd258c5b3cc1c5028e46373d6ea8f
         env:
-          POSTGRES_DB: jarvis_test
-          POSTGRES_USER: jarvis_test
-          POSTGRES_PASSWORD: jarvis_test_password
+          POSTGRES_DB: omnix_test
+          POSTGRES_USER: omnix_test
+          POSTGRES_PASSWORD: omnix_test_password
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U jarvis_test -d jarvis_test"
+          --health-cmd "pg_isready -U omnix_test -d omnix_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      JARVIS_TEST_DATABASE_URL: jdbc:postgresql://127.0.0.1:5432/jarvis_test
-      JARVIS_TEST_DATABASE_USER: jarvis_test
-      JARVIS_TEST_DATABASE_PASSWORD: jarvis_test_password
+      OMNIX_TEST_DATABASE_URL: jdbc:postgresql://127.0.0.1:5432/omnix_test
+      OMNIX_TEST_DATABASE_USER: omnix_test
+      OMNIX_TEST_DATABASE_PASSWORD: omnix_test_password
 
     steps:
       - name: Checkout repository
@@ -148,13 +148,13 @@ jobs:
             || { echo "::error::install-time пак localmodel отсутствует в AAB"; exit 1; }
           echo "PAD OK: localmodel pack present in $AAB"
 
-      - name: JARVIS benchmark regression
+      - name: OMNIX benchmark regression
         shell: bash
         run: |
           bash ./gradlew :app:testDevDebugUnitTest --tests '*BenchmarkRegressionTest*' \
             --stacktrace --no-daemon
 
-      - name: Test JARVIS API server
+      - name: Test OMNIX API server
         shell: bash
         run: |
           bash ./gradlew :server:test :server:jacocoTestCoverageVerification \
@@ -181,12 +181,12 @@ jobs:
         shell: bash
         run: |
           bash ./deploy/verify-production-config.sh
-          docker build --file deploy/server.Dockerfile --tag jarvis-server:ci .
+          docker build --file deploy/server.Dockerfile --tag omnix-server:ci .
 
-      - name: Upload JARVIS APK artifact
+      - name: Upload OMNIX APK artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: JARVIS-v0.2-dev.apk
+          name: OMNIX-v0.2-dev.apk
           path: app/build/outputs/apk/dev/debug/*.apk
           if-no-files-found: error
           retention-days: 14

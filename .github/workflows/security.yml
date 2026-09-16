@@ -72,7 +72,7 @@ jobs:
         with:
           path: .
           format: cyclonedx-json
-          output-file: artifacts/jarvis-repository.cdx.json
+          output-file: artifacts/omnix-repository.cdx.json
           syft-version: v1.51.0
           dependency-snapshot: false
           upload-artifact: false
@@ -100,14 +100,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts
-          docker build --file deploy/server.Dockerfile --tag jarvis-server:security .
+          docker build --file deploy/server.Dockerfile --tag omnix-server:security .
 
       - name: Scan final image (blocking)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           version: v0.74.0
           scan-type: image
-          image-ref: jarvis-server:security
+          image-ref: omnix-server:security
           vuln-type: os,library
           severity: HIGH,CRITICAL
           ignore-unfixed: false
@@ -120,7 +120,7 @@ jobs:
         with:
           version: v0.74.0
           scan-type: image
-          image-ref: jarvis-server:security
+          image-ref: omnix-server:security
           vuln-type: os,library
           severity: UNKNOWN,LOW,MEDIUM
           ignore-unfixed: false
@@ -132,9 +132,9 @@ jobs:
       - name: Generate final image SBOM
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
-          image: jarvis-server:security
+          image: omnix-server:security
           format: cyclonedx-json
-          output-file: artifacts/jarvis-server-image.cdx.json
+          output-file: artifacts/omnix-server-image.cdx.json
           syft-version: v1.51.0
           dependency-snapshot: false
           upload-artifact: false

@@ -5,7 +5,7 @@
 ## Схема
 
 ```
-AI Gateway (JarvisApiHandler)
+AI Gateway (OmnixApiHandler)
       ↓
 Provider Router (ProviderManager)
       ↓

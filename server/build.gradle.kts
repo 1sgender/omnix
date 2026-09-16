@@ -11,7 +11,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("com.jarvis.server.MainKt")
+    mainClass.set("com.omnix.server.MainKt")
 }
 
 dependencies {

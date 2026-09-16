@@ -1,4 +1,4 @@
-# Release Engineering — подписанные релизы JARVIS
+# Release Engineering — подписанные релизы OMNIX
 
 Этот документ описывает полный цикл выпуска подписанного релиза (P0-1):
 генерацию ключа, настройку секретов, локальную и CI-подпись, проверку подписи
@@ -11,13 +11,13 @@
 # ВАЖНО: keystore и пароли НЕ покидают владельца; потери ключа = невозможность
 # обновить приложение для существующих установок (Android требует ту же подпись).
 keytool -genkeypair -v \
-  -keystore jarvis-release.jks \
-  -alias jarvis \
+  -keystore omnix-release.jks \
+  -alias omnix \
   -keyalg RSA -keysize 4096 -validity 10950 \
   -storetype JKS
 ```
 
-Backup: сохраните `jarvis-release.jks` + пароли в офлайн-хранилище
+Backup: сохраните `omnix-release.jks` + пароли в офлайн-хранилище
 (парольный менеджер владельца / зашифрованный носитель). Keystore запрещено
 коммитить: `*.jks`, `*.keystore`, `keystore.properties` — в `.gitignore`.
 
@@ -27,23 +27,28 @@ Repository → Settings → Secrets and variables → Actions:
 
 | Secret | Значение |
 |---|---|
-| `JARVIS_RELEASE_KEYSTORE_B64` | `base64 -w0 jarvis-release.jks` |
-| `JARVIS_SIGNING_STORE_PASSWORD` | пароль keystore |
-| `JARVIS_SIGNING_KEY_ALIAS` | `jarvis` |
-| `JARVIS_SIGNING_KEY_PASSWORD` | пароль ключа |
+| `OMNIX_RELEASE_KEYSTORE_B64` | `base64 -w0 omnix-release.jks` |
+| `OMNIX_SIGNING_STORE_PASSWORD` | пароль keystore |
+| `OMNIX_SIGNING_KEY_ALIAS` | `omnix` |
+| `OMNIX_SIGNING_KEY_PASSWORD` | пароль ключа |
+
+> Переходный фолбэк: пока `OMNIX_*`-секреты не заведены, пайплайн читает
+> legacy `JARVIS_*`-секреты (их значения недоступны через API, поэтому
+> автоматический переезд невозможен). После заведения `OMNIX_*`-секретов
+> старые можно удалить — пайплайн предпочтёт новые имена.
 
 ## 3. Выпуск подписанного релиза
 
 ### CI (основной путь)
 
-Actions → **Release JARVIS (signed)** → Run workflow → выбрать `staging`
+Actions → **Release OMNIX (signed)** → Run workflow → выбрать `staging`
 или `prod`. Пайплайн:
 
 ```text
 checkout → JDK 17 → Gradle 8.7 → fail-fast проверка secrets
         → восстановление keystore из секрета → проверка dependency locks
         → :app:bundleProdRelease :app:assembleProdRelease
-          (JARVIS_REQUIRE_SIGNED_RELEASE=true — unsigned-сборка провалится)
+          (OMNIX_REQUIRE_SIGNED_RELEASE=true — unsigned-сборка провалится)
         → apksigner verify --print-certs
         → upload AAB+APK (retention 90 дней)
 ```
@@ -52,9 +57,9 @@ checkout → JDK 17 → Gradle 8.7 → fail-fast проверка secrets
 
 ```bash
 # keystore.properties в корне проекта (не коммитится):
-#   storeFile=/абсолютный/путь/jarvis-release.jks
+#   storeFile=/абсолютный/путь/omnix-release.jks
 #   storePassword=...
-#   keyAlias=jarvis
+#   keyAlias=omnix
 #   keyPassword=...
 bash ./gradlew :app:assembleProdRelease
 # Проверка:
@@ -87,10 +92,10 @@ R8 minify + resource shrink включены для всех release-вариа�
 
 ## 6. Чеклист релиза
 
-1. `main` зелёный (Build JARVIS APK + Supply Chain Security).
+1. `main` зелёный (Build OMNIX APK + Supply Chain Security).
 2. Версия поднята в `app/build.gradle.kts` (`versionCode`/`versionName`)
    + запись в `CHANGELOG.md`.
-3. `Release JARVIS (signed)` на нужном окружении — зелёный.
+3. `Release OMNIX (signed)` на нужном окружении — зелёный.
 4. AAB/APK скачан из артефактов; `apksigner verify --print-certs` показывает
    ожидаемый отпечаток сертификата.
 5. Установка на устройство, смоук: активация лицензии, голосовая команда,

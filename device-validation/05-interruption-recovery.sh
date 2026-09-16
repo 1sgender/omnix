@@ -2,8 +2,8 @@
 # §13–14, 19 ТЗ: прерывания (20+ итераций вручную), рестарты, сеть off/on.
 # Скрипт автоматизирует механику; вердикты по наблюдаемому поведению — вручную.
 set -euo pipefail
-PKG=com.jarvis.assistant.dev
-ACTIVITY="$PKG/com.jarvis.assistant.presentation.MainActivity"
+PKG=com.omnix.assistant.dev
+ACTIVITY="$PKG/com.omnix.assistant.presentation.MainActivity"
 exec > >(tee recovery.txt) 2>&1
 echo "=== INTERRUPTION HARNESS ==="
 echo "Инструкция: на каждый гудок скрипта произнесите команду и ПРЕРВИТЕ её"

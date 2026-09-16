@@ -37,7 +37,7 @@ https://{$PUBLIC_DOMAIN} {
 		}
 	}
 
-	reverse_proxy jarvis-server:8080 {
+	reverse_proxy omnix-server:8080 {
 		# Delete standardized Forwarded and overwrite every X-Forwarded identity
 		# header with one authoritative hop. Application trusts only proxy CIDR.
 		header_up -Forwarded

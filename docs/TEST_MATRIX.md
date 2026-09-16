@@ -22,7 +22,7 @@ hard-run в build.yml) + device-validation 01–05.
 
 | # | Команда / сценарий | Ожидаемый маршрут | Статус / якорь |
 |---|---|---|---|
-| 1 | «Hey Jarvis» → команда | STANDBY → chime → LISTENING (STT-верификация удалена: детект подтверждает neural-движок) | DEVICE (03-voice-loop, 06-wakeword-metrics) + `VoiceInteractionOrchestrator` |
+| 1 | «Hey Jarvis» (v0.1 acoustics; целевая фраза «Omni») → команда | STANDBY → chime → LISTENING (STT-верификация удалена: детект подтверждает neural-движок) | DEVICE (03-voice-loop, 06-wakeword-metrics) + `VoiceInteractionOrchestrator` |
 | 2 | «Открой Telegram» | DEVICE_TOOL conf .95, без агента | AUTO `FastCommandRouterTest` |
 | 3 | «Открой YouTube и найди UFC» | AGENT: open→click→type→verify(4 шага) | AUTO `CognitivePlannerTest` |
 | 4 | «Включи фонарик» / «выключи» | device.flashlight on/off | AUTO |
@@ -61,7 +61,7 @@ hard-run в build.yml) + device-validation 01–05.
 **AUTO-база:** `ToolExecutorBehaviorTest` (privacy gate → preflight → execute
 → verify → честный статус), `ToolExecutorConfirmationQueueTest` (CR-04
 callId-токены), `ToolDiscoveryEngineTest`, `CapabilityContractTest`,
-`JarvisCapabilityTest`, реестр: `ToolRegistry`/`AppResolverTest`.
+`OmniCapabilityTest`, реестр: `ToolRegistry`/`AppResolverTest`.
 
 | Семья (tool_id) | AUTO | DEVICE-чек |
 |---|---|---|
@@ -82,7 +82,7 @@ preflight-тесты падают при утечке; `ToolExecutorBehaviorTest
 
 | Permission denied | Ожидаемое поведение | Статус |
 |---|---|---|
-| RECORD_AUDIO | `JarvisVoiceService.start/safeStartForeground` fail-closed: сервис не поднимается, не остаётся «created без foreground» | AUTO (контракт) + DEVICE тумблер |
+| RECORD_AUDIO | `OmnixVoiceService.start/safeStartForeground` fail-closed: сервис не поднимается, не остаётся «created без foreground» | AUTO (контракт) + DEVICE тумблер |
 | READ_PHONE_STATE | пауза на звонок отключена, лог «call-state pause disabled», сервис жив | AUTO контракт (`registerTelephonyListener`) |
 | BLUETOOTH_CONNECT (API 31+) | N-05: имя устройства/connectedDevices → пусто/строк-заглушка, БЕЗ SecurityException-краша | AUTO контракт + DEVICE |
 | ACCESSIBILITY (сервис выключен) | screen-тулы недоступны — preflight, честный отказ; фейк-успех запрещён (bbcbcf1) | AUTO |
@@ -136,8 +136,8 @@ preflight-тесты падают при утечке; `ToolExecutorBehaviorTest
 | Сценарий | Ожидаемое | Статус / якорь |
 |---|---|---|
 | Invalid token | 401 fail-closed ДО парсинга тела; requestId в ошибке | PG `ApiIntegrationTest` |
-| Expired license | статус EXPIRED → entitlement-гейт (JarvisApiHandler) → PAYMENT_REQUIRED; клиент-display cache не источник истины | PG `LicenseApiIntegrationTest` |
-| Wrong device | V007: jrv_-токен сверяется с X-Jarvis-Device binding; unbound token denied on AI path | PG (`license token is device bound on AI enforcement path`) |
+| Expired license | статус EXPIRED → entitlement-гейт (OmnixApiHandler) → PAYMENT_REQUIRED; клиент-display cache не источник истины | PG `LicenseApiIntegrationTest` |
+| Wrong device | V007: omx_-токен сверяется с X-Omnix-Device binding; unbound token denied on AI path | PG (`license token is device bound on AI enforcement path`) |
 | Fake device (Clip) | V008 attestation: неизвестный Clip отклонён на challenge; подпись чужим ключом отклонена; второй аккаунт не attестит чужой Clip; revoked отклонён при валидной подписи | PG `ClipAttestationIntegrationTest` |
 | Replay | повтор challenge отклонён (nonce/timestamp) | PG (`replayed challenge is rejected`) |
 | Modified client | на Clip-пути — криптографическая attestation (подмена ключа ловится). **GAP:** для AI execute целостность APK сервером не проверяется (Play Integrity не подключён) — осознанно отложено; защита: токен+device binding+серверная переклассификация | честный GAP |

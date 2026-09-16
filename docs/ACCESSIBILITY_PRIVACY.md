@@ -19,7 +19,7 @@ Accessibility → полный экран → Cloud LLM                 (зак�
 | Слой | Где | Что делает |
 |---|---|---|
 | 1. Пакетная политика | `AccessibilityPrivacyPolicy` (без изменений) | Banking/Wallet/2FA/password/чувствительные пакеты и lock-screen/systemui/settings — экран не читается ВООБЩЕ (`PrivacyBlocked`, честный отказ в tool-результате) |
-| 2. Парольные поля | `JarvisAccessibilityService.getScreenContent` | `isPassword`-узлы пропускаются; нечитаемый флаг → fail-closed (считаем паролем) |
+| 2. Парольные поля | `OmnixAccessibilityService.getScreenContent` | `isPassword`-узлы пропускаются; нечитаемый флаг → fail-closed (считаем паролем) |
 | 3. Контентный санитайзер | `ScreenTextSanitizer` (новый) | OTP-подобные числа (6–8 цифр), короткие коды в код-контексте («код RXT4Q»), картоподобные последовательности (13–19 цифр) маскируются `••••` на этапе capture — для «2FA внутри обычного приложения» (код входа в мессенджере) |
 | 4. Запрет распространения | `ScreenContentPrivacy` (новый) | Успешный `accessibility.screen_reader` помечает результат `containsScreenContent` по всей цепочке; в БД сообщений пишется placeholder вместо текста |
 

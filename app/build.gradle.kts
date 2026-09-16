@@ -32,17 +32,17 @@ fun validatedApiUrl(name: String, value: String, allowHttp: Boolean): String {
 fun quoted(value: String): String = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 val devApiUrl = validatedApiUrl(
-    "JARVIS_DEV_API_BASE_URL",
-    providers.gradleProperty("JARVIS_DEV_API_BASE_URL").orElse("http://10.0.2.2:8080").get(),
+    "OMNIX_DEV_API_BASE_URL",
+    providers.gradleProperty("OMNIX_DEV_API_BASE_URL").orElse("http://10.0.2.2:8080").get(),
     allowHttp = true
 )
 val stagingApiUrl = validatedApiUrl(
-    "JARVIS_STAGING_API_BASE_URL",
-    providers.gradleProperty("JARVIS_STAGING_API_BASE_URL")
-        .orElse("https://staging-api.jarvis.ai").get(),
+    "OMNIX_STAGING_API_BASE_URL",
+    providers.gradleProperty("OMNIX_STAGING_API_BASE_URL")
+        .orElse("https://staging-api.omnix.ai").get(),
     allowHttp = false
 )
-val productionApiUrl = "https://api.jarvis.ai"
+val productionApiUrl = "https://api.omnix.ai"
 require(stagingApiUrl != productionApiUrl) { "Staging and production API origins must differ" }
 
 // ============================================================================
@@ -50,16 +50,16 @@ require(stagingApiUrl != productionApiUrl) { "Staging and production API origins
 //
 // Значения берутся из ОДНОГО из двух источников (первый непустой выигрывает):
 //   1. keystore.properties в корне проекта (в .gitignore, только локально):
-//        storeFile=/absolute/path/jarvis-release.jks
+//        storeFile=/absolute/path/omnix-release.jks
 //        storePassword=...
-//        keyAlias=jarvis
+//        keyAlias=omnix
 //        keyPassword=...
 //   2. переменные окружения CI:
-//        JARVIS_SIGNING_STORE_FILE / JARVIS_SIGNING_STORE_PASSWORD /
-//        JARVIS_SIGNING_KEY_ALIAS  / JARVIS_SIGNING_KEY_PASSWORD
+//        OMNIX_SIGNING_STORE_FILE / OMNIX_SIGNING_STORE_PASSWORD /
+//        OMNIX_SIGNING_KEY_ALIAS  / OMNIX_SIGNING_KEY_PASSWORD
 //
 // Если конфигурация отсутствует — release-сборка остаётся НЕподписанной, но
-// release-пайплайн (см. .github/workflows/release.yml, JARVIS_REQUIRE_SIGNED_RELEASE)
+// release-пайплайн (см. .github/workflows/release.yml, OMNIX_REQUIRE_SIGNED_RELEASE)
 // обязан провалиться в этом случае. Локальные smoke-сборки при этом не ломаются.
 // Keystore НИКОГДА не коммитится (*.jks/*.keystore в .gitignore).
 // ============================================================================
@@ -72,32 +72,32 @@ fun signingValue(propertiesKey: String, envName: String): String? =
     keystoreProperties.getProperty(propertiesKey)?.takeIf { it.isNotBlank() }
         ?: System.getenv(envName)?.takeIf { it.isNotBlank() }
 
-val releaseStoreFile = signingValue("storeFile", "JARVIS_SIGNING_STORE_FILE")
-val releaseStorePassword = signingValue("storePassword", "JARVIS_SIGNING_STORE_PASSWORD")
-val releaseKeyAlias = signingValue("keyAlias", "JARVIS_SIGNING_KEY_ALIAS")
-val releaseKeyPassword = signingValue("keyPassword", "JARVIS_SIGNING_KEY_PASSWORD")
+val releaseStoreFile = signingValue("storeFile", "OMNIX_SIGNING_STORE_FILE")
+val releaseStorePassword = signingValue("storePassword", "OMNIX_SIGNING_STORE_PASSWORD")
+val releaseKeyAlias = signingValue("keyAlias", "OMNIX_SIGNING_KEY_ALIAS")
+val releaseKeyPassword = signingValue("keyPassword", "OMNIX_SIGNING_KEY_PASSWORD")
 val releaseSigningConfigured =
     listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword)
         .all { it != null }
 val requireSignedRelease =
-    System.getenv("JARVIS_REQUIRE_SIGNED_RELEASE") == "true"
+    System.getenv("OMNIX_REQUIRE_SIGNED_RELEASE") == "true"
 
 if (requireSignedRelease && !releaseSigningConfigured) {
     throw GradleException(
-        "JARVIS_REQUIRE_SIGNED_RELEASE=true, но signing-конфигурация не найдена. " +
-            "Задайте keystore.properties или JARVIS_SIGNING_* переменные окружения " +
+        "OMNIX_REQUIRE_SIGNED_RELEASE=true, но signing-конфигурация не найдена. " +
+            "Задайте keystore.properties или OMNIX_SIGNING_* переменные окружения " +
             "(см. docs/RELEASE.md)."
     )
 }
 
 // Экспорт схем Room в app/schemas — обязательно для миграций и MigrationTestHelper
-// (см. JarvisMigrations.kt, пункт аудита #7).
+// (см. OmnixMigrations.kt, пункт аудита #7).
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 android {
-    namespace = "com.jarvis.assistant"
+    namespace = "com.omnix.assistant"
     compileSdk = 34
 
     // Play Asset Delivery: 521 МБ LLM в install-time паке (см. assetpacks/).
@@ -105,7 +105,7 @@ android {
     assetPacks += listOf(":assetpacks:localmodel")
 
     defaultConfig {
-        applicationId = "com.jarvis.assistant"
+        applicationId = "com.omnix.assistant"
         minSdk = 29
         targetSdk = 34
         versionCode = 1
@@ -137,26 +137,26 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            buildConfigField("String", "JARVIS_API_BASE_URL", quoted(devApiUrl))
-            buildConfigField("String", "JARVIS_LICENSE_BASE_URL", quoted(devApiUrl))
+            buildConfigField("String", "OMNIX_API_BASE_URL", quoted(devApiUrl))
+            buildConfigField("String", "OMNIX_LICENSE_BASE_URL", quoted(devApiUrl))
             buildConfigField("boolean", "ALLOW_CLEARTEXT_BACKEND", (devApiUrl.startsWith("http://")).toString())
-            manifestPlaceholders["appLabel"] = "JARVIS Dev"
+            manifestPlaceholders["appLabel"] = "OMNIX Dev"
         }
         create("staging") {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            buildConfigField("String", "JARVIS_API_BASE_URL", quoted(stagingApiUrl))
-            buildConfigField("String", "JARVIS_LICENSE_BASE_URL", quoted(stagingApiUrl))
+            buildConfigField("String", "OMNIX_API_BASE_URL", quoted(stagingApiUrl))
+            buildConfigField("String", "OMNIX_LICENSE_BASE_URL", quoted(stagingApiUrl))
             buildConfigField("boolean", "ALLOW_CLEARTEXT_BACKEND", "false")
-            manifestPlaceholders["appLabel"] = "JARVIS Staging"
+            manifestPlaceholders["appLabel"] = "OMNIX Staging"
         }
         create("prod") {
             dimension = "environment"
-            buildConfigField("String", "JARVIS_API_BASE_URL", quoted(productionApiUrl))
-            buildConfigField("String", "JARVIS_LICENSE_BASE_URL", quoted(productionApiUrl))
+            buildConfigField("String", "OMNIX_API_BASE_URL", quoted(productionApiUrl))
+            buildConfigField("String", "OMNIX_LICENSE_BASE_URL", quoted(productionApiUrl))
             buildConfigField("boolean", "ALLOW_CLEARTEXT_BACKEND", "false")
-            manifestPlaceholders["appLabel"] = "JARVIS"
+            manifestPlaceholders["appLabel"] = "OMNIX"
         }
     }
 
