@@ -258,7 +258,7 @@ class LicenseApiIntegrationTest : PostgresTestSupport() {
     }
 
     @Test
-    fun `unknown and reused codes have indistinguishable public response`() = runBlocking {
+    fun `unknown and foreign-device replays have indistinguishable public response`() = runBlocking {
         val unknown = handler.handle(
             request(
                 LicenseBillingHttpHandler.PATH_REDEEM,
@@ -268,7 +268,16 @@ class LicenseApiIntegrationTest : PostgresTestSupport() {
         val issued = issueCode()
         val first = redeemCode(issued)
         assertEquals(200, first.status)
-        val replay = redeemCode(issued)
+        // Повтор с того же устройства — идемпотентный успех (перевыпуск токена).
+        val retry = redeemCode(issued)
+        assertEquals(200, retry.status)
+        // Чужое устройство — 404, неотличимый от несуществующего кода.
+        val replay = handler.handle(
+            request(
+                LicenseBillingHttpHandler.PATH_REDEEM,
+                body = """{"code":"$issued","device_id":"device-xyz98765"}"""
+            )
+        )!!
 
         assertEquals(404, unknown.status)
         assertEquals(404, replay.status)

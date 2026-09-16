@@ -115,7 +115,7 @@ class LicensePersistenceIntegrationTest : PostgresTestSupport() {
     }
 
     @Test
-    fun `unknown malformed and replayed one-time codes never redeem`() {
+    fun `unknown malformed and foreign-device replays never redeem`() {
         val service = service()
         assertTrue(service.redeem("not-a-code", "device-abcdefgh", "r1", null) is RedeemOutcome.InvalidOrUnknown)
         assertTrue(
@@ -124,7 +124,11 @@ class LicensePersistenceIntegrationTest : PostgresTestSupport() {
         )
         val issued = issue(service)
         assertTrue(service.redeem(issued.code, "device-abcdefgh", "r3", null) is RedeemOutcome.Success)
-        assertTrue(service.redeem(issued.code, "device-abcdefgh", "r4", null) is RedeemOutcome.AlreadyRedeemed)
+        // Идемпотентный повтор с того же устройства — успех с перевыпущенным токеном.
+        val retry = service.redeem(issued.code, "device-abcdefgh", "r4", null)
+        assertTrue(retry is RedeemOutcome.Success)
+        assertTrue((retry as RedeemOutcome.Success).accessToken.startsWith("omx_"))
+        // Чужое устройство — one-time по-прежнему.
         assertTrue(service.redeem(issued.code, "other-device-xyz", "r5", null) is RedeemOutcome.AlreadyRedeemed)
     }
 
