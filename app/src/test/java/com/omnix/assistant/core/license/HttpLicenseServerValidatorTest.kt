@@ -13,6 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Transport blips retry once silently; definitive answers never retry. */
@@ -22,7 +23,12 @@ class HttpLicenseServerValidatorTest {
     @Before
     fun setUp() {
         server = MockWebServer()
-        server.start()
+        // Именно 127.0.0.1, а не localhost: localhost резолвится и в ::1, и в
+        // 127.0.0.1, а MockWebServer слушает один адрес. После первой упавшей
+        // попытки отравленный маршрут уходит вниз, вторая попытка идёт на
+        // мёртвый адрес и (retryOnConnectionFailure=false) падает без
+        // перебора — тест становится флакающим от порядка DNS-ответов.
+        server.start(InetAddress.getByName("127.0.0.1"), 0)
     }
 
     @After
@@ -30,7 +36,10 @@ class HttpLicenseServerValidatorTest {
         server.shutdown()
     }
 
-    private fun validator(baseUrl: String = server.url("/").toString().trimEnd('/')) =
+    private fun baseUrlFor(target: MockWebServer): String =
+        target.url("/").newBuilder().host("127.0.0.1").build().toString().trimEnd('/')
+
+    private fun validator(baseUrl: String = baseUrlFor(server)) =
         HttpLicenseServerValidator(mockk<SecurityManager>(relaxed = true), baseUrl)
 
     @Test
@@ -57,8 +66,8 @@ class HttpLicenseServerValidatorTest {
     @Test
     fun `persistent transport failure surfaces as no connection`(): Unit = runBlocking {
         val dead = MockWebServer()
-        dead.start()
-        val deadUrl = dead.url("/").toString().trimEnd('/')
+        dead.start(InetAddress.getByName("127.0.0.1"), 0)
+        val deadUrl = baseUrlFor(dead)
         dead.shutdown()
         val result = validator(deadUrl).redeem("OMX-ABCDE-FGHJK-LMNPQ-RSTUV", "OMX-TEST-DEVICE-ABCDEF")
         assertEquals(ServerRedemptionResult.NoConnection, result)
