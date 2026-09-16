@@ -329,4 +329,22 @@
     <string name="omnix_diag_license">Лицензия</string>
     <string name="omnix_diag_network">Сеть</string>
     <string name="omnix_diag_battery">Батарея</string>
+
+    <!-- In-app update (staging self-update) -->
+    <string name="omnix_update_available_title">Доступно обновление</string>
+    <string name="omnix_update_available_body">Новая сборка OMNIX готова: %1$d. Скачать и установить?</string>
+    <string name="omnix_update_sources_hint">Для установки разрешите «Установку из неизвестных источников» для OMNIX — система откроет нужный экран.</string>
+    <string name="omnix_update_action_update">Обновить</string>
+    <string name="omnix_update_action_later">Позже</string>
+    <string name="omnix_update_downloading_title">Загрузка обновления</string>
+    <string name="omnix_update_downloading_body">Сборка %1$d загружается. Можно продолжать пользоваться приложением.</string>
+    <string name="omnix_update_action_hide">Скрыть</string>
+    <string name="omnix_update_ready_title">Обновление загружено</string>
+    <string name="omnix_update_ready_body">Сборка %1$d готова к установке.</string>
+    <string name="omnix_update_action_install">Установить</string>
+    <string name="omnix_update_failed_title">Не удалось обновить</string>
+    <string name="omnix_update_failed_body">Загрузка сборки %1$d не удалась. Проверьте соединение и попробуйте ещё раз.</string>
+    <string name="omnix_update_action_retry">Повторить</string>
+    <string name="omnix_update_download_title">OMNIX: обновление</string>
+    <string name="omnix_update_download_desc">Загрузка новой сборки</string>
 </resources>

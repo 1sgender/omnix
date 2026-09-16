@@ -334,20 +334,20 @@
     <string name="omnix_diag_battery">Battery</string>
 
     <!-- In-app update (staging self-update) -->
-    <string name="omnix_update_available_title">Доступно обновление</string>
-    <string name="omnix_update_available_body">Новая сборка OMNIX готова: %1$d. Скачать и установить?</string>
-    <string name="omnix_update_sources_hint">Для установки разрешите «Установку из неизвестных источников» для OMNIX — система откроет нужный экран.</string>
-    <string name="omnix_update_action_update">Обновить</string>
-    <string name="omnix_update_action_later">Позже</string>
-    <string name="omnix_update_downloading_title">Загрузка обновления</string>
-    <string name="omnix_update_downloading_body">Сборка %1$d загружается. Можно продолжать пользоваться приложением.</string>
-    <string name="omnix_update_action_hide">Скрыть</string>
-    <string name="omnix_update_ready_title">Обновление загружено</string>
-    <string name="omnix_update_ready_body">Сборка %1$d готова к установке.</string>
-    <string name="omnix_update_action_install">Установить</string>
-    <string name="omnix_update_failed_title">Не удалось обновить</string>
-    <string name="omnix_update_failed_body">Загрузка сборки %1$d не удалась. Проверьте соединение и попробуйте ещё раз.</string>
-    <string name="omnix_update_action_retry">Повторить</string>
-    <string name="omnix_update_download_title">OMNIX: обновление</string>
-    <string name="omnix_update_download_desc">Загрузка новой сборки</string>
+    <string name="omnix_update_available_title">Update available</string>
+    <string name="omnix_update_available_body">A new OMNIX build is ready: %1$d. Download and install?</string>
+    <string name="omnix_update_sources_hint">To install, allow “Install unknown apps” for OMNIX — the system will open the right screen.</string>
+    <string name="omnix_update_action_update">Update</string>
+    <string name="omnix_update_action_later">Later</string>
+    <string name="omnix_update_downloading_title">Downloading update</string>
+    <string name="omnix_update_downloading_body">Build %1$d is downloading. You can keep using the app.</string>
+    <string name="omnix_update_action_hide">Hide</string>
+    <string name="omnix_update_ready_title">Update downloaded</string>
+    <string name="omnix_update_ready_body">Build %1$d is ready to install.</string>
+    <string name="omnix_update_action_install">Install</string>
+    <string name="omnix_update_failed_title">Update failed</string>
+    <string name="omnix_update_failed_body">Build %1$d failed to download. Check your connection and try again.</string>
+    <string name="omnix_update_action_retry">Retry</string>
+    <string name="omnix_update_download_title">OMNIX: update</string>
+    <string name="omnix_update_download_desc">Downloading a new build</string>
 </resources>
