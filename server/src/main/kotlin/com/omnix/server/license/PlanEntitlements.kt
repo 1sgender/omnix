@@ -1,7 +1,7 @@
 package com.omnix.server.license
 
 /**
- * Тарифы OMNIX: FREE / OMNIX / PRO.
+ * Тарифы OMNIX: FREE / PRO / OMNIX (средний — PRO, флагман — OMNIX).
  *
  * Утверждено фаундером (лимиты):
  * - голосовой AI: 30 / 500 / 2000 в день;
@@ -61,21 +61,6 @@ object PlanCatalog {
     )
 
     private val omnix = PlanLimits(
-        dailyVoiceAi = 500,
-        dailyBaseAi = 500,
-        dailyAgentActions = 100,
-        dailyWebSearch = 100,
-        dailyTranslationUnits = 300,
-        dailyEarMinutes = 120,
-        maxAutomations = Int.MAX_VALUE,
-        screenReading = true,
-        uiControl = true,
-        priorityRouting = false,
-        premiumModels = false,
-        maxClips = 1
-    )
-
-    private val pro = PlanLimits(
         dailyVoiceAi = 2000,
         dailyBaseAi = 2000,
         dailyAgentActions = 500,
@@ -89,6 +74,21 @@ object PlanCatalog {
         priorityRouting = true,
         premiumModels = true,
         maxClips = 2
+    )
+
+    private val pro = PlanLimits(
+        dailyVoiceAi = 500,
+        dailyBaseAi = 500,
+        dailyAgentActions = 100,
+        dailyWebSearch = 100,
+        dailyTranslationUnits = 300,
+        dailyEarMinutes = 120,
+        maxAutomations = Int.MAX_VALUE,
+        screenReading = true,
+        uiControl = true,
+        priorityRouting = false,
+        premiumModels = false,
+        maxClips = 1
     )
 
     fun forPlanId(planId: String): PlanLimits =

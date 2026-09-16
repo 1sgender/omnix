@@ -34,24 +34,6 @@ class EntitlementsDtoTest {
     fun `omnix entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.OMNIX).toDto()
 
-        assertEquals(500, dto.dailyVoiceAi)
-        assertEquals(500, dto.dailyBaseAi)
-        assertEquals(100, dto.dailyAgentActions)
-        assertEquals(100, dto.dailyWebSearch)
-        assertEquals(300, dto.dailyTranslationUnits)
-        assertEquals(120, dto.dailyEarMinutes)
-        assertEquals(Int.MAX_VALUE, dto.maxAutomations)
-        assertTrue(dto.screenReading)
-        assertTrue(dto.uiControl)
-        assertFalse(dto.priorityRouting)
-        assertFalse(dto.premiumModels)
-        assertEquals(1, dto.maxClips)
-    }
-
-    @Test
-    fun `pro entitlements match approved matrix`() {
-        val dto = PlanCatalog.forPlanId(PlanCatalog.PRO).toDto()
-
         assertEquals(2000, dto.dailyVoiceAi)
         assertEquals(2000, dto.dailyBaseAi)
         assertEquals(500, dto.dailyAgentActions)
@@ -64,6 +46,24 @@ class EntitlementsDtoTest {
         assertTrue(dto.priorityRouting)
         assertTrue(dto.premiumModels)
         assertEquals(2, dto.maxClips)
+    }
+
+    @Test
+    fun `pro entitlements match approved matrix`() {
+        val dto = PlanCatalog.forPlanId(PlanCatalog.PRO).toDto()
+
+        assertEquals(500, dto.dailyVoiceAi)
+        assertEquals(500, dto.dailyBaseAi)
+        assertEquals(100, dto.dailyAgentActions)
+        assertEquals(100, dto.dailyWebSearch)
+        assertEquals(300, dto.dailyTranslationUnits)
+        assertEquals(120, dto.dailyEarMinutes)
+        assertEquals(Int.MAX_VALUE, dto.maxAutomations)
+        assertTrue(dto.screenReading)
+        assertTrue(dto.uiControl)
+        assertFalse(dto.priorityRouting)
+        assertFalse(dto.premiumModels)
+        assertEquals(1, dto.maxClips)
     }
 
     @Test
