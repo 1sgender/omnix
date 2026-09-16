@@ -1,11 +1,13 @@
 package com.omnix.assistant.core.license
 
+import androidx.annotation.VisibleForTesting
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.network.readUtf8Bounded
 import com.omnix.assistant.core.security.AccessTokenPolicy
 import com.omnix.assistant.core.security.SecurityManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,6 +17,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -37,6 +40,8 @@ sealed interface ServerRedemptionResult {
     data object NotRedeemable : ServerRedemptionResult
     data object RateLimited : ServerRedemptionResult
     data object ServiceUnavailable : ServerRedemptionResult
+    /** Таймаут/DNS/обрыв соединения — сервер не ответил, а не отказал. */
+    data object NoConnection : ServerRedemptionResult
 }
 
 sealed interface ServerLicenseValidationResult {
@@ -105,14 +110,25 @@ class HttpLicenseServerValidator @Inject constructor(
     companion object {
         private const val MAX_RESPONSE_BYTES = 64L * 1024
         private val BASE_URL: String = AppConstants.OMNIX_LICENSE_BASE_URL
+        private const val RETRY_DELAY_MS = 2_000L
+    }
+
+    // Hilt идёт через primary-конструктор; baseUrl переопределяется только в тестах.
+    private var baseUrl: String = BASE_URL
+
+    @VisibleForTesting
+    constructor(securityManager: SecurityManager, baseUrl: String) : this(securityManager) {
+        this.baseUrl = baseUrl
     }
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = false }
     private val mediaType = "application/json; charset=utf-8".toMediaType()
+    // Активация — редкая операция: таймауты щедрые, чтобы медленные мобильные
+    // сети (рукопожатие TLS + DNS) не превращались в ложный «сервер недоступен».
     private val client = OkHttpClient.Builder()
-        .connectTimeout(3, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .callTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .callTimeout(30, TimeUnit.SECONDS)
         .retryOnConnectionFailure(false)
         .followRedirects(false)
         .followSslRedirects(false)
@@ -123,25 +139,40 @@ class HttpLicenseServerValidator @Inject constructor(
             val requestId = UUID.randomUUID().toString()
             val body = json.encodeToString(RedeemRequest(code, hardwareId, requestId))
             val request = Request.Builder()
-                .url("$BASE_URL/v1/license/redeem")
+                .url("$baseUrl/v1/license/redeem")
                 .post(body.toRequestBody(mediaType))
                 .build()
-            try {
-                client.newCall(request).execute().use { response ->
-                    val responseBody = response.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
-                    when (response.code) {
-                        200 -> parseRedeem(responseBody)
-                        404, 409, 410 -> ServerRedemptionResult.NotRedeemable
-                        429 -> ServerRedemptionResult.RateLimited
-                        else -> ServerRedemptionResult.ServiceUnavailable
-                    }
-                }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                ServerRedemptionResult.ServiceUnavailable
+            // Одна молчаливая повторная попытка при транспортном сбое: мобильные
+            // сети рвут соединения, а redeem идемпотентен для того же устройства.
+            var result = attemptRedeem(request)
+            if (result == ServerRedemptionResult.NoConnection) {
+                delay(RETRY_DELAY_MS)
+                result = attemptRedeem(request)
             }
+            result
         }
+
+    private fun attemptRedeem(request: Request): ServerRedemptionResult {
+        try {
+            client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
+                return when (response.code) {
+                    200 -> parseRedeem(responseBody)
+                    // 400 от redeem — тоже «плохой код», а не авария сервера.
+                    400, 404, 409, 410 -> ServerRedemptionResult.NotRedeemable
+                    429 -> ServerRedemptionResult.RateLimited
+                    else -> ServerRedemptionResult.ServiceUnavailable
+                }
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: IOException) {
+            // Любой транспортный сбой (таймаут/DNS/reset/TLS) — не ответ сервера.
+            return ServerRedemptionResult.NoConnection
+        } catch (_: Exception) {
+            return ServerRedemptionResult.ServiceUnavailable
+        }
+    }
 
     override suspend fun validate(hardwareId: String): ServerLicenseValidationResult =
         withContext(Dispatchers.IO) {

@@ -190,31 +190,43 @@ class LicenseBillingHttpHandler(
         if (parsed.code.length !in 8..64 || parsed.deviceId.length !in 8..128) {
             return error(ApiErrorCode.INVALID_REQUEST, requestId)
         }
+        // Наблюдаемость redeem: раньше попытки активации не оставляли никакого
+        // следа в логах. Пишем только requestId + исход, без кода и устройства.
         return when (val outcome = licenseService.redeem(
             parsed.code, parsed.deviceId, requestId, request.remoteAddress
         )) {
-            is RedeemOutcome.Success -> HttpResponseContext(
-                200,
-                json.encodeToString(
-                    LicenseRedeemResponse.serializer(),
-                    LicenseRedeemResponse(
-                        accessToken = outcome.accessToken,
-                        planId = outcome.planId,
-                        productId = outcome.productId,
-                        startsAt = outcome.startsAt.toString(),
-                        expiresAt = outcome.expiresAt.toString(),
-                        billingStatus = outcome.billingStatus.name,
-                        requestId = requestId
-                    )
-                ),
-                headers = mapOf("Cache-Control" to "no-store")
-            )
+            is RedeemOutcome.Success -> {
+                logger.info("license redeemed", "requestId" to requestId)
+                HttpResponseContext(
+                    200,
+                    json.encodeToString(
+                        LicenseRedeemResponse.serializer(),
+                        LicenseRedeemResponse(
+                            accessToken = outcome.accessToken,
+                            planId = outcome.planId,
+                            productId = outcome.productId,
+                            startsAt = outcome.startsAt.toString(),
+                            expiresAt = outcome.expiresAt.toString(),
+                            billingStatus = outcome.billingStatus.name,
+                            requestId = requestId
+                        )
+                    ),
+                    headers = mapOf("Cache-Control" to "no-store")
+                )
+            }
             RedeemOutcome.InvalidOrUnknown,
             RedeemOutcome.AlreadyRedeemed,
             RedeemOutcome.Expired,
             RedeemOutcome.RevokedOrDisabled,
             RedeemOutcome.InvalidPlan,
-            RedeemOutcome.InvalidState -> error(ApiErrorCode.LICENSE_NOT_REDEEMABLE, requestId)
+            RedeemOutcome.InvalidState -> {
+                logger.info(
+                    "license redeem rejected",
+                    "requestId" to requestId,
+                    "outcome" to outcome.javaClass.simpleName
+                )
+                error(ApiErrorCode.LICENSE_NOT_REDEEMABLE, requestId)
+            }
         }
     }
 
