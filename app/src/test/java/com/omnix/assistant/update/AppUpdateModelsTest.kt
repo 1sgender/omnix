@@ -40,6 +40,16 @@ class AppUpdateModelsTest {
     }
 
     @Test
+    fun `payload without success flag is an update when newer`() {
+        // Регрессия: живой сервер опускает success:true (дефолт сериализации),
+        // и старый дефолт false вечно запрещал обновления.
+        val parsed = parseAppLatest(
+            """{"channel":"staging","versionCode":101,"url":"https://x/y.apk","sizeBytes":1}"""
+        )!!
+        assertTrue(isUpdateAvailable(parsed, 100L))
+    }
+
+    @Test
     fun `null response is not an update`() {
         assertFalse(isUpdateAvailable(null, 100L))
     }

@@ -8,7 +8,9 @@ import kotlinx.serialization.json.Json
 /** Зеркало серверного ответа GET /v1/app/latest. */
 @Serializable
 data class AppLatestInfo(
-    @SerialName("success") val success: Boolean = false,
+    // Сервер опускает success:true (дефолт), поэтому отсутствие флага —
+    // тоже успех. Явный success:false (envelope ошибки) — отказ.
+    @SerialName("success") val success: Boolean = true,
     @SerialName("channel") val channel: String = "",
     @SerialName("versionCode") val versionCode: Long = 0L,
     @SerialName("url") val url: String = "",
