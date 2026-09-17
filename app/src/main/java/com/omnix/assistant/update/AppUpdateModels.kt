@@ -22,6 +22,21 @@ data class AppLatestInfo(
 
 private val appLatestJson = Json { ignoreUnknownKeys = true }
 
+/**
+ * OTA is available only to signed, directly distributed release variants.
+ *
+ * A debug APK is intentionally excluded: its ephemeral signing key is not a
+ * valid upgrade path to a release install. `null` means that the distribution
+ * channel, such as local development, owns updates instead.
+ */
+fun directUpdateChannel(flavor: String, buildType: String): String? =
+    when {
+        !buildType.equals("release", ignoreCase = true) -> null
+        flavor.equals("staging", ignoreCase = true) -> "staging"
+        flavor.equals("prod", ignoreCase = true) -> "prod"
+        else -> null
+    }
+
 /** tolerant-парсинг ответа сервера: мусор превращается в null, а не в краш. */
 fun parseAppLatest(body: String): AppLatestInfo? = try {
     appLatestJson.decodeFromString(AppLatestInfo.serializer(), body)

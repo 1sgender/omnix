@@ -41,13 +41,21 @@ private sealed interface UpdateUiState {
  * Проверка до активации обязательна: иначе баг, ломающий активацию,
  * можно исправить только ручной переустановкой APK.
  *
- * На dev/prod-флейворах молча ничего не делает: dev собирается локально,
- * prod обновляется через Play. Staging проверяется раз за холодный старт;
- * «Позже» откладывает вопрос до следующего запуска.
+ * Dev-сборки исключены: они могут быть подписаны временным debug-ключом и
+ * не способны безопасно заменять опубликованный APK. Подписанные staging и
+ * prod сборки проверяют свой канал раз за холодный старт; «Позже» откладывает
+ * вопрос до следующего запуска.
+ *
+ * Android всё равно требует системного подтверждения установки для обычного
+ * приложения. Пользователь больше не ищет и не скачивает APK вручную: OMNIX
+ * сам находит и загружает совместимое обновление.
  */
 @Composable
 fun AppUpdatePrompt() {
-    if (BuildConfig.FLAVOR != "staging") return
+    val channel = directUpdateChannel(
+        flavor = BuildConfig.FLAVOR,
+        buildType = BuildConfig.BUILD_TYPE
+    ) ?: return
     val context = LocalContext.current
     val appContext = remember(context) { context.applicationContext }
     val manager = remember(appContext) { AppUpdateManager(appContext) }
@@ -82,7 +90,7 @@ fun AppUpdatePrompt() {
     LaunchedEffect(checkKey) {
         if (syncWithPending()) return@LaunchedEffect
         val current = withContext(Dispatchers.IO) { manager.currentVersionCode() }
-        val latest = checker.check(BuildConfig.FLAVOR)
+        val latest = checker.check(channel)
         if (latest != null && isUpdateAvailable(latest, current)) {
             state = UpdateUiState.Available(latest)
         }

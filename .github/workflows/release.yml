@@ -155,30 +155,36 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      # OTA-канал: staging-приложение проверяет /v1/app/latest, а сервер
-      # читает этот релиз. Имя ассета стабильное, заметки несут versionCode
-      # (== run_number) и sha — их парсит AppUpdateHttpHandler.
-      - name: Publish staging APK to GitHub Release
-        if: inputs.environment == 'staging'
+      # OTA-канал: подписанные staging/prod APK проверяют /v1/app/latest.
+      # Релизный tag и asset соответствуют flavor, а заметки несут versionCode
+      # (== run_number) и sha — их парсит AppUpdateHttpHandler. Stable tags are
+      # intentionally rolling: the client only accepts a strictly higher code.
+      - name: Publish direct-install APK to GitHub Release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OTA_CHANNEL: ${{ inputs.environment }}
         run: |
           set -euo pipefail
+          case "$OTA_CHANNEL" in
+            staging|prod) ;;
+            *) echo "::error::неизвестный OTA-канал: $OTA_CHANNEL"; exit 1 ;;
+          esac
           APK=$(find app/build/outputs/apk -name '*release*.apk' | head -n 1)
           [ -n "$APK" ] || { echo "::error::release APK не найден"; exit 1; }
-          cp "$APK" OMNIX-staging.apk
-          if ! gh release view staging >/dev/null 2>&1; then
-            gh release create staging --target "${{ github.sha }}" \
-              --title "OMNIX staging (latest)" \
-              --notes "Rolling staging build for in-app updates."
+          ASSET="OMNIX-${OTA_CHANNEL}.apk"
+          cp "$APK" "$ASSET"
+          if ! gh release view "$OTA_CHANNEL" >/dev/null 2>&1; then
+            gh release create "$OTA_CHANNEL" --target "${{ github.sha }}" \
+              --title "OMNIX ${OTA_CHANNEL} (latest)" \
+              --notes "Rolling signed build for in-app updates."
           fi
-          gh release upload staging OMNIX-staging.apk --clobber
+          gh release upload "$OTA_CHANNEL" "$ASSET" --clobber
           # printf вместо многострочной строки: YAML-индентация не должна
           # попадать в заметки (парсер сервера ждёт ключи с начала строки).
           NOTES="$(printf 'versionCode=%s\nsha=%s' \
             "${{ github.run_number }}" "${{ github.sha }}")"
-          gh release edit staging --notes "$NOTES"
+          gh release edit "$OTA_CHANNEL" --notes "$NOTES"
 
       - name: Cleanup signing material
         if: ${{ always() }}

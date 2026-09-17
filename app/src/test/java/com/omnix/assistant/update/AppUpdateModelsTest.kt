@@ -80,6 +80,14 @@ class AppUpdateModelsTest {
     }
 
     @Test
+    fun `only signed direct release variants get an OTA channel`() {
+        assertEquals("staging", directUpdateChannel(flavor = "staging", buildType = "release"))
+        assertEquals("prod", directUpdateChannel(flavor = "prod", buildType = "release"))
+        assertNull(directUpdateChannel(flavor = "dev", buildType = "release"))
+        assertNull(directUpdateChannel(flavor = "prod", buildType = "debug"))
+    }
+
+    @Test
     fun `no pending download discards`() {
         assertEquals(
             ResumeAction.DISCARD,
