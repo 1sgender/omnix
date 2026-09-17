@@ -146,7 +146,7 @@ class SettingsDataStore @Inject constructor(
         .map { preferences ->
             WakeWordConfig(
                 enabled = preferences[PreferencesKeys.WAKEWORD_ENABLED] ?: true,
-                threshold = preferences[PreferencesKeys.WAKEWORD_THRESHOLD] ?: 0.5f,
+                threshold = preferences[PreferencesKeys.WAKEWORD_THRESHOLD] ?: 0.35f,
                 patienceFrames = preferences[PreferencesKeys.WAKEWORD_PATIENCE] ?: 2,
                 cooldownMs = preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] ?: 2000L,
                 debugLogging = preferences[PreferencesKeys.WAKEWORD_DEBUG] ?: false,

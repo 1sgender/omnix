@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.SharedFlow
 data class WakeWordConfig(
     val enabled: Boolean = true,
     val wakeWord: String = "Omni",
-    // Frozen v0.1 acoustics detect the legacy "Hey Jarvis" phrase; the asset
-    // name stays until the phase-2 retrain (training/README.md) lands.
-    val modelAssetPath: String = "wakeword/hey_jarvis_v0.1.onnx",
+    // omni_v0.1: собственная synthetic-data модель на фразу «Omni»
+    // (training/OMNI_V0.1_REPORT.md). hey_jarvis_v0.1 сохранён в assets как
+    // legacy-фолбэк до приёмки real-data v0.2 (training/README.md).
+    val modelAssetPath: String = "wakeword/omni_v0.1.onnx",
     val melAssetPath: String = "wakeword/melspectrogram.onnx",
     val embeddingAssetPath: String = "wakeword/embedding_model.onnx",
-    val threshold: Float = 0.5f,
+    // 0.35: recall 0.93 / FP 4% на held-out голосах (см. отчёт); регулируется
+    // настройкой WAKEWORD_THRESHOLD.
+    val threshold: Float = 0.35f,
     /** Сколько подряд фреймов (по 80 мс) выше порога нужно для срабатывания (oWW 'patience'). */
     val patienceFrames: Int = 2,
     val cooldownMs: Long = 2000L,

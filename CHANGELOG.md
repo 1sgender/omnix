@@ -12,6 +12,13 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+- Wake word «Omni»: собственная модель `omni_v0.1.onnx` (синтетика Piper
+  TTS, 20 голосов, adversarial-негативы) подключена по умолчанию;
+  порог 0.35. Стриминговый recall 0.90–0.95, FP 3–5% на speaker-disjoint
+  негативах; известные ограничения (нет живой речи в обучении) —
+  training/OMNI_V0.1_REPORT.md. `hey_jarvis_v0.1.onnx` сохранён как
+  фолбэк до приёмки real-data v0.2.
+
 - Ребрендинг JARVIS → OMNIX / OMNI: пакеты `com.omnix.*`, applicationId
   `com.omnix.assistant`, классы `Omni*` (AI-слой) / `Omnix*` (продукт),
   env `OMNIX_*`, метрики `omnix_*`, коды лицензий `OMX-` (legacy `JRV-`

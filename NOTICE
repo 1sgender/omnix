@@ -22,9 +22,15 @@ Runtime dependencies (Android app)
 
 On-device model
 ---------------
+- omni_v0.1.onnx (wake word «Omni») — trained for this project with the
+  openWakeWord v0.6.0 training stack (dscripka/openWakeWord, MIT) on
+  synthetic speech from Piper voices (rhasspy/piper-voices; voices under
+  individual CC BY licenses, training output MIT-compatible for this use).
+  Metrics and provenance: training/OMNI_V0.1_REPORT.md.
 - openWakeWord models (melspectrogram.onnx, embedding_model.onnx,
   hey_jarvis_v0.1.onnx, v0.5.1) — dscripka/openWakeWord —
-  (legacy acoustic phrase «Hey Jarvis»; target phrase «Omni», phase-2 retrain pending) —
+  (melspectrogram/embedding reused as acoustic frontend;
+  hey_jarvis_v0.1 = legacy fallback phrase) —
   Apache License 2.0. Bundled under app/src/main/assets/wakeword/.
   SHA256 pins: see SHA256SUMS in the same directory.
 - Gemma (on-device LLM used via MediaPipe, optional user-installed model) is
