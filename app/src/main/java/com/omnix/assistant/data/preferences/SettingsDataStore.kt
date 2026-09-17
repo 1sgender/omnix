@@ -16,6 +16,33 @@ import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "omnix_settings")
 
+/**
+ * Порог срабатывания wake-word по умолчанию; должен совпадать с
+ * [WakeWordConfig.threshold] (дефолт движка, если чтение настроек упало).
+ */
+internal const val DEFAULT_WAKE_WORD_THRESHOLD = 0.35f
+
+/** Клампы порога: даже «максимальная чувствительность» не вырождается в
+ * порог 0 (= срабатывает на каждый кадр), «минимальная» — в 1 (никогда). */
+internal const val MIN_WAKE_WORD_THRESHOLD = 0.05f
+internal const val MAX_WAKE_WORD_THRESHOLD = 0.95f
+
+/**
+ * Порог wake-word из настроек с миграцией legacy-чувствительности.
+ *
+ * До фикса аудита слайдер «чувствительность» писал ключ wake_word_sensitivity,
+ * который движок не читал: настройка не влияла на детекцию. Теперь слайдер
+ * пишет wakeword.threshold, а старое значение (если порог ещё никогда не
+ * записывался) мигрируется один раз: threshold = 1 − sensitivity.
+ *
+ * Чистая функция — тестируется в JVM-юнит-тесте без Context.
+ */
+internal fun resolveWakeWordThreshold(stored: Float?, legacySensitivity: Float?): Float {
+    if (stored != null) return stored
+    if (legacySensitivity == null) return DEFAULT_WAKE_WORD_THRESHOLD
+    return (1f - legacySensitivity).coerceIn(MIN_WAKE_WORD_THRESHOLD, MAX_WAKE_WORD_THRESHOLD)
+}
+
 @Singleton
 class SettingsDataStore @Inject constructor(
     @ApplicationContext private val context: Context
@@ -85,12 +112,22 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.HEADSET_ONLY_MODE] ?: false
         }
 
+    /**
+     * Чувствительность wake-word (0..1: выше = срабатывает легче).
+     * Единый источник правды — ключ wakeword.threshold (его читает движок
+     * при старте): sensitivity = 1 − threshold. Legacy-ключ
+     * wake_word_sensitivity задействован только как источник миграции
+     * в [resolveWakeWordThreshold].
+     */
     val wakeWordSensitivityFlow: Flow<Float> = context.dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }
         .map { preferences ->
-            preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY] ?: 0.65f
+            1f - resolveWakeWordThreshold(
+                preferences[PreferencesKeys.WAKEWORD_THRESHOLD],
+                preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY]
+            )
         }
 
     suspend fun setUserName(name: String) {
@@ -129,15 +166,19 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
+    /** Пишет wakeword.threshold (инверсия чувствительности) — тот же ключ,
+     * который читает движок. Кламп см. [MIN_WAKE_WORD_THRESHOLD]. */
     suspend fun setWakeWordSensitivity(sensitivity: Float) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY] = sensitivity
+            preferences[PreferencesKeys.WAKEWORD_THRESHOLD] =
+                (1f - sensitivity).coerceIn(MIN_WAKE_WORD_THRESHOLD, MAX_WAKE_WORD_THRESHOLD)
         }
     }
 
     /**
      * Neural wake-word конфиг (§11 ТЗ). Дефолты совпадают с [WakeWordConfig].
-     * Legacy-ключ wake_word_sensitivity оставлен нетронутым для совместимости.
+     * Порог — через [resolveWakeWordThreshold]: ключ wakeword.threshold,
+     * при его отсутствии — однократная миграция с legacy-чувствительности.
      */
     val wakeWordConfig: Flow<WakeWordConfig> = context.dataStore.data
         .catch { exception ->
@@ -146,7 +187,10 @@ class SettingsDataStore @Inject constructor(
         .map { preferences ->
             WakeWordConfig(
                 enabled = preferences[PreferencesKeys.WAKEWORD_ENABLED] ?: true,
-                threshold = preferences[PreferencesKeys.WAKEWORD_THRESHOLD] ?: 0.35f,
+                threshold = resolveWakeWordThreshold(
+                    preferences[PreferencesKeys.WAKEWORD_THRESHOLD],
+                    preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY]
+                ),
                 patienceFrames = preferences[PreferencesKeys.WAKEWORD_PATIENCE] ?: 2,
                 cooldownMs = preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] ?: 2000L,
                 debugLogging = preferences[PreferencesKeys.WAKEWORD_DEBUG] ?: false,
@@ -230,7 +274,7 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.HEADSET_ONLY_MODE] = false
             preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY] = 0.65f
             preferences[PreferencesKeys.WAKEWORD_ENABLED] = true
-            preferences[PreferencesKeys.WAKEWORD_THRESHOLD] = 0.5f
+            preferences[PreferencesKeys.WAKEWORD_THRESHOLD] = DEFAULT_WAKE_WORD_THRESHOLD
             preferences[PreferencesKeys.WAKEWORD_PATIENCE] = 2
             preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] = 2000L
             preferences[PreferencesKeys.WAKEWORD_DEBUG] = false

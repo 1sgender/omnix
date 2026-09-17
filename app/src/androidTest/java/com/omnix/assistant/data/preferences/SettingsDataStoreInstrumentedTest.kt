@@ -74,4 +74,27 @@ class SettingsDataStoreInstrumentedTest {
         assertEquals(false, store.isHeadsetOnlyModeFlow.first())
         assertEquals(0.65f, store.wakeWordSensitivityFlow.first())
     }
+
+    @Test
+    fun wakeSensitivitySliderDrivesEngineThreshold() = runBlocking {
+        // Регрессия аудита: слайдер «чувствительность» раньше писал legacy-ключ
+        // wake_word_sensitivity, который движок не читал — настройка была
+        // мёртвой. Теперь слайдер и движок делят один ключ wakeword.threshold.
+        val store = SettingsDataStore(context)
+
+        store.setWakeWordSensitivity(0.8f)
+        assertEquals(0.2f, store.wakeWordConfig.first().threshold, 1e-4f)
+        assertEquals(0.8f, store.wakeWordSensitivityFlow.first(), 1e-4f)
+
+        // Вырожденные края клампятся, а не ломают детекцию.
+        store.setWakeWordSensitivity(1f)
+        assertEquals(0.05f, store.wakeWordConfig.first().threshold, 1e-4f)
+
+        store.setWakeWordSensitivity(0f)
+        assertEquals(0.95f, store.wakeWordConfig.first().threshold, 1e-4f)
+
+        store.resetDefaults()
+        assertEquals(0.35f, store.wakeWordConfig.first().threshold, 1e-4f)
+        assertEquals(0.65f, store.wakeWordSensitivityFlow.first(), 1e-4f)
+    }
 }
