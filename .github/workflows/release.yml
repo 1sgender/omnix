@@ -34,15 +34,40 @@ on:
         type: string
         default: https://omnix.144.31.14.236.sslip.io
         required: false
+  workflow_run:
+    # Авто-staging: только после зелёного CI (никогда не публикуем
+    # непротестированный билд), только push-события в main того же репо.
+    workflows: ["Build OMNIX APK"]
+    types: [completed]
+
+# Не гоняем параллельные публикации в один и тот же staging-релиз.
+concurrency:
+  group: ota-staging-release
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   signed-release:
-    name: "Signed release (${{ inputs.environment }})"
+    name: "Signed release"
+    # Ручной запуск — всегда; автоматический — только зелёный push-CI в main.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    # На workflow_run inputs пуст — дефолтируем в staging (авто-канал).
+    # RELEASE_SHA — именно тот коммит, который валидировал CI
+    # (github.sha на workflow_run может быть уже новее протестированного).
+    env:
+      RELEASE_ENV: ${{ inputs.environment || 'staging' }}
+      STAGING_API_URL: ${{ inputs.api_url || 'https://omnix.144.31.14.236.sslip.io' }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     # Least privilege: только эта job публикует OTA-релиз (gh release
     # create/upload/edit), workflow в целом остаётся read-only.
     permissions:
@@ -52,6 +77,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+          ref: ${{ env.RELEASE_SHA }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
@@ -102,17 +128,17 @@ jobs:
           bash ./gradlew :app:dependencies --write-locks --no-daemon
           git diff --exit-code -- '**/gradle.lockfile' 'gradle/verification-metadata.xml'
 
-      - name: Build signed ${{ inputs.environment }} release
+      - name: Build signed ${{ env.RELEASE_ENV }} release
         shell: bash
         env:
           OMNIX_REQUIRE_SIGNED_RELEASE: 'true'
         run: |
-          if [ "${{ inputs.environment }}" = "prod" ]; then
+          if [ "${{ env.RELEASE_ENV }}" = "prod" ]; then
             bash ./gradlew :app:bundleProdRelease :app:assembleProdRelease \
               -POMNIX_VERSION_CODE="${{ github.run_number }}" \
               --stacktrace --no-daemon
           else
-            API_URL="${{ inputs.api_url }}"
+            API_URL="${{ env.STAGING_API_URL }}"
             case "$API_URL" in
               https://*) ;;
               *) echo "::error::staging api_url must be https, got: $API_URL"; exit 1 ;;
@@ -148,7 +174,7 @@ jobs:
       - name: Upload release artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: OMNIX-${{ inputs.environment }}-release-${{ github.sha }}
+          name: OMNIX-${{ env.RELEASE_ENV }}-release-${{ env.RELEASE_SHA }}
           path: |
             app/build/outputs/bundle/*Release/*.aab
             app/build/outputs/apk/*/**/*release*.apk
@@ -159,11 +185,12 @@ jobs:
       # Релизный tag и asset соответствуют flavor, а заметки несут versionCode
       # (== run_number) и sha — их парсит AppUpdateHttpHandler. Stable tags are
       # intentionally rolling: the client only accepts a strictly higher code.
+      # На workflow_run inputs пуст — OTA-канал дефолтит в staging (авто-канал).
       - name: Publish direct-install APK to GitHub Release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OTA_CHANNEL: ${{ inputs.environment }}
+          OTA_CHANNEL: ${{ inputs.environment || 'staging' }}
         run: |
           set -euo pipefail
           case "$OTA_CHANNEL" in
@@ -175,7 +202,9 @@ jobs:
           ASSET="OMNIX-${OTA_CHANNEL}.apk"
           cp "$APK" "$ASSET"
           if ! gh release view "$OTA_CHANNEL" >/dev/null 2>&1; then
-            gh release create "$OTA_CHANNEL" --target "${{ github.sha }}" \
+            # --target: именно тот SHA, который валидировал CI
+            # (github.sha на workflow_run может быть уже новее протестированного).
+            gh release create "$OTA_CHANNEL" --target "${{ env.RELEASE_SHA }}" \
               --title "OMNIX ${OTA_CHANNEL} (latest)" \
               --notes "Rolling signed build for in-app updates."
           fi
@@ -183,7 +212,7 @@ jobs:
           # printf вместо многострочной строки: YAML-индентация не должна
           # попадать в заметки (парсер сервера ждёт ключи с начала строки).
           NOTES="$(printf 'versionCode=%s\nsha=%s' \
-            "${{ github.run_number }}" "${{ github.sha }}")"
+            "${{ github.run_number }}" "${{ env.RELEASE_SHA }}")"
           gh release edit "$OTA_CHANNEL" --notes "$NOTES"
 
       - name: Cleanup signing material
