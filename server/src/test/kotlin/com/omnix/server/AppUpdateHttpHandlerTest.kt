@@ -30,7 +30,7 @@ class AppUpdateHttpHandlerTest {
     private fun releaseJson(
         versionCodeLine: String = "versionCode=35071367107",
         assetName: String = "OMNIX-staging.apk",
-        assetUrl: String = "https://github.com/freelanceTM/jarvis/releases/download/staging/OMNIX-staging.apk"
+        assetUrl: String = "https://github.com/freelanceTM/omnix/releases/download/staging/OMNIX-staging.apk"
     ) = """
         {"tag_name":"staging",
          "body":"$versionCodeLine\nsha=9782910cd3e9570d5931cd4a5f7567735c7380a3",
@@ -41,7 +41,7 @@ class AppUpdateHttpHandlerTest {
     @Test
     fun `latest returns version and download url without auth`() = runBlocking {
         val handler = AppUpdateHttpHandler(
-            releaseRepo = "freelanceTM/jarvis",
+            releaseRepo = "freelanceTM/omnix",
             fetchReleaseJson = { releaseJson() }
         )
 
