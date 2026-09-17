@@ -23,7 +23,7 @@ community space.
 
 ## Enforcement
 
-The repository owner (GitHub: **freelanceTM**) is the sole maintainer and
+The repository owner (GitHub: **1sgender**) is the sole maintainer and
 enforcer. Violations may be edited, locked, deleted, or lead to blocking
 from the repository. Reports of violations go privately to the owner via
 GitHub (or the vulnerability-reporting channel if sensitive).

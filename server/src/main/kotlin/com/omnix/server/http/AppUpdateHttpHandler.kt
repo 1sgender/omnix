@@ -67,7 +67,7 @@ class AppUpdateHttpHandler(
 ) {
     companion object {
         const val PATH_APP_LATEST = "/v1/app/latest"
-        const val DEFAULT_REPO = "freelanceTM/omnix"
+        const val DEFAULT_REPO = "1sgender/omnix"
         const val DEFAULT_API_BASE = "https://api.github.com"
         const val CACHE_TTL_MS = 5 * 60 * 1000L
         private const val MAX_RELEASE_JSON_BYTES = 256 * 1024L

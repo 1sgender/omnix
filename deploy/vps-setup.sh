@@ -51,7 +51,7 @@ if [ -d "$INSTALL_DIR/.git" ]; then
   git -C "$INSTALL_DIR" pull --ff-only origin "$REF"
 else
   mkdir -p "$INSTALL_DIR"
-  git clone --branch "$REF" https://github.com/freelanceTM/omnix.git "$INSTALL_DIR"
+  git clone --branch "$REF" https://github.com/1sgender/omnix.git "$INSTALL_DIR"
 fi
 cd "$INSTALL_DIR/deploy"
 chmod +x verify-production-config.sh smoke-production-tls.sh 2>/dev/null || true

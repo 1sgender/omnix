@@ -27,7 +27,7 @@ Preferred private reporting channel:
 Fallback contact:
 
 - Open a private GitHub discussion/message with the repository owner
-  (GitHub: **freelanceTM**) requesting a private channel — without including
+  (GitHub: **1sgender**) requesting a private channel — without including
   exploit details in the message or any public issue.
 
 Please do not include exploit details in public issues or pull requests.
