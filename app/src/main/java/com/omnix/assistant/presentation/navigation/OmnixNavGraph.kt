@@ -46,8 +46,8 @@ import com.omnix.assistant.presentation.translator.TranslatorRoute
  * The OMNIX navigation graph (§20, §44).
  *
  * One `NavHost`, one persistent navigation bar, one shared [OmnixViewModel].
- * Because the state is hoisted above the host, the Core in the navigation bar
- * shows the same state as the Core on Home — from any screen (§14).
+ * State remains hoisted above the host so returning Home restores the current
+ * Core state without a separate, competing status indicator in navigation.
  *
  * Screen transitions are plain cross-fades: sliding panes would fight the
  * stillness the product depends on (§29).
@@ -161,11 +161,11 @@ fun OmnixNavGraph(
             }
         }
 
-        // The bar is outside the NavHost, so the Core never unmounts and its
-        // breathing animation is continuous across navigation (§12).
+        // Navigation stays outside the NavHost so it remains a stable way to
+        // reach Home, History and Profile while the live Core itself keeps a
+        // single, unambiguous home on the Home screen.
         OmnixNavigationBar(
             currentRoute = currentRoute,
-            coreState = uiState.coreState,
             onNavigate = { navController.navigateSingleTop(it) }
         )
     }

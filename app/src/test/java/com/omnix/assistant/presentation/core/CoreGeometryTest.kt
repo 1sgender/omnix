@@ -108,7 +108,7 @@ class CoreGeometryTest {
 
     @Test
     fun `a sealed ring has no hidden angles`() {
-        // SUCCESS and ERROR close the ring completely.
+        // Ready and terminal states use this continuous-ring geometry.
         val sealedShape = base.copy(gaps = emptyList())
         for (i in 0 until 90) {
             val theta = CoreGeometry.TAU * i / 90
@@ -177,15 +177,19 @@ class CoreGeometryTest {
     }
 
     @Test
-    fun `only the terminal states carry a glyph and the ring seals for them`() {
+    fun `ready and terminal states seal the ring while only terminal states carry a glyph`() {
         CoreState.values().forEach { state ->
             val shape = CoreMotion.baseShape(state)
             val glyph = CoreMotion.glyphOf(state)
+            if (state == CoreState.IDLE || state.isTerminal) {
+                assertTrue("$state must use a continuous ring", shape.gaps.isEmpty())
+            } else {
+                assertEquals("$state must keep the three working-state breaks", 3, shape.gaps.size)
+            }
+
             if (state.isTerminal) {
-                assertTrue("$state must seal the ring", shape.gaps.isEmpty())
                 assertTrue("$state must carry a glyph", glyph != CoreGlyph.NONE)
             } else {
-                assertEquals("$state must keep the three breaks", 3, shape.gaps.size)
                 assertEquals("$state must have no glyph", CoreGlyph.NONE, glyph)
             }
         }

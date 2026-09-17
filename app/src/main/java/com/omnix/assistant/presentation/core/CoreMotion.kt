@@ -15,7 +15,7 @@ import com.omnix.assistant.presentation.design.OmnixMotionTokens
  * Per-state Core motion (§28, §58).
  *
  * Each animation answers "what changed?":
- *  - IDLE        slow breathing;
+ *  - IDLE        continuous, gently breathing presence;
  *  - LISTENING   audio reactive;
  *  - RECOGNIZING subtle directional drift;
  *  - THINKING    slow internal progression;
@@ -24,24 +24,27 @@ import com.omnix.assistant.presentation.design.OmnixMotionTokens
  *  - SUCCESS     one confirmation, then settle;
  *  - ERROR       short interruption of the ring.
  *
- * There are no spinners, no particles, no glow and no giant waveform.
- * With reduced motion every cycle is disabled and the state stays legible
- * through stroke, aperture and colour (§29).
+ * A moving discontinuous element is reserved for recognition, thought and
+ * execution. In particular, the ready state never resembles a loading
+ * spinner. With reduced motion every cycle is disabled and the state stays
+ * legible through stroke, aperture and colour (§29).
  */
 internal object CoreMotion {
 
     /**
      * Base shape per state — the values that do not depend on the clock.
      *
-     * Every state keeps the same three-break ring: the identity of the object
-     * must survive the transition (§7). What changes is stroke weight,
-     * harmonic character and opacity.
+     * The IDLE Core is intentionally sealed: a ready voice assistant is a
+     * present, stable object rather than unfinished work. The signature three
+     * breaks return in the interactive and processing states; terminal states
+     * remain sealed and add their result glyph (§7).
      */
     fun baseShape(state: CoreState): Shape = when (state) {
         CoreState.IDLE -> Shape(
+            gaps = emptyList(),
             stroke = CoreGeometry.STROKE_RATIO,
-            pressure = 0.35f,
-            opacity = 0.88f
+            pressure = 0.22f,
+            opacity = 0.94f
         )
 
         CoreState.LISTENING -> Shape(
@@ -135,7 +138,7 @@ internal object CoreMotion {
         val transition = rememberInfiniteTransition(label = "omnix_core")
 
         val breathing by transition.animateFloatOrStill(
-            enabled = motion.breathingAmplitude > 0f,
+            enabled = state == CoreState.IDLE && motion.breathingAmplitude > 0f,
             durationMs = motion.breathingCycleMs,
             initial = 0f,
             target = 1f,
@@ -188,7 +191,7 @@ internal object CoreMotion {
 
     /** Snapshot of every continuous driver for the current frame. */
     data class Drivers(
-        /** 0..1 breathing phase. */
+        /** 0..1 breathing phase, used only while the Core is ready. */
         val breathing: Float,
         /** Radians, inner-arc rotation while thinking. */
         val thinkingAngle: Float,

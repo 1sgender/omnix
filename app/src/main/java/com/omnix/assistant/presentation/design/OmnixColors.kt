@@ -67,8 +67,10 @@ val OmnixDarkColors = OmnixColorScheme(
     textTertiary = TextTertiaryToken,
     textDisabled = TextDisabledToken,
 
-    // Core state hues, sampled from the reference rings.
-    stateIdle = Color(0xFFDFE0E6),
+    // A restrained ice cyan is the signature active/presence accent. It is
+    // deliberately cool rather than neon, so the ready Core and a connected
+    // Clip feel calm instead of signalling a warning.
+    stateIdle = Color(0xFF83E6EE),
     stateListening = Color(0xFF6FD98D),
     stateRecognizing = Color(0xFFE3DE7A),
     stateThinking = Color(0xFF5FB0F5),
@@ -99,7 +101,7 @@ val OmnixNightColors = OmnixDarkColors.copy(
     textTertiary = Color(0x4DFFFFFF),
     textDisabled = Color(0x2BFFFFFF),
 
-    stateIdle = Color(0xFFA9AEB3),
+    stateIdle = Color(0xFF6FAEB6),
     stateListening = Color(0xFF7FBF91),
     stateRecognizing = Color(0xFFC0B272),
     stateThinking = Color(0xFF7EA5D1),
@@ -128,7 +130,7 @@ val OmnixLightColors = OmnixColorScheme(
     textTertiary = Color(0x61121416),
     textDisabled = Color(0x38121416),
 
-    stateIdle = Color(0xFF6C7276),
+    stateIdle = Color(0xFF237D87),
     stateListening = Color(0xFF2F8B50),
     stateRecognizing = Color(0xFF8A7420),
     stateThinking = Color(0xFF2E6BB0),

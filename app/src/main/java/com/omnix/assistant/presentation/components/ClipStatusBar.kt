@@ -22,8 +22,8 @@ import com.omnix.assistant.presentation.state.ClipState
  * The Clip status line that sits under the OMNIX wordmark on Home (§9, §23).
  *
  * It answers one question — "can OMNIX hear me right now?" — and nothing else.
- * No battery percentage is displayed unless the device actually reports one,
- * and no signal strength, codec or MAC address ever appears here (§3, §33).
+ * A disconnected device is quiet grey, a connection in progress or Bluetooth
+ * switch-off is calm amber, and red is reserved for a failed connection.
  */
 @Composable
 fun ClipStatusBar(
@@ -36,13 +36,7 @@ fun ClipStatusBar(
     val spacing = OmnixTheme.spacing
 
     val label = clipLabel(clip)
-    val dotColor = when (clip) {
-        is ClipState.Connected -> colors.stateListening
-        is ClipState.Connecting, ClipState.Searching -> colors.stateRecognizing
-        ClipState.BluetoothOff, is ClipState.ConnectionFailed -> colors.stateError
-        else -> colors.textDisabled
-    }
-
+    val dotColor = clipDotColor(clip)
     val description = stringResource(R.string.omnix_a11y_clip_status, label)
 
     Row(
@@ -89,11 +83,20 @@ fun clipLabel(clip: ClipState): String = when (clip) {
     ClipState.Unknown -> stringResource(R.string.omnix_status_clip_disconnected)
 }
 
-/** Colour used for the Clip dot; exposed for reuse on the Devices screen. */
+/**
+ * Colour used for the Clip dot; exposed for reuse on the Devices screen.
+ *
+ * The status is not an alarm: only a concrete connection failure uses the
+ * error colour. In particular, Bluetooth being switched off is actionable but
+ * not an application error, so it uses the neutral warm status colour.
+ */
 @Composable
 fun clipDotColor(clip: ClipState): Color = when (clip) {
-    is ClipState.Connected -> OmnixTheme.colors.stateListening
-    is ClipState.Connecting, ClipState.Searching -> OmnixTheme.colors.stateRecognizing
-    ClipState.BluetoothOff, is ClipState.ConnectionFailed -> OmnixTheme.colors.stateError
-    else -> OmnixTheme.colors.textDisabled
+    is ClipState.Connected -> OmnixTheme.colors.stateIdle
+    is ClipState.Connecting, ClipState.Searching,
+    ClipState.BluetoothOff,
+    is ClipState.BatteryLow -> OmnixTheme.colors.stateRecognizing
+    is ClipState.ConnectionFailed -> OmnixTheme.colors.stateError
+    is ClipState.Disconnected,
+    ClipState.Unknown -> OmnixTheme.colors.textDisabled
 }

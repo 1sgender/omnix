@@ -28,7 +28,9 @@
 
     <!-- ===== Подсказки на Home ===== -->
     <string name="omnix_home_hint_say_omni_wake">Скажите %1$s</string>
-    <string name="omnix_home_example_time">«Omni, который час?»</string>
+    <string name="omnix_home_example_time">«Омни, который час?»</string>
+    <string name="omnix_home_example_weather">«Омни, какая погода?»</string>
+    <string name="omnix_home_example_music">«Омни, включи музыку»</string>
     <string name="omnix_home_offline_partial">Часть возможностей доступна.</string>
 
     <!-- ===== Действия ===== -->
@@ -136,6 +138,7 @@
 
     <!-- ===== Навигация ===== -->
     <string name="omnix_nav_history">История</string>
+    <string name="omnix_nav_home">Главная</string>
     <string name="omnix_nav_core">Core</string>
     <string name="omnix_nav_me">Профиль</string>
     <string name="omnix_nav_back">Назад</string>

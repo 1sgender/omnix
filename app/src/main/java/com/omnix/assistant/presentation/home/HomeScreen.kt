@@ -1,24 +1,30 @@
 package com.omnix.assistant.presentation.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.ClipStatusBar
+import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixSpokenExample
 import com.omnix.assistant.presentation.components.SystemStateView
 import com.omnix.assistant.presentation.core.CoreState
@@ -37,6 +44,7 @@ import com.omnix.assistant.presentation.state.ActionPhrase
 import com.omnix.assistant.presentation.state.GuidanceLevel
 import com.omnix.assistant.presentation.state.OmnixPhase
 import com.omnix.assistant.presentation.state.OmnixUiState
+import kotlinx.coroutines.delay
 
 /**
  * Home — presence and orientation, not a dashboard (§9, §21, §22).
@@ -46,6 +54,10 @@ import com.omnix.assistant.presentation.state.OmnixUiState
  *  2. Is my Clip connected?   → [ClipStatusBar]
  *  3. What is it doing?       → the state line under the Core
  *  4. What can I say?         → guidance, which fades as the user learns
+ *
+ * The Core, its state and guidance are optically centred in the space beneath
+ * the device status. This makes idle feel intentional instead of leaving a
+ * large accidental void above or below the main interaction.
  *
  * There is no CPU load, no provider name, no latency, no token count and no
  * command counter anywhere on this screen (§9, §31, §84).
@@ -63,7 +75,6 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -75,6 +86,15 @@ fun HomeScreen(
             color = colors.textSecondary
         )
 
+        // A restrained ice-cyan brand accent gives the otherwise quiet header
+        // a point of recognition without turning it into a control.
+        Spacer(Modifier.height(spacing.xs))
+        Box(
+            modifier = Modifier
+                .width(spacing.xxl)
+                .height(OmnixHairline)
+                .background(colors.stateIdle.copy(alpha = 0.72f))
+        )
         Spacer(Modifier.height(spacing.xs))
 
         ClipStatusBar(
@@ -83,51 +103,59 @@ fun HomeScreen(
             onClick = onClipTap
         )
 
-        // The Core sits in the optical centre: the space above and below it is
-        // deliberate, and is what makes the product feel calm (§21, §80).
-        Spacer(Modifier.height(spacing.colossal))
-
-        // The Core, flanked by the audio bars while it is hearing or speaking.
-        // The bars only exist for the audio-reactive states, so the layout is
-        // quiet the rest of the time (§29).
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        // The available area, rather than a fixed spacer, owns the main
+        // composition. The Core bundle remains balanced on different display
+        // heights and when the navigation bar consumes system insets.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center
         ) {
-            AudioBarsSlot(state = state, mirrored = true)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // The Core, flanked by the audio bars while it is hearing or
+                // speaking. The slots are always reserved so it never shifts.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+                ) {
+                    AudioBarsSlot(state = state, mirrored = true)
 
-            OmnixCore(
-                state = state.coreState,
-                size = OmnixTheme.coreSizes.home,
-                audioLevel = state.audioLevel,
-                contentDescription = stringResource(
-                    R.string.omnix_a11y_core_state,
-                    stateLabel(state)
-                )
-            )
+                    OmnixCore(
+                        state = state.coreState,
+                        size = OmnixTheme.coreSizes.home,
+                        audioLevel = state.audioLevel,
+                        contentDescription = stringResource(
+                            R.string.omnix_a11y_core_state,
+                            stateLabel(state)
+                        )
+                    )
 
-            AudioBarsSlot(state = state, mirrored = false)
+                    AudioBarsSlot(state = state, mirrored = false)
+                }
+
+                Spacer(Modifier.height(spacing.xxl))
+
+                StateLine(state = state)
+
+                Spacer(Modifier.height(spacing.md))
+
+                // Guidance is progressive: it is driven by real stored
+                // signals, not by a timer or a hardcoded new-user flag.
+                Guidance(state = state)
+
+                state.systemState?.let { systemState ->
+                    Spacer(Modifier.height(spacing.xl))
+                    SystemStateView(
+                        type = systemState,
+                        onAction = onSystemStateAction
+                    )
+                }
+            }
         }
-
-        Spacer(Modifier.height(spacing.xxl))
-
-        StateLine(state = state)
-
-        Spacer(Modifier.height(spacing.md))
-
-        // Guidance is progressive: it is driven by real stored signals, not by
-        // a timer and not by a hardcoded "isNewUser" flag (§10, §82).
-        Guidance(state = state)
-
-        state.systemState?.let { systemState ->
-            Spacer(Modifier.height(spacing.xl))
-            SystemStateView(
-                type = systemState,
-                onAction = onSystemStateAction
-            )
-        }
-
-        Spacer(Modifier.height(spacing.colossal))
     }
 }
 
@@ -185,7 +213,7 @@ private fun StateLine(state: OmnixUiState, modifier: Modifier = Modifier) {
 fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
     is OmnixPhase.Idle -> stringResource(R.string.omnix_state_ready)
     is OmnixPhase.Listening -> stringResource(R.string.omnix_state_listening)
-    // While recognising, the partial transcript *is* the feedback: showing the
+    // While recognising, the partial transcript is the feedback: showing the
     // user's own words is more reassuring than the word "Recognizing" (§17).
     is OmnixPhase.Recognizing -> phase.partialTranscript.ifBlank {
         stringResource(R.string.omnix_state_listening)
@@ -204,7 +232,7 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
 /**
  * Progressive disclosure (§10, §24–§26, §82).
  *
- * New user  → wake word plus a concrete example
+ * New user  → wake word plus a rotating set of concrete examples
  * Familiar  → wake word only
  * Minimal   → nothing; presence is enough
  */
@@ -233,7 +261,7 @@ private fun Guidance(state: OmnixUiState, modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center
             )
             if (state.guidance == GuidanceLevel.New) {
-                OmnixSpokenExample(text = stringResource(R.string.omnix_home_example_time))
+                RotatingSpokenExample()
             }
             if (!state.isOnline) {
                 Text(
@@ -246,3 +274,37 @@ private fun Guidance(state: OmnixUiState, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * Cycles through compact, real commands without claiming that OMNIX supports
+ * a feature it does not. Animation is stopped when reduced motion is enabled.
+ */
+@Composable
+private fun RotatingSpokenExample(modifier: Modifier = Modifier) {
+    val examples = listOf(
+        stringResource(R.string.omnix_home_example_time),
+        stringResource(R.string.omnix_home_example_weather),
+        stringResource(R.string.omnix_home_example_music)
+    )
+    val reducedMotion = OmnixTheme.reducedMotion
+    var exampleIndex by rememberSaveable { mutableStateOf(0) }
+
+    LaunchedEffect(reducedMotion) {
+        if (!reducedMotion) {
+            while (true) {
+                delay(EXAMPLE_ROTATION_MS)
+                exampleIndex = (exampleIndex + 1) % examples.size
+            }
+        }
+    }
+
+    Crossfade(
+        targetState = examples[exampleIndex],
+        animationSpec = tween(OmnixTheme.motion.contentFadeMs),
+        label = "home_command_example"
+    ) { example ->
+        OmnixSpokenExample(text = example, modifier = modifier)
+    }
+}
+
+private const val EXAMPLE_ROTATION_MS = 5_500L

@@ -30,10 +30,11 @@ import kotlin.math.sin
  * states; it is never unmounted and remounted, and there is never a separate
  * "listening core" or "thinking core" component.
  *
- * The visual is a segmented ring — three arcs, three breaks — sitting in a
- * soft halo of its own colour. The halo is what makes the Core read as light
- * rather than as a drawn outline, and it is the reason the product looks
- * like an object rather than a progress indicator.
+ * The visual is a soft halo around one ring. When OMNIX is ready, the ring is
+ * continuous and gently breathes; its stable form reads as presence rather
+ * than loading. The signature three breaks and directional motion appear only
+ * while OMNIX is interpreting or working. The halo is what makes the Core
+ * read as light rather than as a drawn outline.
  *
  * The Core is **not a button** (§8). It exposes no click handling; a caller
  * that genuinely needs a tap target wraps it explicitly and must also provide
@@ -167,7 +168,13 @@ fun OmnixCore(
         label = "core_inner"
     )
 
-    val breathScale = 1f + motion.breathingAmplitude * drivers.breathing
+    // A ready Core breathes as emitted light, not as a loader. The ring's
+    // movement stays almost imperceptible while the halo does most of the
+    // breathing, so the idle state reads as calm presence.
+    val readyBreath = if (state == CoreState.IDLE) drivers.breathing else 0f
+    val breathScale = 1f + motion.breathingAmplitude * readyBreath
+    val haloOpacity = 0.80f + readyBreath * 0.25f
+    val haloScale = 1f + readyBreath * 0.08f
 
     // The gaps narrow towards zero as the ring closes.
     val gaps = if (closure >= 0.999f) {
@@ -209,7 +216,12 @@ fun OmnixCore(
             val center = Offset(this.size.width / 2f, this.size.height / 2f)
             val baseRadius = sizePx * CoreGeometry.RADIUS_RATIO
 
-            drawHalo(center, baseRadius, color, shape.opacity)
+            drawHalo(
+                center = center,
+                baseRadius = baseRadius * haloScale,
+                color = color,
+                alpha = shape.opacity * haloOpacity
+            )
             drawRing(shape, center, baseRadius, color, shape.opacity)
 
             if (innerSweep > 0.01f) {

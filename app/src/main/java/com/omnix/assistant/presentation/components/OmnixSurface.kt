@@ -86,7 +86,9 @@ fun OmnixSpokenExample(
     Text(
         text = text,
         style = OmnixTheme.typography.caption,
-        color = OmnixTheme.colors.textDisabled,
+        // Examples are intentionally secondary, but must remain legible above
+        // the dark ground rather than blending into it.
+        color = OmnixTheme.colors.textTertiary,
         modifier = modifier
     )
 }

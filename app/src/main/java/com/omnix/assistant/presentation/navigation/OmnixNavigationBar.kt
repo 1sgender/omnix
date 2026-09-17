@@ -6,13 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement as LayoutArrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -25,37 +24,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixHistoryIcon
 import com.omnix.assistant.presentation.components.OmnixMeIcon
-import com.omnix.assistant.presentation.core.CoreState
-import com.omnix.assistant.presentation.core.OmnixCore
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
- * The OMNIX navigation bar: `History | ◎ | Me` (§20, §44, §45).
+ * The OMNIX navigation bar: `History | OMNIX | Me` (§20, §44, §45).
  *
- * The centre item is the Core itself, rendered small — the same geometry as on
- * Home, in the same eight states. The two side items are thin outline icons
- * with an overline label, dimmed unless selected, so they never compete with
- * the Core for attention (§45).
+ * The centre is deliberately a Home tab, not a second Core. The large Core on
+ * Home is the single live state indicator; duplicating it in navigation made
+ * its purpose ambiguous (status or action). The quiet wordmark tab retains a
+ * clear way home without competing with that indicator.
  */
 @Composable
 fun OmnixNavigationBar(
     currentRoute: String?,
-    coreState: CoreState,
     onNavigate: (OmnixDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = OmnixTheme.colors
     val spacing = OmnixTheme.spacing
 
-    // A floating pill rather than a full-width bar: it keeps the Core visually
-    // detached from the screen edge and stops the chrome competing with it
-    // (§45, reference poster).
+    // A floating pill rather than a full-width bar: it keeps navigation
+    // detached from the screen edge and stops the chrome competing with Home.
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -84,8 +77,7 @@ fun OmnixNavigationBar(
                 icon = { tint -> OmnixHistoryIcon(color = tint) }
             )
 
-            CoreNavigationItem(
-                coreState = coreState,
+            HomeNavigationItem(
                 selected = currentRoute == OmnixDestination.Home.route,
                 onClick = { onNavigate(OmnixDestination.Home) },
                 modifier = Modifier.weight(1f)
@@ -137,30 +129,39 @@ private fun NavigationItem(
 }
 
 /**
- * The Core as a navigation item. It is the same component in a smaller size,
- * still state-driven — so the user can see what OMNIX is doing from any
- * screen without going Home (§12, §44).
+ * Clear navigation affordance for Home. Its wordmark and small underline are
+ * intentionally unlike the Core's glowing circular status form.
  */
 @Composable
-private fun CoreNavigationItem(
-    coreState: CoreState,
+private fun HomeNavigationItem(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val description = stringResource(R.string.omnix_nav_core)
-    Box(
+    val colors = OmnixTheme.colors
+    val tint = if (selected) colors.textPrimary else colors.textTertiary
+    val description = stringResource(R.string.omnix_nav_home)
+
+    Column(
         modifier = modifier
             .height(OmnixTheme.spacing.touchTarget)
-            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
-        contentAlignment = Alignment.Center
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .semantics { contentDescription = description },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = LayoutArrangement.Center
     ) {
-        OmnixCore(
-            state = coreState,
-            size = OmnixTheme.coreSizes.navigation,
-            intensity = if (selected) 1f else 0.7f,
-            contentDescription = description,
-            modifier = Modifier.size(OmnixTheme.coreSizes.navigation)
+        Text(
+            text = stringResource(R.string.omnix_wordmark),
+            style = OmnixTheme.typography.overline,
+            color = tint,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .width(OmnixTheme.spacing.lg)
+                .height(OmnixHairline)
+                .background(if (selected) colors.stateIdle else Color.Transparent)
         )
     }
 }

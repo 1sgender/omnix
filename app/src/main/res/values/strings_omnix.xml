@@ -30,6 +30,8 @@
     <!-- ===== Home guidance (§9, §24–§26) ===== -->
     <string name="omnix_home_hint_say_omni_wake">Say %1$s</string>
     <string name="omnix_home_example_time">“Omni, what time is it?”</string>
+    <string name="omnix_home_example_weather">“Omni, what’s the weather?”</string>
+    <string name="omnix_home_example_music">“Omni, play some music.”</string>
     <string name="omnix_home_offline_partial">Some features are still available.</string>
 
     <!-- ===== Action phrasing (§16, §19) ===== -->
@@ -138,6 +140,7 @@
 
     <!-- ===== Navigation (§27, §78) ===== -->
     <string name="omnix_nav_history">History</string>
+    <string name="omnix_nav_home">Home</string>
     <string name="omnix_nav_core">Core</string>
     <string name="omnix_nav_me">Me</string>
     <string name="omnix_nav_back">Back</string>
