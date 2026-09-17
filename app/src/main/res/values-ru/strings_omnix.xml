@@ -139,7 +139,6 @@
     <!-- ===== Навигация ===== -->
     <string name="omnix_nav_history">История</string>
     <string name="omnix_nav_home">Главная</string>
-    <string name="omnix_nav_core">Core</string>
     <string name="omnix_nav_me">Профиль</string>
     <string name="omnix_nav_back">Назад</string>
 

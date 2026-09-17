@@ -141,7 +141,6 @@
     <!-- ===== Navigation (§27, §78) ===== -->
     <string name="omnix_nav_history">History</string>
     <string name="omnix_nav_home">Home</string>
-    <string name="omnix_nav_core">Core</string>
     <string name="omnix_nav_me">Me</string>
     <string name="omnix_nav_back">Back</string>
 
