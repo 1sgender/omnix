@@ -252,6 +252,10 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
             issuedAt = Instant.now(),
             expiresAt = null
         )
+        // RateLimiter.check() возвращает sealed-тип: relaxed-мок даст null и
+        // issue упадёт в NoWhenBranchMatchedException — поэтому явный allow-all.
+        val allowAll = mockk<com.omnix.server.ratelimit.RateLimiter>()
+        every { allowAll.check(any()) } returns com.omnix.server.ratelimit.RateLimitDecision.Allowed
         val billingHandler = com.omnix.server.http.LicenseBillingHttpHandler(
             authenticator = TokenAuthenticator(emptyMap()) { ClientTier.FREE },
             authorizer = com.omnix.server.auth.TierAuthorizer(),
@@ -259,9 +263,9 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
             billingService = mockk(relaxed = true),
             paddleWebhookVerifier = mockk(relaxed = true),
             heleketWebhookVerifier = mockk(relaxed = true),
-            redeemRateLimiter = mockk(relaxed = true),
-            authenticatedRateLimiter = mockk(relaxed = true),
-            webhookRateLimiter = mockk(relaxed = true),
+            redeemRateLimiter = allowAll,
+            authenticatedRateLimiter = allowAll,
+            webhookRateLimiter = allowAll,
             validation = com.omnix.server.config.ValidationConfig(),
             logger = mockk(relaxed = true),
             json = json
