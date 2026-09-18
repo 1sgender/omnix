@@ -183,22 +183,22 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
      */
     @Test
     fun `spa serves index, redirects legacy ui paths and blocks traversal`() = runBlocking {
-        assertEquals(301, spa.handle(HttpRequestContext("GET", "/v1/admin/ui/login", body = "", contentLength = 0))!!.status)
-        assertEquals(301, spa.handle(HttpRequestContext("GET", "/v1/admin/ui/dashboard", body = "", contentLength = 0))!!.status)
+        assertEquals(301, spa.handle(HttpRequestContext("GET", "/v1/admin/ui/login", null, "", 0))!!.status)
+        assertEquals(301, spa.handle(HttpRequestContext("GET", "/v1/admin/ui/dashboard", null, "", 0))!!.status)
 
-        val index = spa.handle(HttpRequestContext("GET", "/admin", body = "", contentLength = 0))!!
+        val index = spa.handle(HttpRequestContext("GET", "/admin", null, "", 0))!!
         assertEquals(200, index.status)
         assertTrue("index is html", index.headers["Content-Type"]!!.startsWith("text/html"))
         assertEquals("no-store", index.headers["Cache-Control"])
 
         // Клиентский роут без расширения → тоже index.
-        assertEquals(200, spa.handle(HttpRequestContext("GET", "/admin/licenses", body = "", contentLength = 0))!!.status)
+        assertEquals(200, spa.handle(HttpRequestContext("GET", "/admin/licenses", null, "", 0))!!.status)
 
         // Traversal и несуществующий ассет → 404.
-        assertEquals(404, spa.handle(HttpRequestContext("GET", "/admin/../secret", body = "", contentLength = 0))!!.status)
-        assertEquals(404, spa.handle(HttpRequestContext("GET", "/admin/assets/missing.js", body = "", contentLength = 0))!!.status)
+        assertEquals(404, spa.handle(HttpRequestContext("GET", "/admin/../secret", null, "", 0))!!.status)
+        assertEquals(404, spa.handle(HttpRequestContext("GET", "/admin/assets/missing.js", null, "", 0))!!.status)
         // Чужие маршруты не наши.
-        assertNull(spa.handle(HttpRequestContext("GET", "/v1/license/redeem", body = "", contentLength = 0)))
+        assertNull(spa.handle(HttpRequestContext("GET", "/v1/license/redeem", null, "", 0)))
     }
 
     @Test
