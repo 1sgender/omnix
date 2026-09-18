@@ -233,6 +233,7 @@
     <string name="omnix_local_model_loading">Загружается в память…</string>
     <string name="omnix_local_model_ready">Готова к офлайн-ответам</string>
     <string name="omnix_local_model_failed">Не запустилась: %1$s</string>
+    <string name="omnix_local_model_low_memory">Не хватает свободной RAM (нужно %1$d МБ) — отвечаю из облака</string>
     <string name="omnix_local_model_download_failed">Загрузка не удалась: %1$s</string>
     <string name="omnix_local_model_cancel">Отменить загрузку</string>
     <string name="omnix_local_model_consent_title">Скачать локальную модель?</string>

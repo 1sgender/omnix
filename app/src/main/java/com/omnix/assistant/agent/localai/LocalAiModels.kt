@@ -130,6 +130,16 @@ sealed class LocalModelState {
 
     /** Модель есть, но инициализация упала — это уже ошибка. */
     data class Failed(val reason: String) : LocalModelState()
+
+    /**
+     * Модель скачана, но устройству не хватает свободной RAM для запуска
+     * (нужно ~[requiredMb] МБ). Это ОЖИДАЕМОЕ состояние слабого устройства,
+     * а не сбой — как [NotInstalled], оно уходит в Cloud AI (Unsupported),
+     * а не в Error. Проверка повторяется при каждой попытке: как только
+     * память освободится (перезагрузка, закрытые приложения), модель
+     * загрузится сама.
+     */
+    data class InsufficientMemory(val requiredMb: Int) : LocalModelState()
 }
 
 /**

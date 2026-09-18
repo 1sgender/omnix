@@ -239,7 +239,7 @@ class MediaPipeModelManager @Inject constructor(
         }
 
         if (!hasEnoughMemory()) {
-            setState(LocalModelState.Failed("Недостаточно свободной RAM для локальной модели"))
+            setState(LocalModelState.InsufficientMemory(spec.minRuntimeMemoryMb))
             Log.w(TAG, "model load skipped: недостаточно памяти (нужно ~${spec.minRuntimeMemoryMb} МБ)")
             return@withLock currentState
         }
