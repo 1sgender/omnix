@@ -75,6 +75,41 @@ class AdminQueries(private val dataSource: DataSource) {
         val lastActiveAt: Instant?
     )
 
+    /* ── Plans (billing_plans) ─────────────────────────────────────────────── */
+
+    /** Строка billing_plans для формы выдачи лицензии (Control Plane). */
+    data class PlanRow(
+        val id: String,
+        val displayName: String?,
+        val durationDays: Int,
+        val amountMinor: Long,
+        val currency: String?,
+        val active: Boolean
+    )
+
+    /** Каталог тарифов — раньше в admin-API вообще не был виден. */
+    fun plans(): List<PlanRow> = dataSource.connection.use { c ->
+        c.prepareStatement(
+            "SELECT id, display_name, duration_days, amount_minor, currency, active " +
+                "FROM billing_plans ORDER BY active DESC, amount_minor ASC, id ASC"
+        ).use { ps ->
+            ps.executeQuery().use { rs ->
+                val out = mutableListOf<PlanRow>()
+                while (rs.next()) {
+                    out += PlanRow(
+                        id = rs.getString("id"),
+                        displayName = rs.getString("display_name"),
+                        durationDays = rs.getInt("duration_days"),
+                        amountMinor = rs.getLong("amount_minor"),
+                        currency = rs.getString("currency"),
+                        active = rs.getBoolean("active")
+                    )
+                }
+                out
+            }
+        }
+    }
+
     fun users(query: String?, limit: Int, offset: Long): List<UserRow> {
         val sql = buildString {
             append(
