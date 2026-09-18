@@ -14,6 +14,7 @@ import com.omnix.server.api.LicenseValidateRequest
 import com.omnix.server.api.LicenseValidateResponse
 import com.omnix.server.api.toDto
 import com.omnix.server.auth.AuthResult
+import com.omnix.server.auth.ClientTier
 import com.omnix.server.auth.AuthenticatedClient
 import com.omnix.server.auth.Authenticator
 import com.omnix.server.auth.Authorizer

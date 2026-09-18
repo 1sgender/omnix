@@ -55,7 +55,7 @@ class AdminHttpHandler(
         if (!path.startsWith(PREFIX) || path in RESERVED_FOR_LICENSE_HANDLER) return null
         val sub = path.removePrefix(PREFIX).trim('/')
 
-        // Server-rendered UI удалён: /v1/admin/ui/** теперь редиректит
+        // Server-rendered UI удалён: старые пути /v1/admin/ui/… теперь редиректит
         // AdminSpaHandler на SPA /admin (совместимость старых ссылок).
 
         return try {

@@ -12,7 +12,7 @@ import com.omnix.server.http.HttpResponseContext
  *  - `/admin`, `/admin/`, `/admin/<client-route>`  → index.html (no-store);
  *  - `/admin/assets/<file>`                        → файл из classpath
  *    (Cache-Control: immutable — Vite хэширует имена);
- *  - `/v1/admin/ui/**`                             → 301 на `/admin`
+ *  - `/v1/admin/ui/…` (старые ссылки)          → 301 на `/admin`
  *    (совместимость со старыми ссылками server-rendered панели);
  *  - прочее → null (не наш маршрут).
  *
