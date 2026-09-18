@@ -216,6 +216,9 @@ function LicenseDetail({ id, onClose, onChanged, onErr }: {
   const [confirmAction, setConfirmAction] = useState<'disable' | null>(null)
   const [extendDays, setExtendDays] = useState('30')
   const [extendOpen, setExtendOpen] = useState(false)
+  const [revokeOpen, setRevokeOpen] = useState(false)
+  const [revokeReason, setRevokeReason] = useState('')
+  const [revokeError, setRevokeError] = useState<string | null>(null)
 
   const act = useMutation({
     mutationFn: (args: { action: 'disable' | 'enable' | 'extend'; body?: unknown }) =>
@@ -228,6 +231,18 @@ function LicenseDetail({ id, onClose, onChanged, onErr }: {
       void query.refetch()
     },
     onError: (e) => onErr(isApiError(e) ? e.message : 'Действие не удалось')
+  })
+
+  // Отзыв — отдельный эндпоинт биллинг-хендлера: reason обязателен (3–256),
+  // статус необратимо становится REVOKED (SQL: NOT IN ('REVOKED','DISABLED')).
+  const revokeAct = useMutation({
+    mutationFn: () => endpoints.revokeLicense(id, revokeReason.trim()),
+    onSuccess: () => {
+      onChanged('Лицензия отозвана')
+      setRevokeOpen(false)
+      void query.refetch()
+    },
+    onError: (e) => setRevokeError(isApiError(e) ? e.message : 'Не удалось отозвать лицензию')
   })
 
   const license: LicenseRow | undefined = query.data
@@ -261,6 +276,9 @@ function LicenseDetail({ id, onClose, onChanged, onErr }: {
                   <Button size="sm" onClick={() => act.mutate({ action: 'enable' })} loading={act.isPending}>Включить</Button>
                 ) : null}
                 <Button size="sm" onClick={() => setExtendOpen(true)}>Продлить…</Button>
+                {license.status === 'ACTIVE' || license.status === 'ISSUED' ? (
+                  <Button size="sm" variant="danger" onClick={() => { setRevokeOpen(true); setRevokeReason(''); setRevokeError(null) }}>Отозвать…</Button>
+                ) : null}
               </div>
             </>
           ) : null}
@@ -299,6 +317,39 @@ function LicenseDetail({ id, onClose, onChanged, onErr }: {
               Продлить
             </Button>
           </div>
+        </Modal>
+      ) : null}
+      {revokeOpen ? (
+        <Modal
+          title="Отозвать лицензию?"
+          sub={`••••${license?.codeHint ?? ''} — действие необратимо`}
+          onClose={() => setRevokeOpen(false)}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const reason = revokeReason.trim()
+              if (reason.length < 3 || reason.length > 256) {
+                setRevokeError('Причина: 3–256 символов')
+                return
+              }
+              setRevokeError(null)
+              revokeAct.mutate()
+            }}
+          >
+            {revokeError ? <div className="form-error" role="alert">{revokeError}</div> : null}
+            <Field label="Причина отзыва" htmlFor="revoke-reason" hint="Записывается в audit-трейл лицензии">
+              <Input
+                id="revoke-reason" value={revokeReason} required maxLength={256}
+                placeholder="например: выдана по ошибке"
+                onChange={(e) => setRevokeReason(e.target.value)}
+              />
+            </Field>
+            <div className="modal-actions">
+              <Button type="button" onClick={() => setRevokeOpen(false)}>Отмена</Button>
+              <Button type="submit" variant="danger" loading={revokeAct.isPending}>Отозвать</Button>
+            </div>
+          </form>
         </Modal>
       ) : null}
     </Drawer>

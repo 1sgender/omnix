@@ -52,6 +52,8 @@ export const endpoints = {
     api.post<{ changed: boolean }>(`/v1/admin/licenses/${id}/${action}`, body),
   issueLicense: (body: { plan_id: string; one_time: boolean; expires_at?: string; account_ref?: string; metadata?: Record<string, string> }) =>
     api.post<IssueLicenseResponse>('/v1/admin/licenses/issue', body),
+  revokeLicense: (licenseId: string, reason: string) =>
+    api.post<{ success: boolean }>('/v1/admin/licenses/revoke', { license_id: licenseId, reason }),
   plans: () => api.get<{ plans: PlanRow[] }>('/v1/admin/plans'),
 
   // ── подписки / провайдеры ──
