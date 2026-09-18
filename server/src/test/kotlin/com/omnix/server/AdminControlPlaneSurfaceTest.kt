@@ -257,7 +257,7 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
         val allowAll = mockk<com.omnix.server.ratelimit.RateLimiter>()
         every { allowAll.check(any()) } returns com.omnix.server.ratelimit.RateLimitDecision.Allowed
         val billingHandler = com.omnix.server.http.LicenseBillingHttpHandler(
-            authenticator = TokenAuthenticator(emptyMap()) { ClientTier.FREE },
+            authenticator = TokenAuthenticator(mapOf("d".repeat(64) to "ops")) { ClientTier.ADMIN },
             authorizer = com.omnix.server.auth.TierAuthorizer(),
             licenseService = licenseService,
             billingService = mockk(relaxed = true),
