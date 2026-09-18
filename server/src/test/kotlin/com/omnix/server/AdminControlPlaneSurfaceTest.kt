@@ -277,7 +277,7 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
             policy = AdminSecurityPolicy()
         )
 
-        fun issue(token: String) = billingHandler.handle(
+        suspend fun issue(token: String) = billingHandler.handle(
             HttpRequestContext(
                 method = "POST", path = "/v1/admin/licenses/issue",
                 authorizationHeader = "Bearer $token",
