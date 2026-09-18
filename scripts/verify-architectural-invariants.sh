@@ -11,6 +11,7 @@ ROOT="."
 APP="$ROOT/app/src/main"
 APP_TEST="$ROOT/app/src/test"
 SERVER="$ROOT/server/src/main"
+WEB="$ROOT/web/admin/src"
 SERVER_TEST="$ROOT/server/src/test"
 fail=0
 
@@ -533,8 +534,8 @@ check "ADMIN: unknown status is 400 (no silent show-all fallback)" \
       "unknown license status" \
       "$SERVER/kotlin/com/omnix/server/admin/AdminHttpHandler.kt"
 check "ADMIN: UI renders active/expired filter tabs" \
-      "licenseStatusParam" \
-      "$SERVER/kotlin/com/omnix/server/admin/AdminUiHandler.kt"
+      "STATUS_TABS = \['ALL', 'ACTIVE', 'ISSUED', 'EXPIRED', 'DISABLED', 'REVOKED'\]" \
+      "$WEB/pages/Licenses.tsx"
 check "ADMIN: status filter pinned by test" \
       "licenses list filters by status and rejects unknown status" \
       "$SERVER_TEST/kotlin/com/omnix/server/AdminControlPlaneSurfaceTest.kt"

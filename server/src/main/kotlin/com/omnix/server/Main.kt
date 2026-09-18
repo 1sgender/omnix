@@ -480,16 +480,7 @@ object ServerBootstrap {
             policy = adminPolicy
         )
         val adminQueries = com.omnix.server.admin.AdminQueries(dataSource)
-        val adminUiHandler = com.omnix.server.admin.AdminUiHandler(
-            auth = adminAuthService,
-            staticAuthenticator = staticAuthenticator,
-            audit = adminAuditLog,
-            settings = adminSettings,
-            flags = featureFlags,
-            queries = adminQueries,
-            providerManager = providerManager,
-            json = json
-        )
+        val adminSpaHandler = com.omnix.server.admin.AdminSpaHandler()
         val adminHttpHandler = com.omnix.server.admin.AdminHttpHandler(
             auth = adminAuthService,
             staticAuthenticator = staticAuthenticator,
@@ -501,9 +492,11 @@ object ServerBootstrap {
             queries = adminQueries,
             providerManager = providerManager,
             overrides = providerOverrides,
-            ui = adminUiHandler,
             json = json
         )
+        // Control Plane SPA: issue/revoke лицензий из панели под админ-сессией
+        // (раньше — только static-токен).
+        licenseHttpHandler.adminAuthService = adminAuthService
         // Apply при старте: сохранённые routing-overrides вступают в силу
         // без пересборки (Validate→Persist→Audit выполнены в момент PUT).
         adminHttpHandler.applyOverrides(adminSettings.ai())
@@ -533,7 +526,8 @@ object ServerBootstrap {
             // Control Plane: admin-маршруты /v1/admin/… первым слоем,
             // лицензионные (issue/revoke, redeem, checkout, webhooks) — следом.
             extensionHandler = { request ->
-                adminHttpHandler.handle(request) ?:
+                adminSpaHandler.handle(request) ?:
+                    adminHttpHandler.handle(request) ?:
                     licenseHttpHandler.handle(request) ?:
                     appUpdateHandler.handle(request) ?:
                     clipHttpHandler.handle(request)

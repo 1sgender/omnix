@@ -14,6 +14,7 @@ import com.omnix.server.api.LicenseValidateRequest
 import com.omnix.server.api.LicenseValidateResponse
 import com.omnix.server.api.toDto
 import com.omnix.server.auth.AuthResult
+import com.omnix.server.auth.ClientTier
 import com.omnix.server.auth.AuthenticatedClient
 import com.omnix.server.auth.Authenticator
 import com.omnix.server.auth.Authorizer
@@ -62,6 +63,13 @@ class LicenseBillingHttpHandler(
      */
     private val clipDevices: JdbcClipDeviceRepository? = null
 ) {
+    /**
+     * Admin-сессии Control Plane для issue/revoke (см. authenticate).
+     * Wire-up в Main ПОСЛЕ сборки admin-инфраструктуры: конструктор
+     * LicenseBillingHttpHandler собирается раньше неё.
+     */
+    var adminAuthService: com.omnix.server.admin.AdminAuthService? = null
+
     companion object {
         const val PATH_ISSUE = "/v1/admin/licenses/issue"
         const val PATH_REVOKE = "/v1/admin/licenses/revoke"
@@ -376,14 +384,33 @@ class LicenseBillingHttpHandler(
         }
     }
 
-    private fun authenticate(request: HttpRequestContext, requestId: String): AuthenticatedClient? =
+    private fun authenticate(request: HttpRequestContext, requestId: String): AuthenticatedClient? {
+        // 1) Static client-токен (обратная совместимость, как раньше).
         when (val result = authenticator.authenticate(request.authorizationHeader)) {
-            is AuthResult.Success -> result.client
-            AuthResult.InvalidCredentials, AuthResult.MissingCredentials -> {
-                logger.warn("license/billing unauthorized", "path" to request.path, "requestId" to requestId)
-                null
+            is AuthResult.Success -> return result.client
+            AuthResult.InvalidCredentials, AuthResult.MissingCredentials -> Unit
+        }
+        // 2) Админ-сессия Control Plane: issue/revoke из панели (раньше —
+        // только static-токен, из UI выдать лицензию было невозможно).
+        // RBAC: роль должна иметь LICENSES_WRITE, иначе — как unauthorized.
+        val header = request.authorizationHeader
+        if (header != null && adminAuthService != null) {
+            val admin = adminAuthService!!.authenticate(header, null)
+            if (admin is com.omnix.server.admin.AdminAuthResult.Success &&
+                com.omnix.server.admin.AdminRbac.can(
+                    admin.principal.role,
+                    com.omnix.server.admin.AdminPermission.LICENSES_WRITE
+                )
+            ) {
+                return AuthenticatedClient(
+                    clientId = admin.principal.actor,
+                    tier = ClientTier.ADMIN
+                )
             }
         }
+        logger.warn("license/billing unauthorized", "path" to request.path, "requestId" to requestId)
+        return null
+    }
 
     private fun unauthorized(requestId: String) = error(ApiErrorCode.UNAUTHORIZED, requestId)
 

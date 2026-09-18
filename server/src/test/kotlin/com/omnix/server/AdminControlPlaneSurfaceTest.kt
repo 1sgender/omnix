@@ -10,7 +10,7 @@ import com.omnix.server.admin.AdminRole
 import com.omnix.server.admin.AdminSecurityPolicy
 import com.omnix.server.admin.AdminSessionRepository
 import com.omnix.server.admin.AdminSettingsService
-import com.omnix.server.admin.AdminUiHandler
+import com.omnix.server.admin.AdminSpaHandler
 import com.omnix.server.admin.CostSettings
 import com.omnix.server.admin.FeatureFlagService
 import com.omnix.server.admin.ProviderCostEntry
@@ -21,11 +21,13 @@ import com.omnix.server.config.RateLimitConfig
 import com.omnix.server.http.HttpRequestContext
 import com.omnix.server.provider.ProviderManager
 import com.omnix.server.ratelimit.PostgresRateLimiter
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -44,7 +46,7 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
     private lateinit var sessions: AdminSessionRepository
     private lateinit var settings: AdminSettingsService
     private lateinit var handler: AdminHttpHandler
-    private lateinit var ui: AdminUiHandler
+    private lateinit var spa: AdminSpaHandler
 
     @Before
     fun build() {
@@ -63,17 +65,13 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
         )
         val queries = AdminQueries(dataSource)
         val flags = FeatureFlagService(dataSource)
-        ui = AdminUiHandler(
-            auth = auth, staticAuthenticator = staticAuth, audit = AdminAuditLog(dataSource),
-            settings = settings, flags = flags, queries = queries,
-            providerManager = mockk(relaxed = true), json = json
-        )
+        spa = AdminSpaHandler()
         handler = AdminHttpHandler(
             auth = auth, staticAuthenticator = staticAuth,
             accounts = accounts, sessions = sessions,
             audit = AdminAuditLog(dataSource), settings = settings, flags = flags,
             queries = queries, providerManager = mockk(relaxed = true),
-            overrides = ProviderRuntimeOverrides(), ui = ui, json = json
+            overrides = ProviderRuntimeOverrides(), json = json
         )
     }
 
@@ -91,28 +89,6 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
         assertEquals(200, r.status)
         return Json.parseToJsonElement(r.body).let { (it as kotlinx.serialization.json.JsonObject)["token"] }
             ?.let { (it as kotlinx.serialization.json.JsonPrimitive).content }!!
-    }
-
-    /** UI-login: возвращает Cookie-заголовок сессии (HttpOnly). */
-    private fun loginUi(username: String, password: String): String {
-        val r = page("POST", "/v1/admin/ui/login", null, "username=" + username + "&password=" + password)
-        val setCookie = r.headers.entries.firstOrNull { it.key.equals("Set-Cookie", ignoreCase = true) }
-            ?: error("no Set-Cookie on ui login")
-        return setCookie.value.substringBefore(';')
-    }
-
-    private fun page(method: String, path: String, cookie: String? = null, body: String = "") = runBlocking {
-        // Как в проде (Main.kt): query отделяется от path и идёт в rawQuery —
-        // иначе UI-хендлеры, читающие rawQuery (?status=...), увидят null.
-        ui.handle(
-            HttpRequestContext(
-                method = method, path = path.substringBefore('?'), authorizationHeader = null, body = body,
-                contentLength = body.length.toLong(),
-                headers = if (cookie != null) mapOf("Cookie" to cookie) else emptyMap(),
-                remoteAddress = "10.9.9.2",
-                rawQuery = path.substringAfter('?', "").takeIf { it.isNotEmpty() }
-            )
-        )
     }
 
     @Test
@@ -200,22 +176,29 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
         assertEquals(400, api("GET", "/v1/admin/licenses?status=BOGUS", token).status)
     }
 
+    /**
+     * Control Plane — теперь SPA: старые server-rendered пути
+     * (префикс /v1/admin/ui) редиректят на /admin; /admin отдаёт index.html (no-store); traversal
+     * и несуществующие ассеты — 404. (См. AdminSpaHandler.)
+     */
     @Test
-    fun `licenses UI renders status filter tabs`() {
-        val (accountId, activeId) = seedBoth()
-        val expiredId = seedExpiredLicense(accountId)
-        accounts.create("uiseer", AdminPasswords.hash("uiseer-pass-1234"), AdminRole.SUPPORT, Instant.now())
-        val cookie = loginUi("uiseer", "uiseer-pass-1234")
+    fun `spa serves index, redirects legacy ui paths and blocks traversal`() = runBlocking {
+        assertEquals(301, spa.handle(HttpRequestContext("GET", "/v1/admin/ui/login", null, "", 0))!!.status)
+        assertEquals(301, spa.handle(HttpRequestContext("GET", "/v1/admin/ui/dashboard", null, "", 0))!!.status)
 
-        val page = page("GET", "/v1/admin/ui/licenses?status=EXPIRED", cookie)
-        assertEquals(200, page.status)
-        assertTrue("expired row shown", page.body.contains(expiredId.toString().take(8)))
-        assertFalse("active row hidden", page.body.contains(activeId.toString().take(8)))
-        assertTrue("current tab bold", page.body.contains("<b>EXPIRED</b>"))
+        val index = spa.handle(HttpRequestContext("GET", "/admin", null, "", 0))!!
+        assertEquals(200, index.status)
+        assertTrue("index is html", index.headers["Content-Type"]!!.startsWith("text/html"))
+        assertEquals("no-store", index.headers["Cache-Control"])
 
-        val all = page("GET", "/v1/admin/ui/licenses", cookie)
-        assertEquals(200, all.status)
-        assertTrue(all.body.contains(activeId.toString().take(8)))
+        // Клиентский роут без расширения → тоже index.
+        assertEquals(200, spa.handle(HttpRequestContext("GET", "/admin/licenses", null, "", 0))!!.status)
+
+        // Traversal и несуществующий ассет → 404.
+        assertEquals(404, spa.handle(HttpRequestContext("GET", "/admin/../secret", null, "", 0))!!.status)
+        assertEquals(404, spa.handle(HttpRequestContext("GET", "/admin/assets/missing.js", null, "", 0))!!.status)
+        // Чужие маршруты не наши.
+        assertNull(spa.handle(HttpRequestContext("GET", "/v1/license/redeem", null, "", 0)))
     }
 
     @Test
@@ -249,35 +232,72 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
         sessions.purge(java.time.Duration.ofDays(1), Instant.now())
     }
 
+    /**
+     * issue/revoke лицензий из Control Plane под АДМИН-СЕССИЕЙ (раньше —
+     * только static-токен). Роль без LICENSES_WRITE — как unauthorized.
+     */
     @Test
-    fun `ui exposes every operational page over seeded data`() {
-        val (accountId, licenseId) = seedBoth()
-        seedOrder(accountId)
-        seedUsage()
-        accounts.create("pager", AdminPasswords.hash("pager-pass-12345"), AdminRole.ADMIN, Instant.now())
-        val token = login("pager", "pager-pass-12345")
-        val cookie = "admin_session=$token"
+    fun `license issue accepts admin session and enforces rbac`() = runBlocking {
+        accounts.create("issuer", AdminPasswords.hash("issuer-pass-12345"), AdminRole.ADMIN, Instant.now())
+        accounts.create("peon", AdminPasswords.hash("peon-pass-123456"), AdminRole.VIEWER, Instant.now())
+        val session = login("issuer", "issuer-pass-12345")
+        val viewerSession = login("peon", "peon-pass-123456")
 
-        assertEquals(200, page("GET", "/v1/admin/ui/dashboard", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/users", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/users/$accountId", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/devices", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/licenses", cookie).status)
-        val licensePage = page("GET", "/v1/admin/ui/licenses/$licenseId", cookie)
-        assertEquals(200, licensePage.status)
-        assertTrue("форма действий должна быть у ADMIN", licensePage.body.contains("Suspend"))
-        assertEquals(200, page("GET", "/v1/admin/ui/providers", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/usage", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/logs", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/audit", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/settings", cookie).status)
-        assertEquals(200, page("GET", "/v1/admin/ui/flags", cookie).status)
-        // CSRF: мутация без токена → 403.
-        assertEquals(403, page("POST", "/v1/admin/ui/licenses/$licenseId", cookie, body = "action=disable").status)
-        // UI logout: cookie больше не даёт доступ.
-        assertEquals(303, page("POST", "/v1/admin/ui/logout", cookie).status)
-        val after = page("GET", "/v1/admin/ui/dashboard", cookie)
-        assertEquals(303, after.status)
+        val licenseService = mockk<com.omnix.server.license.LicenseService>()
+        every { licenseService.issue(any()) } returns com.omnix.server.license.IssuedLicense(
+            licenseId = java.util.UUID.randomUUID(),
+            code = "OMX-TESTC-ODETEST-CODETEST",
+            status = com.omnix.server.license.LicenseStatus.ISSUED,
+            planId = "free",
+            issuedAt = Instant.now(),
+            expiresAt = null
+        )
+        // RateLimiter.check() возвращает sealed-тип: relaxed-мок даст null и
+        // issue упадёт в NoWhenBranchMatchedException — поэтому явный allow-all.
+        val allowAll = mockk<com.omnix.server.ratelimit.RateLimiter>()
+        every { allowAll.check(any()) } returns com.omnix.server.ratelimit.RateLimitDecision.Allowed
+        val billingHandler = com.omnix.server.http.LicenseBillingHttpHandler(
+            authenticator = TokenAuthenticator(mapOf("d".repeat(64) to "ops")) { ClientTier.ADMIN },
+            authorizer = com.omnix.server.auth.TierAuthorizer(),
+            licenseService = licenseService,
+            billingService = mockk(relaxed = true),
+            paddleWebhookVerifier = mockk(relaxed = true),
+            heleketWebhookVerifier = mockk(relaxed = true),
+            redeemRateLimiter = allowAll,
+            authenticatedRateLimiter = allowAll,
+            webhookRateLimiter = allowAll,
+            validation = com.omnix.server.config.ValidationConfig(),
+            logger = mockk(relaxed = true),
+            json = json
+        )
+        // Wire, как в Main: adminAuthService поверх static.
+        val staticAuth = TokenAuthenticator(mapOf("d".repeat(64) to "ops")) { ClientTier.ADMIN }
+        billingHandler.adminAuthService = AdminAuthService(
+            accounts = accounts, sessions = sessions,
+            loginRateLimiter = PostgresRateLimiter(
+                dataSource, "admin_login",
+                RateLimitConfig(AdminSecurityPolicy().loginMaxAttempts, AdminSecurityPolicy().loginMaxAttempts)
+            ),
+            policy = AdminSecurityPolicy()
+        )
+
+        suspend fun issue(token: String) = billingHandler.handle(
+            HttpRequestContext(
+                method = "POST", path = "/v1/admin/licenses/issue",
+                authorizationHeader = "Bearer $token",
+                body = """{"plan_id":"free","one_time":true}""",
+                contentLength = 30, remoteAddress = "10.9.9.3"
+            )
+        )!!
+
+        // ADMIN-сессия с LICENSES_WRITE → 201, код в ответе.
+        val ok = issue(session)
+        assertEquals("body=${ok.body}", 201, ok.status)
+        assertTrue("code returned once", ok.body.contains("OMX-TESTC-ODETEST-CODETEST"))
+        // VIEWER (нет LICENSES_WRITE) → unauthorized.
+        assertEquals(401, issue(viewerSession).status)
+        // Static ADMIN-токен работает как раньше (обратная совместимость).
+        assertEquals(201, issue("d".repeat(64)).status)
     }
 
     /* ── seeds ─────────────────────────────────────────────────────────────── */

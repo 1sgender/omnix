@@ -39,8 +39,6 @@ class AdminHttpHandler(
     private val queries: AdminQueries,
     private val providerManager: ProviderManager,
     private val overrides: com.omnix.server.admin.ProviderRuntimeOverrides,
-    /** Server-rendered operational UI (/v1/admin/ui/…). */
-    private val ui: com.omnix.server.admin.AdminUiHandler? = null,
     private val json: Json = Json
 ) {
 
@@ -57,8 +55,8 @@ class AdminHttpHandler(
         if (!path.startsWith(PREFIX) || path in RESERVED_FOR_LICENSE_HANDLER) return null
         val sub = path.removePrefix(PREFIX).trim('/')
 
-        // UI-страницы живут в собственном cookie-flow (login до аутентификации).
-        if (sub.startsWith("ui") && ui != null) return ui.handle(request)
+        // Server-rendered UI удалён: старые пути /v1/admin/ui/… теперь редиректит
+        // AdminSpaHandler на SPA /admin (совместимость старых ссылок).
 
         return try {
             route(request, sub)
@@ -120,6 +118,8 @@ class AdminHttpHandler(
                 requirePermission(principal, AdminPermission.LICENSES_WRITE) { handleLicenseAction(principal, request, parts[1], parts[2]) }
             parts.size == 1 && parts[0] == "subscriptions" && method == "GET" ->
                 requirePermission(principal, AdminPermission.SUBSCRIPTIONS_READ) { handleSubscriptions(request) }
+            parts.size == 1 && parts[0] == "plans" && method == "GET" ->
+                requirePermission(principal, AdminPermission.LICENSES_READ) { handlePlans() }
             parts.size == 1 && parts[0] == "providers" && method == "GET" ->
                 requirePermission(principal, AdminPermission.PROVIDERS_READ) { handleProviders() }
             parts.size == 3 && parts[0] == "providers" && parts[2] == "configure" && method == "POST" ->
@@ -439,6 +439,26 @@ class AdminHttpHandler(
         }
         return plain(200, buildJsonObject { put("changed", changed) })
     }
+
+    /** Каталог тарифов для формы выдачи лицензии (billing_plans). */
+    private fun handlePlans(): HttpResponseContext = plain(
+        200, buildJsonObject {
+            putJsonArray("plans") {
+                queries.plans().forEach { p ->
+                    add(
+                        buildJsonObject {
+                            put("id", p.id)
+                            put("displayName", p.displayName)
+                            put("durationDays", p.durationDays)
+                            put("amountMinor", p.amountMinor)
+                            put("currency", p.currency)
+                            put("active", p.active)
+                        }
+                    )
+                }
+            }
+        }
+    )
 
     private fun handleSubscriptions(request: HttpRequestContext): HttpResponseContext {
         val (size, offset) = pagination(request)
