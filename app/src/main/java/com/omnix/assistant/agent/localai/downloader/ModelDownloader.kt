@@ -3,6 +3,7 @@ package com.omnix.assistant.agent.localai.downloader
 import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
@@ -119,6 +120,29 @@ object ModelDownloadPolicy {
 }
 
 /**
+ * Относительный путь [destFile] внутри [filesDir] ("llm/model.task") или null,
+ * если destFile лежит вне filesDir. Чистая функция — тестируется на JVM.
+ *
+ * Задаёт подсхему для внешнего зеркала [externalFallbackFile]: fallback
+ * загрузки кладёт файл по тому же относительному пути, но от корня внешнего
+ * app-каталога.
+ */
+internal fun filesDirRelativePath(destFile: File, filesDir: File): String? {
+    val rel = runCatching { destFile.relativeTo(filesDir) }.getOrNull() ?: return null
+    val path = rel.path
+    if (path.isEmpty() || path == "." || path.startsWith("..")) return null
+    return path
+}
+
+/**
+ * Внешнее зеркало для [relPath]: тот же относительный путь, но от корня
+ * внешнего app-каталога (getExternalFilesDir). Туда DownloadManager кладёт
+ * файл при fallback-загрузке. null — внешнее хранилище недоступно.
+ */
+internal fun externalFallbackFile(context: Context, relPath: String): File? =
+    context.getExternalFilesDir(null)?.let { File(it, relPath) }
+
+/**
  * Реализация поверх системного DownloadManager.
  *
  * Почему DownloadManager, а не свой OkHttp-цикл: система сама переживает
@@ -130,6 +154,10 @@ object ModelDownloadPolicy {
 class DownloadManagerModelDownloader @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ModelDownloader {
+
+    private companion object {
+        const val TAG = "ModelDownloader"
+    }
 
     override fun enqueue(
         url: String,
@@ -144,16 +172,39 @@ class DownloadManagerModelDownloader @Inject constructor(
         destFile.parentFile?.mkdirs()
 
         val manager = context.getSystemService(DownloadManager::class.java)
+            ?: throw IllegalStateException(
+                "Системный DownloadManager недоступен (приложение Загрузки отключено/удалено?)"
+            )
         val request = DownloadManager.Request(Uri.parse(url))
             .setTitle(title)
             .setDescription("Локальная модель OMNIX")
-            .setDestinationUri(Uri.fromFile(destFile))
             .setAllowedOverMetered(allowedOverMetered)
             .setAllowedOverRoaming(false)
             .setNotificationVisibility(
                 DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
             )
-        return manager.enqueue(request)
+            .setDestinationUri(Uri.fromFile(destFile))
+        // Основной путь — file:// в filesDir: платформой НЕ гарантирован и на
+        // части прошивок отвергается (IllegalArgumentException/SecurityException
+        // — отсюда «не удалось начать загрузку»). Fallback — внешний app-каталог
+        // (официально поддерживается DownloadManager с API 9, разрешений не
+        // нужно): файл ляжет во внешнее зеркало [externalFallbackFile], откуда
+        // MediaPipeModelManager перенесёт его на внутренний путь после финиша.
+        return try {
+            manager.enqueue(request)
+        } catch (e: Exception) {
+            val relPath = filesDirRelativePath(destFile, context.filesDir)
+            val extDir = context.getExternalFilesDir(null)
+            if (relPath == null || extDir == null) throw e
+            Log.e(
+                TAG,
+                "file:// destination rejected (${e.message}); fallback to external files dir",
+                e
+            )
+            manager.enqueue(
+                request.setDestinationInExternalFilesDir(context, null, relPath)
+            )
+        }
     }
 
     override fun observe(downloadId: Long): ModelDownloadObservation? {
