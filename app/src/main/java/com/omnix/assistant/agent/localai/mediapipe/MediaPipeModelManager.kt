@@ -12,6 +12,8 @@ import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadStatus
 import com.omnix.assistant.agent.localai.downloader.ModelDownloader
+import com.omnix.assistant.agent.localai.downloader.externalFallbackFile
+import com.omnix.assistant.agent.localai.downloader.filesDirRelativePath
 import com.omnix.assistant.agent.localai.pack.PackModelLocator
 import com.omnix.assistant.core.dispatcher.CoroutineDispatchers
 import com.omnix.assistant.data.preferences.SettingsDataStore
@@ -369,7 +371,13 @@ class MediaPipeModelManager @Inject constructor(
             )
         } catch (e: Exception) {
             Log.e(TAG, "model download enqueue failed", e)
-            setState(LocalModelState.DownloadFailed("Не удалось начать загрузку"))
+            // Причину — в UI: без этого диагностика «не удалось начать загрузку»
+            // требует logcat, которого у пользователя нет.
+            setState(
+                LocalModelState.DownloadFailed(
+                    "Не удалось начать загрузку: ${e.message ?: e.javaClass.simpleName}"
+                )
+            )
             return currentState
         }
         settings.setLocalModelDownloadId(id)
@@ -503,9 +511,38 @@ class MediaPipeModelManager @Inject constructor(
         setState(LocalModelState.DownloadFailed(reason))
     }
 
-    /** Файл валиден, только если размер совпал с ожидаемым байт в байт. */
-    private fun isModelFileValid(file: File): Boolean =
-        file.exists() && file.length() == spec.expectedSizeBytes
+    /**
+     * Файл валиден, только если размер совпал с ожидаемым байт в байт.
+     *
+     * Перед проверкой переносит файл из внешнего зеркала, если загрузка
+     * ушла в fallback (file:// во внутреннее хранилище отвергнут прошивкой —
+     * [com.omnix.assistant.agent.localai.downloader.externalFallbackFile]).
+     */
+    private fun isModelFileValid(file: File): Boolean {
+        moveFromExternalFallbackIfNeeded(file)
+        return file.exists() && file.length() == spec.expectedSizeBytes
+    }
+
+    /**
+     * Fallback кладёт файл во внешний app-каталог. Переносим на ожидаемый
+     * внутренний путь: сначала rename (дёшево), при неудаче — copy+delete
+     * (каталоги на разных томах/мэппингах). Тишина при отсутствии зеркала —
+     * это норма для 99% загрузок, шедших основным путём.
+     */
+    private fun moveFromExternalFallbackIfNeeded(file: File) {
+        if (file.exists()) return
+        val relPath = filesDirRelativePath(file, context.filesDir) ?: return
+        val ext = externalFallbackFile(context, relPath) ?: return
+        if (!ext.exists()) return
+        file.parentFile?.mkdirs()
+        try {
+            if (ext.renameTo(file)) return
+            ext.copyTo(file, overwrite = true)
+            ext.delete()
+        } catch (e: Exception) {
+            Log.e(TAG, "external fallback move failed: ${ext.path} -> ${file.path}", e)
+        }
+    }
 
     private fun closeRuntime() {
         val current = runtime ?: return
