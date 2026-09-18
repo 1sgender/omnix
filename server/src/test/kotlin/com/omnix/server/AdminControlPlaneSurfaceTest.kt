@@ -177,8 +177,8 @@ class AdminControlPlaneSurfaceTest : PostgresTestSupport() {
     }
 
     /**
-     * Control Plane — теперь SPA: старые server-rendered пути /v1/admin/ui/**
-     * редиректят на /admin; /admin отдаёт index.html (no-store); traversal
+     * Control Plane — теперь SPA: старые server-rendered пути
+     * (префикс /v1/admin/ui) редиректят на /admin; /admin отдаёт index.html (no-store); traversal
      * и несуществующие ассеты — 404. (См. AdminSpaHandler.)
      */
     @Test
