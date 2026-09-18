@@ -242,6 +242,25 @@ class OnDeviceLocalAiTest {
         assertTrue(result is LocalAiResult.Error)
     }
 
+    /**
+     * Недостаточно RAM — ОЖИДАЕМОЕ состояние слабого устройства, а не сбой:
+     * Unsupported (движок уйдёт в Cloud AI), а не Error. Регрессия бага
+     * «Model failed to initialize: Недостаточно свободной RAM», при котором
+     * чат показывал ошибку вместо ответа.
+     */
+    @Test
+    fun `insufficient ram yields unsupported and falls back to cloud`() = runBlocking {
+        val manager = FakeModelManager(
+            runtime = null,
+            state = LocalModelState.InsufficientMemory(requiredMb = 1536)
+        )
+        val localAi = buildLocalAi(manager)
+
+        val result = localAi.execute(request())
+
+        assertTrue("Ожидался Unsupported (уход в Cloud AI), получено: $result", result is LocalAiResult.Unsupported)
+    }
+
     /** Пустой ответ модели — это Error, а не «успех с пустотой». */
     @Test
     fun `empty model output is an error`() = runBlocking {

@@ -99,5 +99,15 @@ fun LocalModelSettingsBlock(
                 )
             )
         }
+
+        is LocalModelState.InsufficientMemory -> {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_local_model_title),
+                subtitle = stringResource(
+                    R.string.omnix_local_model_low_memory,
+                    state.requiredMb
+                )
+            )
+        }
     }
 }

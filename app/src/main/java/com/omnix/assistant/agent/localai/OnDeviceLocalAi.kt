@@ -120,6 +120,15 @@ class OnDeviceLocalAi @Inject constructor(
                     LocalAiResult.Unsupported("Local model download failed: ${state.reason}")
                 }
 
+                is LocalModelState.InsufficientMemory -> {
+                    // Ожидаемое состояние слабого устройства, а не сбой:
+                    // уходим в Cloud AI, как при NotInstalled.
+                    Log.i(TAG, "unsupported: мало RAM (нужно ~${state.requiredMb} МБ) — Cloud AI")
+                    LocalAiResult.Unsupported(
+                        "Insufficient RAM for local model (${state.requiredMb} MB required)"
+                    )
+                }
+
                 is LocalModelState.Failed -> {
                     Log.w(TAG, "error: инициализация модели провалена (${state.reason})")
                     LocalAiResult.Error("Model failed to initialize: ${state.reason}")

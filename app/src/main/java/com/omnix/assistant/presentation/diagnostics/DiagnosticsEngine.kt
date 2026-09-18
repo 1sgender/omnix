@@ -175,6 +175,8 @@ class DiagnosticsEngine @Inject constructor(
                 DiagnosticStatus.FAIL to "download failed: ${state.reason}"
             is LocalModelState.Failed ->
                 DiagnosticStatus.FAIL to "model failed: ${state.reason}"
+            is LocalModelState.InsufficientMemory ->
+                DiagnosticStatus.WARNING to "insufficient RAM (need ${state.requiredMb} MB, cloud AI in use)"
         }
 
     private suspend fun checkCloudAi(): Pair<DiagnosticStatus, String> {
