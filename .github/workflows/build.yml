@@ -8,6 +8,17 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Новый пуш в тот же PR/ветку гасит устаревший прогон ЭТОГО воркфлоу —
+# экономия минут Actions (полный прогон ~7 мин × 2 job с Postgres).
+# github.workflow в группе — воркфлоу не гасят друг друга;
+# event_name — schedule/workflow_dispatch-прогоны не отменяются пушами
+# (еженедельный security-скан нельзя молча гасить коммитом);
+# github.ref — группа per-PR/per-ветка. Публикации не затронуты:
+# у release.yml своя группа ota-staging-release без cancel-in-progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # C-01 gate: обязательная быстрая проверка, что оба модуля КОМПИЛИРУЮТСЯ.
   # Запускается ПЕРВЫМ и без Postgres/Android-эмулятора, чтобы любая P0
