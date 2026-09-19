@@ -10,6 +10,14 @@ on:
   schedule:
     - cron: '23 3 * * 1'
 
+# Аналогично build.yml: устаревшие прогоны того же воркфлоу в том же
+# PR/ветке отменяются новым пушем. event_name в группе гарантирует, что
+# понедельничный cron-скан (schedule) и ручные запуски не гасятся пушами
+# в main и не гасят их.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   source-security:
     runs-on: ubuntu-24.04
