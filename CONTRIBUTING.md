@@ -38,6 +38,21 @@ bash scripts/verify-architectural-invariants.sh                   # инвари
 CI прогоняет то же самое + Trivy/Gitleaks/SBOM; PR без зелёного CI не мержится.
 Каждый исправленный P0/P1-баг получает regression-тест.
 
+## Branch protection (политика слияния в main)
+
+Main защищён (включая владельца — enforce_admins):
+
+- изменения **только через pull request** — прямые пуши в main отклоняются;
+- обязательны **все 5 статус-чеков**: `compile-gate (server + app debug)`,
+  `build`, `Android API 34 instrumentation and coverage`,
+  `source-security`, `production-image-security`;
+- force-push и удаление ветки main запрещены;
+- merge-коммиты разрешены (linear history не требуется).
+
+Если добавляете/переименовываете job в CI — обновите список required
+status checks в настройках ветки main, иначе PR-ы «зависнут» на
+ожидании чека, который больше не приходит.
+
 ## Коммиты
 
 Повелительное наклонение, первая строка ≤ 72 символов, тело объясняет «почему»:
