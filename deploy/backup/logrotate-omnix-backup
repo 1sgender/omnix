@@ -1,0 +1,7 @@
+/var/log/omnix-db-backup.log {
+    monthly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
