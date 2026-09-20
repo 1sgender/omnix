@@ -172,6 +172,16 @@
     <string name="omnix_chat_send">Send</string>
     <string name="omnix_chat_empty_title">Nothing here yet</string>
     <string name="omnix_chat_empty_body">Use chat when you can’t speak out loud.</string>
+    <string name="omnix_chat_clear_confirm_title">Clear this conversation?</string>
+    <string name="omnix_chat_clear_confirm_body">All messages will be deleted from this device.</string>
+    <string name="omnix_chat_thinking">OMNIX is thinking…</string>
+    <string name="omnix_chat_dictation_start">Dictate</string>
+    <string name="omnix_chat_dictation_stop">Stop dictation</string>
+    <string name="omnix_privacy_badge_private">Private</string>
+    <string name="omnix_privacy_badge_sensitive">Sensitive</string>
+    <string name="omnix_privacy_badge_hint">OMNIX will ask before this leaves the device</string>
+    <string name="omnix_chat_consent_allow">Send to cloud</string>
+    <string name="omnix_chat_consent_keep_local">Keep on device</string>
 
     <!-- ===== Translator (§24, §42) ===== -->
     <string name="omnix_translator_title">Translation</string>
