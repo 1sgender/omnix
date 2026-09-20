@@ -326,3 +326,33 @@ fun OmnixChevronRightIcon(
         )
     }
 }
+
+/**
+ * A checkmark: the selected option in a choice group. Mirrors the chevron's
+ * weight so the two row affordances — choose and open — stay in one family.
+ */
+@Composable
+fun OmnixCheckIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 18.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val s = this.size.minDimension
+        val w = s * 0.09f
+        drawLine(
+            color = color,
+            start = Offset(s * 0.28f, s * 0.53f),
+            end = Offset(s * 0.44f, s * 0.70f),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(s * 0.44f, s * 0.70f),
+            end = Offset(s * 0.74f, s * 0.33f),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+    }
+}

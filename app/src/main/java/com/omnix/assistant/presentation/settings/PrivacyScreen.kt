@@ -1,21 +1,19 @@
 package com.omnix.assistant.presentation.settings
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixDivider
+import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.components.OmnixTextButton
-import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.presentation.design.OmnixTheme
+import com.omnix.assistant.presentation.state.ConfirmationRequest
 
 /**
  * Privacy (§26, §42, §52).
@@ -26,7 +24,10 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  * model names or token counts (§4).
  *
  * Every value shown here is read from real state; nothing is asserted that
- * the app does not actually enforce (§3).
+ * the app does not actually enforce (§3). Deleting history is destructive and
+ * irreversible, so it asks through the shared confirmation sheet first — and
+ * it only exists as an action at all because the caller wires it to the real
+ * clear-history path.
  */
 @Composable
 fun PrivacyScreen(
@@ -34,71 +35,82 @@ fun PrivacyScreen(
     historyStored: Boolean,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    onManagePermissions: () -> Unit = {},
-    onDeleteHistory: () -> Unit = {}
+    onManagePermissions: (() -> Unit)? = null,
+    onDeleteHistory: (() -> Unit)? = null
 ) {
     val spacing = OmnixTheme.spacing
+    var deleteArmed by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = spacing.screenHorizontal)
-    ) {
-        Spacer(Modifier.height(spacing.lg))
-
-        OmnixScreenHeader(
-            title = stringResource(R.string.omnix_privacy_title),
-            onBack = onBack
-        )
-
-        Spacer(Modifier.height(spacing.md))
-
-        OmnixSettingRow(
-            title = stringResource(R.string.omnix_privacy_microphone),
-            value = stringResource(
-                if (microphoneAllowed) {
-                    R.string.omnix_privacy_allowed
-                } else {
-                    R.string.omnix_privacy_not_allowed
-                }
+    SectionScaffold(stringResource(R.string.omnix_privacy_title), modifier, onBack) {
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_microphone),
+                value = stringResource(
+                    if (microphoneAllowed) {
+                        R.string.omnix_privacy_allowed
+                    } else {
+                        R.string.omnix_privacy_not_allowed
+                    }
+                ),
+                inset = true
             )
-        )
-        OmnixDivider()
+            OmnixGroupDivider()
 
-        OmnixSettingRow(
-            title = stringResource(R.string.omnix_privacy_voice_history),
-            value = stringResource(
-                if (historyStored) {
-                    R.string.omnix_privacy_stored_on_device
-                } else {
-                    R.string.omnix_privacy_not_stored
-                }
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_voice_history),
+                value = stringResource(
+                    if (historyStored) {
+                        R.string.omnix_privacy_stored_on_device
+                    } else {
+                        R.string.omnix_privacy_not_stored
+                    }
+                ),
+                inset = true
             )
+            OmnixGroupDivider()
+
+            // This reflects a real behaviour: the orchestrator asks for consent
+            // before sending a request classified as private to the cloud.
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_cloud),
+                value = stringResource(R.string.omnix_privacy_cloud_controlled),
+                inset = true
+            )
+            OmnixGroupDivider()
+
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_permissions),
+                value = stringResource(R.string.omnix_privacy_permissions_manage),
+                inset = true,
+                chevron = onManagePermissions != null,
+                onClick = onManagePermissions
+            )
+        }
+
+        if (onDeleteHistory != null) {
+            Spacer(Modifier.height(spacing.xl))
+            OmnixTextButton(
+                text = stringResource(R.string.omnix_privacy_delete_history),
+                onClick = { deleteArmed = true }
+            )
+        }
+    }
+
+    // The same copy the chat and history use: one log, one question (§17).
+    if (deleteArmed) {
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = stringResource(R.string.omnix_chat_clear_confirm_title),
+                detail = stringResource(R.string.omnix_chat_clear_confirm_body),
+                confirmLabel = stringResource(R.string.omnix_privacy_delete_history),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = {
+                deleteArmed = false
+                onDeleteHistory?.invoke()
+            },
+            onCancel = { deleteArmed = false }
         )
-        OmnixDivider()
-
-        // This reflects a real behaviour: the orchestrator asks for consent
-        // before sending a request classified as private to the cloud.
-        OmnixSettingRow(
-            title = stringResource(R.string.omnix_privacy_cloud),
-            value = stringResource(R.string.omnix_privacy_cloud_controlled)
-        )
-        OmnixDivider()
-
-        OmnixSettingRow(
-            title = stringResource(R.string.omnix_privacy_permissions),
-            value = stringResource(R.string.omnix_privacy_permissions_manage),
-            onClick = onManagePermissions
-        )
-
-        Spacer(Modifier.height(spacing.xl))
-
-        OmnixTextButton(
-            text = stringResource(R.string.omnix_privacy_delete_history),
-            onClick = onDeleteHistory
-        )
-
-        Spacer(Modifier.height(spacing.colossal))
     }
 }

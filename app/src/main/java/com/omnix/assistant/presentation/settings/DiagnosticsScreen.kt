@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixDivider
+import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.diagnostics.DiagnosticCheckId
@@ -50,8 +50,13 @@ fun DiagnosticsScreen(
     val spacing = OmnixTheme.spacing
 
     SectionScaffold(stringResource(R.string.omnix_diagnostics_title), modifier, onBack) {
-        rows.forEach { result ->
-            DiagnosticRow(result = result)
+        OmnixSettingsGroup {
+            rows.forEachIndexed { index, result ->
+                if (index > 0) {
+                    OmnixGroupDivider()
+                }
+                DiagnosticRow(result = result)
+            }
         }
 
         Spacer(Modifier.height(spacing.md))
@@ -105,7 +110,7 @@ private fun DiagnosticRow(result: DiagnosticResult) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = spacing.sm),
+            .padding(horizontal = spacing.md, vertical = spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.sm)
     ) {
@@ -127,14 +132,15 @@ private fun DiagnosticRow(result: DiagnosticResult) {
             text = label,
             style = OmnixTheme.typography.status,
             color = color,
-            modifier = Modifier.border(
-                width = 1.dp,
-                color = color,
-                shape = RoundedCornerShape(4.dp)
-            ).padding(horizontal = spacing.sm, vertical = 2.dp)
+            modifier = Modifier
+                .border(
+                    width = OmnixHairline,
+                    color = color,
+                    shape = RoundedCornerShape(OmnixTheme.radius.pill)
+                )
+                .padding(horizontal = spacing.sm, vertical = 2.dp)
         )
     }
-    OmnixDivider()
 }
 
 private fun titleFor(id: DiagnosticCheckId): Int =

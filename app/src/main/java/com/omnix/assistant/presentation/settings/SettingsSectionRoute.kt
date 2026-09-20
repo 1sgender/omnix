@@ -22,11 +22,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixDivider
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.components.OmnixScreenHeader
-import com.omnix.assistant.presentation.design.OmnixAppearance
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
@@ -168,7 +166,7 @@ internal fun SectionScaffold(
         OmnixScreenHeader(title = title, onBack = onBack)
         Spacer(Modifier.height(spacing.sm))
         content()
-        Spacer(Modifier.height(spacing.colossal))
+        Spacer(Modifier.height(spacing.xl))
     }
 }
 
@@ -180,11 +178,14 @@ internal fun SectionScaffold(
 private fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -> Unit)? = null) {
     val context = LocalContext.current
     SectionScaffold(stringResource(R.string.omnix_language_title), modifier, onBack) {
-        OmnixSettingRow(
-            title = stringResource(R.string.omnix_language_title),
-            value = context.resources.configuration.locales[0].displayLanguage,
-            subtitle = stringResource(R.string.omnix_language_system)
-        )
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_language_title),
+                value = context.resources.configuration.locales[0].displayLanguage,
+                subtitle = stringResource(R.string.omnix_language_system),
+                inset = true
+            )
+        }
     }
 }
 
@@ -198,21 +199,28 @@ private fun NotificationsSettingsScreen(
     onBack: (() -> Unit)? = null
 ) {
     SectionScaffold(stringResource(R.string.omnix_notifications_settings_title), modifier, onBack) {
-        OmnixToggleRow(
-            title = stringResource(R.string.omnix_notifications_assistant),
-            checked = state.notifyAssistant,
-            onCheckedChange = onAssistantChange
-        )
-        OmnixToggleRow(
-            title = stringResource(R.string.omnix_notifications_device),
-            checked = state.notifyDevice,
-            onCheckedChange = onDeviceChange
-        )
-        OmnixToggleRow(
-            title = stringResource(R.string.omnix_notifications_routines),
-            checked = state.notifyRoutines,
-            onCheckedChange = onRoutinesChange
-        )
+        OmnixSettingsGroup {
+            OmnixToggleRow(
+                title = stringResource(R.string.omnix_notifications_assistant),
+                checked = state.notifyAssistant,
+                onCheckedChange = onAssistantChange,
+                inset = true
+            )
+            OmnixGroupDivider()
+            OmnixToggleRow(
+                title = stringResource(R.string.omnix_notifications_device),
+                checked = state.notifyDevice,
+                onCheckedChange = onDeviceChange,
+                inset = true
+            )
+            OmnixGroupDivider()
+            OmnixToggleRow(
+                title = stringResource(R.string.omnix_notifications_routines),
+                checked = state.notifyRoutines,
+                onCheckedChange = onRoutinesChange,
+                inset = true
+            )
+        }
     }
 }
 
@@ -230,6 +238,7 @@ private fun AiSettingsScreen(
     onBack: (() -> Unit)? = null
 ) {
     SectionScaffold(stringResource(R.string.omnix_ai_title), modifier, onBack) {
+        val spacing = OmnixTheme.spacing
         // Deliberately no model picker, no provider name, no temperature:
         // model selection is server-managed and is not a user concept (§4).
         OmnixTextFieldRow(
@@ -239,13 +248,18 @@ private fun AiSettingsScreen(
             onValueChange = onSystemPromptChange,
             singleLine = false
         )
-        com.omnix.assistant.presentation.components.OmnixDivider()
-        LocalModelSettingsBlock(
-            state = modelState,
-            onDownloadAny = onDownloadAny,
-            onDownloadWifi = onDownloadWifi,
-            onCancelDownload = onCancelDownload
-        )
+
+        Spacer(Modifier.height(spacing.lg))
+
+        OmnixSettingsGroup {
+            LocalModelSettingsBlock(
+                state = modelState,
+                onDownloadAny = onDownloadAny,
+                onDownloadWifi = onDownloadWifi,
+                onCancelDownload = onCancelDownload
+            )
+        }
+
         SaveRow(saved = saved, onSave = onSave)
     }
 }
@@ -279,13 +293,15 @@ private fun AdvancedSettingsScreen(
     onBack: (() -> Unit)? = null
 ) {
     SectionScaffold(stringResource(R.string.omnix_advanced_title), modifier, onBack) {
+        val spacing = OmnixTheme.spacing
+
         Text(
             text = stringResource(R.string.omnix_advanced_body),
             style = OmnixTheme.typography.caption,
             color = OmnixTheme.colors.textTertiary
         )
 
-        OmnixDivider()
+        Spacer(Modifier.height(spacing.sm))
 
         // The token is editable here because a user re-entering it is the
         // documented recovery path when access stops working.
@@ -312,13 +328,15 @@ private fun AdvancedSettingsScreen(
 
         SaveRow(saved = saved, onSave = onSave)
 
-        OmnixDivider()
-
-        OmnixSettingRow(
-            title = stringResource(R.string.omnix_advanced_accessibility),
-            subtitle = stringResource(R.string.omnix_advanced_accessibility_body),
-            value = stringResource(R.string.omnix_advanced_accessibility_action),
-            onClick = onOpenAccessibilitySettings
-        )
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_advanced_accessibility),
+                subtitle = stringResource(R.string.omnix_advanced_accessibility_body),
+                value = stringResource(R.string.omnix_advanced_accessibility_action),
+                inset = true,
+                chevron = true,
+                onClick = onOpenAccessibilitySettings
+            )
+        }
     }
 }
