@@ -1,12 +1,18 @@
 package com.omnix.assistant.presentation.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,16 +20,22 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.VisualTransformation
+import com.omnix.assistant.presentation.components.OmnixChevronRightIcon
+import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.design.OmnixRadius
 import com.omnix.assistant.presentation.design.OmnixTheme
 
@@ -38,6 +50,16 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  * Each row states a human concept and, where useful, one line of plain
  * explanation. Permission identifiers, service names and provider names never
  * appear (§4).
+ *
+ * Press feedback is the iOS row highlight, not a ripple and not a scale: the
+ * tapped row briefly fills with the elevated surface colour.
+ *
+ * @param inset   true inside [OmnixSettingsGroup]: content is padded to the
+ *                card gutters while the tap target and highlight stay
+ *                full-bleed within the card.
+ * @param chevron true for rows that open another page. Opt-in: an action or
+ *                choice row must never promise navigation.
+ * @param leading optional slot before the title (a status dot, an icon).
  */
 @Composable
 fun OmnixSettingRow(
@@ -47,10 +69,20 @@ fun OmnixSettingRow(
     value: String? = null,
     enabled: Boolean = true,
     contentDescription: String? = null,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    inset: Boolean = false,
+    chevron: Boolean = false,
+    leading: (@Composable () -> Unit)? = null
 ) {
     val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val rowBackground by animateColorAsState(
+        targetValue = if (pressed && enabled) colors.surfaceElevated else Color.Transparent,
+        animationSpec = tween(120),
+        label = "omnixRowHighlight"
+    )
 
     Row(
         modifier = modifier
@@ -58,7 +90,13 @@ fun OmnixSettingRow(
             .then(
                 if (onClick != null && enabled) {
                     Modifier
-                        .clickable(role = Role.Button, onClick = onClick)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Button,
+                            onClick = onClick
+                        )
+                        .background(rowBackground)
                         .semantics {
                             // A spoken label describes the destination, not
                             // just the row's visible title.
@@ -70,11 +108,21 @@ fun OmnixSettingRow(
                     Modifier
                 }
             )
+            .then(
+                if (inset) {
+                    Modifier.padding(horizontal = spacing.md)
+                } else {
+                    Modifier
+                }
+            )
             .defaultMinSize(minHeight = spacing.touchTarget)
             .padding(vertical = spacing.sm),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        leading?.let {
+            it()
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -96,6 +144,9 @@ fun OmnixSettingRow(
                 color = colors.textSecondary,
                 modifier = Modifier.padding(start = spacing.sm)
             )
+        }
+        if (chevron && onClick != null && enabled) {
+            OmnixChevronRightIcon(color = colors.textTertiary)
         }
     }
 }
@@ -299,6 +350,33 @@ fun OmnixTextFieldRow(
                 color = colors.stateError,
                 modifier = Modifier.padding(top = spacing.xxs)
             )
+        }
+    }
+}
+
+/**
+ * A grouped settings card (§42): rows live inside one rounded surface, with
+ * hairline insets between them supplied by the caller. This is the OMNIX
+ * reading of the iOS grouped table — surface on background, radius 16,
+ * a 6 % hairline, no shadows.
+ *
+ * Rows inside the group pass `inset = true` to [OmnixSettingRow] so their
+ * content aligns to the card gutters while the tap target and the press
+ * highlight run full-bleed to the card edges.
+ */
+@Composable
+fun OmnixSettingsGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(OmnixTheme.radius.medium),
+        color = OmnixTheme.colors.surface,
+        border = BorderStroke(OmnixHairline, OmnixTheme.colors.border)
+    ) {
+        Column {
+            content()
         }
     }
 }

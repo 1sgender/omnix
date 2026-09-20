@@ -290,3 +290,39 @@ fun OmnixLockIcon(
         )
     }
 }
+
+/**
+ * A right chevron: the affordance of a row that opens another page. It is
+ * opt-in per row — action rows and choice rows never show it, because a
+ * chevron promises navigation.
+ */
+@Composable
+fun OmnixChevronRightIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 18.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val s = this.size.minDimension
+        val w = s * 0.085f
+        val cx = this.size.width / 2f
+        val cy = this.size.height / 2f
+        val dx = s * 0.16f
+        val dy = s * 0.22f
+
+        drawLine(
+            color = color,
+            start = Offset(cx - dx, cy - dy),
+            end = Offset(cx + dx, cy),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(cx + dx, cy),
+            end = Offset(cx - dx, cy + dy),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+    }
+}
