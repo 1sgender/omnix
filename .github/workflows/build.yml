@@ -5,7 +5,20 @@ permissions:
 
 on:
   push:
+    # Только main: на feature-ветках push-прогон дублирует pull_request-прогон
+    # того же SHA (required-чеки приходят из pull_request-прогонов).
+    # Docs-only коммиты в main не гоняют полный пайплайн (~7 мин × 2 воркфлоу).
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'NOTICE'
   pull_request:
+    # НАМЕРЕННО без paths/branches-фильтров: все 5 required status checks
+    # (branch protection) обязаны прийти на каждый PR — если воркфлоу
+    # отфильтруется, чек останется "expected" и мерж зависнет навсегда.
+    # Экономим на push-прогонах, а не на PR-ах.
   workflow_dispatch:
 
 # Новый пуш в тот же PR/ветку гасит устаревший прогон ЭТОГО воркфлоу —
