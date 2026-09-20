@@ -1,8 +1,10 @@
 package com.omnix.assistant.presentation.activation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
@@ -28,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.core.CoreState
 import com.omnix.assistant.presentation.core.OmnixCore
@@ -71,17 +76,27 @@ fun ActivationScreen(
     ) {
         Spacer(Modifier.height(spacing.colossal))
 
-        OmnixCore(
-            state = if (uiState.isLoading) CoreState.THINKING else CoreState.IDLE,
-            size = OmnixTheme.coreSizes.home
+        // The same header moment as Home: wordmark first, then the restrained
+        // ice-cyan accent — activation is the first impression, not a
+        // different app (§2).
+        Text(
+            text = stringResource(R.string.omnix_wordmark),
+            style = OmnixWordmarkStyle,
+            color = colors.textSecondary
+        )
+        Spacer(Modifier.height(spacing.xs))
+        Box(
+            modifier = Modifier
+                .width(spacing.xxl)
+                .height(OmnixHairline)
+                .background(colors.stateIdle.copy(alpha = 0.72f))
         )
 
         Spacer(Modifier.height(spacing.xl))
 
-        Text(
-            text = stringResource(R.string.omnix_wordmark),
-            style = OmnixWordmarkStyle,
-            color = colors.textPrimary
+        OmnixCore(
+            state = if (uiState.isLoading) CoreState.THINKING else CoreState.IDLE,
+            size = OmnixTheme.coreSizes.home
         )
 
         Spacer(Modifier.height(spacing.xl))
@@ -112,10 +127,17 @@ fun ActivationScreen(
             enabled = !uiState.isLoading,
             isError = uiState.errorMessage != null,
             label = { Text(stringResource(R.string.omnix_activation_field)) },
-            textStyle = typography.body,
+            // An activation code is a gift-card-style entry: the text sits in
+            // the middle of the field, not against the left gutter.
+            textStyle = typography.body.copy(textAlign = TextAlign.Center),
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Characters,
                 imeAction = ImeAction.Done
+            ),
+            // The Done key was a no-op; it now submits. The ViewModel guards
+            // a blank code with a localized message, so this is always safe.
+            keyboardActions = KeyboardActions(
+                onDone = { viewModel.activate() }
             ),
             shape = RoundedCornerShape(OmnixRadius.medium),
             colors = OutlinedTextFieldDefaults.colors(
