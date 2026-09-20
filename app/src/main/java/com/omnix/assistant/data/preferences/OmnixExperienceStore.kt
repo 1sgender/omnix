@@ -84,9 +84,10 @@ class OmnixExperienceStore @Inject constructor(
     val notificationsPrompted: Flow<Boolean> =
         preferences.map { it[Keys.NOTIFICATIONS_PROMPTED] ?: false }
 
-    /** "System" | "Light" | "Dark" (§47). */
+    /** "System" | "Light" | "Dark" (§47). Default Dark: the product is
+     *  voice-first, logo-dark, and pocket-lit; stored user choice wins. */
     val appearance: Flow<String> =
-        preferences.map { it[Keys.APPEARANCE] ?: "System" }
+        preferences.map { it[Keys.APPEARANCE] ?: "Dark" }
 
     val nightDimming: Flow<Boolean> =
         preferences.map { it[Keys.NIGHT_DIMMING] ?: false }

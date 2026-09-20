@@ -18,6 +18,8 @@ Runtime dependencies (Android app)
 - Kotlinx Serialization — JetBrains — Apache License 2.0
 - MediaPipe LLM Inference (tasks-genai) — Google — Apache License 2.0
 - ONNX Runtime (onnxruntime-android) — Microsoft — MIT License
+- Inter (Regular/Medium/SemiBold/Bold hinted statics, res/font/) —
+  The Inter Project Authors — SIL Open Font License 1.1 (SF Pro stand-in)
 - Material Design Icons — Google — Apache License 2.0
 
 On-device model

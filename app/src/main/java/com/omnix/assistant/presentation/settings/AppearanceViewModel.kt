@@ -119,6 +119,6 @@ class AppearanceViewModel @Inject constructor(
         /** Tolerates an unknown stored value rather than crashing on it. */
         fun appearanceOf(stored: String): OmnixAppearance =
             OmnixAppearance.entries.firstOrNull { it.name == stored }
-                ?: OmnixAppearance.System
+                ?: OmnixAppearance.Dark
     }
 }
