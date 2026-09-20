@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSpokenExample
 import com.omnix.assistant.presentation.components.OmnixTextButton
@@ -70,6 +73,17 @@ fun FirstRunScreen(
             text = stringResource(R.string.omnix_wordmark),
             style = OmnixWordmarkStyle,
             color = colors.textSecondary
+        )
+
+        // The same restrained ice-cyan accent as Home and Activation: one
+        // brand moment, stated the same way on every screen that opens the
+        // product (§2, §9).
+        Spacer(Modifier.height(spacing.xs))
+        Box(
+            modifier = Modifier
+                .width(spacing.xxl)
+                .height(OmnixHairline)
+                .background(colors.stateIdle.copy(alpha = 0.72f))
         )
 
         Spacer(Modifier.weight(1f))
