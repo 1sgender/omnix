@@ -113,11 +113,15 @@ fun OmnixNavGraph(
                 val chatState by chatViewModel.uiState.collectAsState()
                 OmnixChatScreen(
                     state = chatState,
+                    onBack = navController::popBackStack,
                     onInputChange = chatViewModel::onInputTextChanged,
                     onSend = { chatViewModel.sendTextMessage() },
                     onConfirm = chatViewModel::confirmPendingAction,
                     onCancel = chatViewModel::cancelPendingAction,
-                    onClear = chatViewModel::clearAllHistory
+                    onClear = chatViewModel::clearAllHistory,
+                    onAllowCloud = chatViewModel::confirmCloudConsent,
+                    onKeepLocal = chatViewModel::denyCloudConsent,
+                    onToggleDictation = chatViewModel::toggleVoiceDictation
                 )
             }
 
