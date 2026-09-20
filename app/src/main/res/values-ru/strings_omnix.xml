@@ -170,6 +170,16 @@
     <string name="omnix_chat_send">Отправить</string>
     <string name="omnix_chat_empty_title">Здесь пока пусто</string>
     <string name="omnix_chat_empty_body">Чат пригодится, когда говорить вслух неудобно.</string>
+    <string name="omnix_chat_clear_confirm_title">Очистить этот диалог?</string>
+    <string name="omnix_chat_clear_confirm_body">Все сообщения будут удалены с этого устройства.</string>
+    <string name="omnix_chat_thinking">OMNIX думает…</string>
+    <string name="omnix_chat_dictation_start">Голосовой ввод</string>
+    <string name="omnix_chat_dictation_stop">Остановить голосовой ввод</string>
+    <string name="omnix_privacy_badge_private">Личное</string>
+    <string name="omnix_privacy_badge_sensitive">Чувствительное</string>
+    <string name="omnix_privacy_badge_hint">OMNIX спросит, прежде чем отправить это в облако</string>
+    <string name="omnix_chat_consent_allow">Отправить в облако</string>
+    <string name="omnix_chat_consent_keep_local">Оставить на устройстве</string>
 
     <!-- ===== Переводчик ===== -->
     <string name="omnix_translator_title">Перевод</string>

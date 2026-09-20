@@ -206,3 +206,87 @@ fun OmnixBackIcon(
         )
     }
 }
+
+/**
+ * An upward arrow: the send affordance in the Chat composer. Drawn as a plain
+ * stem with a chevron so it reads at 16 dp inside the filled circle.
+ */
+@Composable
+fun OmnixArrowUpIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 16.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val s = this.size.minDimension
+        val w = s * 0.11f
+        val cx = this.size.width / 2f
+        val cy = this.size.height / 2f
+        val stem = s * 0.30f
+        val head = s * 0.17f
+
+        drawLine(
+            color = color,
+            start = Offset(cx, cy + stem),
+            end = Offset(cx, cy - stem),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(cx - head, cy - stem + head),
+            end = Offset(cx, cy - stem),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(cx, cy - stem),
+            end = Offset(cx + head, cy - stem + head),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+/**
+ * A padlock: the privacy classification badge in Chat. The message is held on
+ * the device — the closed shackle is the whole point, so the arc is closed.
+ */
+@Composable
+fun OmnixLockIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.NavSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val s = this.size.minDimension
+        val w = s * 0.085f
+        val cx = this.size.width / 2f
+        val bodyWidth = s * 0.46f
+        val bodyHeight = s * 0.34f
+        val bodyTop = s * 0.48f
+
+        drawRoundRectOutline(
+            color,
+            cx,
+            bodyTop,
+            bodyWidth,
+            bodyHeight,
+            w
+        )
+
+        // The shackle: a semicircle resting on the body, not touching its
+        // top edge — a hairline gap keeps the glyph readable at small sizes.
+        val r = s * 0.125f
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(cx - r, bodyTop - s * 0.04f - r),
+            size = Size(2f * r, 2f * r),
+            style = Stroke(width = w, cap = StrokeCap.Round)
+        )
+    }
+}
