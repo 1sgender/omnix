@@ -200,7 +200,7 @@ private fun StateLine(state: OmnixUiState, modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stateLabel(state),
-            style = OmnixTheme.typography.heading,
+            style = OmnixTheme.typography.title2,
             color = OmnixTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
             modifier = Modifier.widthIn(max = 320.dp)
@@ -256,7 +256,7 @@ private fun Guidance(state: OmnixUiState, modifier: Modifier = Modifier) {
                     R.string.omnix_home_hint_say_omni_wake,
                     stringResource(R.string.omnix_wake_word_quoted)
                 ),
-                style = OmnixTheme.typography.body,
+                style = OmnixTheme.typography.subheadline,
                 color = OmnixTheme.colors.textSecondary,
                 textAlign = TextAlign.Center
             )
