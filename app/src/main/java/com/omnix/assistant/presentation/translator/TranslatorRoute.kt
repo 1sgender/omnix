@@ -18,6 +18,7 @@ import com.omnix.assistant.presentation.core.CoreState
 fun TranslatorRoute(
     modifier: Modifier = Modifier,
     audioLevel: Float = 0f,
+    onBack: () -> Unit = {},
     viewModel: LiveInterpreterViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -35,6 +36,7 @@ fun TranslatorRoute(
 
     TranslatorScreen(
         modifier = modifier,
+        onBack = onBack,
         active = state.isListening,
         coreState = coreState,
         audioLevel = audioLevel,
