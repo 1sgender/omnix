@@ -2,99 +2,150 @@ package com.omnix.assistant.presentation.design
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.omnix.assistant.R
 
 /**
- * OMNIX typography tokens (§6).
+ * OMNIX typography tokens — the Apple HIG type ladder on Inter (§6).
  *
  * "Typography should disappear into the product": one family, few weights,
- * six roles. Sizes are declared in `sp` so system font scaling works (§30).
- * Screens must not declare `fontSize = 15.sp` locally.
+ * a complete ladder from Large Title down to Caption 2. Sizes are declared in
+ * `sp` so system font scaling keeps working (§30). Screens must not declare
+ * `fontSize = 15.sp` locally.
+ *
+ * Inter is bundled under the SIL OFL 1.1 (see NOTICE) as the Android stand-in
+ * for SF Pro. This deliberately overrides the old platform-sans choice: the
+ * product's reference is the Apple ladder, and Inter renders it consistently
+ * across OEM fonts. Dynamic Type still works — `sp` and `FontWeight` map onto
+ * the user's font-scale setting.
  */
 @Immutable
 data class OmnixTypographyTokens(
-    /** Product wordmark and first-run statements. */
+    /** Large Title — first-run statements, the product wordmark moment. */
     val display: TextStyle,
-    /** Screen titles: Settings, Devices, History. */
+    /** Title 1 — screen titles: Settings, Devices, History. */
     val screenTitle: TextStyle,
-    /** Section and card headings. */
+    /** Title 2 — prominent section titles, translator panes. */
+    val title2: TextStyle,
+    /** Title 3 — section and card headings. */
     val heading: TextStyle,
-    /** Default reading text and primary state labels. */
+    /** Headline — row titles, emphasised labels (17 semibold). */
+    val headline: TextStyle,
+    /** Body — default reading text and primary state labels (17). */
     val body: TextStyle,
-    /** Guidance, secondary explanations, examples. */
+    /** Callout — secondary reading text, sheet copy (16). */
+    val callout: TextStyle,
+    /** Subheadline — supporting lines in rows (15). */
+    val subheadline: TextStyle,
+    /** Footnote — guidance, secondary explanations, examples (13). */
     val caption: TextStyle,
-    /** Status line: "Listening…", "Clip Connected". */
+    /** Caption 2 — the smallest permitted text (11), timestamps only. */
+    val caption2: TextStyle,
+    /** Status line: "Listening…", "Clip Connected" (13 medium). */
     val status: TextStyle,
     /** Small overline labels: "TODAY", "YOU", "OMNIX". */
     val overline: TextStyle
 )
 
-private val Sans = FontFamily.SansSerif
-
-/*
- * Scale reconciled with the reference poster: Display 34/600, Heading 20/600,
- * Body 16/400, Caption 12/400.
- *
- * screenTitle, status and overline have no poster equivalent — the poster
- * shows a handful of screens, not a whole product — so they remain as the
- * intermediate steps the app actually needs. The poster's "SF Pro Display" is
- * deliberately not bundled: the platform sans-serif keeps Dynamic Type and
- * the user's font choice working (§32).
- */
+/** Inter, four weights, hinted statics from res/font (OFL 1.1, NOTICE). */
+val OmnixSans: FontFamily = FontFamily(
+    Font(R.font.inter_regular, FontWeight.Normal),
+    Font(R.font.inter_medium, FontWeight.Medium),
+    Font(R.font.inter_semibold, FontWeight.SemiBold),
+    Font(R.font.inter_bold, FontWeight.Bold)
+)
 
 val OmnixTypography = OmnixTypographyTokens(
     display = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 34.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-0.2).sp
+        lineHeight = 41.sp,
+        letterSpacing = (-0.4).sp
     ),
     screenTitle = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 30.sp,
-        letterSpacing = (-0.1).sp
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.35).sp
+    ),
+    title2 = TextStyle(
+        fontFamily = OmnixSans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = (-0.25).sp
     ),
     heading = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
-        lineHeight = 26.sp
+        lineHeight = 25.sp,
+        letterSpacing = (-0.2).sp
+    ),
+    headline = TextStyle(
+        fontFamily = OmnixSans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 17.sp,
+        lineHeight = 22.sp,
+        letterSpacing = (-0.2).sp
     ),
     body = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 17.sp,
+        lineHeight = 22.sp,
+        letterSpacing = (-0.2).sp
+    ),
+    callout = TextStyle(
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 23.sp
+        lineHeight = 21.sp,
+        letterSpacing = (-0.1).sp
+    ),
+    subheadline = TextStyle(
+        fontFamily = OmnixSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
+        letterSpacing = (-0.1).sp
     ),
     caption = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 17.sp
+        fontSize = 13.sp,
+        lineHeight = 18.sp
+    ),
+    caption2 = TextStyle(
+        fontFamily = OmnixSans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 11.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.06.sp
     ),
     status = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.Medium,
         fontSize = 13.sp,
         lineHeight = 18.sp
     ),
     overline = TextStyle(
-        fontFamily = Sans,
+        fontFamily = OmnixSans,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        lineHeight = 15.sp,
-        letterSpacing = 0.22.sp
+        lineHeight = 13.sp,
+        letterSpacing = 0.8.sp
     )
 )
 
 /** The OMNIX wordmark: the only place with wide tracking (§23, §79). */
 val OmnixWordmarkStyle: TextStyle = TextStyle(
-    fontFamily = Sans,
+    fontFamily = OmnixSans,
     fontWeight = FontWeight.SemiBold,
     fontSize = 13.sp,
     lineHeight = 18.sp,

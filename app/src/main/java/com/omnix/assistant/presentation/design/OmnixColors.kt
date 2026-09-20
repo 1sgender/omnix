@@ -115,20 +115,23 @@ val OmnixNightColors = OmnixDarkColors.copy(
 )
 
 /**
- * Light scheme. The product is voice-first and designed dark; light exists so
- * that `Appearance = System/Light` (§47) is honest rather than ignored.
+ * Light scheme — the Apple-grade variant (rebuild v2).
+ *
+ * The product is voice-first and designed dark; light must still be a real
+ * citizen, not an afterthought: grouped-table surfaces, 6 % black hairlines,
+ * near-black text with the same four-step opacity ladder as dark.
  */
 val OmnixLightColors = OmnixColorScheme(
-    background = Color(0xFFF6F7F8),
+    background = Color(0xFFF7F8FA),
     surface = Color(0xFFFFFFFF),
-    surfaceElevated = Color(0xFFFFFFFF),
-    border = Color(0x14000000),
-    scrim = Color(0x66000000),
+    surfaceElevated = Color(0xFFF0F2F5),
+    border = Color(0x0F000000),                        // 6 % black hairline
+    scrim = Color(0x59000000),
 
-    textPrimary = Color(0xF0121416),
-    textSecondary = Color(0x9E121416),
-    textTertiary = Color(0x61121416),
-    textDisabled = Color(0x38121416),
+    textPrimary = Color(0xF00C0D10),                   // 0.94
+    textSecondary = Color(0x9E0C0D10),                 // 0.62
+    textTertiary = Color(0x520C0D10),                  // 0.32
+    textDisabled = Color(0x360C0D10),                  // 0.21
 
     stateIdle = Color(0xFF237D87),
     stateListening = Color(0xFF2F8B50),
@@ -136,12 +139,12 @@ val OmnixLightColors = OmnixColorScheme(
     stateThinking = Color(0xFF2E6BB0),
     stateExecuting = Color(0xFF1F7E8B),
     stateSpeaking = Color(0xFF6A4CB0),
-    stateSuccess = Color(0xFF2F8B50),
-    stateError = Color(0xFFC0322A),
+    stateSuccess = Color(0xFF248A3D),
+    stateError = Color(0xFFD70015),
 
-    actionPrimary = Color(0xFF121416),
-    onActionPrimary = Color(0xFFF6F7F8),
-    actionSecondaryBorder = Color(0x2E000000),
+    actionPrimary = Color(0xFF0C0D10),
+    onActionPrimary = Color(0xFFF7F8FA),
+    actionSecondaryBorder = Color(0x1F000000),
 
     isNight = false
 )

@@ -1,6 +1,7 @@
 package com.omnix.assistant.presentation.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +11,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -24,7 +26,8 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  *  - [OmnixTextButton]      quiet links — Learn more, View history.
  *
  * All of them satisfy the 44 dp minimum touch target (§57) even when the
- * visible shape is smaller.
+ * visible shape is smaller, and answer touch with the iOS press-scale spring
+ * ([omnixPressScale]) rather than a ripple.
  */
 @Composable
 fun OmnixPrimaryButton(
@@ -35,10 +38,14 @@ fun OmnixPrimaryButton(
 ) {
     val colors = OmnixTheme.colors
     val spacing = OmnixTheme.spacing
+    val interactionSource = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.defaultMinSize(minHeight = spacing.touchTarget),
+        interactionSource = interactionSource,
+        modifier = modifier
+            .omnixPressScale(interactionSource)
+            .defaultMinSize(minHeight = spacing.touchTarget),
         shape = RoundedCornerShape(OmnixTheme.radius.pill),
         colors = ButtonDefaults.buttonColors(
             containerColor = colors.actionPrimary,
@@ -48,7 +55,7 @@ fun OmnixPrimaryButton(
         ),
         contentPadding = PaddingValues(horizontal = spacing.xl, vertical = spacing.sm)
     ) {
-        Text(text = text, style = OmnixTheme.typography.body)
+        Text(text = text, style = OmnixTheme.typography.headline)
     }
 }
 
@@ -61,10 +68,14 @@ fun OmnixSecondaryButton(
 ) {
     val colors = OmnixTheme.colors
     val spacing = OmnixTheme.spacing
+    val interactionSource = remember { MutableInteractionSource() }
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.defaultMinSize(minHeight = spacing.touchTarget),
+        interactionSource = interactionSource,
+        modifier = modifier
+            .omnixPressScale(interactionSource)
+            .defaultMinSize(minHeight = spacing.touchTarget),
         shape = RoundedCornerShape(OmnixTheme.radius.pill),
         border = BorderStroke(OmnixHairline, colors.actionSecondaryBorder),
         colors = ButtonDefaults.outlinedButtonColors(
@@ -73,7 +84,7 @@ fun OmnixSecondaryButton(
         ),
         contentPadding = PaddingValues(horizontal = spacing.xl, vertical = spacing.sm)
     ) {
-        Text(text = text, style = OmnixTheme.typography.body)
+        Text(text = text, style = OmnixTheme.typography.headline)
     }
 }
 
@@ -86,17 +97,21 @@ fun OmnixTextButton(
 ) {
     val colors = OmnixTheme.colors
     val spacing = OmnixTheme.spacing
+    val interactionSource = remember { MutableInteractionSource() }
     TextButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.defaultMinSize(minHeight = spacing.touchTarget),
+        interactionSource = interactionSource,
+        modifier = modifier
+            .omnixPressScale(interactionSource, pressedScale = 0.98f)
+            .defaultMinSize(minHeight = spacing.touchTarget),
         colors = ButtonDefaults.textButtonColors(
             contentColor = colors.textSecondary,
             disabledContentColor = colors.textDisabled
         ),
         contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.xs)
     ) {
-        Text(text = text, style = OmnixTheme.typography.caption)
+        Text(text = text, style = OmnixTheme.typography.subheadline)
     }
 }
 

@@ -69,14 +69,17 @@ class AppearanceViewModelTest {
         }
 
     @Test
-    fun `an unknown stored appearance falls back to System`() =
+    fun `an unknown stored appearance falls back to the Dark default`() =
         runTest(mainDispatcher.dispatcher) {
+            // Product decision (design-system v2): Dark is the default
+            // appearance; a stored-but-unrecognised value must not fall
+            // back to a different theme than a fresh install.
             appearance.value = "Sepia"
             val viewModel = AppearanceViewModel(store())
 
             val state = viewModel.uiState.first { it.loaded }
 
-            assertEquals(OmnixAppearance.System, state.appearance)
+            assertEquals(OmnixAppearance.Dark, state.appearance)
         }
 
     @Test
