@@ -191,6 +191,7 @@
 
     <!-- ===== Настройки ===== -->
     <string name="omnix_settings_title">Настройки</string>
+    <string name="omnix_settings_section_modes">Режимы</string>
     <string name="omnix_settings_voice">Голос</string>
     <string name="omnix_settings_privacy">Приватность</string>
     <string name="omnix_settings_devices">Устройства</string>
