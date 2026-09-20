@@ -1,0 +1,14 @@
+# Зависимости пайплайна тренировки omni (окружение v0.1; точный pip freeze
+# не сохранялся — при воспроизведении зафиксируйте свой).
+# train_omni.py использует train-API openwakeword 0.6.0; акустический фронтенд
+# (melspectrogram/embedding) в APK — модели v0.5.1 (см. SHA256SUMS).
+numpy
+scipy
+torch
+onnxruntime
+openwakeword==0.6.0
+piper-tts
+tqdm
+torchinfo
+torchmetrics
+pyyaml

@@ -41,6 +41,25 @@ legacy-фразу «Hey Jarvis») сохранена в assets как фолбэ
 Замена имени/пути модели — через `WakeWordConfig.modelAssetPath`
 (дефолт остаётся `hey_jarvis_v0.1.onnx`, пока фаза 2 не принята).
 
+## Пайплайн v0.1 (как получен omni_v0.1.onnx)
+
+Скрипты запускаются из корня репо, данные и выходы пишутся в `training/`
+(в .gitignore). Зависимости: `training/requirements.txt`.
+
+1. `python3 training/gen_raw.py` — Phase A: синтез raw-данных Piper TTS.
+   Нужны голоса: каталог `training/voices/` или переменная `PIPER_VOICES`.
+2. `python3 training/make_features.py` — Phase B: аугментация + фичи
+   (melspectrogram/embedding — те же модели, что в APK).
+3. `python3 training/train_omni.py` — Phase C+D: обучение DNN-головы,
+   merge лучших чекпойнтов, подбор порога, экспорт ONNX `[?,16,96] -> [?,1]`.
+4. `python3 training/eval_streaming.py [модель.onnx]` — стриминговый eval
+   (recall / FP, как на устройстве).
+
+`training/oww_train.py` — адаптированная копия openwakeword/train.py
+(v0.6.0, класс Model); нужна для шага 3. Одиночные (оконные) метрики
+v0.1 — `training/metrics_v0.1.json`; итоговая модель —
+`app/src/main/assets/wakeword/omni_v0.1.onnx` (sha256 в SHA256SUMS).
+
 ## Критерии приёмки фазы 2
 
 1. `verify_model.py` зелёный.
