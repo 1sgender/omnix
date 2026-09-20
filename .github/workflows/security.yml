@@ -5,7 +5,17 @@ permissions:
 
 on:
   push:
+    # Только main + не-докс изменения (см. комментарий в build.yml).
+    # schedule и workflow_dispatch не затронуты.
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'NOTICE'
   pull_request:
+    # НАМЕРЕННО без фильтров — required-чеки source-security и
+    # production-image-security обязаны прийти на каждый PR.
   workflow_dispatch:
   schedule:
     - cron: '23 3 * * 1'
