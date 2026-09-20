@@ -54,3 +54,11 @@ captures/
 # в git не коммитится.
 assetpacks/localmodel/src/main/assets/*.task
 assetpacks/localmodel/src/main/assets/*.part
+
+# Тренировочный пайплайн wake-word: данные и выходы генерируются локально.
+training/raw/
+training/bg/
+training/features/
+training/model/
+training/voices/
+__pycache__/

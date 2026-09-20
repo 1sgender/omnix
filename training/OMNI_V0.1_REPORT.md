@@ -53,8 +53,9 @@
 
 - `app/src/main/assets/wakeword/omni_v0.1.onnx` — 868 КБ, самодостаточный
   (без external data), sha256 в `SHA256SUMS`.
-- Скрипты пайплайна: `oww_work/{gen_raw,make_features,train_omni,eval_streaming}.py`
-  (вне репо; воспроизводятся по данному отчёту).
+- Скрипты пайплайна: `training/{gen_raw,make_features,train_omni,eval_streaming}.py`
+  + vendored `training/oww_train.py`, зависимости — `training/requirements.txt`,
+  оконные метрики — `training/metrics_v0.1.json` (порядок запуска — training/README.md).
 - `hey_jarvis_v0.1.onnx` сохранён в assets как проверенный фолбэк
   (переключается через `WakeWordConfig.modelAssetPath`) — удаляется после
   приёмки v0.2 на реальных данных.
