@@ -1,6 +1,7 @@
 package com.omnix.assistant.presentation.devices
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,7 +55,6 @@ fun DevicesScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = spacing.screenHorizontal)
     ) {
         Spacer(Modifier.height(spacing.lg))
@@ -64,44 +64,61 @@ fun DevicesScreen(
             onBack = onBack
         )
 
-        Spacer(Modifier.height(spacing.lg))
+        // Whatever the Clip reports, it is the whole point of this screen —
+        // so it owns the space and sits at its optical centre instead of
+        // hanging under the header (§9).
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(spacing.lg))
 
-        when (clip) {
-            is ClipState.Connected -> ConnectedClip(clip)
+                when (clip) {
+                    is ClipState.Connected -> ConnectedClip(clip)
 
-            is ClipState.BatteryLow -> ConnectedClip(
-                ClipState.Connected(
-                    deviceName = clip.deviceName,
-                    battery = ClipCapability.Available(clip.percent)
-                )
-            )
+                    is ClipState.BatteryLow -> ConnectedClip(
+                        ClipState.Connected(
+                            deviceName = clip.deviceName,
+                            battery = ClipCapability.Available(clip.percent)
+                        )
+                    )
 
-            ClipState.BluetoothOff -> OmnixEmptyState(
-                title = stringResource(R.string.omnix_error_bt_off_title),
-                description = stringResource(R.string.omnix_error_bt_off_body),
-                actionLabel = stringResource(R.string.omnix_error_bt_off_action),
-                onAction = onOpenSystemBluetooth
-            )
+                    ClipState.BluetoothOff -> OmnixEmptyState(
+                        title = stringResource(R.string.omnix_error_bt_off_title),
+                        description = stringResource(R.string.omnix_error_bt_off_body),
+                        actionLabel = stringResource(R.string.omnix_error_bt_off_action),
+                        onAction = onOpenSystemBluetooth
+                    )
 
-            is ClipState.Connecting, ClipState.Searching -> ClipStatusBar(
-                clip = clip,
-                isOnline = isOnline
-            )
+                    is ClipState.Connecting, ClipState.Searching -> ClipStatusBar(
+                        clip = clip,
+                        isOnline = isOnline
+                    )
 
-            else -> OmnixEmptyState(
-                title = stringResource(R.string.omnix_devices_empty_title),
-                description = stringResource(R.string.omnix_devices_empty_body),
-                actionLabel = stringResource(R.string.omnix_devices_connect),
-                onAction = onConnect
-            )
+                    else -> OmnixEmptyState(
+                        title = stringResource(R.string.omnix_devices_empty_title),
+                        description = stringResource(R.string.omnix_devices_empty_body),
+                        actionLabel = stringResource(R.string.omnix_devices_connect),
+                        onAction = onConnect
+                    )
+                }
+
+                if (clip is ClipState.Disconnected && clip.lastSeenMillis != null) {
+                    Spacer(Modifier.height(spacing.lg))
+                    LastSeenRow(clip.lastSeenMillis)
+                }
+
+                Spacer(Modifier.height(spacing.xl))
+            }
         }
-
-        if (clip is ClipState.Disconnected && clip.lastSeenMillis != null) {
-            Spacer(Modifier.height(spacing.lg))
-            LastSeenRow(clip.lastSeenMillis)
-        }
-
-        Spacer(Modifier.height(spacing.xxl))
     }
 }
 
@@ -118,7 +135,7 @@ private fun ConnectedClip(clip: ClipState.Connected) {
                     text = clip.deviceName.ifBlank {
                         stringResource(R.string.omnix_devices_clip_name)
                     },
-                    style = OmnixTheme.typography.heading,
+                    style = OmnixTheme.typography.headline,
                     color = OmnixTheme.colors.textPrimary
                 )
                 Text(

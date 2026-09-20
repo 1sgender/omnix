@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
+import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
 import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.core.CoreState
@@ -29,6 +30,12 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  * The proof that it is a mode: the same Core, in the same eight states, is the
  * centre of this screen too. There is no second visual identity, no
  * translator-specific chrome, and no separate "app" framing.
+ *
+ * Stage 4: the screen gains the back affordance every sub-screen carries
+ * (§20), and the result is typeset at title2 — the translation is what the
+ * user is waiting for, so it gets the same presence the state line has on
+ * Home. The live transcript settles into subheadline: it is context, not
+ * content.
  */
 @Composable
 fun TranslatorScreen(
@@ -40,6 +47,7 @@ fun TranslatorScreen(
     transcript: String,
     translation: String,
     modifier: Modifier = Modifier,
+    onBack: () -> Unit = {},
     onStart: () -> Unit = {},
     onStop: () -> Unit = {},
     onSwap: () -> Unit = {}
@@ -52,15 +60,10 @@ fun TranslatorScreen(
             .padding(horizontal = spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(spacing.lg))
-
-        Text(
-            text = stringResource(R.string.omnix_translator_title),
-            style = OmnixTheme.typography.screenTitle,
-            color = OmnixTheme.colors.textPrimary
+        OmnixScreenHeader(
+            title = stringResource(R.string.omnix_translator_title),
+            onBack = onBack
         )
-
-        Spacer(Modifier.height(spacing.xs))
 
         Text(
             text = stringResource(
@@ -69,7 +72,8 @@ fun TranslatorScreen(
                 targetLanguage
             ),
             style = OmnixTheme.typography.caption,
-            color = OmnixTheme.colors.textTertiary
+            color = OmnixTheme.colors.textTertiary,
+            modifier = Modifier.padding(top = spacing.sm)
         )
 
         Spacer(Modifier.weight(1f))
@@ -105,15 +109,15 @@ fun TranslatorScreen(
         if (transcript.isNotBlank() || translation.isNotBlank()) {
             Text(
                 text = transcript,
-                style = OmnixTheme.typography.caption,
-                color = OmnixTheme.colors.textTertiary,
+                style = OmnixTheme.typography.subheadline,
+                color = OmnixTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(spacing.xs))
             Text(
                 text = translation,
-                style = OmnixTheme.typography.heading,
+                style = OmnixTheme.typography.title2,
                 color = OmnixTheme.colors.textPrimary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -121,7 +125,7 @@ fun TranslatorScreen(
         } else {
             Text(
                 text = stringResource(R.string.omnix_translator_empty_body),
-                style = OmnixTheme.typography.body,
+                style = OmnixTheme.typography.subheadline,
                 color = OmnixTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
