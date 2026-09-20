@@ -1,5 +1,8 @@
 package com.omnix.assistant.presentation.navigation
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -140,11 +144,26 @@ fun OmnixNavGraph(
             }
 
             composable(OmnixDestination.Privacy.route) {
+                // Privacy states facts, but its two actions must be real:
+                // "manage permissions" opens this app's system page, and
+                // "delete history" clears the one shared log (§3).
+                val context = LocalContext.current
+                val privacyChatViewModel: ChatViewModel = hiltViewModel()
                 PrivacyScreen(
                     microphoneAllowed =
                         uiState.systemState != SystemStateType.MICROPHONE_DENIED,
                     historyStored = true,
-                    onBack = navController::popBackStack
+                    onBack = navController::popBackStack,
+                    onManagePermissions = {
+                        context.startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                .setData(
+                                    Uri.fromParts("package", context.packageName, null)
+                                )
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    },
+                    onDeleteHistory = privacyChatViewModel::clearAllHistory
                 )
             }
 

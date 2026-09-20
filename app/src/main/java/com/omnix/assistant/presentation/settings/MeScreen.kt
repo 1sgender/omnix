@@ -1,11 +1,8 @@
 package com.omnix.assistant.presentation.settings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -16,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixStatusDot
-import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.clipDotColor
 import com.omnix.assistant.presentation.components.clipLabel
 import com.omnix.assistant.presentation.design.OmnixTheme
@@ -96,7 +92,7 @@ fun MeScreen(
                 chevron = true,
                 onClick = { onOpenSection(OmnixDestination.Translator) }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_chat_title),
                 contentDescription = stringResource(R.string.omnix_a11y_open_chat),
@@ -116,14 +112,14 @@ fun MeScreen(
                     onOpenSection(OmnixDestination.SettingsSection(SECTION_VOICE))
                 }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_privacy),
                 inset = true,
                 chevron = true,
                 onClick = { onOpenSection(OmnixDestination.Privacy) }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_devices),
                 contentDescription = stringResource(R.string.omnix_a11y_open_devices),
@@ -131,7 +127,7 @@ fun MeScreen(
                 chevron = true,
                 onClick = { onOpenSection(OmnixDestination.Devices) }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_ai),
                 inset = true,
@@ -140,7 +136,7 @@ fun MeScreen(
                     onOpenSection(OmnixDestination.SettingsSection(SECTION_AI))
                 }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_language),
                 inset = true,
@@ -149,7 +145,7 @@ fun MeScreen(
                     onOpenSection(OmnixDestination.SettingsSection(SECTION_LANGUAGE))
                 }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_notifications),
                 inset = true,
@@ -158,7 +154,7 @@ fun MeScreen(
                     onOpenSection(OmnixDestination.SettingsSection(SECTION_NOTIFICATIONS))
                 }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_appearance),
                 inset = true,
@@ -179,7 +175,7 @@ fun MeScreen(
                     onOpenSection(OmnixDestination.SettingsSection(SECTION_ABOUT))
                 }
             )
-            GroupDivider()
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_settings_diagnostics),
                 inset = true,
@@ -207,20 +203,6 @@ fun MeScreen(
     }
 }
 
-/**
- * The hairline between rows inside a group: inset to the text start, the way
- * the iOS grouped table separates entries — never a full-bleed line.
- */
-@Composable
-private fun GroupDivider() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = OmnixTheme.spacing.md)
-            .height(OmnixHairline)
-            .background(OmnixTheme.colors.border)
-    )
-}
 
 const val SECTION_VOICE = "voice"
 const val SECTION_AI = "ai"

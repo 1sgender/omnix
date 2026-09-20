@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -60,6 +61,7 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  * @param chevron true for rows that open another page. Opt-in: an action or
  *                choice row must never promise navigation.
  * @param leading optional slot before the title (a status dot, an icon).
+ * @param trailing optional slot after the value (a checkmark, a badge).
  */
 @Composable
 fun OmnixSettingRow(
@@ -72,7 +74,8 @@ fun OmnixSettingRow(
     onClick: (() -> Unit)? = null,
     inset: Boolean = false,
     chevron: Boolean = false,
-    leading: (@Composable () -> Unit)? = null
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null
 ) {
     val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
@@ -145,6 +148,9 @@ fun OmnixSettingRow(
                 modifier = Modifier.padding(start = spacing.sm)
             )
         }
+        trailing?.let {
+            it()
+        }
         if (chevron && onClick != null && enabled) {
             OmnixChevronRightIcon(color = colors.textTertiary)
         }
@@ -158,7 +164,8 @@ fun OmnixToggleRow(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    inset: Boolean = false
 ) {
     val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
@@ -166,6 +173,13 @@ fun OmnixToggleRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .then(
+                if (inset) {
+                    Modifier.padding(horizontal = spacing.md)
+                } else {
+                    Modifier
+                }
+            )
             .defaultMinSize(minHeight = spacing.touchTarget)
             .padding(vertical = spacing.sm),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -216,12 +230,24 @@ fun OmnixSliderRow(
     modifier: Modifier = Modifier,
     valueRange: ClosedFloatingPointRange<Float> = 0.5f..2.0f,
     steps: Int = 0,
-    onValueChangeFinished: (() -> Unit)? = null
+    onValueChangeFinished: (() -> Unit)? = null,
+    inset: Boolean = false
 ) {
     val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
 
-    Column(modifier = modifier.fillMaxWidth().padding(vertical = spacing.xs)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (inset) {
+                    Modifier.padding(horizontal = spacing.md)
+                } else {
+                    Modifier
+                }
+            )
+            .padding(vertical = spacing.xs)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -379,4 +405,20 @@ fun OmnixSettingsGroup(
             content()
         }
     }
+}
+
+/**
+ * The hairline between rows inside an [OmnixSettingsGroup]: inset to the
+ * text start, the way the iOS grouped table separates entries — never a
+ * full-bleed line.
+ */
+@Composable
+fun OmnixGroupDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = OmnixTheme.spacing.md)
+            .height(OmnixHairline)
+            .background(OmnixTheme.colors.border)
+    )
 }
