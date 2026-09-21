@@ -51,6 +51,14 @@ sealed interface ActivationResult {
 
 sealed interface LicenseRefreshResult {
     data class Valid(val licenseInfo: LicenseInfo) : LicenseRefreshResult
+
+    /**
+     * Офлайн-льгота (решение владельца 2026-09-21): сервер недоступен
+     * (нет сети, 5xx или троттлинг), вход выполнен по непросроченному кэшу
+     * последней успешной проверки. Явные вердикты сервера сюда не попадают —
+     * они блокируют сразу при любой связи.
+     */
+    data class OfflineGrace(val licenseInfo: LicenseInfo) : LicenseRefreshResult
     data object Invalid : LicenseRefreshResult
     data object Expired : LicenseRefreshResult
     data object Revoked : LicenseRefreshResult
@@ -75,6 +83,24 @@ interface LicenseManager {
      */
     fun getDeviceId(): String = ""
 }
+
+/**
+ * Чистое решение офлайн-льготы: невозможность проверить лицензию у сервера
+ * (нет сети, 5xx, троттлинг) — не вердикт против неё. Непросроченный кэш
+ * последней успешной проверки открывает приложение; просроченный или
+ * отсутствующий — нет, показываем активацию. Явные вердикты сервера
+ * (Invalid/Expired/Revoked/Unauthorized/WrongDevice) сюда не попадают —
+ * они блокируют сразу при любой связи.
+ */
+fun offlineGraceDecision(
+    cached: LicenseInfo,
+    otherwise: LicenseRefreshResult
+): LicenseRefreshResult =
+    if (cached.isActivated && !cached.isExpired) {
+        LicenseRefreshResult.OfflineGrace(cached)
+    } else {
+        otherwise
+    }
 
 @Singleton
 class LicenseManagerImpl @Inject constructor(
@@ -112,7 +138,10 @@ class LicenseManagerImpl @Inject constructor(
     )
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Persisted state is display-only until independently revalidated this process.
+    // Кэш не открывает продукт сам: новый процесс стартует запертым и
+    // открывается сервером. Исключение — офлайн-льгота: сервер недоступен
+    // (нет сети/5xx/троттлинг), кэш не просрочен → вход по кэшу. Явные
+    // вердикты сервера блокируют сразу (решение владельца 2026-09-21).
     private val _licenseFlow = MutableStateFlow(loadCachedInfo().copy(isActivated = false))
     override val licenseFlow: Flow<LicenseInfo> = _licenseFlow.asStateFlow()
 
@@ -157,14 +186,10 @@ class LicenseManagerImpl @Inject constructor(
                 securityManager.clearAccessToken()
                 LicenseRefreshResult.Unauthorized
             }
-            ServerLicenseValidationResult.RateLimited -> {
-                invalidateProcessState(expired = false)
-                LicenseRefreshResult.RateLimited
-            }
-            ServerLicenseValidationResult.ServiceUnavailable -> {
-                invalidateProcessState(expired = false)
-                LicenseRefreshResult.ServiceUnavailable
-            }
+            ServerLicenseValidationResult.RateLimited ->
+                offlineGraceOr(LicenseRefreshResult.RateLimited)
+            ServerLicenseValidationResult.ServiceUnavailable ->
+                offlineGraceOr(LicenseRefreshResult.ServiceUnavailable)
         }
     }
 
@@ -216,6 +241,26 @@ class LicenseManagerImpl @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Офлайн-льгота: применяет [offlineGraceDecision] к кэшу последней успешной
+     * проверки и публикует результат в поток. Кэш на диске не трогаем —
+     * следующий старт с сетью перепроверит у сервера как обычно; никаких
+     * записей «не активирован» без вердикта сервера больше нет.
+     */
+    private fun offlineGraceOr(otherwise: LicenseRefreshResult): LicenseRefreshResult {
+        val cached = loadCachedInfo()
+        val decision = offlineGraceDecision(cached, otherwise)
+        if (decision is LicenseRefreshResult.OfflineGrace) {
+            _licenseFlow.value = decision.licenseInfo
+            Log.i(
+                TAG,
+                "license offline grace | plan=${decision.licenseInfo.planId}" +
+                    " | remainingDays=${decision.licenseInfo.remainingDays}"
+            )
+        }
+        return decision
     }
 
     private fun persistServerRecord(record: ServerLicenseRecord, hardwareId: String): LicenseInfo {

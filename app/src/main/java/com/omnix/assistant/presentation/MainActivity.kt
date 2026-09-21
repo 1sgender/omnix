@@ -93,7 +93,9 @@ class MainActivity : ComponentActivity() {
 
                     LaunchedEffect(showFirstRun) {
                         if (!showFirstRun) {
-                            // Persisted client state never unlocks the product by itself.
+                            // Кэш не открывает продукт сам: при любой связи решает
+                            // сервер; без связи LicenseManager применяет офлайн-льготу
+                            // по непросроченному кэшу последней успешной проверки.
                             licenseManager.refreshFromServer()
                             serverCheckComplete = true
                         }

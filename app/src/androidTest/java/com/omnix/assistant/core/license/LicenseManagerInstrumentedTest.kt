@@ -123,6 +123,48 @@ class LicenseManagerInstrumentedTest {
         assertFalse(manager.isActivatedAndValid())
     }
 
+    @Test
+    fun offlineGraceOpensUnexpiredCacheWhenServerIsUnreachableAndStopsAtVerdicts() = runBlocking {
+        val server = FakeServerValidator().apply { redeemResult = successfulRedemption() }
+        val security = FakeSecurityManager()
+        val first = manager(server, security)
+        assertTrue(first.activateWithCode("ABCD-1234") is ActivationResult.Success)
+
+        // Новый процесс без сервера: непросроченный кэш открывает продукт.
+        val offline = manager(server, security)
+        server.validationResult = ServerLicenseValidationResult.ServiceUnavailable
+        val grace = offline.refreshFromServer()
+        assertTrue(grace is LicenseRefreshResult.OfflineGrace)
+        assertTrue(offline.isActivatedAndValid())
+        assertEquals("phase3-pro", offline.getLicenseInfo().planId)
+
+        // Троттлинг сервера — не вердикт против лицензии: льгота та же.
+        server.validationResult = ServerLicenseValidationResult.RateLimited
+        assertTrue(offline.refreshFromServer() is LicenseRefreshResult.OfflineGrace)
+
+        // Явный вердикт сервера при связи блокирует сразу — льготы нет.
+        server.validationResult = ServerLicenseValidationResult.Expired
+        assertEquals(LicenseRefreshResult.Expired, offline.refreshFromServer())
+        assertFalse(offline.isActivatedAndValid())
+    }
+
+    @Test
+    fun offlineGraceRequiresUnexpiredCache() = runBlocking {
+        val server = FakeServerValidator()
+        server.redeemResult = ServerRedemptionResult.Success(
+            validRecord(VALID_TOKEN).copy(
+                startsAt = Instant.now().minusSeconds(60L * 24 * 60 * 60),
+                expiresAt = Instant.now().minusSeconds(60)
+            )
+        )
+        val manager = manager(server, FakeSecurityManager())
+        assertTrue(manager.activateWithCode("ABCD-1234") is ActivationResult.Success)
+
+        server.validationResult = ServerLicenseValidationResult.ServiceUnavailable
+        assertEquals(LicenseRefreshResult.ServiceUnavailable, manager.refreshFromServer())
+        assertFalse(manager.isActivatedAndValid())
+    }
+
     private fun manager(server: FakeServerValidator, security: FakeSecurityManager) =
         LicenseManagerImpl(context, server, LicenseCodeValidator(), security)
 
