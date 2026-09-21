@@ -24,16 +24,22 @@ import javax.inject.Singleton
  * Маппинг исходов в контракт Этапа 1:
  *
  * ```
- * LocalAiResult.Success     → LocalAiOutcome.Handled   → ExecutionType.LOCAL_AI
- * LocalAiResult.Unsupported → LocalAiOutcome.Uncertain → Cloud AI / Agent
- * LocalAiResult.Error       → LocalAiOutcome.Failed    → ExecutionResult.Error
+ * LocalAiResult.Success          → LocalAiOutcome.Handled   → ExecutionType.LOCAL_AI
+ * LocalAiResult.Unsupported      → LocalAiOutcome.Uncertain → Cloud AI / Agent
+ * LocalAiResult.FailedToFallback → LocalAiOutcome.Fallback  → Cloud AI + сообщение пользователю
+ * LocalAiResult.Error            → LocalAiOutcome.Failed    → ExecutionResult.Error
  * ```
  *
- * Почему `Error` НЕ эскалируется в облако: движок Этапа 1 намеренно
- * детерминирован (пункт 16 ТЗ) — один проход по цепочке без повторов.
- * «Модель сломалась» — это честная ошибка, а не повод молча отправить,
- * возможно приватный, запрос в сеть. Ситуация «модель просто не установлена»
- * возвращается как `Unsupported` и корректно уходит в облако.
+ * Почему генерационный `Error` НЕ эскалируется в облако: движок Этапа 1
+ * намеренно детерминирован (пункт 16 ТЗ) — один проход по цепочке без
+ * повторов; упавшая ПОСЛЕ старта генерация — честная ошибка, а не повод
+ * молча отправить, возможно приватный, запрос в сеть.
+ *
+ * Исключение — провал ИНИЦИАЛИЗАЦИИ (решение владельца 2026-09-21):
+ * запрос не должен погибать из-за того, что локальная модель не завелась.
+ * Он уходит в облако по обычному privacy-гейту (приватный без согласия
+ * всё равно блокируется), а пользователь видит сообщение про
+ * офлайн-версию с причиной сбоя.
  */
 @Singleton
 class CompositeLocalAiExecutor @Inject constructor(
@@ -74,6 +80,13 @@ class CompositeLocalAiExecutor @Inject constructor(
             is LocalAiResult.Unsupported -> {
                 Log.d(TAG, "local layer declined: ${result.reason}")
                 LocalAiOutcome.Uncertain
+            }
+
+            is LocalAiResult.FailedToFallback -> {
+                // Решение владельца 2026-09-21: инициализация модели провалилась —
+                // запрос уходит в облако, причина доезжает до пользователя.
+                Log.w(TAG, "local layer failed to start | ${result.reason} — облачный fallback")
+                LocalAiOutcome.Fallback(result.reason)
             }
 
             is LocalAiResult.Error -> {

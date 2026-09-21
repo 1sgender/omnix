@@ -36,6 +36,13 @@ class SendPromptUseCase @Inject constructor(
     private val agentPipeline: AgentPipeline
 ) {
     /**
+     * Дедупликация офлайн-fallback-уведомлений: одна и та же причина сбоя
+     * инициализации сообщает пользователю один раз за жизнь use case
+     * (инстанс живёт в ViewModel), новая причина — новое сообщение.
+     */
+    private var lastNotifiedLocalFallbackReason: String? = null
+
+    /**
      * @param source откуда пришёл запрос — голос (STT) или текстовый чат.
      *               Участвует в решении [com.omnix.assistant.agent.decision.ExecutionDecisionEngine].
      * @param privacyLevel только hint вызывающего слоя. По умолчанию UNKNOWN;
@@ -157,6 +164,26 @@ class SendPromptUseCase @Inject constructor(
                         ScreenContentPrivacy.PLACEHOLDER
                     } else {
                         exec.text
+                    }
+                    // Решение владельца 2026-09-21: локальная модель не
+                    // стартовала и ответ пришёл из облака — один раз на причину
+                    // сообщаем пользователю про офлайн-версию. SYSTEM-строка
+                    // попадает ТОЛЬКО в историю чата (не озвучивается: голос
+                    // и так занят основным ответом; SMS-канал не затрагивается).
+                    exec.localFallbackReason?.let { reason ->
+                        if (reason != lastNotifiedLocalFallbackReason) {
+                            lastNotifiedLocalFallbackReason = reason
+                            messageRepository.insertMessage(
+                                Message(
+                                    role = MessageRole.SYSTEM,
+                                    text = context.getString(
+                                        R.string.omnix_local_fallback_notice,
+                                        reason
+                                    ),
+                                    timestamp = System.currentTimeMillis()
+                                )
+                            )
+                        }
                     }
                     saveAssistantMessage(persistedText)
                     memoryManager.workingMemory.updateEntityFromResponse(persistedText)

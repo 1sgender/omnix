@@ -192,6 +192,7 @@ object BenchmarkHarness {
             when (val r = localAi.execute(request)) {
                 is LocalAiResult.Success -> { handled.incrementAndGet(); LocalAiOutcome.Handled(r.text) }
                 is LocalAiResult.Unsupported -> { declines.incrementAndGet(); LocalAiOutcome.Uncertain }
+                is LocalAiResult.FailedToFallback -> LocalAiOutcome.Fallback(r.reason)
                 is LocalAiResult.Error -> LocalAiOutcome.Failed(r.message)
             }
     }

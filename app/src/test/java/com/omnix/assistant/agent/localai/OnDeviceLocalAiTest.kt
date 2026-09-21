@@ -216,9 +216,13 @@ class OnDeviceLocalAiTest {
         assertTrue("Отсутствие модели — не ошибка: $result", result is LocalAiResult.Unsupported)
     }
 
-    /** Провал инициализации → Error. */
+    /**
+     * Провал инициализации модели — не приговор запросу (решение владельца
+     * 2026-09-21): FailedToFallback с причиной, движок уйдёт в облако
+     * и сообщит пользователю про офлайн-версию.
+     */
     @Test
-    fun `model initialization failure yields error`() = runBlocking {
+    fun `model initialization failure falls back with reason`() = runBlocking {
         val manager = FakeModelManager(
             runtime = null,
             state = LocalModelState.Failed("UnsatisfiedLinkError")
@@ -227,12 +231,17 @@ class OnDeviceLocalAiTest {
 
         val result = localAi.execute(request())
 
-        assertTrue("Ожидался Error, получено: $result", result is LocalAiResult.Error)
+        assertTrue("Ожидался FailedToFallback, получено: $result", result is LocalAiResult.FailedToFallback)
+        assertEquals("UnsatisfiedLinkError", (result as LocalAiResult.FailedToFallback).reason)
     }
 
-    /** Исключение при инициализации не пробрасывается наружу. */
+    /**
+     * Провал инициализации — не приговор запросу (решение владельца
+     * 2026-09-21): FailedToFallback, движок уйдёт в облако и сообщит
+     * пользователю про офлайн-версию.
+     */
     @Test
-    fun `initialization exception is converted to error`() = runBlocking {
+    fun `initialization exception falls back to cloud`() = runBlocking {
         val manager = FakeModelManager(
             runtime = null,
             throwOnInit = OutOfMemoryError("no memory").let { IllegalStateException(it) }
@@ -241,7 +250,7 @@ class OnDeviceLocalAiTest {
 
         val result = localAi.execute(request())
 
-        assertTrue(result is LocalAiResult.Error)
+        assertTrue("Ожидался FailedToFallback (уход в облако), получено: $result", result is LocalAiResult.FailedToFallback)
     }
 
     /**

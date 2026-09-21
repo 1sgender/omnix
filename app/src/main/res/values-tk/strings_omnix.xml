@@ -249,6 +249,7 @@
     <string name="omnix_local_model_download_failed">Göçürilmedi: %1$s</string>
     <string name="omnix_local_model_cancel">Göçürişi ýatyr</string>
     <string name="omnix_local_model_delete_redownload">Poz we täzeden göçürip al</string>
+    <string name="omnix_local_fallback_notice">Oflain model elýeterli däl (%1$s). Jogap bulutdan gelýär.</string>
     <string name="omnix_local_model_consent_title">Enjamdaky modeli göçürip alaýaýmyňyz?</string>
     <string name="omnix_local_model_consent_body">521 MB. Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut adaty ýaly jogap berýär.</string>
     <string name="omnix_local_model_later">Soňrak</string>

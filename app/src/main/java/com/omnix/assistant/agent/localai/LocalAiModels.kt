@@ -11,7 +11,12 @@ import java.util.Locale
  *  - [Unsupported] — модель НЕ БЕРЁТСЯ за запрос (нужен web, модель не
  *                    установлена, запрос — device-команда). Это НЕ ошибка:
  *                    ExecutionDecisionEngine спокойно уходит в Cloud/Agent;
- *  - [Error]       — реальный сбой (инициализация упала, runtime бросил).
+ *  - [FailedToFallback] — локальный слой не смог СТАРТОВАТЬ (инициализация
+ *                    модели провалилась). Решение владельца 2026-09-21: запрос
+ *                    НЕ погибает — уходит в облако, а пользователю показывается
+ *                    сообщение про офлайн-версию;
+ *  - [Error]       — реальный сбой во время генерации (runtime бросил,
+ *                    пустой ответ) — остаётся честной ошибкой.
  */
 sealed class LocalAiResult {
 
@@ -21,6 +26,12 @@ sealed class LocalAiResult {
     ) : LocalAiResult()
 
     data class Unsupported(val reason: String) : LocalAiResult()
+
+    /**
+     * Инициализация модели провалилась: не приговор запросу, а повод уйти в
+     * облако и предупредить пользователя (решение владельца 2026-09-21).
+     */
+    data class FailedToFallback(val reason: String) : LocalAiResult()
 
     data class Error(val message: String) : LocalAiResult()
 }

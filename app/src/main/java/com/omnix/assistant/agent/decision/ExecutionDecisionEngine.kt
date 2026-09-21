@@ -202,6 +202,9 @@ class ExecutionDecisionEngine @Inject constructor(
             latency.nowMs() - localAiStartedAt,
             VoiceLatencyMetrics.VoiceLane.LOCAL
         )
+        // Решение владельца 2026-09-21: провал инициализации локальной модели
+        // доезжает до пользователя (metadata → DirectAnswer → сообщение в чате).
+        var localFallbackReason: String? = null
         when (localOutcome) {
             is LocalAiOutcome.Handled -> {
                 logRoute(ExecutionType.LOCAL_AI, DecisionReason.LOCAL_AI_HANDLED, routing.confidence, request.requestId)
@@ -225,12 +228,19 @@ class ExecutionDecisionEngine @Inject constructor(
                 )
             }
 
+            is LocalAiOutcome.Fallback -> {
+                // Не приговор запросу: уходим в облако по обычному privacy-гейту.
+                Log.w(TAG, "route=LOCAL_AI outcome=FALLBACK (${localOutcome.reason}) — облачный fallback")
+                metrics.noteLocalFailed()
+                localFallbackReason = localOutcome.reason
+            }
+
             LocalAiOutcome.Uncertain -> Unit // идём дальше
         }
 
         // ------------------------------------------------ PRIORITY 3: CLOUD AI
         recordLaneStage(VoiceLatencyMetrics.VoiceLane.CLOUD, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
-        return runCloud(request, routing, trace)
+        return runCloud(request, routing, trace, localFallbackReason)
     }
 
     // =====================================================================
@@ -404,7 +414,8 @@ class ExecutionDecisionEngine @Inject constructor(
     private suspend fun runCloud(
         request: ExecutionRequest,
         routing: CommandRoutingResult,
-        trace: RouterTrace
+        trace: RouterTrace,
+        localFallbackReason: String? = null
     ): ExecutionResult {
         // Privacy gate: приватный/чувствительный запрос НИКОГДА не уходит
         // в облако без явного разрешения (пункт 7 ТЗ).
@@ -502,10 +513,13 @@ class ExecutionDecisionEngine @Inject constructor(
                 ExecutionResult.Success(
                     text = rawOutput,
                     executionType = ExecutionType.CLOUD_AI,
-                    metadata = mapOf(
-                        "reason" to reason.name,
-                        "request_id" to request.requestId
-                    )
+                    metadata = buildMap {
+                        put("reason", reason.name)
+                        put("request_id", request.requestId)
+                        // Причина офлайн-fallback доезжает до UI
+                        // (→ DirectAnswer.localFallbackReason → сообщение в чате).
+                        localFallbackReason?.let { put("local_fallback_reason", it) }
+                    }
                 )
             }
 
