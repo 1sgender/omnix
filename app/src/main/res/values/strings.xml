@@ -1,78 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    
-    <!-- ===== Исходные строки приложения ===== -->
+    <!--
+      Spoken layer (TTS prompts, tool summaries, license flow) — default
+      (English) locale. Russian lives in values-ru, Turkmen in values-tk.
+      These strings are heard, not read: short sentences, no technical terms.
+    -->
+
+    <!-- ===== Application ===== -->
     <string name="app_name">OMNIX</string>
 
-    <!-- ===== Presentation layer (audit #17: полный вынос строк) ===== -->
-    <string name="podklyuchite_naushniki_dlya_raboty">● Подключите наушники для работы</string>
+    <!-- ===== Presentation layer (audit #17) ===== -->
+    <string name="podklyuchite_naushniki_dlya_raboty">● Connect headphones to start</string>
 
-    <!-- ===== Format-строки (audit #17) ===== -->
-    <string name="oshibka">Ошибка: %1$s</string>
-    <string name="s_sir">%1$s, сэр.</string>
-    <string name="ne_udalos_vypolnit">Не удалось выполнить: %1$s</string>
+    <!-- ===== Format strings (audit #17) ===== -->
+    <string name="oshibka">Error: %1$s</string>
+    <string name="s_sir">%1$s, sir.</string>
+    <string name="ne_udalos_vypolnit">Couldn’t do that: %1$s</string>
 
-    <string name="oshibka_vypolneniya_zaprosa">Ошибка выполнения запроса</string>
-    <string name="operaciya_otmenena_sir">Операция отменена, сэр.</string>
-    <string name="pozhaluysta_vvedite_kod">Пожалуйста, введите код активации со скретч-карты из коробки.</string>
+    <string name="oshibka_vypolneniya_zaprosa">Request failed</string>
+    <string name="operaciya_otmenena_sir">Operation cancelled, sir.</string>
+    <string name="pozhaluysta_vvedite_kod">Please enter the activation code from the scratch card in the box.</string>
 
     <!-- ===== Voice layer (audit #17) ===== -->
-    <string name="omnix_na_pauze">OMNIX на паузе</string>
-    <string name="omnix_slushaet_v_naushnike">OMNIX слушает (в наушнике)…</string>
-    <string name="omnix_slushaet">OMNIX слушает…</string>
-    <string name="vremya_ozhidaniya_isteklo">Время ожидания истекло. Операция отменена, сэр.</string>
-    <string name="vy_nichego_ne_skazali">Вы ничего не сказали.</string>
-    <string name="naushniki_otklyucheny_ozhidanie">Наушники отключены. Ожидание…</string>
-    <string name="ne_ponyal_skazhite_da_ili_net">Не понял. Скажите да или нет.</string>
-    <string name="ne_udalos_otkryt_mikrofon">Не удалось открыть микрофон</string>
-    <string name="net_podklyucheniya_k_internetu">Нет подключения к интернету.</string>
-    <string name="net_razresheniya_na_mikrofon">Нет разрешения на микрофон.</string>
-    <string name="ozhidanie_podtverzhdeniya">Ожидание подтверждения (Да/Нет)…</string>
-    <string name="ozvuchivanie_otveta">Озвучивание ответа…</string>
-    <string name="oshibka_raspoznavaniya_rechi">Ошибка распознавания речи (%1$d).</string>
-    <string name="oshibka_svyazi_s_ai">Ошибка связи с AI</string>
-    <string name="podklyuchite_naushniki">Подключите наушники</string>
-    <string name="provodnye_naushniki">Проводные наушники</string>
-    <string name="rezhim_perevodchika_aktivirovan">Режим синхронного переводчика в ухе активирован. Слушаю собеседника, сэр.</string>
-    <string name="slushayu_prodolzhenie_dialoga">Слушаю продолжение диалога…</string>
-    <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Фоновое распознавание ключевого слова и голосовые ответы</string>
-    <string name="ya_ne_rasslyshal_zapros">Я не расслышал запрос.</string>
-    <string name="bluetooth_garnitura">Bluetooth Гарнитура</string>
-    <string name="bluetooth_naushnik">Bluetooth Наушник</string>
+    <string name="omnix_na_pauze">OMNIX is paused</string>
+    <string name="omnix_slushaet_v_naushnike">OMNIX is listening (in your ear)…</string>
+    <string name="omnix_slushaet">OMNIX is listening…</string>
+    <string name="vremya_ozhidaniya_isteklo">Time’s up. Operation cancelled, sir.</string>
+    <string name="vy_nichego_ne_skazali">You didn’t say anything.</string>
+    <string name="naushniki_otklyucheny_ozhidanie">Headphones disconnected. Waiting…</string>
+    <string name="ne_ponyal_skazhite_da_ili_net">I didn’t catch that. Say yes or no.</string>
+    <string name="ne_udalos_otkryt_mikrofon">Couldn’t open the microphone</string>
+    <string name="net_podklyucheniya_k_internetu">No internet connection.</string>
+    <string name="net_razresheniya_na_mikrofon">No microphone permission.</string>
+    <string name="ozhidanie_podtverzhdeniya">Waiting for your answer (yes/no)…</string>
+    <string name="ozvuchivanie_otveta">Reading the answer…</string>
+    <string name="oshibka_raspoznavaniya_rechi">Speech recognition error (%1$d).</string>
+    <string name="oshibka_svyazi_s_ai">Couldn’t reach the AI</string>
+    <string name="podklyuchite_naushniki">Connect headphones</string>
+    <string name="provodnye_naushniki">Wired headphones</string>
+    <string name="rezhim_perevodchika_aktivirovan">Live interpreter mode is on. Listening for the other speaker, sir.</string>
+    <string name="slushayu_prodolzhenie_dialoga">Listening for more…</string>
+    <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Background wake word recognition and spoken replies</string>
+    <string name="ya_ne_rasslyshal_zapros">I didn’t hear the request.</string>
+    <string name="bluetooth_garnitura">Bluetooth headset</string>
+    <string name="bluetooth_naushnik">Bluetooth headphones</string>
 
     <!-- ===== License & UseCase (audit #17) ===== -->
-    <string name="nevernyy_kod_aktivacii">Неверный код активации. Проверьте код на карточке в коробке наушников.</string>
-    <string name="server_licenziy_nedostupen">Сервер активации временно недоступен. Код не был активирован — повторите позже.</string>
-    <string name="proverte_internet">Нет соединения с сервером активации. Проверьте интернет и повторите.</string>
-    <string name="slishkom_mnogo_popytok_aktivacii">Слишком много попыток активации. Подождите и повторите позже.</string>
-    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip успешно активирован! Первые 30 дней использования включены бесплатно, сэр.</string>
-    <string name="pustoy_zapros">Пустой запрос</string>
-    <string name="zapros_ne_mozhet_byt_pustym">Запрос не может быть пустым</string>
+    <string name="nevernyy_kod_aktivacii">Wrong activation code. Check the card in the headphone box.</string>
+    <string name="server_licenziy_nedostupen">The activation server is temporarily unavailable. The code wasn’t activated — try again later.</string>
+    <string name="proverte_internet">Can’t reach the activation server. Check your internet and try again.</string>
+    <string name="slishkom_mnogo_popytok_aktivacii">Too many activation attempts. Wait a moment and try again later.</string>
+    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip activated! Your first 30 days are included free, sir.</string>
+    <string name="pustoy_zapros">Empty request</string>
+    <string name="zapros_ne_mozhet_byt_pustym">A request can’t be empty</string>
 
     <!-- ===== Tool summaries (audit #17, phase 3) ===== -->
-    <string name="bluetooth_net_adaptera">На этом устройстве нет Bluetooth-адаптера</string>
-    <string name="bluetooth_seychas_vklyuchen">Bluetooth сейчас включён.</string>
-    <string name="bluetooth_seychas_vyklyuchen">Bluetooth сейчас выключен.</string>
-    <string name="otkryvayu_nastroyki_bluetooth">%1$s Открываю настройки Bluetooth.</string>
-    <string name="neizvestnoe_deystvie">Неизвестное действие: %1$s</string>
-    <string name="nuzhno_razreshenie_bluetooth">Нужно разрешение на доступ к Bluetooth, чтобы прочитать его состояние</string>
-    <string name="bluetooth_adapter_nedostupen">Bluetooth-адаптер недоступен</string>
-    <string name="sistema_otklonila_dostup_bluetooth">Система отклонила доступ к списку сопряжённых устройств</string>
-    <string name="bluetooth_vklyuchen">Bluetooth включён</string>
-    <string name="bluetooth_vyklyuchen">Bluetooth выключен</string>
-    <string name="sopryazhennyh_ustroystv">. Сопряжённых устройств: %1$d</string>
-    <string name="net_sopryazhennyh_ustroystv">. Нет сопряжённых устройств</string>
-    <string name="bluetooth_uzhe_vklyuchen">Bluetooth уже включён, сэр.</string>
-    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth уже выключен, сэр.</string>
-    <string name="chtoby_upravlyat_bluetooth">Чтобы управлять Bluetooth, нужно разрешение на доступ к Bluetooth</string>
+    <string name="bluetooth_net_adaptera">This device has no Bluetooth adapter</string>
+    <string name="bluetooth_seychas_vklyuchen">Bluetooth is on.</string>
+    <string name="bluetooth_seychas_vyklyuchen">Bluetooth is off.</string>
+    <string name="otkryvayu_nastroyki_bluetooth">%1$s Opening Bluetooth settings.</string>
+    <string name="neizvestnoe_deystvie">Unknown action: %1$s</string>
+    <string name="nuzhno_razreshenie_bluetooth">Bluetooth permission is needed to read its state</string>
+    <string name="bluetooth_adapter_nedostupen">Bluetooth adapter unavailable</string>
+    <string name="sistema_otklonila_dostup_bluetooth">The system denied access to the paired device list</string>
+    <string name="bluetooth_vklyuchen">Bluetooth is on</string>
+    <string name="bluetooth_vyklyuchen">Bluetooth is off</string>
+    <string name="sopryazhennyh_ustroystv">. Paired devices: %1$d</string>
+    <string name="net_sopryazhennyh_ustroystv">. No paired devices</string>
+    <string name="bluetooth_uzhe_vklyuchen">Bluetooth is already on, sir.</string>
+    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth is already off, sir.</string>
+    <string name="chtoby_upravlyat_bluetooth">Bluetooth permission is needed to control Bluetooth</string>
 
     <!-- C-02: privacy consent UI -->
-    <string name="cloud_consent_private_prompt">Запрос содержит приватные данные (email/телефон/адрес и т.п.). Без вашего разрешения OMNIX не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
-    <string name="cloud_consent_sensitive_prompt">Запрос содержит чувствительные данные (пароли, паспортные данные, платёжную информацию). Без вашего разрешения OMNIX не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
-    <string name="cloud_consent_voice_private">Запрос содержит приватные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
-    <string name="cloud_consent_voice_sensitive">Запрос содержит чувствительные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
-    <string name="cloud_consent_declined">Понял, обрабатываю локально, сэр.</string>
-    <string name="cloud_consent_timeout">Время ожидания истекло, обрабатываю локально.</string>
-    <string name="wakeword_engine_unavailable">Голосовая активация недоступна</string>
+    <string name="cloud_consent_private_prompt">The request contains private data (email, phone, address…). Without your permission OMNIX won’t send it to the cloud model and will try to answer on this device. Send it to the cloud for a better answer?</string>
+    <string name="cloud_consent_sensitive_prompt">The request contains sensitive data (passwords, passport details, payment information). Without your permission OMNIX won’t send it to the cloud model and will try to answer on this device. Send it to the cloud for a better answer?</string>
+    <string name="cloud_consent_voice_private">The request contains private data. Send it to the cloud for a better answer? Say yes or no.</string>
+    <string name="cloud_consent_voice_sensitive">The request contains sensitive data. Send it to the cloud for a better answer? Say yes or no.</string>
+    <string name="cloud_consent_declined">Understood — answering on this device, sir.</string>
+    <string name="cloud_consent_timeout">Timed out — answering on this device.</string>
+    <string name="wakeword_engine_unavailable">Voice activation unavailable</string>
 </resources>

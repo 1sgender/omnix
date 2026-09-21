@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Supported locales (Android 13+ per-app language picker). The Language
+  settings row points users to the system choice; this file is what makes the
+  app appear in that picker with exactly these three options.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ru" />
+    <locale android:name="tk" />
+</locale-config>
