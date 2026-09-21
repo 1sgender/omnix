@@ -163,6 +163,11 @@ class SendPromptUseCasePrivacyGateTest {
      */
     @Test
     fun `local fallback notice is inserted once per reason before the answer`() = runTest {
+        val inserted = mutableListOf<com.omnix.assistant.domain.models.Message>()
+        coEvery { messageRepo.insertMessage(any()) } answers {
+            inserted.add(firstArg()); 0L
+        }
+
         coEvery { pipeline.process(any<ExecutionRequest>()) } returns
             Resource.Success(
                 PromptExecutionResult.DirectAnswer(
@@ -173,9 +178,6 @@ class SendPromptUseCasePrivacyGateTest {
 
         useCase("привет", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
         useCase("ещё вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
-
-        val inserted = mutableListOf<com.omnix.assistant.domain.models.Message>()
-        coVerify(allGenerated = true) { messageRepo.insertMessage(capture(inserted)) }
 
         val notices = inserted.filter {
             it.role == com.omnix.assistant.domain.models.MessageRole.SYSTEM
@@ -201,9 +203,11 @@ class SendPromptUseCasePrivacyGateTest {
             )
         useCase("третий вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
 
-        val all = mutableListOf<com.omnix.assistant.domain.models.Message>()
-        coVerify(allGenerated = true) { messageRepo.insertMessage(capture(all)) }
-        assertEquals(2, all.filter { it.role == com.omnix.assistant.domain.models.MessageRole.SYSTEM }.size)
+        assertEquals(
+            "Новая причина — новое уведомление",
+            2,
+            inserted.filter { it.role == com.omnix.assistant.domain.models.MessageRole.SYSTEM }.size
+        )
     }
 
 }
