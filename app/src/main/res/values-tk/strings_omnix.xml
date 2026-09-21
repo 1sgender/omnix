@@ -353,6 +353,10 @@
     <string name="omnix_update_action_later">Soňrak</string>
     <string name="omnix_update_downloading_title">Täzeleme göçürilýär</string>
     <string name="omnix_update_downloading_body">%1$d ýygyntysy göçürilýär. Programmany ulanmagy dowam edip bilersiňiz.</string>
+    <string name="omnix_update_progress_caption">Göçürildi: %1$s / %2$s · %3$s</string>
+    <string name="omnix_update_progress_no_total">Göçürildi: %1$s</string>
+    <string name="omnix_update_paused_body">Göçüriliş duruzgaldyldy — ulgam ýa-da Wi-Fi garaşylýar.</string>
+    <string name="omnix_update_unit_mb">MB</string>
     <string name="omnix_update_action_hide">Gizle</string>
     <string name="omnix_update_ready_title">Täzeleme göçürildi</string>
     <string name="omnix_update_ready_body">%1$d ýygyntysy gurnamaga taýýar.</string>

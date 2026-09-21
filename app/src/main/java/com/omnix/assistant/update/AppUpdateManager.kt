@@ -18,6 +18,14 @@ import java.io.File
 data class PendingUpdate(
     val downloadId: Long,
     val versionCode: Long,
+    val expectedBytes: Long,
+    val status: Int
+)
+
+/** Снимок хода загрузки для UI. totalBytes = 0 — размер ещё неизвестен. */
+data class DownloadProgress(
+    val bytesSoFar: Long,
+    val totalBytes: Long,
     val status: Int
 )
 
@@ -39,6 +47,7 @@ class AppUpdateManager(private val context: Context) {
         private const val PREFS = "omnix_app_update"
         private const val KEY_DOWNLOAD_ID = "download_id"
         private const val KEY_VERSION = "version_code"
+        private const val KEY_EXPECTED_BYTES = "expected_bytes"
     }
 
     private val downloadManager: DownloadManager
@@ -72,7 +81,11 @@ class AppUpdateManager(private val context: Context) {
         val request = DownloadManager.Request(Uri.parse(info.url))
             .setTitle(context.getString(R.string.omnix_update_download_title))
             .setDescription(context.getString(R.string.omnix_update_download_desc))
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+            // VISIBLE скрывал уведомление сразу после завершения: выйдя из
+            // приложения, пользователь не видел, что APK уже скачан.
+            .setNotificationVisibility(
+                DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+            )
             .setDestinationInExternalFilesDir(
                 context,
                 Environment.DIRECTORY_DOWNLOADS,
@@ -84,6 +97,7 @@ class AppUpdateManager(private val context: Context) {
         prefs().edit()
             .putLong(KEY_DOWNLOAD_ID, id)
             .putLong(KEY_VERSION, info.versionCode)
+            .putLong(KEY_EXPECTED_BYTES, info.sizeBytes)
             .apply()
         return id
     }
@@ -97,12 +111,18 @@ class AppUpdateManager(private val context: Context) {
         if (!stored.contains(KEY_DOWNLOAD_ID)) return null
         val id = stored.getLong(KEY_DOWNLOAD_ID, -1)
         val version = stored.getLong(KEY_VERSION, 0)
+        val expected = stored.getLong(KEY_EXPECTED_BYTES, 0)
         val status = queryStatus(id)
         if (id < 0 || status == null) {
             clearPending()
             return null
         }
-        return PendingUpdate(downloadId = id, versionCode = version, status = status)
+        return PendingUpdate(
+            downloadId = id,
+            versionCode = version,
+            expectedBytes = expected,
+            status = status
+        )
     }
 
     /** Забывает загрузку и вычищает её из DownloadManager. */
@@ -149,6 +169,36 @@ class AppUpdateManager(private val context: Context) {
             true
         } catch (_: Exception) {
             false
+        }
+    }
+
+    /**
+     * Снимок хода загрузки: байты, итог и статус (включая паузу —
+     * STATUS_PAUSED, когда DownloadManager ждёт сеть или Wi-Fi).
+     */
+    fun queryProgress(id: Long): DownloadProgress? {
+        if (id < 0) return null
+        val cursor: Cursor = try {
+            downloadManager.query(DownloadManager.Query().setFilterById(id))
+        } catch (_: Exception) {
+            return null
+        }
+        cursor.use {
+            if (!it.moveToFirst()) return null
+            val soFar = it.getLong(
+                it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+            )
+            val total = it.getLong(
+                it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+            )
+            val status = it.getInt(
+                it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
+            )
+            return DownloadProgress(
+                bytesSoFar = soFar.coerceAtLeast(0L),
+                totalBytes = if (total > 0) total else 0L,
+                status = status
+            )
         }
     }
 

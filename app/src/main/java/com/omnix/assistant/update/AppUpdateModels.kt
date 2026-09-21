@@ -1,6 +1,7 @@
 package com.omnix.assistant.update
 
 import android.app.DownloadManager
+import java.util.Locale
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -86,3 +87,16 @@ fun decideResume(
         else -> ResumeAction.DISCARD
     }
 }
+
+/** Целочисленный процент 0..100; 0, если итог неизвестен. */
+fun progressPercent(bytesSoFar: Long, totalBytes: Long): Int {
+    if (totalBytes <= 0 || bytesSoFar <= 0) return 0
+    return ((bytesSoFar * 100L) / totalBytes).toInt().coerceIn(0, 100)
+}
+
+/**
+ * Мегабайты с одним знаком после запятой («62,4 МБ»). Локаль и единица
+ * измерения подаются снаружи — функция остаётся чистой для JVM-тестов.
+ */
+fun formatMegaBytes(bytes: Long, locale: Locale, unitMb: String): String =
+    String.format(locale, "%.1f %s", bytes / (1024.0 * 1024.0), unitMb)

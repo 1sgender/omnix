@@ -355,6 +355,10 @@
     <string name="omnix_update_action_later">Later</string>
     <string name="omnix_update_downloading_title">Downloading update</string>
     <string name="omnix_update_downloading_body">Build %1$d is downloading. You can keep using the app.</string>
+    <string name="omnix_update_progress_caption">Downloaded %1$s of %2$s · %3$s</string>
+    <string name="omnix_update_progress_no_total">Downloaded %1$s</string>
+    <string name="omnix_update_paused_body">Download paused — waiting for network or Wi-Fi.</string>
+    <string name="omnix_update_unit_mb">MB</string>
     <string name="omnix_update_action_hide">Hide</string>
     <string name="omnix_update_ready_title">Update downloaded</string>
     <string name="omnix_update_ready_body">Build %1$d is ready to install.</string>
