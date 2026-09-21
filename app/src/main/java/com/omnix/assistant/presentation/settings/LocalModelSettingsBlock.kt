@@ -21,7 +21,8 @@ fun LocalModelSettingsBlock(
     state: LocalModelState,
     onDownloadAny: () -> Unit,
     onDownloadWifi: () -> Unit,
-    onCancelDownload: () -> Unit
+    onCancelDownload: () -> Unit,
+    onDeleteAndRedownload: () -> Unit
 ) {
     when (state) {
         is LocalModelState.NotInstalled -> {
@@ -117,6 +118,12 @@ fun LocalModelSettingsBlock(
                     state.reason
                 ),
                 inset = true
+            )
+            OmnixGroupDivider()
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_local_model_delete_redownload),
+                inset = true,
+                onClick = onDeleteAndRedownload
             )
         }
 

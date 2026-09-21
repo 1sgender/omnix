@@ -89,6 +89,13 @@ interface LocalModelManager {
     /** Отменяет активную загрузку. После отмены — [LocalModelState.NotInstalled]. */
     fun cancelDownload()
 
+    /**
+     * Удаляет файл модели (включая внешнее зеркало fallback) и сбрасывает
+     * состояние в [LocalModelState.NotInstalled]. Лечение повреждённого
+     * файла: обычный retry бесполезен, пока битый файл лежит на месте.
+     */
+    suspend fun deleteModel(): LocalModelState
+
     /** Освобождает нативные ресурсы (memory pressure, выход из приложения). */
     suspend fun unload()
 }

@@ -189,6 +189,18 @@ class SettingsViewModel @Inject constructor(
         localModelManager.cancelDownload()
     }
 
+    /**
+     * Удаление файла модели и немедленная повторная загрузка с прежним
+     * сетевым согласием. Единственный путь вылечить повреждённый файл:
+     * retry мимо удаления упирается в тот же битый файл.
+     */
+    fun deleteAndRedownloadLocalModel() {
+        viewModelScope.launch {
+            localModelManager.deleteModel()
+            localModelManager.ensureModel()
+        }
+    }
+
     fun saveAllSettings() {
         viewModelScope.launch {
             val state = _uiState.value

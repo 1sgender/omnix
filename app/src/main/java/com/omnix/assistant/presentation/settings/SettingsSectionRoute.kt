@@ -82,7 +82,8 @@ fun SettingsSectionRoute(
                 modelState = modelState,
                 onDownloadAny = { viewModel.downloadLocalModel(overMetered = true) },
                 onDownloadWifi = { viewModel.downloadLocalModel(overMetered = false) },
-                onCancelDownload = viewModel::cancelLocalModelDownload
+                onCancelDownload = viewModel::cancelLocalModelDownload,
+                onDeleteAndRedownload = viewModel::deleteAndRedownloadLocalModel
             )
         }
 
@@ -234,6 +235,7 @@ private fun AiSettingsScreen(
     onDownloadAny: () -> Unit,
     onDownloadWifi: () -> Unit,
     onCancelDownload: () -> Unit,
+    onDeleteAndRedownload: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
@@ -256,7 +258,8 @@ private fun AiSettingsScreen(
                 state = modelState,
                 onDownloadAny = onDownloadAny,
                 onDownloadWifi = onDownloadWifi,
-                onCancelDownload = onCancelDownload
+                onCancelDownload = onCancelDownload,
+                onDeleteAndRedownload = onDeleteAndRedownload
             )
         }
 

@@ -249,6 +249,7 @@
     <string name="omnix_local_model_low_memory">Not enough free RAM (%1$d MB needed) — answering from the cloud</string>
     <string name="omnix_local_model_download_failed">Download failed: %1$s</string>
     <string name="omnix_local_model_cancel">Cancel download</string>
+    <string name="omnix_local_model_delete_redownload">Delete and re-download</string>
     <string name="omnix_local_model_consent_title">Download the on-device model?</string>
     <string name="omnix_local_model_consent_body">521 MB. It answers without internet when the cloud is unreachable. Cloud answers as usual while it downloads.</string>
     <string name="omnix_local_model_later">Later</string>
