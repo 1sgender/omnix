@@ -248,6 +248,7 @@
     <string name="omnix_local_model_low_memory">Boş ýat ýeterlik däl (%1$d MB gerek) — bulutdan jogap berýärin</string>
     <string name="omnix_local_model_download_failed">Göçürilmedi: %1$s</string>
     <string name="omnix_local_model_cancel">Göçürişi ýatyr</string>
+    <string name="omnix_local_model_delete_redownload">Poz we täzeden göçürip al</string>
     <string name="omnix_local_model_consent_title">Enjamdaky modeli göçürip alaýaýmyňyz?</string>
     <string name="omnix_local_model_consent_body">521 MB. Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut adaty ýaly jogap berýär.</string>
     <string name="omnix_local_model_later">Soňrak</string>

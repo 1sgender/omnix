@@ -15,6 +15,7 @@ import com.omnix.assistant.agent.localai.downloader.ModelDownloader
 import com.omnix.assistant.agent.localai.downloader.externalFallbackFile
 import com.omnix.assistant.agent.localai.downloader.filesDirRelativePath
 import com.omnix.assistant.agent.localai.pack.PackModelLocator
+import com.omnix.assistant.agent.localai.throwableSummary
 import com.omnix.assistant.core.dispatcher.CoroutineDispatchers
 import com.omnix.assistant.data.preferences.SettingsDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -290,7 +291,9 @@ class MediaPipeModelManager @Inject constructor(
             // Ловим Throwable: нативная библиотека может кинуть UnsatisfiedLinkError
             // или OutOfMemoryError, и это не должно ронять приложение.
             runtime = null
-            val reason = e.javaClass.simpleName
+            // Класс + первая строка сообщения: голый simpleName («RuntimeException»)
+            // не диагностируется без logcat, которого у пользователя нет.
+            val reason = throwableSummary(e)
             setState(LocalModelState.Failed(reason))
             Log.e(TAG, "model load failed | id=${spec.modelId}", e)
             currentState
@@ -401,6 +404,32 @@ class MediaPipeModelManager @Inject constructor(
                 setState(LocalModelState.NotInstalled(modelFile.absolutePath))
             }
         }
+    }
+
+    /**
+     * Полное удаление файла модели: внутренний путь + внешнее зеркало
+     * fallback (иначе зеркало воскресит тот же битый файл при следующей
+     * проверке валидности). Состояние — честный [LocalModelState.NotInstalled]:
+     * дальнейшее — обычный путь [ensureModel] с прежним сетевым согласием.
+     */
+    override suspend fun deleteModel(): LocalModelState = lifecycleMutex.withLock {
+        downloadJob?.cancel()
+        downloadJob = null
+        val storedId = settings.localModelDownloadIdFlow.first()
+        if (storedId != ModelDownloadPolicy.NO_DOWNLOAD_ID) {
+            runCatching { downloader.cancel(storedId) }
+            settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+        }
+        closeRuntime()
+        runCatching { modelFile.delete() }
+        filesDirRelativePath(modelFile, context.filesDir)?.let { relPath ->
+            externalFallbackFile(context, relPath)?.let { mirror ->
+                runCatching { mirror.delete() }
+            }
+        }
+        Log.i(TAG, "model file deleted | ${modelFile.absolutePath}")
+        setState(LocalModelState.NotInstalled(modelFile.absolutePath))
+        currentState
     }
 
     /** Переподключение к системной загрузке при старте процесса. */

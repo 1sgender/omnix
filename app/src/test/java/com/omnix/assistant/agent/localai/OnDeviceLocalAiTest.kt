@@ -108,6 +108,8 @@ class OnDeviceLocalAiTest {
 
         override fun cancelDownload() = Unit
 
+        override suspend fun deleteModel(): LocalModelState = state
+
         override suspend fun unload() = Unit
     }
 

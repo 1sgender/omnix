@@ -54,6 +54,7 @@ class LocalLlmTranslationProviderTest {
         override suspend fun runtimeOrNull(): LocalModelRuntime? = runtime
         override suspend fun ensureModel(): LocalModelState = state
         override fun cancelDownload() = Unit
+        override suspend fun deleteModel(): LocalModelState = state
         override suspend fun unload() = Unit
     }
 

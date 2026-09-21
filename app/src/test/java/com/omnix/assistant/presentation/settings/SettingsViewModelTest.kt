@@ -13,6 +13,7 @@ import com.omnix.assistant.domain.repository.SettingsRepository
 import com.omnix.assistant.domain.usecases.GetSettingsUseCase
 import com.omnix.assistant.domain.usecases.SaveSettingsUseCase
 import com.omnix.assistant.testing.MainDispatcherRule
+import io.mockk.Ordering
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -122,21 +123,50 @@ class SettingsViewModelTest {
             assertTrue("sensitivity" to 0.8f in repository.writes)
         }
 
+    @Test
+    fun `delete and re-download removes the file then re-enqueues`() =
+        runTest(mainDispatcher.dispatcher) {
+            val manager = mockk<LocalModelManager> {
+                every { stateFlow } returns MutableStateFlow(LocalModelState.NotInitialized)
+                coEvery { deleteModel() } returns
+                    LocalModelState.NotInstalled("/data/model.task")
+                coEvery { ensureModel() } returns
+                    LocalModelState.Downloading(0, 0L, 546660344L)
+            }
+            val viewModel = viewModel(
+                FakeSettingsRepository(),
+                FakeSecurityManager(VALID_TOKEN),
+                mockDao(),
+                FakeLicenseManager(LicenseInfo(true, planId = "pro")),
+                manager
+            )
+
+            viewModel.deleteAndRedownloadLocalModel()
+            advanceUntilIdle()
+
+            // Порядок важен: сначала файл удалён, только потом новая загрузка.
+            coVerify(ordering = Ordering.ORDERED) {
+                manager.deleteModel()
+                manager.ensureModel()
+            }
+        }
+
     private fun viewModel(
         repository: FakeSettingsRepository,
         security: FakeSecurityManager,
         dao: AutomationDao,
-        license: FakeLicenseManager
+        license: FakeLicenseManager,
+        localModelManager: LocalModelManager = mockk {
+            every { stateFlow } returns MutableStateFlow(LocalModelState.NotInitialized)
+            coEvery { ensureModel() } returns LocalModelState.NotInitialized
+        }
     ) = SettingsViewModel(
         GetSettingsUseCase(repository),
         SaveSettingsUseCase(repository),
         security,
         dao,
         license,
-        mockk {
-            every { stateFlow } returns MutableStateFlow(LocalModelState.NotInitialized)
-            coEvery { ensureModel() } returns LocalModelState.NotInitialized
-        },
+        localModelManager,
         mockk {
             every { localModelConsentFlow } returns flowOf("unasked")
             every { localModelDownloadIdFlow } returns flowOf(-1L)

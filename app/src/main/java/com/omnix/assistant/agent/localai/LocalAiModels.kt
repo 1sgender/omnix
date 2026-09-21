@@ -185,3 +185,19 @@ data class LocalModelSpec(
         )
     }
 }
+
+/**
+ * Причина сбоя для UI: класс исключения + первая содержательная строка
+ * сообщения. Нативные движки (MediaPipe) кладут диагностику в многострочные
+ * сообщения — пользователю нужна первая строка, а не весь дамп.
+ */
+fun throwableSummary(t: Throwable, maxChars: Int = 160): String {
+    val className = t.javaClass.simpleName.ifEmpty { t.javaClass.name }
+    val firstLine = t.message
+        ?.lineSequence()
+        ?.firstOrNull { it.isNotBlank() }
+        ?.trim()
+        ?: return className
+    val summary = "$className: $firstLine"
+    return if (summary.length <= maxChars) summary else summary.take(maxChars) + "..."
+}

@@ -247,6 +247,7 @@
     <string name="omnix_local_model_low_memory">Не хватает свободной RAM (нужно %1$d МБ) — отвечаю из облака</string>
     <string name="omnix_local_model_download_failed">Загрузка не удалась: %1$s</string>
     <string name="omnix_local_model_cancel">Отменить загрузку</string>
+    <string name="omnix_local_model_delete_redownload">Удалить и скачать заново</string>
     <string name="omnix_local_model_consent_title">Скачать локальную модель?</string>
     <string name="omnix_local_model_consent_body">521 МБ. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
     <string name="omnix_local_model_later">Позже</string>
