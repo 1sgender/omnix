@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      Türkmen dili (latin elipbiýi). Bu faýl diňlenilýän setirleri öz içine alýar:
+      TTS aýdymlary, guralýagyň jiresi, aktiwasiýa üstiňden aýdylýanlar.
+      Gysga sözlemler, tehniki ady ýok.
+    -->
+
+    <!-- ===== Programma ===== -->
+    <string name="app_name">OMNIX</string>
+
+    <!-- ===== presentations gatlagy (audit #17) ===== -->
+    <string name="podklyuchite_naushniki_dlya_raboty">● Işlemek üçin nauşniki birikdiriň</string>
+
+    <!-- ===== Format-setirleri (audit #17) ===== -->
+    <string name="oshibka">Ýalňyşlyk: %1$s</string>
+    <string name="s_sir">%1$s, beg.</string>
+    <string name="ne_udalos_vypolnit">Ýerine ýetirmek başarmady: %1$s</string>
+
+    <string name="oshibka_vypolneniya_zaprosa">Haýyş ýerine ýetirilmedi</string>
+    <string name="operaciya_otmenena_sir">Amal ýatyryldy, beg.</string>
+    <string name="pozhaluysta_vvedite_kod">Gutudaky skretç kartasyndaky aktiwasiýa kodyny giriziň.</string>
+
+    <!-- ===== Ses gatlagy (audit #17) ===== -->
+    <string name="omnix_na_pauze">OMNIX pawuzda</string>
+    <string name="omnix_slushaet_v_naushnike">OMNIX diňleýär (nauşnikde)…</string>
+    <string name="omnix_slushaet">OMNIX diňleýär…</string>
+    <string name="vremya_ozhidaniya_isteklo">Garaşyş wagty gutardy. Amal ýatyryldy, beg.</string>
+    <string name="vy_nichego_ne_skazali">Siz hiç zat aýtmadyňyz.</string>
+    <string name="naushniki_otklyucheny_ozhidanie">Nauşnik aýryldy. Garaşylýar…</string>
+    <string name="ne_ponyal_skazhite_da_ili_net">Düşünmedim. Hawa ýa ýok diýiň.</string>
+    <string name="ne_udalos_otkryt_mikrofon">Mikrofony açmak başarmady</string>
+    <string name="net_podklyucheniya_k_internetu">Internet baglanyşygy ýok.</string>
+    <string name="net_razresheniya_na_mikrofon">Mikrofona rugsat ýok.</string>
+    <string name="ozhidanie_podtverzhdeniya">Jogaby garaşylýar (hawa/ýok)…</string>
+    <string name="ozvuchivanie_otveta">Jogap aýdylýar…</string>
+    <string name="oshibka_raspoznavaniya_rechi">Sözi tanamak ýalňyşlygy (%1$d).</string>
+    <string name="oshibka_svyazi_s_ai">AI bilen birikip bolmady</string>
+    <string name="podklyuchite_naushniki">Nauşniki birikdiriň</string>
+    <string name="provodnye_naushniki">Simli nauşnik</string>
+    <string name="rezhim_perevodchika_aktivirovan">Gulakdaky göni tercime rejimi açyldy. Söhbetdeşi diňleýärin, beg.</string>
+    <string name="slushayu_prodolzhenie_dialoga">Söhbetiň dowamyny diňleýärin…</string>
+    <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Fonda oýandyryş sözüni tanamak we sesli jogaplar</string>
+    <string name="ya_ne_rasslyshal_zapros">Haýyşy eşitmedim.</string>
+    <string name="bluetooth_garnitura">Bluetooth mikrofonly nauşnik</string>
+    <string name="bluetooth_naushnik">Bluetooth nauşnik</string>
+
+    <!-- ===== Ulgam (ruhsatnama) we UseCase (audit #17) ===== -->
+    <string name="nevernyy_kod_aktivacii">Aktiwasiýa kody nädogry. Nauşnik gutusyndaky kartany barlaň.</string>
+    <string name="server_licenziy_nedostupen">Aktiwasiýa serweri wagtlaýyn elýeterli däl. Kod aktiwlendirilmedi — soňrak gaýtadan synanyşyň.</string>
+    <string name="proverte_internet">Aktiwasiýa serwerine birikip bolanok. Internedi barlaň we gaýtadan synanyşyň.</string>
+    <string name="slishkom_mnogo_popytok_aktivacii">Aktiwasiýa synanyşyklary örän köp. Biraz garaşyp, soňrak gaýtadan synanyşyň.</string>
+    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip üstünlikli aktiwlendirildi! Ilkinji 30 gün mugt goşuldy, beg.</string>
+    <string name="pustoy_zapros">Boş haýyş</string>
+    <string name="zapros_ne_mozhet_byt_pustym">Haýyş boş bolup bilmez</string>
+
+    <!-- ===== Gural ýygty (audit #17, 3-nji tapgyr) ===== -->
+    <string name="bluetooth_net_adaptera">Bu enjamda Bluetooth adapteri ýok</string>
+    <string name="bluetooth_seychas_vklyuchen">Bluetooth häzir açyk.</string>
+    <string name="bluetooth_seychas_vyklyuchen">Bluetooth häzir ýapyk.</string>
+    <string name="otkryvayu_nastroyki_bluetooth">%1$s Bluetooth sazlamalaryny açýan.</string>
+    <string name="neizvestnoe_deystvie">Näbelli hereket: %1$s</string>
+    <string name="nuzhno_razreshenie_bluetooth">Ýagdaýy okamak üçin Bluetooth rugsady gerek</string>
+    <string name="bluetooth_adapter_nedostupen">Bluetooth adapteri elýeterli däl</string>
+    <string name="sistema_otklonila_dostup_bluetooth">Ulgam birikdirilen enjamlaryň sanawyna rugsady ret etdi</string>
+    <string name="bluetooth_vklyuchen">Bluetooth açyk</string>
+    <string name="bluetooth_vyklyuchen">Bluetooth ýapyk</string>
+    <string name="sopryazhennyh_ustroystv">. Birikdirilen enjamlar: %1$d</string>
+    <string name="net_sopryazhennyh_ustroystv">. Birikdirilen enjam ýok</string>
+    <string name="bluetooth_uzhe_vklyuchen">Bluetooth eýýäm açyk, beg.</string>
+    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth eýýäm ýapyk, beg.</string>
+    <string name="chtoby_upravlyat_bluetooth">Bluetooth-y dolandyrmak üçin Bluetooth rugsady gerek</string>
+
+    <!-- C-02: bulut rugsady (hususylyk) -->
+    <string name="cloud_consent_private_prompt">Haýyşda hususy maglumatlar bar (email, telefon, salgy…). Rugsadyňyz bolmasa, OMNIX ony bulut modeline ibermän, bu enjamda jogap bermäge synanyşar. Has takyk jogap almak üçin ony buluta ibermiňizmi?</string>
+    <string name="cloud_consent_sensitive_prompt">Haýyşda duýgur maglumatlar bar (parollar, pasport maglumatlary, töleg bellikleri). Rugsadyňyz bolmasa, OMNIX ony bulut modeline ibermän, bu enjamda jogap bermäge synanyşar. Has takyk jogap almak üçin ony buluta ibermiňizmi?</string>
+    <string name="cloud_consent_voice_private">Haýyşda hususy maglumatlar bar. Has takyk jogap almak üçin ony buluta ibermiňizmi? Hawa ýa ýok diýiň.</string>
+    <string name="cloud_consent_voice_sensitive">Haýyşda duýgur maglumatlar bar. Has takyk jogap almak üçin ony buluta ibermiňizmi? Hawa ýa ýok diýiň.</string>
+    <string name="cloud_consent_declined">Düşündim — bu enjamda işleýärin, beg.</string>
+    <string name="cloud_consent_timeout">Wagy gutardy — bu enjamda jogap berýärin.</string>
+    <string name="wakeword_engine_unavailable">Ses bilen oýandyrmak elýeterli däl</string>
+</resources>

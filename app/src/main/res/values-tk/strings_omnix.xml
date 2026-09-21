@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OMNIX frontend copy — Türkmen dili (latin elipbiýi).
+
+  Rules: human language only. No technical permission names, no exception
+  class names, no HTTP codes, no provider or router names (§12, §18, §50, §73).
+  Every error answers WHAT / WHY / NEXT ACTION.
+-->
+<resources>
+
+    <!-- ===== Brend ===== -->
+    <string name="omnix_wake_word_quoted">«Omni»</string>
+
+    <!-- ===== Clip ýagdaýy (başlyk) ===== -->
+    <string name="omnix_status_clip_connected">Clip birikdirildi</string>
+    <string name="omnix_status_clip_disconnected">Clip aýryldy</string>
+    <string name="omnix_status_clip_connecting">Birikdirilýär…</string>
+    <string name="omnix_status_clip_searching">Cligi gözleýärin…</string>
+    <string name="omnix_status_bluetooth_off">Bluetooth ýapyk</string>
+    <string name="omnix_status_offline">Oflaýn</string>
+
+    <!-- ===== Ses ýagdaýlary (§15) ===== -->
+    <string name="omnix_state_ready">Diňlemäge taýýar</string>
+    <string name="omnix_state_listening">Diňleýärin…</string>
+    <string name="omnix_state_thinking">Düşünýärin…</string>
+    <string name="omnix_state_speaking">Aýdýar</string>
+    <string name="omnix_state_working">Işleýärin…</string>
+
+    <!-- ===== Baş sahypa görkezmeleri (§9, §24–§26) ===== -->
+    <string name="omnix_home_hint_say_omni_wake">%1$s diýiň</string>
+    <string name="omnix_home_example_time">«Omni, sagat näçe?»</string>
+    <string name="omnix_home_example_weather">«Omni, howa nähili?»</string>
+    <string name="omnix_home_example_music">«Omni, saz goý.»</string>
+    <string name="omnix_home_offline_partial">Käbir mümkinçilikler entäk elýeterli.</string>
+
+    <!-- ===== Hereketleriň aýdylyşy (§16, §19) ===== -->
+    <string name="omnix_action_calling">Jaň edýärin: %1$s…</string>
+    <string name="omnix_action_calling_generic">Jaň edýärin…</string>
+    <string name="omnix_action_messaging">Habar iberýärin: %1$s…</string>
+    <string name="omnix_action_messaging_generic">Habar iberýärin…</string>
+    <string name="omnix_action_alarm">Oýadyjyny düzýärin…</string>
+    <string name="omnix_action_timer">Taymer düzýärin…</string>
+    <string name="omnix_action_calendar">Takwimiňizi barlaýyn…</string>
+    <string name="omnix_action_navigation">Ýol görkezilýär: %1$s…</string>
+    <string name="omnix_action_navigation_generic">Ýol görkezilýär…</string>
+    <string name="omnix_action_weather">Howany barlaýyn…</string>
+    <string name="omnix_action_search">Gözleýärin…</string>
+    <string name="omnix_action_translate">Tercimeleýärin…</string>
+    <string name="omnix_action_app">%1$s açylýar…</string>
+    <string name="omnix_action_app_generic">Programma açylýar…</string>
+    <string name="omnix_action_device_setting">Telefonyňyzy sazlaýyn…</string>
+    <string name="omnix_action_media">Aýdym-sazy dolandyran…</string>
+    <string name="omnix_action_automation">Awtomatiki iş döredilýär…</string>
+
+    <!-- Hereket netijeleri -->
+    <string name="omnix_result_call_started">Jaň başlady</string>
+    <string name="omnix_result_message_sent">Habar iberildi</string>
+    <string name="omnix_result_done">Boldy</string>
+    <string name="omnix_result_cancelled">Ýatyryldy</string>
+
+    <!-- ===== Tassyklama (§17, §36) ===== -->
+    <string name="omnix_confirm_confirm">Tassykla</string>
+    <string name="omnix_confirm_voice_hint">«%1$s» diýip hem bileriňiz.</string>
+
+    <!-- ===== Ulgam ýagdaýlary (§18, §49) ===== -->
+    <string name="omnix_error_clip_title">OMNIX Clip birikdirilmändir</string>
+    <string name="omnix_error_clip_body">Bluetooth baglanyşygyňyzy barlaň.</string>
+    <string name="omnix_error_clip_action">Birikdir</string>
+
+    <string name="omnix_error_bt_off_title">Bluetooth ýapyk</string>
+    <string name="omnix_error_bt_off_body">OMNIX Cligiňizi birikdirmek üçin Bluetooth-y açyň.</string>
+    <string name="omnix_error_bt_off_action">Bluetooth-y aç</string>
+
+    <string name="omnix_error_mic_title">Mikrofona rugsat gerek</string>
+    <string name="omnix_error_mic_body">Sesli buýruklar üçin OMNIX-e mikrofonyňyz gerek.</string>
+    <string name="omnix_error_mic_action">Rugsat ber</string>
+
+    <string name="omnix_error_mic_unavailable_title">Mikrofon meşgul</string>
+    <string name="omnix_error_mic_unavailable_body">Ony başga programma ulanýar. Birazdan gaýtadan synanyşyň.</string>
+
+    <string name="omnix_error_network_title">Häzir OMNIX-e birip bolanok.</string>
+    <string name="omnix_error_network_body">Birazdan gaýtadan synanyşyň.</string>
+    <string name="omnix_error_network_action">Gaýtadan synanyş</string>
+
+    <string name="omnix_error_user_action_title">Ýene bir ädim</string>
+    <string name="omnix_error_user_action_body">Dowam etmek üçin telefonyňyzy açyň.</string>
+    <string name="omnix_error_user_action_action">Dowam et</string>
+
+    <string name="omnix_error_not_understood_title">Düşünmedim.</string>
+    <string name="omnix_error_not_understood_body">«Omni» diýip gaýtadan synanyşyň.</string>
+
+    <string name="omnix_error_generic_title">Bu işleşmedi.</string>
+    <string name="omnix_error_generic_body">Gaýtadan synanyşyň.</string>
+    <string name="omnix_error_generic_action">Gaýtadan synanyş</string>
+
+    <string name="omnix_error_permission_title">Rugsat gerek</string>
+    <string name="omnix_error_permission_body">Buny etmek üçin OMNIX-e rugsadyňyz gerek.</string>
+    <string name="omnix_error_permission_action">Rugsat ber</string>
+
+    <string name="omnix_error_access_expired_title">OMNIX Access gutardy</string>
+    <string name="omnix_error_access_expired_body">Bulut mümkinçiliklerini dowam etmek üçin uzadyň.</string>
+    <string name="omnix_error_access_expired_action">Ulgamy dolandyr</string>
+
+    <string name="omnix_error_unavailable_title">Entäk elýeterli däl</string>
+    <string name="omnix_error_unavailable_body">Bu häzirki wagtda enjamyňyzda goldanylmaýar.</string>
+
+    <!-- ===== Ilkinji açylyş (§30–§35) ===== -->
+    <string name="omnix_welcome_headline">Gulagyňyzda ses.</string>
+    <string name="omnix_welcome_body">Erkin gepleşiň.\nGalany OMNIX düzüşdirýär.</string>
+    <string name="omnix_welcome_cta">Başla</string>
+
+    <string name="omnix_pairing_title">OMNIX Cligiňiz bilen tanyşyň</string>
+    <string name="omnix_pairing_searching">Cligi gözleýärin…</string>
+    <string name="omnix_pairing_detected">Tapylan</string>
+    <string name="omnix_pairing_verified">Enjam tassyklandy</string>
+    <string name="omnix_pairing_code_link">Aktiwasiýa kodyňyz barmy?</string>
+    <string name="omnix_pairing_not_found_title">Clip tapylmady</string>
+    <string name="omnix_pairing_not_found_body">Cligiňiziň doldurylandygyny we ýanyňyzdadygyny barlaň.</string>
+    <string name="omnix_pairing_retry">Ýene gözle</string>
+
+    <string name="omnix_clip_ready_title">Taýýarsyňyz.</string>
+    <string name="omnix_clip_ready_say">Aýdyň:</string>
+    <string name="omnix_clip_continue">Dowam et</string>
+
+    <string name="omnix_mic_title">OMNIX sizi eşidsin</string>
+    <string name="omnix_mic_body">Sesli buýruklar üçin mikrofonyňyz gerek.</string>
+    <string name="omnix_mic_ready">Mikrofon taýýar.</string>
+    <string name="omnix_mic_continue">Dowam et</string>
+    <string name="omnix_mic_open_settings">Sazlamalary aç</string>
+
+    <string name="omnix_first_success_title">Siz entäk OMNIX ulandyňyz.</string>
+    <string name="omnix_first_success_body">Indi OMNIX bilen erkin söhbetleşip bilersiňiz.</string>
+    <string name="omnix_first_success_cta">Boldy</string>
+
+    <string name="omnix_activation_title">OMNIX-i aktiwlediriň</string>
+    <string name="omnix_activation_body">Clip gutusyndaky kartadaky kody giriziň.</string>
+    <string name="omnix_activation_field">Aktiwasiýa kody</string>
+    <string name="omnix_activation_cta">Aktiwle</string>
+
+    <!-- ===== Navigasiýa (§27, §78) ===== -->
+    <string name="omnix_nav_history">Taryh</string>
+    <string name="omnix_nav_home">Baş sahypa</string>
+    <string name="omnix_nav_me">Men</string>
+    <string name="omnix_nav_back">Yza</string>
+
+    <!-- ===== Taryh (§22, §39) ===== -->
+    <string name="omnix_history_title">Taryh</string>
+    <string name="omnix_history_today">Şu gün</string>
+    <string name="omnix_history_yesterday">Düýn</string>
+    <string name="omnix_history_earlier">Ozalky</string>
+    <string name="omnix_history_empty_title">Entäk gatnaşyk ýok</string>
+    <string name="omnix_history_empty_body">Söhbetleriňiz we hereketleriňiz şu ýerde peýda bolar.</string>
+    <string name="omnix_history_clear">Taryhy arassala</string>
+
+    <!-- ===== Enjamlar (§23, §40, §41) ===== -->
+    <string name="omnix_devices_title">Enjamlar</string>
+    <string name="omnix_devices_clip_name">OMNIX Clip</string>
+    <string name="omnix_devices_battery">Batareýa</string>
+    <string name="omnix_devices_battery_unavailable">Bu enjam habar bermeýär</string>
+    <string name="omnix_devices_connection">Baglanyşyk</string>
+    <string name="omnix_devices_connection_active">Işjeň</string>
+    <string name="omnix_devices_connect">Birikdir</string>
+    <string name="omnix_devices_empty_title">Birikdirilen OMNIX Clip ýok</string>
+    <string name="omnix_devices_empty_body">Eller erkin ses dolandyrmagy ulanmak üçin Cligiňizi birikdiriň.</string>
+
+    <!-- ===== Söhbet (§21, §38) ===== -->
+    <string name="omnix_chat_title">Söhbet</string>
+    <string name="omnix_chat_you">Siz</string>
+    <string name="omnix_chat_omnix">OMNIX</string>
+    <string name="omnix_chat_input_hint">Habar ýazyň…</string>
+    <string name="omnix_chat_send">Iber</string>
+    <string name="omnix_chat_empty_title">Bu ýerde entäk hiç zat ýok</string>
+    <string name="omnix_chat_empty_body">Sesli aýdyp bilmeýän wagtyňyzda söhbedi ulanyň.</string>
+    <string name="omnix_chat_clear_confirm_title">Bu söhbedi arassalaýaýmyňyz?</string>
+    <string name="omnix_chat_clear_confirm_body">Ähli habarlar bu enjamdan pozular.</string>
+    <string name="omnix_chat_thinking">OMNIX pikirlenýär…</string>
+    <string name="omnix_chat_dictation_start">Ses bilen ýazdyr</string>
+    <string name="omnix_chat_dictation_stop">Ýazdyrmany bes et</string>
+    <string name="omnix_privacy_badge_private">Hususy</string>
+    <string name="omnix_privacy_badge_sensitive">Duýgur</string>
+    <string name="omnix_privacy_badge_hint">Bu enjamdan çýkmazdan öň OMNIX soraýar</string>
+    <string name="omnix_chat_consent_allow">Buluta iber</string>
+    <string name="omnix_chat_consent_keep_local">Enjamda galsyn</string>
+
+    <!-- ===== Tercime (§24, §42) ===== -->
+    <string name="omnix_translator_title">Tercime</string>
+    <string name="omnix_translator_direction">%1$s → %2$s</string>
+    <string name="omnix_translator_start">Başla</string>
+    <string name="omnix_translator_stop">Bes et</string>
+    <string name="omnix_translator_swap">Dilleri çalyş</string>
+    <string name="omnix_translator_empty_body">Aýdyň — OMNIX tercimäni göni gulagyňyza aýdýar.</string>
+
+    <!-- ===== Sazlamalar (§25, §43–§47) ===== -->
+    <string name="omnix_settings_title">Sazlamalar</string>
+    <string name="omnix_settings_section_modes">Rejimler</string>
+    <string name="omnix_settings_voice">Dawuş</string>
+    <string name="omnix_settings_privacy">Hususylyk</string>
+    <string name="omnix_settings_devices">Enjamlar</string>
+    <string name="omnix_settings_ai">AI</string>
+    <string name="omnix_settings_language">Dil</string>
+    <string name="omnix_settings_notifications">Bildirişler</string>
+    <string name="omnix_settings_appearance">Görnüş</string>
+    <string name="omnix_settings_about">Barada</string>
+    <string name="omnix_settings_advanced">Giňişleýin</string>
+
+    <string name="omnix_voice_title">Dawuş</string>
+    <string name="omnix_voice_speaking_speed">Gepleşik tizligi</string>
+    <string name="omnix_voice_tone">Dawuş tony</string>
+    <string name="omnix_voice_feedback">Sesli jogap</string>
+    <string name="omnix_voice_listening">Diňleme</string>
+    <string name="omnix_voice_listening_body">OMNIX fonda «Omni» sözüni diňläp durşun.</string>
+    <string name="omnix_voice_headset_only">Diňe Clip birikdirilen wagty</string>
+    <string name="omnix_voice_headset_only_body">Diňe Cligiňiz arkaly diňlemek batareýany tygşytlaýar.</string>
+    <string name="omnix_voice_sensitivity">Oýandyryş duýgurlygy</string>
+    <string name="omnix_voice_background">Fon</string>
+    <string name="omnix_voice_background_body">OMNIX-e ekran öçüli wagtynda-da işlemäge rugsat beriň.</string>
+    <string name="omnix_voice_background_action">Rugsat ber</string>
+    <string name="omnix_voice_automations">Awtomatiki işler</string>
+    <string name="omnix_voice_automations_empty">Entäk awtomatiki iş ýok. Aýdyň: «Omni, Clip birikdirilende saz goý.»</string>
+
+    <string name="omnix_privacy_title">Hususylyk</string>
+    <string name="omnix_privacy_microphone">Mikrofon</string>
+    <string name="omnix_privacy_allowed">Rugsat berlen</string>
+    <string name="omnix_privacy_not_allowed">Rugsat berilmedik</string>
+    <string name="omnix_privacy_voice_history">Dawuş taryhy</string>
+    <string name="omnix_privacy_stored_on_device">Bu telefonda saklanýar</string>
+    <string name="omnix_privacy_not_stored">Saklanmaýar</string>
+    <string name="omnix_privacy_cloud">Bulutda işlenmek</string>
+    <string name="omnix_privacy_cloud_controlled">Hususy haýyşlary ibermän öň soraýar</string>
+    <string name="omnix_privacy_permissions">Rugsatlar</string>
+    <string name="omnix_privacy_permissions_manage">Dolandyr</string>
+    <string name="omnix_privacy_delete_history">Dawuş taryhyny poz</string>
+
+    <string name="omnix_ai_title">AI</string>
+    <string name="omnix_ai_personality">OMNIX nähili jogap berýär</string>
+    <string name="omnix_ai_personality_body">OMNIX-iň beräýýän tony we görkezmelerini düzüň.</string>
+
+    <string name="omnix_local_model_title">Enjamdaky model</string>
+    <string name="omnix_local_model_not_installed">Göçürilmedik · 521 MB</string>
+    <string name="omnix_local_model_not_installed_body">Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut jogap berýär.</string>
+    <string name="omnix_local_model_download_now">Şu wagt göçürip al</string>
+    <string name="omnix_local_model_download_wifi">Wi-Fi arkaly göçürip al</string>
+    <string name="omnix_local_model_downloading">Göçürilýär… %1$d%%</string>
+    <string name="omnix_local_model_downloaded">Göçürildi, ilkinji haýyşda ýüklener</string>
+    <string name="omnix_local_model_loading">Ýada ýüklenýär…</string>
+    <string name="omnix_local_model_ready">Oflaýn jogaplara taýýar</string>
+    <string name="omnix_local_model_failed">Start edilmedi: %1$s</string>
+    <string name="omnix_local_model_low_memory">Boş ýat ýeterlik däl (%1$d MB gerek) — bulutdan jogap berýärin</string>
+    <string name="omnix_local_model_download_failed">Göçürilmedi: %1$s</string>
+    <string name="omnix_local_model_cancel">Göçürişi ýatyr</string>
+    <string name="omnix_local_model_consent_title">Enjamdaky modeli göçürip alaýaýmyňyz?</string>
+    <string name="omnix_local_model_consent_body">521 MB. Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut adaty ýaly jogap berýär.</string>
+    <string name="omnix_local_model_later">Soňrak</string>
+
+    <string name="omnix_language_title">Dil</string>
+    <string name="omnix_language_system">Ulgam</string>
+
+    <string name="omnix_notifications_settings_title">Bildirişler</string>
+    <string name="omnix_notifications_assistant">Kömekçiniň jogaplary</string>
+    <string name="omnix_notifications_device">Enjam ýagdaýy</string>
+    <string name="omnix_notifications_routines">Rutin ýatlatmalary</string>
+
+    <string name="omnix_appearance_title">Görnüş</string>
+    <string name="omnix_appearance_system">Ulgam</string>
+    <string name="omnix_appearance_light">Ýagty</string>
+    <string name="omnix_appearance_dark">Garaňky</string>
+    <string name="omnix_appearance_night">Gije kemeltmek</string>
+    <string name="omnix_appearance_night_body">Garaňkyda ýagtylygy we kontrasty peseldýär.</string>
+    <string name="omnix_appearance_reduce_motion">Hereketleri azalt</string>
+    <string name="omnix_appearance_reduce_motion_body">Ulgamyň sazlamasyny yzarlaň ýa-da şu ýerde animasiýany öçüriň.</string>
+
+    <string name="omnix_about_title">Barada</string>
+    <string name="omnix_about_access">OMNIX Access</string>
+    <string name="omnix_about_access_active">Işjeň</string>
+    <string name="omnix_about_access_expired">Gutardy</string>
+    <string name="omnix_about_access_not_configured">Düzülmedik</string>
+    <string name="omnix_about_renewal">Uzaldym</string>
+    <string name="omnix_about_renewal_unavailable">Entäk elýeterli däl</string>
+    <string name="omnix_about_version">Wersiýa</string>
+    <string name="omnix_about_device_code">Enjam kody</string>
+
+    <string name="omnix_advanced_title">Giňişleýin</string>
+    <string name="omnix_advanced_body">Diagnostika we dörediji sazlamalary. OMNIX-iň gündelik ulanylyşyna degişli däl.</string>
+    <string name="omnix_advanced_access_token">Giriş açary</string>
+    <string name="omnix_advanced_access_token_body">Aktiwasiýada berilýär. AI üpjün edijileriniň açarlary bu telefonda hiç haçan saklanmaýar.</string>
+    <string name="omnix_advanced_show_hide">Görkez ýa gizle</string>
+    <string name="omnix_advanced_token_invalid">Açar 32–256 simboldan ybarat bolmaly, boşluklarsyz.</string>
+    <string name="omnix_advanced_accessibility">Ekrany okamak we basmak</string>
+    <string name="omnix_advanced_accessibility_body">OMNIX-e ekraňyzy okap we sizin üçin basyp bermäge mümkinçilik berýär.</string>
+    <string name="omnix_advanced_accessibility_action">Android sazlamalaryny aç</string>
+    <string name="omnix_advanced_save">Sakla</string>
+    <string name="omnix_advanced_saved">Saklandy</string>
+
+    <!-- ===== Umumy ===== -->
+    <string name="omnix_continue">Dowam et</string>
+    <string name="omnix_cancel">Ýatyr</string>
+
+    <!-- ===== Elýeterlilik (§55) ===== -->
+    <string name="omnix_a11y_core_state">OMNIX: %1$s</string>
+    <string name="omnix_a11y_clip_status">Clip ýagdaýy: %1$s</string>
+    <string name="omnix_a11y_open_settings">Sazlamalary aç</string>
+    <string name="omnix_a11y_open_chat">Söhbedi aç</string>
+    <string name="omnix_a11y_open_translator">Tercimäni aç</string>
+    <string name="omnix_a11y_open_devices">Enjamlary aç</string>
+
+    <!-- ===== Clip akym ýagdaýlary (§40, §70, §71) ===== -->
+    <string name="omnix_clip_connecting_title">Birikdirilýär…</string>
+    <string name="omnix_clip_connected_title">Clip birikdirildi</string>
+    <string name="omnix_error_clip_failed_title">Birikdirip bolmady</string>
+    <string name="omnix_clip_battery_low_title">Cligiň batareýasy pes</string>
+    <string name="omnix_clip_last_seen">Soňky birikdirilen: %1$s</string>
+    <string name="omnix_clip_find_coming_soon">Cligimi tap — ýakynda</string>
+
+    <!-- Sesli jogap sözleri (§17) -->
+    <string name="omnix_voice_yes">Hawa</string>
+
+    <string name="omnix_skip_for_now">Şu wagt geç</string>
+    <!-- Ynançly mümkinçilik ýagdaýlary (§3, §33) -->
+    <string name="omnix_coming_soon">Ýakynda</string>
+    <string name="omnix_not_configured">Entäk düzülmedik</string>
+    <string name="omnix_chat_clear">Arassala</string>
+    <!-- Yzygiderli bahalaryň ady (§42) -->
+    <string name="omnix_level_lowest">Iň haýal</string>
+    <string name="omnix_level_low">Haýal</string>
+    <string name="omnix_level_normal">Adaty</string>
+    <string name="omnix_level_high">Çalt</string>
+    <string name="omnix_level_highest">Iň çalt</string>
+    <!-- OMNIX DIAGNOSTIKA (§21) -->
+    <string name="omnix_settings_diagnostics">Diagnostika</string>
+    <string name="omnix_diagnostics_title">OMNIX DIAGNOSTIKASY</string>
+    <string name="omnix_diagnostics_run">DOLU SYNAGY GEÇIR</string>
+    <string name="omnix_diagnostics_running">GEÇIRILÝÄR %1$d/%2$d</string>
+    <string name="omnix_diagnostics_export">HASABATY ÇYKAR</string>
+    <string name="omnix_diagnostics_share_title">Diagnostika hasabatyny paýlaş</string>
+    <string name="omnix_diag_mic">Mikrofon</string>
+    <string name="omnix_diag_stt">Sözi tanamak</string>
+    <string name="omnix_diag_local_ai">Ýerli AI</string>
+    <string name="omnix_diag_cloud_ai">Bulut AI</string>
+    <string name="omnix_diag_bluetooth">Bluetooth</string>
+    <string name="omnix_diag_clip">Clip</string>
+    <string name="omnix_diag_accessibility">Elýeterlilik gullugy</string>
+    <string name="omnix_diag_permissions">Rugsatlar</string>
+    <string name="omnix_diag_tts">Tekstden sese</string>
+    <string name="omnix_diag_license">Ruhsatnama</string>
+    <string name="omnix_diag_network">Şebeke</string>
+    <string name="omnix_diag_battery">Batareýa</string>
+
+    <!-- Programmaniň içindäki täzeleme (staging) -->
+    <string name="omnix_update_available_title">Täzeleme bar</string>
+    <string name="omnix_update_available_body">Täze OMNIX ýygyntysy taýýar: %1$d. Göçürip alyp gurnaýaýmyňyz?</string>
+    <string name="omnix_update_sources_hint">Gurnamak üçin OMNIX-e «Näbelli programmalary gurnamak» rugsadyny beriň — ulgam dogry sahypany özi açar.</string>
+    <string name="omnix_update_action_update">Täzele</string>
+    <string name="omnix_update_action_later">Soňrak</string>
+    <string name="omnix_update_downloading_title">Täzeleme göçürilýär</string>
+    <string name="omnix_update_downloading_body">%1$d ýygyntysy göçürilýär. Programmany ulanmagy dowam edip bilersiňiz.</string>
+    <string name="omnix_update_action_hide">Gizle</string>
+    <string name="omnix_update_ready_title">Täzeleme göçürildi</string>
+    <string name="omnix_update_ready_body">%1$d ýygyntysy gurnamaga taýýar.</string>
+    <string name="omnix_update_action_install">Gurna</string>
+    <string name="omnix_update_failed_title">Täzeleme şowsuz boldy</string>
+    <string name="omnix_update_failed_body">%1$d ýygyntysy göçürilmedi. Baglanyşygy barlaň we gaýtadan synanyşyň.</string>
+    <string name="omnix_update_action_retry">Gaýtadan synanyş</string>
+    <string name="omnix_update_download_title">OMNIX: täzeleme</string>
+    <string name="omnix_update_download_desc">Täze ýygynty göçürilýär</string>
+</resources>
