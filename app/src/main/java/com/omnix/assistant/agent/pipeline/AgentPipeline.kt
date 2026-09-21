@@ -88,7 +88,11 @@ class AgentPipeline @Inject constructor(
                 Resource.Success(
                     PromptExecutionResult.DirectAnswer(
                         text = result.text,
-                        containsScreenContent = result.containsScreenContent
+                        containsScreenContent = result.containsScreenContent,
+                        // Причина офлайн-fallback (решение владельца 2026-09-21):
+                        // движок кладёт её в metadata при провале инициализации
+                        // локальной модели — UI покажет сообщение в чате.
+                        localFallbackReason = result.metadata["local_fallback_reason"]
                     )
                 )
 

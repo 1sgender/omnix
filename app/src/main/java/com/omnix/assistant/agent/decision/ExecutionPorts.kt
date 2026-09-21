@@ -41,6 +41,13 @@ sealed class LocalAiOutcome {
     /** Локальный слой не берётся за запрос — нужен следующий уровень. */
     data object Uncertain : LocalAiOutcome()
 
+    /**
+     * Локальный слой не смог СТАРТОВАТЬ: инициализация модели провалилась.
+     * Как [Uncertain], запрос уходит дальше (в облако), но причина доезжает
+     * до пользователя сообщением в чате (решение владельца 2026-09-21).
+     */
+    data class Fallback(val reason: String) : LocalAiOutcome()
+
     /** Локальный слой взялся, но выполнение не удалось (это не исключение). */
     data class Failed(val message: String) : LocalAiOutcome()
 }

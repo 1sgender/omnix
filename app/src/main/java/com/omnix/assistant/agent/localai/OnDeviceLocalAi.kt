@@ -95,7 +95,11 @@ class OnDeviceLocalAi @Inject constructor(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "model initialization failed", e)
-            return LocalAiResult.Error("Model failed to initialize")
+            // Решение владельца 2026-09-21: провал инициализации — не приговор
+            // запросу: уходим в облако, причина доедет до пользователя.
+            return LocalAiResult.FailedToFallback(
+                "Model failed to initialize: ${throwableSummary(e)}"
+            )
         }
 
         if (runtime == null) {
@@ -130,8 +134,10 @@ class OnDeviceLocalAi @Inject constructor(
                 }
 
                 is LocalModelState.Failed -> {
-                    Log.w(TAG, "error: инициализация модели провалена (${state.reason})")
-                    LocalAiResult.Error("Model failed to initialize: ${state.reason}")
+                    // Решение владельца 2026-09-21: провал инициализации — не
+                    // приговор запросу: облако + сообщение про офлайн-версию.
+                    Log.w(TAG, "fallback: инициализация модели провалена (${state.reason})")
+                    LocalAiResult.FailedToFallback(state.reason)
                 }
 
                 else -> {

@@ -141,6 +141,7 @@ class LocalAiRoutingIntegrationTest {
             when (val r = localAi.execute(request)) {
                 is LocalAiResult.Success -> LocalAiOutcome.Handled(r.text)
                 is LocalAiResult.Unsupported -> LocalAiOutcome.Uncertain
+                is LocalAiResult.FailedToFallback -> LocalAiOutcome.Fallback(r.reason)
                 is LocalAiResult.Error -> LocalAiOutcome.Failed(r.message)
             }
     }

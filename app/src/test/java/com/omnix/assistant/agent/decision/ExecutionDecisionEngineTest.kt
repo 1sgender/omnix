@@ -236,6 +236,30 @@ class ExecutionDecisionEngineTest {
         assertEquals(0, cloud.calls)
     }
 
+    /**
+     * Провал ИНИЦИАЛИЗАЦИИ локальной модели (Fallback) — не приговор запросу
+     * (решение владельца 2026-09-21): запрос уходит в облако, а причина
+     * доезжает до UI через metadata (→ сообщение в чате).
+     */
+    @Test
+    fun `local init failure falls back to cloud and carries reason in metadata`() = runBlocking {
+        val local = FakeLocalAi(LocalAiOutcome.Fallback("Unable to open zip archive"))
+        val cloud = FakeCloudAi(Resource.Success("Облачный ответ вместо локального"))
+        val engine = buildEngine(localAi = local, cloudAi = cloud)
+
+        val result = engine.execute(request("расскажи что-нибудь интересное про космос"))
+
+        assertTrue("Ожидался Success, получено: $result", result is ExecutionResult.Success)
+        val success = result as ExecutionResult.Success
+        assertEquals(ExecutionType.CLOUD_AI, success.executionType)
+        assertEquals(1, local.calls)
+        assertEquals(1, cloud.calls)
+        assertEquals(
+            "Unable to open zip archive",
+            success.metadata["local_fallback_reason"]
+        )
+    }
+
     /** Test 3: Local AI не уверен → Cloud AI → CLOUD_AI. */
     @Test
     fun `local ai uncertain escalates to cloud ai`() = runBlocking {

@@ -155,4 +155,55 @@ class SendPromptUseCasePrivacyGateTest {
         }
     }
 
+    /**
+     * Решение владельца 2026-09-21: провал инициализации локальной модели —
+     * запрос уходит в облако, а пользователь видит в ИСТОРИИ SYSTEM-сообщение
+     * про офлайн-версию. Дедуп: одна причина — одно уведомление; новая
+     * причина — новое уведомление. Уведомление вставляется ПЕРЕД ответом.
+     */
+    @Test
+    fun `local fallback notice is inserted once per reason before the answer`() = runTest {
+        coEvery { pipeline.process(any<ExecutionRequest>()) } returns
+            Resource.Success(
+                PromptExecutionResult.DirectAnswer(
+                    "Облачный ответ",
+                    localFallbackReason = "Unable to open zip archive"
+                )
+            )
+
+        useCase("привет", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
+        useCase("ещё вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
+
+        val inserted = mutableListOf<com.omnix.assistant.domain.models.Message>()
+        coVerify(allGenerated = true) { messageRepo.insertMessage(capture(inserted)) }
+
+        val notices = inserted.filter {
+            it.role == com.omnix.assistant.domain.models.MessageRole.SYSTEM
+        }
+        assertEquals("Одна и та же причина — одно уведомление", 1, notices.size)
+
+        val answers = inserted.filter {
+            it.role == com.omnix.assistant.domain.models.MessageRole.ASSISTANT
+        }
+        assertEquals(2, answers.size)
+        assertTrue(
+            "Уведомление должно идти перед ответом",
+            inserted.indexOf(notices.first()) < inserted.indexOf(answers.first())
+        )
+
+        // Новая причина сбоя — новое уведомление.
+        coEvery { pipeline.process(any<ExecutionRequest>()) } returns
+            Resource.Success(
+                PromptExecutionResult.DirectAnswer(
+                    "Другой ответ",
+                    localFallbackReason = "no memory"
+                )
+            )
+        useCase("третий вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
+
+        val all = mutableListOf<com.omnix.assistant.domain.models.Message>()
+        coVerify(allGenerated = true) { messageRepo.insertMessage(capture(all)) }
+        assertEquals(2, all.filter { it.role == com.omnix.assistant.domain.models.MessageRole.SYSTEM }.size)
+    }
+
 }
