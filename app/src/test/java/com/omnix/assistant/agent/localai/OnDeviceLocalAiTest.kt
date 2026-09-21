@@ -216,9 +216,13 @@ class OnDeviceLocalAiTest {
         assertTrue("Отсутствие модели — не ошибка: $result", result is LocalAiResult.Unsupported)
     }
 
-    /** Провал инициализации → Error. */
+    /**
+     * Провал инициализации модели — не приговор запросу (решение владельца
+     * 2026-09-21): FailedToFallback с причиной, движок уйдёт в облако
+     * и сообщит пользователю про офлайн-версию.
+     */
     @Test
-    fun `model initialization failure yields error`() = runBlocking {
+    fun `model initialization failure falls back with reason`() = runBlocking {
         val manager = FakeModelManager(
             runtime = null,
             state = LocalModelState.Failed("UnsatisfiedLinkError")
@@ -227,7 +231,8 @@ class OnDeviceLocalAiTest {
 
         val result = localAi.execute(request())
 
-        assertTrue("Ожидался Error, получено: $result", result is LocalAiResult.Error)
+        assertTrue("Ожидался FailedToFallback, получено: $result", result is LocalAiResult.FailedToFallback)
+        assertEquals("UnsatisfiedLinkError", (result as LocalAiResult.FailedToFallback).reason)
     }
 
     /**
@@ -265,28 +270,6 @@ class OnDeviceLocalAiTest {
         val result = localAi.execute(request())
 
         assertTrue("Ожидался Unsupported (уход в Cloud AI), получено: $result", result is LocalAiResult.Unsupported)
-    }
-
-    /**
-     * Провал инициализации модели — не приговор запросу (решение владельца
-     * 2026-09-21): FailedToFallback с причиной, движок уйдёт в облако
-     * и сообщит пользователю про офлайн-версию.
-     */
-    @Test
-    fun `failed model state falls back with reason`() = runBlocking {
-        val manager = FakeModelManager(
-            runtime = null,
-            state = LocalModelState.Failed("IllegalStateException: Unable to open zip archive")
-        )
-        val localAi = buildLocalAi(manager)
-
-        val result = localAi.execute(request())
-
-        assertTrue(result is LocalAiResult.FailedToFallback)
-        assertEquals(
-            "IllegalStateException: Unable to open zip archive",
-            (result as LocalAiResult.FailedToFallback).reason
-        )
     }
 
     /** Пустой ответ модели — это Error, а не «успех с пустотой». */
