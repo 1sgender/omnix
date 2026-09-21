@@ -5,7 +5,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -17,19 +22,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.design.OmnixTheme
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+/** Период опроса хода загрузки: DownloadManager не шлёт промежуточных событий. */
+private const val DOWNLOAD_POLL_MS = 1_000L
 
 private sealed interface UpdateUiState {
     data object Idle : UpdateUiState
     data class Available(val info: AppLatestInfo) : UpdateUiState
-    data class Downloading(val versionCode: Long) : UpdateUiState
+    data class Downloading(
+        val downloadId: Long,
+        val versionCode: Long,
+        val expectedBytes: Long
+    ) : UpdateUiState
     data class Ready(val versionCode: Long) : UpdateUiState
     data class Failed(val versionCode: Long) : UpdateUiState
 }
@@ -77,7 +94,11 @@ fun AppUpdatePrompt() {
                 true
             }
             ResumeAction.WAIT_DOWNLOAD -> {
-                state = UpdateUiState.Downloading(pending!!.versionCode)
+                state = UpdateUiState.Downloading(
+                    downloadId = pending!!.downloadId,
+                    versionCode = pending.versionCode,
+                    expectedBytes = pending.expectedBytes
+                )
                 true
             }
             ResumeAction.DISCARD -> {
@@ -138,28 +159,32 @@ fun AppUpdatePrompt() {
                     return@AvailableDialog
                 }
                 scope.launch {
-                    withContext(Dispatchers.IO) { manager.enqueueDownload(current.info) }
-                    state = UpdateUiState.Downloading(current.info.versionCode)
+                    val id = withContext(Dispatchers.IO) {
+                        manager.enqueueDownload(current.info)
+                    }
+                    state = UpdateUiState.Downloading(
+                        downloadId = id,
+                        versionCode = current.info.versionCode,
+                        expectedBytes = current.info.sizeBytes
+                    )
                 }
             },
             onLater = { state = UpdateUiState.Idle }
         )
-        is UpdateUiState.Downloading -> AlertDialog(
-            onDismissRequest = { state = UpdateUiState.Idle },
-            title = { Text(stringResource(R.string.omnix_update_downloading_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.omnix_update_downloading_body,
-                        current.versionCode
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { state = UpdateUiState.Idle }) {
-                    Text(stringResource(R.string.omnix_update_action_hide))
+        is UpdateUiState.Downloading -> DownloadingDialog(
+            downloadId = current.downloadId,
+            versionCode = current.versionCode,
+            expectedBytes = current.expectedBytes,
+            manager = manager,
+            onCompleted = {
+                scope.launch {
+                    // SUCCESSFUL в опросе: свериться с файлом и показать «Готово».
+                    val resumed = syncWithPending()
+                    if (!resumed) state = UpdateUiState.Failed(current.versionCode)
                 }
-            }
+            },
+            onFailed = { state = UpdateUiState.Failed(current.versionCode) },
+            onHide = { state = UpdateUiState.Idle }
         )
         is UpdateUiState.Ready -> AlertDialog(
             onDismissRequest = { state = UpdateUiState.Idle },
@@ -239,6 +264,119 @@ private fun AvailableDialog(
         dismissButton = {
             TextButton(onClick = onLater) {
                 Text(stringResource(R.string.omnix_update_action_later))
+            }
+        }
+    )
+}
+
+/**
+ * Диалог загрузки с живым прогрессом: раз в секунду опрашивает
+ * DownloadManager и показывает полосу, мегабайты и процент. Опрос —
+ * единственный способ увидеть ход: broadcast приходит только по завершению.
+ */
+@Composable
+private fun DownloadingDialog(
+    downloadId: Long,
+    versionCode: Long,
+    expectedBytes: Long,
+    manager: AppUpdateManager,
+    onCompleted: () -> Unit,
+    onFailed: () -> Unit,
+    onHide: () -> Unit
+) {
+    var progress by remember { mutableStateOf<DownloadProgress?>(null) }
+
+    LaunchedEffect(downloadId) {
+        while (true) {
+            val snapshot = withContext(Dispatchers.IO) {
+                manager.queryProgress(downloadId)
+            }
+            // Запись исчезла — загрузку снесли вне приложения; предложить retry.
+            if (snapshot == null) {
+                onFailed()
+                break
+            }
+            progress = snapshot
+            when (snapshot.status) {
+                DownloadManager.STATUS_SUCCESSFUL -> {
+                    onCompleted()
+                    break
+                }
+                DownloadManager.STATUS_FAILED -> {
+                    onFailed()
+                    break
+                }
+                else -> delay(DOWNLOAD_POLL_MS)
+            }
+        }
+    }
+
+    val snapshot = progress
+    val unitMb = stringResource(R.string.omnix_update_unit_mb)
+    AlertDialog(
+        onDismissRequest = onHide,
+        title = { Text(stringResource(R.string.omnix_update_downloading_title)) },
+        text = {
+            Column {
+                Text(
+                    stringResource(
+                        R.string.omnix_update_downloading_body,
+                        versionCode
+                    )
+                )
+                Spacer(Modifier.height(12.dp))
+                // DownloadManager не сразу знает размер: страховка — sizeBytes
+                // из ответа сервера, сохранённый при старте загрузки.
+                val total = snapshot?.totalBytes?.takeIf { it > 0 } ?: expectedBytes
+                if (snapshot != null && total > 0) {
+                    val percent = progressPercent(snapshot.bytesSoFar, total)
+                    LinearProgressIndicator(
+                        progress = { snapshot.bytesSoFar.toFloat() / total },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        stringResource(
+                            R.string.omnix_update_progress_caption,
+                            formatMegaBytes(
+                                snapshot.bytesSoFar,
+                                Locale.getDefault(),
+                                unitMb
+                            ),
+                            formatMegaBytes(total, Locale.getDefault(), unitMb),
+                            stringResource(R.string.omnix_percent, percent)
+                        ),
+                        style = OmnixTheme.typography.caption
+                    )
+                } else {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    if (snapshot != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(
+                                R.string.omnix_update_progress_no_total,
+                                formatMegaBytes(
+                                    snapshot.bytesSoFar,
+                                    Locale.getDefault(),
+                                    unitMb
+                                )
+                            ),
+                            style = OmnixTheme.typography.caption
+                        )
+                    }
+                }
+                if (snapshot?.status == DownloadManager.STATUS_PAUSED) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        stringResource(R.string.omnix_update_paused_body),
+                        style = OmnixTheme.typography.caption
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onHide) {
+                Text(stringResource(R.string.omnix_update_action_hide))
             }
         }
     )

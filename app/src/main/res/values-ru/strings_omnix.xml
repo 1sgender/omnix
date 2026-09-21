@@ -352,6 +352,10 @@
     <string name="omnix_update_action_later">Позже</string>
     <string name="omnix_update_downloading_title">Загрузка обновления</string>
     <string name="omnix_update_downloading_body">Сборка %1$d загружается. Можно продолжать пользоваться приложением.</string>
+    <string name="omnix_update_progress_caption">Загружено %1$s из %2$s · %3$s</string>
+    <string name="omnix_update_progress_no_total">Загружено %1$s</string>
+    <string name="omnix_update_paused_body">Загрузка приостановлена — ждёт сеть или Wi-Fi.</string>
+    <string name="omnix_update_unit_mb">МБ</string>
     <string name="omnix_update_action_hide">Скрыть</string>
     <string name="omnix_update_ready_title">Обновление загружено</string>
     <string name="omnix_update_ready_body">Сборка %1$d готова к установке.</string>

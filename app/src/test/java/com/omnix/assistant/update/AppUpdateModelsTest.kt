@@ -1,5 +1,6 @@
 package com.omnix.assistant.update
 
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -97,7 +98,9 @@ class AppUpdateModelsTest {
 
     @Test
     fun `obsolete pending version discards`() {
-        val pending = PendingUpdate(downloadId = 7L, versionCode = 100L, status = 8)
+        val pending = PendingUpdate(
+            downloadId = 7L, versionCode = 100L, expectedBytes = 0L, status = 8
+        )
 
         assertEquals(
             ResumeAction.DISCARD,
@@ -108,7 +111,9 @@ class AppUpdateModelsTest {
     @Test
     fun `successful download with file installs`() {
         // DownloadManager.STATUS_SUCCESSFUL == 8 (константа инлайнится).
-        val pending = PendingUpdate(downloadId = 7L, versionCode = 101L, status = 8)
+        val pending = PendingUpdate(
+            downloadId = 7L, versionCode = 101L, expectedBytes = 0L, status = 8
+        )
 
         assertEquals(
             ResumeAction.INSTALL,
@@ -118,7 +123,9 @@ class AppUpdateModelsTest {
 
     @Test
     fun `successful download without file discards`() {
-        val pending = PendingUpdate(downloadId = 7L, versionCode = 101L, status = 8)
+        val pending = PendingUpdate(
+            downloadId = 7L, versionCode = 101L, expectedBytes = 0L, status = 8
+        )
 
         assertEquals(
             ResumeAction.DISCARD,
@@ -129,7 +136,9 @@ class AppUpdateModelsTest {
     @Test
     fun `running download waits`() {
         // DownloadManager.STATUS_RUNNING == 2.
-        val pending = PendingUpdate(downloadId = 7L, versionCode = 101L, status = 2)
+        val pending = PendingUpdate(
+            downloadId = 7L, versionCode = 101L, expectedBytes = 0L, status = 2
+        )
 
         assertEquals(
             ResumeAction.WAIT_DOWNLOAD,
@@ -140,11 +149,33 @@ class AppUpdateModelsTest {
     @Test
     fun `failed download discards`() {
         // DownloadManager.STATUS_FAILED == 16.
-        val pending = PendingUpdate(downloadId = 7L, versionCode = 101L, status = 16)
+        val pending = PendingUpdate(
+            downloadId = 7L, versionCode = 101L, expectedBytes = 0L, status = 16
+        )
 
         assertEquals(
             ResumeAction.DISCARD,
             decideResume(pending, fileExists = false, currentVersionCode = 100L)
         )
+    }
+
+    @Test
+    fun `progress percent without total is zero`() {
+        assertEquals(0, progressPercent(bytesSoFar = 500L, totalBytes = 0L))
+        assertEquals(0, progressPercent(bytesSoFar = 0L, totalBytes = 1000L))
+    }
+
+    @Test
+    fun `progress percent maps and clamps`() {
+        assertEquals(50, progressPercent(bytesSoFar = 500L, totalBytes = 1000L))
+        assertEquals(100, progressPercent(bytesSoFar = 1000L, totalBytes = 1000L))
+        assertEquals(100, progressPercent(bytesSoFar = 1500L, totalBytes = 1000L))
+    }
+
+    @Test
+    fun `megabytes format keeps one decimal`() {
+        assertEquals("0.0 MB", formatMegaBytes(0L, Locale.ROOT, "MB"))
+        assertEquals("1.0 MB", formatMegaBytes(1048576L, Locale.ROOT, "MB"))
+        assertEquals("132.5 MB", formatMegaBytes(138979810L, Locale.ROOT, "MB"))
     }
 }
