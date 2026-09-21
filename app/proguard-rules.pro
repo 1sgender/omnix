@@ -11,6 +11,16 @@
 -keep class com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession { *; }
 -keep class com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession$* { *; }
 
+# Reproduced release failure (2026-09-21, v93 on a real device):
+# "RuntimeException: Field modelPath_ for c2.g not found" — R8 renamed the
+# fields of LlmOptionsProto$LlmModelSettings. The protobuf runtime reaches
+# these GeneratedMessageLite fields BY NAME through reflection, so the whole
+# jni.proto package must keep its members: LlmOptionsProto (engine options,
+# modelPath_/maxTokens_/backend), LlmSessionConfig (per-request session:
+# temperature/topK/topP) and LlmResponseContext (parsing native responses).
+# Debug builds are unminified, which is why CI never caught it.
+-keep class com.google.mediapipe.tasks.genai.llminference.jni.proto.** { *; }
+
 # Generic JNI entry points may be invoked by symbol/name from native code.
 -keepclasseswithmembernames,includedescriptorclasses class * {
     native <methods>;
