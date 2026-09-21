@@ -73,6 +73,11 @@ Rules:
 - Tokens intentionally survive entitlement expiry so the account can validate
   status and purchase a renewal; AI access stays gated separately by
   `hasActiveEntitlement` (license status, plan, billing window, expiry).
+- Offline (owner decision 2026-09-21): when `validate` cannot be reached (no
+  network, 5xx, or rate limiting), the Android client unlocks from the
+  encrypted cache of the last successful validate while that license is
+  unexpired; explicit server verdicts (invalid/expired/revoked/wrong device)
+  still lock the app immediately whenever the server answers.
 - `validate`/`checkout` keep the legacy token-only authentication: `validate`
   verifies the device against the license body independently; `checkout`
   operates on the caller's own account.
