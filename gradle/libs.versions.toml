@@ -25,6 +25,7 @@ coroutines = "1.8.1"
 mediapipeGenai = "0.10.35"
 onnxruntime = "1.22.0"
 materialIconsExtended = "1.6.8"
+detekt = "1.23.8"
 junit = "4.13.2"
 mockk = "1.13.12"
 postgresql = "42.7.13"
@@ -85,7 +86,10 @@ androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-asset-pack = { id = "com.android.asset-pack", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
