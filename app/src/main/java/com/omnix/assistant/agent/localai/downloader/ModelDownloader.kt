@@ -166,9 +166,9 @@ class DownloadManagerModelDownloader @Inject constructor(
         allowedOverMetered: Boolean
     ): Long {
         // DownloadManager упадёт с FILE_ALREADY_EXISTS, если файл уже есть, —
-        // недокачанный остаток удаляем заранее (целостность всё равно
-        // проверяется точным размером после финиша).
-        if (destFile.exists()) destFile.delete()
+        // недокачанный остаток удаляем заранее вместе с маркером верификации
+        // (целостность всё равно проверяется размером и SHA-256 после финиша).
+        ModelFileIntegrity.deleteWithMarker(destFile)
         destFile.parentFile?.mkdirs()
 
         val manager = context.getSystemService(DownloadManager::class.java)
