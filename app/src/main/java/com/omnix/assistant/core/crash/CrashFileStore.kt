@@ -103,7 +103,6 @@ class CrashFileStore(private val dir: File) {
  */
 object CrashCapture {
 
-    private const val TAG = "CrashCapture"
     private const val DIR = "crash"
 
     @Volatile
