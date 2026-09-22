@@ -221,7 +221,8 @@ adb push Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task /data/local/tmp
 adb shell run-as com.omnix.assistant mkdir -p files/llm
 adb shell "cat /data/local/tmp/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task | run-as com.omnix.assistant tee files/llm/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task > /dev/null"
 
-# 3. Проверить (размер обязан совпасть байт в байт)
+# 3. Проверить (размер обязан совпасть байт в байт; SHA-256 проверит
+#    приложение при первой инициализации — см. expectedSha256 в LocalModelSpec)
 adb shell run-as com.omnix.assistant ls -la files/llm/
 # -rw-rw---- ... 546660344 ..._multi-prefill-seq_q8_ekv1280.task
 ```

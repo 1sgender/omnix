@@ -12,6 +12,8 @@ import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadStatus
 import com.omnix.assistant.agent.localai.downloader.ModelDownloader
+import com.omnix.assistant.agent.localai.downloader.ModelFileIntegrity
+import com.omnix.assistant.agent.localai.downloader.ModelIntegrity
 import com.omnix.assistant.agent.localai.downloader.externalFallbackFile
 import com.omnix.assistant.agent.localai.downloader.filesDirRelativePath
 import com.omnix.assistant.agent.localai.pack.PackModelLocator
@@ -224,11 +226,16 @@ class MediaPipeModelManager @Inject constructor(
         runtime?.let { return@withLock currentState }
 
         val file = modelFile
-        if (!isModelFileValid(file)) {
+        val integrity = checkModelFile(file)
+        if (integrity != ModelIntegrity.VALID) {
             if (file.exists()) {
                 // Частичный или битый остаток — в рантайм такое отдавать нельзя.
-                Log.w(TAG, "model file size mismatch | got=${file.length()} | want=${spec.expectedSizeBytes}")
-                runCatching { file.delete() }
+                Log.w(
+                    TAG,
+                    "model file integrity | $integrity | got=${file.length()}" +
+                        " | want=${spec.expectedSizeBytes}"
+                )
+                ModelFileIntegrity.deleteWithMarker(file)
             }
             // Если согласие уже дано (например, после перезапуска) — загрузка
             // стартует сама; без согласия честно возвращаем NotInstalled.
@@ -421,10 +428,10 @@ class MediaPipeModelManager @Inject constructor(
             settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
         }
         closeRuntime()
-        runCatching { modelFile.delete() }
+        ModelFileIntegrity.deleteWithMarker(modelFile)
         filesDirRelativePath(modelFile, context.filesDir)?.let { relPath ->
             externalFallbackFile(context, relPath)?.let { mirror ->
-                runCatching { mirror.delete() }
+                ModelFileIntegrity.deleteWithMarker(mirror)
             }
         }
         Log.i(TAG, "model file deleted | ${modelFile.absolutePath}")
@@ -516,20 +523,39 @@ class MediaPipeModelManager @Inject constructor(
     private suspend fun onDownloadSucceeded() {
         settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
         val file = modelFile
-        if (isModelFileValid(file)) {
-            Log.i(TAG, "model downloaded | bytes=${file.length()}")
-            // Ленивая загрузка при первом запросе: 1.3 ГБ RSS без нужды не занимаем.
-            setState(LocalModelState.NotInitialized)
-        } else {
-            Log.w(
-                TAG,
-                "downloaded size mismatch | got=${if (file.exists()) file.length() else "missing"}" +
-                    " | want=${spec.expectedSizeBytes}"
-            )
-            if (file.exists()) runCatching { file.delete() }
-            setState(
-                LocalModelState.DownloadFailed("Скачанный файл повреждён (несовпадение размера)")
-            )
+        when (checkModelFile(file)) {
+            ModelIntegrity.VALID -> {
+                Log.i(TAG, "model downloaded | bytes=${file.length()} | sha256=ok")
+                // Ленивая загрузка при первом запросе: 1.3 ГБ RSS без нужды не занимаем.
+                setState(LocalModelState.NotInitialized)
+            }
+
+            ModelIntegrity.HASH_MISMATCH -> {
+                // Регрессия v97: размер совпал, а содержимое битое — раньше
+                // такой файл попадал в рантайм и убивал его «Unable to open
+                // zip archive». Теперь ловим на границе.
+                Log.w(
+                    TAG,
+                    "downloaded sha256 mismatch | got=${file.length()} bytes" +
+                        " | want=${spec.expectedSha256}"
+                )
+                ModelFileIntegrity.deleteWithMarker(file)
+                setState(
+                    LocalModelState.DownloadFailed("Скачанный файл повреждён (SHA-256 не совпал)")
+                )
+            }
+
+            else -> {
+                Log.w(
+                    TAG,
+                    "downloaded size mismatch | got=${if (file.exists()) file.length() else "missing"}" +
+                        " | want=${spec.expectedSizeBytes}"
+                )
+                ModelFileIntegrity.deleteWithMarker(file)
+                setState(
+                    LocalModelState.DownloadFailed("Скачанный файл повреждён (несовпадение размера)")
+                )
+            }
         }
     }
 
@@ -541,16 +567,27 @@ class MediaPipeModelManager @Inject constructor(
     }
 
     /**
-     * Файл валиден, только если размер совпал с ожидаемым байт в байт.
+     * Файл валиден, только если совпали размер И SHA-256 (регрессия v97:
+     * битый по содержимому файл прошёл проверку по размеру). Пройденная
+     * однажды проверка запоминается sidecar-маркером — 521 МБ хешируются
+     * один раз на файл, а не при каждом старте.
      *
      * Перед проверкой переносит файл из внешнего зеркала, если загрузка
      * ушла в fallback (file:// во внутреннее хранилище отвергнут прошивкой —
      * [com.omnix.assistant.agent.localai.downloader.externalFallbackFile]).
      */
-    private fun isModelFileValid(file: File): Boolean {
+    private suspend fun checkModelFile(file: File): ModelIntegrity {
         moveFromExternalFallbackIfNeeded(file)
-        return file.exists() && file.length() == spec.expectedSizeBytes
+        return ModelFileIntegrity.verify(
+            file = file,
+            expectedSizeBytes = spec.expectedSizeBytes,
+            expectedSha256 = spec.expectedSha256,
+            ioDispatcher = dispatchers.io
+        )
     }
+
+    private suspend fun isModelFileValid(file: File): Boolean =
+        checkModelFile(file) == ModelIntegrity.VALID
 
     /**
      * Fallback кладёт файл во внешний app-каталог. Переносим на ожидаемый

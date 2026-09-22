@@ -169,7 +169,13 @@ data class LocalModelSpec(
     /** Прямая ссылка для автозагрузки. Должна быть доступна БЕЗ авторизации. */
     val downloadUrl: String,
     /** Точный размер файла в байтах — проверка целостности после скачивания. */
-    val expectedSizeBytes: Long
+    val expectedSizeBytes: Long,
+    /**
+     * Эталонный SHA-256 файла в hex (64 символа). Размер ловит обрывы
+     * загрузки, но не битые байты: в v97 повреждённый файл прошёл проверку
+     * по размеру и убил рантайм («Unable to open zip archive»).
+     */
+    val expectedSha256: String
 ) {
     companion object {
         /**
@@ -181,8 +187,9 @@ data class LocalModelSpec(
          * без click-through, в отличие от Gemma Terms of Use).
          *
          * Размер сверен с Hugging Face (Content-Length, 2026-09-11):
-         * 546660344 байта. Если апстрим обновит файл — загрузка честно
-         * упадёт в DownloadFailed, а не подсунет битый файл в рантайм.
+         * 546660344 байта. SHA-256 сверен с Hugging Face API (lfs.sha256,
+         * 2026-09-22): e608953f…52fd2. Если апстрим обновит файл — загрузка
+         * честно упадёт в DownloadFailed, а не подсунет битый файл в рантайм.
          */
         val QWEN2_5_0_5B_INSTRUCT_Q8 = LocalModelSpec(
             modelId = "qwen2.5-0.5b-instruct-q8",
@@ -192,7 +199,8 @@ data class LocalModelSpec(
             minRuntimeMemoryMb = 1536,
             downloadUrl = "https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct/" +
                 "resolve/main/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
-            expectedSizeBytes = 546660344L
+            expectedSizeBytes = 546660344L,
+            expectedSha256 = "e608953f169aeb1bd7b9155fec2559825e08453fc209b84eda3a781ed0452fd2"
         )
     }
 }

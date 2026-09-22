@@ -61,5 +61,15 @@ class ModelDownloadPolicyTest {
         assertTrue(spec.fileName.endsWith(".task"))
         assertTrue(spec.expectedSizeBytes > 500L * 1024 * 1024)
         assertEquals(1280, spec.contextTokens)
+        // Хеш обязателен (регрессия v97: битый файл прошёл проверку по размеру)
+        // и сверен с Hugging Face API (lfs.sha256) — защита от случайной правки.
+        assertTrue(
+            "SHA-256 эталона обязан быть 64 hex-символа",
+            spec.expectedSha256.matches(Regex("^[0-9a-f]{64}$"))
+        )
+        assertEquals(
+            "e608953f169aeb1bd7b9155fec2559825e08453fc209b84eda3a781ed0452fd2",
+            spec.expectedSha256
+        )
     }
 }
