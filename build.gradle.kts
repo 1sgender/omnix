@@ -1,14 +1,15 @@
 plugins {
-    id("com.android.application") version "8.5.2" apply false
-    id("com.android.library") version "8.5.2" apply false
-    id("com.android.asset-pack") version "8.5.2" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.24" apply false
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24" apply false
-    id("com.google.dagger.hilt.android") version "2.51.1" apply false
-    id("com.google.devtools.ksp") version "1.9.24-1.0.20" apply false
-    // :server — JVM-модуль (Этап 3). Версия совпадает с kotlin.android.
-    id("org.jetbrains.kotlin.jvm") version "1.9.24" apply false
-    id("io.gitlab.arturbosch.detekt") version "1.23.8" apply false
+    // Версии плагинов — ТОЛЬКО в gradle/libs.versions.toml (один источник
+    // правды); здесь и в модулях — alias() без версий.
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.asset.pack) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.hilt.android) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.detekt) apply false
+    // com.android.library удалён при миграции: ни один модуль его не применял.
 }
 
 allprojects {

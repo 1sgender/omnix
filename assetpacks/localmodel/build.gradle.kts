@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.asset-pack")
+    alias(libs.plugins.android.asset.pack)
 }
 
 assetPack {
