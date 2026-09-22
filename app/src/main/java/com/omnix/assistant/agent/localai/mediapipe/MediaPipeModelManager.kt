@@ -148,6 +148,14 @@ class MediaPipeModelManager @Inject constructor(
     /** Путь, где ожидается файл модели. */
     val modelFile: File get() = File(File(context.filesDir, MODEL_DIR), spec.fileName)
 
+    /**
+     * Страж нативного краша при create(): маркер живёт рядом с файлом
+     * модели и переживает смерть процесса (см. [ModelInitCrashGuard]).
+     */
+    private val initCrashGuard = ModelInitCrashGuard(
+        File(File(context.filesDir, MODEL_DIR), spec.fileName + ".init_crash")
+    )
+
     init {
         registerTrimMemoryCallback()
         // Загрузка принадлежит системе и переживает смерть процесса:
@@ -252,10 +260,25 @@ class MediaPipeModelManager @Inject constructor(
             return@withLock currentState
         }
 
+        // Нативный краш при прошлой попытке: процесс умер ВНУТРИ create(),
+        // Java это не ловит. Повтор для того же файла запрещён — иначе каждое
+        // сообщение снова убивает приложение. Чат уйдёт в облако (fallback).
+        if (initCrashGuard.previousAttemptCrashed()) {
+            setState(
+                LocalModelState.Failed(
+                    "Загрузка модели упала с крахом процесса (нативный сбой). " +
+                        "Удалите модель и скачайте заново: Настройки → ИИ → Модель на устройстве"
+                )
+            )
+            Log.e(TAG, "model init skipped: previous attempt crashed the process")
+            return@withLock currentState
+        }
+
         setState(LocalModelState.Loading)
         Log.i(TAG, "model loading | id=${spec.modelId} | sizeMb=${spec.approxSizeMb}")
 
         var createdDuringAttempt: LocalModelRuntime? = null
+        initCrashGuard.attemptStarted()
         return@withLock try {
             val startedAt = System.currentTimeMillis()
             val created = withContext(dispatchers.default) {
@@ -278,6 +301,8 @@ class MediaPipeModelManager @Inject constructor(
             coroutineContext.ensureActive()
             val loadTimeMs = System.currentTimeMillis() - startedAt
 
+            // Процесс выжил — краша не было, повторные попытки разрешены.
+            initCrashGuard.attemptFinished()
             runtime = created
             createdDuringAttempt = null // ownership transferred to the manager
             setState(LocalModelState.Ready(modelId = spec.modelId, loadTimeMs = loadTimeMs))
@@ -289,6 +314,9 @@ class MediaPipeModelManager @Inject constructor(
             )
             currentState
         } catch (e: CancellationException) {
+            // Отмена — не краш процесса: create() либо не начинался, либо
+            // бросил Java-исключение, которое поймёт и следующий запуск.
+            initCrashGuard.attemptFinished()
             (createdDuringAttempt as? AutoCloseable)?.close()
             createdDuringAttempt = null
             runtime = null
@@ -297,6 +325,8 @@ class MediaPipeModelManager @Inject constructor(
         } catch (e: Throwable) {
             // Ловим Throwable: нативная библиотека может кинуть UnsatisfiedLinkError
             // или OutOfMemoryError, и это не должно ронять приложение.
+            // Пойманное исключение — не смерть процесса: маркер снимаем.
+            initCrashGuard.attemptFinished()
             runtime = null
             // Класс + первая строка сообщения: голый simpleName («RuntimeException»)
             // не диагностируется без logcat, которого у пользователя нет.
@@ -340,6 +370,8 @@ class MediaPipeModelManager @Inject constructor(
         // Play-установка: пак ставится локально вместо сетевой загрузки
         // (перестраховка на случай, если стартовый reattach не сработал).
         if (packLocator.installFromPackIfPresent(file, spec.expectedSizeBytes)) {
+            // Свежий файл из пакa — разрешаем одну новую попытку загрузки.
+            initCrashGuard.reset()
             if (currentState !is LocalModelState.Ready &&
                 currentState !is LocalModelState.Loading
             ) {
@@ -434,6 +466,9 @@ class MediaPipeModelManager @Inject constructor(
                 ModelFileIntegrity.deleteWithMarker(mirror)
             }
         }
+        // Файл удалён пользователем — следующий скачанный файл получит
+        // одну свежую попытку загрузки (сбрасываем страж нативного краша).
+        initCrashGuard.reset()
         Log.i(TAG, "model file deleted | ${modelFile.absolutePath}")
         setState(LocalModelState.NotInstalled(modelFile.absolutePath))
         currentState
@@ -448,6 +483,8 @@ class MediaPipeModelManager @Inject constructor(
             // локально без сети и без согласия (трафика нет, capacity ноль
             // действий пользователя). Sideload-APK: метод вернёт false.
             if (packLocator.installFromPackIfPresent(modelFile, spec.expectedSizeBytes)) {
+                // Свежий файл из пакa — разрешаем одну новую попытку загрузки.
+                initCrashGuard.reset()
                 if (currentState is LocalModelState.NotInstalled ||
                     currentState is LocalModelState.NotInitialized
                 ) {
@@ -526,6 +563,9 @@ class MediaPipeModelManager @Inject constructor(
         when (checkModelFile(file)) {
             ModelIntegrity.VALID -> {
                 Log.i(TAG, "model downloaded | bytes=${file.length()} | sha256=ok")
+                // Свежий файл — разрешаем одну новую попытку загрузки,
+                // даже если прежний файл убивал процесс.
+                initCrashGuard.reset()
                 // Ленивая загрузка при первом запросе: 1.3 ГБ RSS без нужды не занимаем.
                 setState(LocalModelState.NotInitialized)
             }

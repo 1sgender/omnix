@@ -55,4 +55,24 @@ class DiagnosticsReportTest {
 
         assertTrue(text.contains("recent app log: unavailable"))
     }
+
+    @Test
+    fun `report without crashes states none captured`() {
+        val text = DiagnosticsReport.build(emptyList(), build)
+
+        assertTrue(text.contains("recent crashes: none captured"))
+    }
+
+    @Test
+    fun `report includes captured crash blocks`() {
+        val crashes = listOf(
+            "--- crash_20260922_170500.txt ---\napp: 0.3.0 (104)\njava.lang.IllegalStateException: boom"
+        )
+
+        val text = DiagnosticsReport.build(emptyList(), build, crashes)
+
+        assertTrue(text.contains("recent crashes (captured in-app):"))
+        assertTrue(text.contains("crash_20260922_170500.txt"))
+        assertTrue(text.contains("IllegalStateException: boom"))
+    }
 }
