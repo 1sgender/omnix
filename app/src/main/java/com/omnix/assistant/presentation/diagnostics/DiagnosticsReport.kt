@@ -20,6 +20,9 @@ object DiagnosticsReport {
     )
 
     fun build(results: List<DiagnosticResult>, build: BuildInfo): String =
+        build(results, build, crashes = emptyList())
+
+    fun build(results: List<DiagnosticResult>, build: BuildInfo, crashes: List<String>): String =
         buildString {
             appendLine("OMNIX DIAGNOSTICS REPORT")
             appendLine("generated: ${build.timestamp}")
@@ -45,6 +48,18 @@ object DiagnosticsReport {
                 )
             }
             appendLine()
+            // Java-краши, пойманные in-app (нативные SIGSEGV не ловятся —
+            // их след виден только по стражу загрузки модели).
+            if (crashes.isEmpty()) {
+                appendLine("recent crashes: none captured")
+            } else {
+                appendLine("recent crashes (captured in-app):")
+                appendLine()
+                for (c in crashes) {
+                    appendLine(c)
+                    appendLine()
+                }
+            }
             appendLine("recent app log: unavailable (no in-app log buffer; use adb logcat)")
         }
 }

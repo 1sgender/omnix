@@ -1,10 +1,13 @@
 package com.omnix.assistant.presentation.diagnostics
 
+import android.content.Context
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.BuildConfig
+import com.omnix.assistant.core.crash.CrashCapture
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +27,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class DiagnosticsViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val engine: DiagnosticsEngine
 ) : ViewModel() {
 
@@ -76,7 +80,9 @@ class DiagnosticsViewModel @Inject constructor(
                 androidRelease = Build.VERSION.RELEASE ?: "?",
                 sdkInt = Build.VERSION.SDK_INT,
                 timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
-            )
+            ),
+            // Java-краши, записанные CrashCapture (нативные — см. ModelInitCrashGuard).
+            crashes = CrashCapture.latestReports(appContext)
         )
 
     private fun setStatus(id: DiagnosticCheckId, status: DiagnosticStatus) {
