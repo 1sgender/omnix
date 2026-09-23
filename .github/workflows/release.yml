@@ -72,13 +72,18 @@ jobs:
 
   signed-release:
     name: "Signed release"
-    # Ручной запуск — всегда; автоматический — только зелёный push-CI в main.
+    # Ручной запуск — всегда; автоматический — только зелёный push-CI в main
+    # И только когда авто-релиз не заморожен переменной OTA_AUTO_RELEASE
+    # (решение владельца 2026-09-24: во время редизайна интерфейса приложение
+    # обновляется ОДНИМ релизом по завершении ВСЕГО интерфейса, не по каждому
+    # изменению; заморозка/разморозка — через Actions variables, без коммитов).
     # (Проверку head_repo.full_name убрали: после переименования аккаунта
     # пейлоад workflow_run может нести старое full_name и ложно пропускать
     # релиз; workflow_run и так приходит только из своего репо.)
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' &&
+       vars.OTA_AUTO_RELEASE == 'true' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'main')
