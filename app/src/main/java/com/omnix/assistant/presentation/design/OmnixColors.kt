@@ -9,7 +9,11 @@ import androidx.compose.ui.graphics.Color
  * Specification §3–§5, §54. Rules enforced here:
  *  - the background is never pure `#000000`; it is a felt material;
  *  - text is never pure white, it uses four opacity steps;
- *  - every state colour is semantic and muted — OMNIX is not a neon interface;
+ *  - the Core's states are MONOCHROME: white/graphite only, told apart by
+ *    brightness, halo intensity and motion tempo — never by hue. Colour is
+ *    reserved for the single critical exception, ERROR, which stays an
+ *    unmistakable alarm red so "something is wrong" reads instantly against
+ *    the monochrome field (design decision, 2026-09-23);
  *  - screens must never declare `Color(0x...)` locally.
  */
 @Immutable
@@ -67,16 +71,18 @@ val OmnixDarkColors = OmnixColorScheme(
     textTertiary = TextTertiaryToken,
     textDisabled = TextDisabledToken,
 
-    // A restrained ice cyan is the signature active/presence accent. It is
-    // deliberately cool rather than neon, so the ready Core and a connected
-    // Clip feel calm instead of signalling a warning.
-    stateIdle = Color(0xFF83E6EE),
-    stateListening = Color(0xFF6FD98D),
-    stateRecognizing = Color(0xFFE3DE7A),
-    stateThinking = Color(0xFF5FB0F5),
-    stateExecuting = Color(0xFF6FD9E8),
-    stateSpeaking = Color(0xFFB07FEA),
-    stateSuccess = Color(0xFF7FD98A),
+    // Monochrome state ladder: idle is a dim graphite presence, every working
+    // state glows the same bright white. The states are told apart by halo
+    // intensity and the tempo of their motion (see CoreMotion), not by hue.
+    // The former cyan/green/yellow/blue/purple per-state hues are gone by
+    // design; ERROR keeps the alarm red as the only coloured state.
+    stateIdle = Color(0xFF8F989F),
+    stateListening = Color(0xFFEDF1F4),
+    stateRecognizing = Color(0xFFEDF1F4),
+    stateThinking = Color(0xFFEDF1F4),
+    stateExecuting = Color(0xFFEDF1F4),
+    stateSpeaking = Color(0xFFEDF1F4),
+    stateSuccess = Color(0xFFEDF1F4),
     stateError = Color(0xFFFF5A3C),
 
     actionPrimary = TextPrimaryToken,
@@ -101,13 +107,13 @@ val OmnixNightColors = OmnixDarkColors.copy(
     textTertiary = Color(0x4DFFFFFF),
     textDisabled = Color(0x2BFFFFFF),
 
-    stateIdle = Color(0xFF6FAEB6),
-    stateListening = Color(0xFF7FBF91),
-    stateRecognizing = Color(0xFFC0B272),
-    stateThinking = Color(0xFF7EA5D1),
-    stateExecuting = Color(0xFF77BFC8),
-    stateSpeaking = Color(0xFFA18BD1),
-    stateSuccess = Color(0xFF8AC080),
+    stateIdle = Color(0xFF6E767C),
+    stateListening = Color(0xFFB7BEC3),
+    stateRecognizing = Color(0xFFB7BEC3),
+    stateThinking = Color(0xFFB7BEC3),
+    stateExecuting = Color(0xFFB7BEC3),
+    stateSpeaking = Color(0xFFB7BEC3),
+    stateSuccess = Color(0xFFB7BEC3),
     stateError = Color(0xFFD1615B),
 
     actionPrimary = Color(0xD6FFFFFF),
@@ -133,13 +139,15 @@ val OmnixLightColors = OmnixColorScheme(
     textTertiary = Color(0x520C0D10),                  // 0.32
     textDisabled = Color(0x360C0D10),                  // 0.21
 
-    stateIdle = Color(0xFF237D87),
-    stateListening = Color(0xFF2F8B50),
-    stateRecognizing = Color(0xFF8A7420),
-    stateThinking = Color(0xFF2E6BB0),
-    stateExecuting = Color(0xFF1F7E8B),
-    stateSpeaking = Color(0xFF6A4CB0),
-    stateSuccess = Color(0xFF248A3D),
+    // Light scheme inverts the ladder: graphite idle, near-black working
+    // states — bright white would vanish on a light surface.
+    stateIdle = Color(0xFF697077),
+    stateListening = Color(0xFF20262B),
+    stateRecognizing = Color(0xFF20262B),
+    stateThinking = Color(0xFF20262B),
+    stateExecuting = Color(0xFF20262B),
+    stateSpeaking = Color(0xFF20262B),
+    stateSuccess = Color(0xFF20262B),
     stateError = Color(0xFFD70015),
 
     actionPrimary = Color(0xFF0C0D10),

@@ -30,6 +30,14 @@ data class OmnixMotionTokens(
 
     /** Thinking: slow internal progression, one revolution. */
     val thinkingCycleMs: Int = 2600,
+    /**
+     * Thinking pulse: a breathing-like scale/halo pulse ~4x faster than the
+     * idle breath. The TEMPO difference — 5.2 s idle vs 1.3 s thinking — is
+     * how the two states are told apart now that the palette is monochrome.
+     */
+    val thinkingPulseMs: Int = 1300,
+    /** Peak pulse scale while thinking — a touch larger than the idle breath. */
+    val thinkingPulseAmplitude: Float = 0.024f,
     /** Executing: controlled continuous motion. */
     val executingCycleMs: Int = 1600,
     /** Recognizing: subtle directional drift. */
@@ -39,6 +47,10 @@ data class OmnixMotionTokens(
     val successHoldMs: Int = 900,
     /** Error interruption — short, not an alarm. */
     val errorInterruptMs: Int = 260,
+    /** Error emphasis: a sharp brightness flash that decays quickly. */
+    val errorFlashMs: Int = 560,
+    /** Error emphasis: peak scale jerk of the whole Core when an error lands. */
+    val errorJerkAmplitude: Float = 0.05f,
 
     /** Screen / content transitions. */
     val screenEnterMs: Int = 260,
@@ -61,10 +73,14 @@ data class OmnixMotionTokens(
         audioAttackMs = 0,
         audioReleaseMs = 0,
         thinkingCycleMs = 0,
+        thinkingPulseMs = 0,
+        thinkingPulseAmplitude = 0f,
         executingCycleMs = 0,
         recognizingCycleMs = 0,
         successHoldMs = 700,
         errorInterruptMs = 0,
+        errorFlashMs = 0,
+        errorJerkAmplitude = 0f,
         screenEnterMs = 100,
         screenExitMs = 80,
         contentFadeMs = 90
