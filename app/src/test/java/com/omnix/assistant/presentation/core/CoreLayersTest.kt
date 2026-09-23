@@ -35,7 +35,7 @@ class CoreLayersTest {
     }
 
     @Test
-    fun `fraction is clamped to 0..1 and null is zero`() {
+    fun `fraction is clamped to unit range and null is zero`() {
         assertEquals(0f, CoreLayers.arcFraction(null))
         assertEquals(0f, CoreLayers.arcFraction(-0.3f))
         assertEquals(0.5f, CoreLayers.arcFraction(0.5f))
