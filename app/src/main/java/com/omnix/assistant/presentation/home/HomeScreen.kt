@@ -35,6 +35,7 @@ import com.omnix.assistant.presentation.components.ClipStatusBar
 import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixSpokenExample
 import com.omnix.assistant.presentation.components.SystemStateView
+import com.omnix.assistant.presentation.core.CoreBadge
 import com.omnix.assistant.presentation.core.CoreState
 import com.omnix.assistant.presentation.core.OmnixAudioBars
 import com.omnix.assistant.presentation.core.OmnixCore
@@ -128,6 +129,14 @@ fun HomeScreen(
                         state = state.coreState,
                         size = OmnixTheme.coreSizes.home,
                         audioLevel = state.audioLevel,
+                        // Matrix: the offline badge docks onto the IDLE core
+                        // so "why is nothing answering" reads before the
+                        // first word is spoken.
+                        badge = if (state.coreState == CoreState.IDLE && !state.isOnline) {
+                            CoreBadge.WIFI_OFF
+                        } else {
+                            null
+                        },
                         contentDescription = stringResource(
                             R.string.omnix_a11y_core_state,
                             stateLabel(state)
