@@ -3,6 +3,8 @@ package com.omnix.assistant.domain.usecases
 import android.content.Context
 import android.util.Log
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.localai.LocalModelManager
+import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
 import com.omnix.assistant.agent.decision.ExecutionRequest
 import com.omnix.assistant.agent.decision.PrivacyLevel
@@ -18,6 +20,7 @@ import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -33,7 +36,8 @@ class SendPromptUseCase @Inject constructor(
     private val messageRepository: MessageRepository,
     private val settingsRepository: SettingsRepository,
     private val memoryManager: OmniMemoryManager,
-    private val agentPipeline: AgentPipeline
+    private val agentPipeline: AgentPipeline,
+    private val localModelManager: LocalModelManager
 ) {
     /**
      * Дедупликация офлайн-fallback-уведомлений: одна и та же причина сбоя
@@ -193,10 +197,27 @@ class SendPromptUseCase @Inject constructor(
                 }
             }
         } else if (result is Resource.Error) {
-            saveAssistantMessage(result.message ?: context.getString(R.string.oshibka_vypolneniya_zaprosa))
+            saveAssistantMessage(withOfflineModelHint(result.message, result.exception))
         }
 
         return result
+    }
+
+    /**
+     * Сетевой сбой при НЕскачанной офлайн-модели — самая непонятная для
+     * пользователя комбинация: выбран офлайн-режим, а в ответ «Ошибка
+     * сети». Отвечать в офлайне пока нечем, и без подсказки пользователь
+     * не понимает, из-за чего ошибка и что делать. Дополняем сообщение
+     * адресом, где скачать модель.
+     */
+    private fun withOfflineModelHint(message: String?, exception: Throwable?): String {
+        val base = message ?: context.getString(R.string.oshibka_vypolneniya_zaprosa)
+        val networkFailure = exception is IOException
+        val offlineModelMissing = localModelManager.state.let {
+            it is LocalModelState.NotInstalled || it is LocalModelState.DownloadFailed
+        }
+        if (!networkFailure || !offlineModelMissing) return base
+        return base + " " + context.getString(R.string.oflayn_model_ne_skachana)
     }
 
     private suspend fun saveAssistantMessage(text: String) {

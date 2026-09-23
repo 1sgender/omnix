@@ -22,7 +22,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
-import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -263,22 +262,19 @@ class OmnixApiClient @Inject constructor(
     }
 
     /** CR-05: маппинг сетевых исключений на Resource.Error (вызывается из onFailure). */
-    private fun exceptionToResource(e: IOException, requestId: String): Resource<String> = when (e) {
-        is SocketTimeoutException -> {
-            Log.w(TAG, "timeout | requestId=$requestId")
-            Resource.Error(e, "Таймаут подключения к серверу OMNIX. Проверьте интернет.")
+    private fun exceptionToResource(e: IOException, requestId: String): Resource<String> {
+        // Cancellation от OkHttp после call.cancel() прилетает как IOException
+        // с message "Canceled" — это ожидаемое состояние, маппим в ошибку
+        // отмены; вызывающий код корректно обрабатывает её как завершение.
+        if (e.message?.contains("Canceled", ignoreCase = true) == true) {
+            Log.d(TAG, "call cancelled | requestId=$requestId")
+            return Resource.Error(e, "Запрос отменён.")
         }
-        else -> {
-            // Cancellation от OkHttp после call.cancel() прилетает как IOException
-            // с message "Canceled" — это ожидаемое состояние, маппим в ошибку
-            // отмены; вызывающий код корректно обрабатывает её как завершение.
-            if (e.message?.contains("Canceled", ignoreCase = true) == true) {
-                Log.d(TAG, "call cancelled | requestId=$requestId")
-            } else {
-                Log.w(TAG, "network error | requestId=$requestId", e)
-            }
-            Resource.Error(e, "Ошибка сети при обращении к серверу OMNIX.")
-        }
+        // Безликое «Ошибка сети» не даёт пользователю понять, что именно
+        // сломалось (нет интернета? DNS оператора? SSL?) — называем причину.
+        val reason = NetworkErrorMessages.reasonFor(e)
+        Log.w(TAG, "network error | requestId=$requestId | reason=$reason", e)
+        return Resource.Error(e, "Ошибка сети при обращении к серверу OMNIX: $reason.")
     }
 
     /** Понятные пользователю сообщения по machine-readable кодам сервера. */
@@ -295,6 +291,9 @@ class OmnixApiClient @Inject constructor(
         "PROVIDER_ERROR" -> "Ошибка на стороне сервиса AI."
         "INVALID_REQUEST" -> "Некорректный запрос."
         "PAYLOAD_TOO_LARGE" -> "Запрос слишком длинный."
-        else -> "Не удалось связаться с сервером OMNIX."
+        // Неизвестный код показываем как есть: без него «Не удалось
+        // связаться» невозможно отличить HTTP_502 от HTTP_302 при разборе
+        // жалоб пользователя (логов у sideload-приложения нет).
+        else -> "Не удалось связаться с сервером OMNIX (код $code)."
     }
 }
