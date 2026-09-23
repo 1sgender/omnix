@@ -5,8 +5,17 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,9 +30,13 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.presentation.design.OmnixTheme
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
@@ -61,6 +74,13 @@ import kotlin.math.sin
  *                    LISTENING and SPEAKING; must come from a real audio
  *                    source, never from a timer (§33)
  * @param intensity   global damping of the visual weight, 0..1
+ * @param progress    measurable task progress 0..1 (OTA download, command
+ *                    execution). Only IDLE and EXECUTING may turn the ring
+ *                    into an arc with a centred digit (CoreLayers); THINKING
+ *                    never does — an LLM has no honest percentage
+ * @param badge       orthogonal status badge docked onto the ring (cloud
+ *                    processing, no connectivity). Coexists with every
+ *                    layer; never changes the Core's shape
  */
 @Composable
 fun OmnixCore(
@@ -69,7 +89,9 @@ fun OmnixCore(
     size: Dp = OmnixTheme.coreSizes.home,
     audioLevel: Float = 0f,
     intensity: Float = 1f,
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    progress: Float? = null,
+    badge: CoreBadge? = null
 ) {
     val colors = OmnixTheme.colors
     val motion = OmnixTheme.motion
@@ -128,6 +150,22 @@ fun OmnixCore(
     // The flash pushes the stroke towards the theme's brightest ink so the
     // jerk reads on both dark and light surfaces.
     val flashColor = lerp(color, colors.textPrimary, flash * 0.4f)
+
+    // Layer rules (design matrix 2026-09-23): the ring carries exactly one
+    // primary signal. The progress arc is allowed only in IDLE (a background
+    // OTA download) and EXECUTING, and while active it crossfades the state
+    // ring out — the object still morphs, nothing is remounted.
+    val arcActive = CoreLayers.showArc(state, progress)
+    val arcAlpha by animateFloatAsState(
+        targetValue = if (arcActive) 1f else 0f,
+        animationSpec = tween(motion.stateTransitionMs, easing = motion.standard),
+        label = "core_arc"
+    )
+    val arcFraction by animateFloatAsState(
+        targetValue = CoreLayers.arcFraction(progress),
+        animationSpec = tween(motion.arcStepMs.coerceAtLeast(1), easing = motion.standard),
+        label = "core_arc_fraction"
+    )
 
     // Every scalar is animated, so a state change is a transformation of one
     // object rather than a swap between two.
@@ -277,9 +315,15 @@ fun OmnixCore(
                 color = flashColor,
                 alpha = shape.opacity * haloOpacity
             )
-            drawRing(shape, center, baseRadius, flashColor, shape.opacity)
 
-            if (innerSweep > 0.01f) {
+            // While the progress-arc layer is active the state ring fades
+            // out — the arc replaces it (one primary signal per ring).
+            val ringFade = 1f - arcAlpha
+            if (ringFade > 0.01f) {
+                drawRing(shape, center, baseRadius, flashColor, shape.opacity * ringFade)
+            }
+
+            if (innerSweep > 0.01f && ringFade > 0.01f) {
                 drawInnerArc(
                     center = center,
                     radius = baseRadius * 0.58f,
@@ -287,7 +331,19 @@ fun OmnixCore(
                     sweep = innerSweep,
                     color = flashColor,
                     widthPx = CoreGeometry.STROKE_RATIO * baseRadius * 0.45f,
-                    alpha = shape.opacity * 0.45f
+                    alpha = shape.opacity * 0.45f * ringFade
+                )
+            }
+
+            // The progress arc: a dim full-circle track plus a bright fill
+            // sweeping from the top, clockwise (design matrix 2026-09-23).
+            if (arcAlpha > 0.01f) {
+                drawProgressArc(
+                    center = center,
+                    baseRadius = baseRadius,
+                    color = flashColor,
+                    fraction = arcFraction,
+                    alpha = shape.opacity * arcAlpha
                 )
             }
 
@@ -295,14 +351,14 @@ fun OmnixCore(
             // something the user cannot see: interpreting speech, and
             // reasoning. They are the poster's substitute for a spinner —
             // three small points on the ring, not a rotating arc (§29).
-            if (orbitAlpha > 0.01f) {
+            if (orbitAlpha > 0.01f && ringFade > 0.01f) {
                 drawOrbitDots(
                     center = center,
                     radius = baseRadius,
                     angle = innerRotation,
                     color = flashColor,
                     dotRadius = CoreGeometry.STROKE_RATIO * baseRadius * 0.62f,
-                    alpha = shape.opacity * orbitAlpha
+                    alpha = shape.opacity * orbitAlpha * ringFade
                 )
             }
 
@@ -328,6 +384,69 @@ fun OmnixCore(
                 }
             }
         }
+
+        // The progress digit: centred, only while the arc is the active
+        // layer. The centre carries the digit OR the terminal glyph — never
+        // both (their states are disjoint by construction, CoreLayers).
+        // Font size scales with the Core's size: the digit is part of the
+        // drawing, the caller's contentDescription carries the semantics.
+        if (arcActive) {
+            Text(
+                text = "${(arcFraction * 100).roundToInt()}%",
+                color = colors.textPrimary,
+                fontSize = (size.value * 0.22f).sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        // Orthogonal status badge, docked onto the ring at 45°. Coexists
+        // with every layer; decorative for screen readers because the
+        // Core-level contentDescription already narrates the state.
+        badge?.let {
+            CoreBadgeDock(
+                badge = it,
+                coreSize = size,
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
+    }
+}
+
+/**
+ * The docked status badge (design matrix 2026-09-23): a small circle with a
+ * thin outline icon, sitting ON the ring's top-right arc. Monochrome by
+ * design — colour still belongs to ERROR alone.
+ */
+@Composable
+private fun CoreBadgeDock(
+    badge: CoreBadge,
+    coreSize: Dp,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    val badgeSize = coreSize * 0.28f
+    // Pulls the TopEnd-aligned badge onto the ring circumference at 45°
+    // (ring radius = 0.36 of the core, RADIUS_RATIO).
+    val dock = coreSize * 0.106f
+    val icon = when (badge) {
+        CoreBadge.CLOUD -> Icons.Outlined.Cloud
+        CoreBadge.WIFI_OFF -> Icons.Outlined.WifiOff
+    }
+    Box(
+        modifier = modifier
+            .absoluteOffset(x = -dock, y = dock)
+            .size(badgeSize)
+            .background(colors.background, CircleShape)
+            .border(1.dp, colors.actionSecondaryBorder, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(badgeSize * 0.62f)
+        )
     }
 }
 
@@ -530,3 +649,58 @@ private const val ORBIT_DOT_COUNT = 3
 
 /** 120° in radians. */
 private const val ORBIT_STEP_RADIANS = 2.0944f
+
+/**
+ * The progress arc: a dim full-circle track plus a bright fill sweeping
+ * from the top clockwise (design matrix 2026-09-23). Drawn with the same
+ * segment technique as the rest of the Core so the stroke caps and weight
+ * match the ring exactly.
+ */
+private fun DrawScope.drawProgressArc(
+    center: Offset,
+    baseRadius: Float,
+    color: Color,
+    fraction: Float,
+    alpha: Float
+) {
+    val steps = 96
+    val stroke = CoreGeometry.STROKE_RATIO * baseRadius
+    val top = -CoreGeometry.TAU / 4f
+
+    // Track: the unfilled remainder reads as remaining work.
+    var previous = arcPointAt(center, baseRadius, top)
+    for (i in 1..steps) {
+        val t = top + CoreGeometry.TAU * i / steps
+        val point = arcPointAt(center, baseRadius, t)
+        drawLine(
+            color = color,
+            start = previous,
+            end = point,
+            strokeWidth = stroke * 0.6f,
+            cap = StrokeCap.Butt,
+            alpha = alpha * 0.20f
+        )
+        previous = point
+    }
+
+    if (fraction <= 0f) return
+    // Fill: bright, from the top, clockwise, with rounded ends.
+    val fillSteps = (steps * fraction).toInt().coerceIn(1, steps)
+    previous = arcPointAt(center, baseRadius, top)
+    for (i in 1..fillSteps) {
+        val t = top + CoreGeometry.TAU * fraction * i / fillSteps
+        val point = arcPointAt(center, baseRadius, t)
+        drawLine(
+            color = color,
+            start = previous,
+            end = point,
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+            alpha = alpha
+        )
+        previous = point
+    }
+}
+
+private fun arcPointAt(center: Offset, radius: Float, angle: Float): Offset =
+    Offset(center.x + radius * cos(angle), center.y + radius * sin(angle))

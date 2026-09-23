@@ -23,6 +23,8 @@ data class OmnixMotionTokens(
     val stateTransitionMs: Int = 420,
     /** Colour cross-fade between states. */
     val colorTransitionMs: Int = 320,
+    /** Progress-arc steps: smooth enough for a download, calm enough for a Core. */
+    val arcStepMs: Int = 300,
 
     /** Audio-reactive follow: fast enough to feel live, slow enough to be calm. */
     val audioAttackMs: Int = 90,
@@ -70,6 +72,7 @@ data class OmnixMotionTokens(
         breathingAmplitude = 0f,
         stateTransitionMs = 120,
         colorTransitionMs = 120,
+        arcStepMs = 0,
         audioAttackMs = 0,
         audioReleaseMs = 0,
         thinkingCycleMs = 0,
