@@ -256,6 +256,33 @@ class OmnixApiClientTest {
         )
     }
 
+    /**
+     * Сетевой сбой обязан называть КОНКРЕТУЮ причину, а не безликое
+     * «Ошибка сети»: закрытый порт даёт ConnectException → «нет соединения».
+     */
+    @Test
+    fun `network failure message names the concrete reason`() = runBlocking {
+        server.shutdown()
+        val result = client.execute("hello", "CHAT", "NORMAL", false)
+        assertTrue(result is Resource.Error)
+        val message = (result as Resource.Error).message.orEmpty()
+        assertTrue("expected concrete reason in: '$message'", message.contains("нет соединения"))
+    }
+
+    /** Неизвестный код сервера виден в сообщении — иначе жалобы не диагностируются. */
+    @Test
+    fun `unknown server error code is surfaced in the user message`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(502).setBody(
+                """{"success":false,"error":{"code":"HTTP_502","message":"internal","requestId":"r-2"}}"""
+            )
+        )
+        val result = client.execute("hello", "CHAT", "NORMAL", false)
+        assertTrue(result is Resource.Error)
+        val message = (result as Resource.Error).message.orEmpty()
+        assertTrue("expected code in: '$message'", message.contains("HTTP_502"))
+    }
+
     private companion object {
         const val VALID_TOKEN = "test-access-token-abcdefghijklmnopqrstuvwxyz"
     }

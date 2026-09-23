@@ -2,6 +2,8 @@ package com.omnix.assistant.domain.usecases
 
 import android.content.Context
 import com.omnix.assistant.agent.decision.*
+import com.omnix.assistant.agent.localai.LocalModelManager
+import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.tools.accessibility.ScreenContentPrivacy
 import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
 import com.omnix.assistant.agent.pipeline.AgentPipeline
@@ -36,6 +38,7 @@ class SendPromptUseCasePrivacyGateTest {
     private lateinit var messageRepo: MessageRepository
     private lateinit var settingsRepo: SettingsRepository
     private lateinit var memoryManager: OmniMemoryManager
+    private lateinit var localModelManager: LocalModelManager
     private lateinit var pipeline: AgentPipeline
     private lateinit var useCase: SendPromptUseCase
 
@@ -54,11 +57,16 @@ class SendPromptUseCasePrivacyGateTest {
         memoryManager = mockk(relaxed = true)
         every { memoryManager.workingMemory.resolveContextualQuery(any()) } answers { firstArg<String>() }
 
+        // Модель на устройстве считаем нескачанной — это нейтральный фон для
+        // privacy-gate тестов; sealed LocalModelState мокать нельзя, даём реальный NotInstalled.
+        localModelManager = mockk(relaxed = true)
+        every { localModelManager.state } returns LocalModelState.NotInstalled("/data/local/model.task")
+
         pipeline = mockk(relaxed = true)
         coEvery { pipeline.process(any<ExecutionRequest>()) } returns
             Resource.Success(PromptExecutionResult.DirectAnswer("ok"))
 
-        useCase = SendPromptUseCase(context, messageRepo, settingsRepo, memoryManager, pipeline)
+        useCase = SendPromptUseCase(context, messageRepo, settingsRepo, memoryManager, pipeline, localModelManager)
     }
 
     @After

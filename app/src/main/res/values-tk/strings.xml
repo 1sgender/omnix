@@ -80,4 +80,5 @@
     <string name="cloud_consent_declined">Düşündim — bu enjamda işleýärin, beg.</string>
     <string name="cloud_consent_timeout">Wagy gutardy — bu enjamda jogap berýärin.</string>
     <string name="wakeword_engine_unavailable">Ses bilen oýandyrmak elýeterli däl</string>
+    <string name="oflayn_model_ne_skachana">Oflaýn model ýüklenmändi: Sazlamalar → AI → Enjamdaky model. Ýüklenenden soň kömekşi internetsiz hem jogap berýär.</string>
 </resources>

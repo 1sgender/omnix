@@ -80,4 +80,5 @@
     <string name="cloud_consent_declined">Understood — answering on this device, sir.</string>
     <string name="cloud_consent_timeout">Timed out — answering on this device.</string>
     <string name="wakeword_engine_unavailable">Voice activation unavailable</string>
+    <string name="oflayn_model_ne_skachana">Offline model is not downloaded: Settings → AI → On-device model. Once downloaded, the assistant answers without internet.</string>
 </resources>
