@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.presentation.design.OmnixTheme
+import kotlinx.coroutines.delay
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -165,6 +167,35 @@ fun OmnixCore(
         targetValue = CoreLayers.arcFraction(progress),
         animationSpec = tween(motion.arcStepMs.coerceAtLeast(1), easing = motion.standard),
         label = "core_arc_fraction"
+    )
+
+    // The amplitude layer: eleven perimeter ticks fed by a rolling history
+    // of the RAW microphone level (design matrix 2026-09-23) — the circle
+    // reads as the last half-second of real audio scrolling clockwise.
+    // On leaving an audio-reactive state the ticks fade out over
+    // [OmnixMotionTokens.amplitudeTailMs] — the recognizing tail — instead
+    // of being cut. Never runs under reduced motion (§29, §33).
+    val currentAudioLevel by rememberUpdatedState(audioLevel.coerceIn(0f, 1f))
+    val amplitudeHistory = remember { AmplitudeRing() }
+    LaunchedEffect(state, reduced) {
+        if (state.isAudioReactive && !reduced) {
+            while (true) {
+                amplitudeHistory.push(currentAudioLevel)
+                delay(motion.amplitudeSampleMs.coerceAtLeast(10).toLong())
+            }
+        }
+    }
+    val tickAlpha by animateFloatAsState(
+        targetValue = if (state.isAudioReactive && !reduced) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = if (state.isAudioReactive) {
+                motion.audioAttackMs.coerceAtLeast(1)
+            } else {
+                motion.amplitudeTailMs.coerceAtLeast(1)
+            },
+            easing = motion.gentle
+        ),
+        label = "core_amplitude"
     )
 
     // Every scalar is animated, so a state change is a transformation of one
@@ -359,6 +390,19 @@ fun OmnixCore(
                     color = flashColor,
                     dotRadius = CoreGeometry.STROKE_RATIO * baseRadius * 0.62f,
                     alpha = shape.opacity * orbitAlpha * ringFade
+                )
+            }
+
+            // Amplitude ticks live OUTSIDE the ring perimeter and coexist
+            // with the deformed ring (the wavy band) — including the fading
+            // tail in RECOGNIZING, where they are the last thing to go.
+            if (tickAlpha > 0.01f) {
+                drawAmplitudeTicks(
+                    center = center,
+                    baseRadius = baseRadius,
+                    color = flashColor,
+                    history = amplitudeHistory,
+                    alpha = tickAlpha * shape.opacity
                 )
             }
 
@@ -704,3 +748,42 @@ private fun DrawScope.drawProgressArc(
 
 private fun arcPointAt(center: Offset, radius: Float, angle: Float): Offset =
     Offset(center.x + radius * cos(angle), center.y + radius * sin(angle))
+
+/**
+ * The amplitude ticks: eleven short strokes around the ring perimeter, fed
+ * by [AmplitudeRing] — newest sample at the top, history flowing clockwise.
+ * Length and brightness follow the real level of each sample, so the circle
+ * reads as live audio, not as an equaliser animation (design matrix
+ * 2026-09-23). Orthogonal to badges; shares the monochrome ink.
+ */
+private fun DrawScope.drawAmplitudeTicks(
+    center: Offset,
+    baseRadius: Float,
+    color: Color,
+    history: AmplitudeRing,
+    alpha: Float
+) {
+    val inner = baseRadius * 1.14f
+    val maxLength = baseRadius * 0.30f
+    val width = CoreGeometry.STROKE_RATIO * baseRadius * 0.45f
+    val top = -CoreGeometry.TAU / 4f
+    for (i in 0 until AmplitudeRing.TICK_COUNT) {
+        val level = history.newestFirst(i)
+        if (level <= 0.01f) continue
+        val angle = top + CoreGeometry.TAU * i / AmplitudeRing.TICK_COUNT
+        val cosA = cos(angle)
+        val sinA = sin(angle)
+        val length = maxLength * (0.25f + 0.75f * level)
+        drawLine(
+            color = color,
+            start = Offset(center.x + inner * cosA, center.y + inner * sinA),
+            end = Offset(
+                center.x + (inner + length) * cosA,
+                center.y + (inner + length) * sinA
+            ),
+            strokeWidth = width,
+            cap = StrokeCap.Round,
+            alpha = alpha * (0.30f + 0.70f * level)
+        )
+    }
+}

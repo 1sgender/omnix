@@ -55,7 +55,9 @@ internal object CoreMotion {
             stroke = CoreGeometry.STROKE_RATIO * 0.95f,
             pressure = 0.45f,
             reactive = 0f,              // driven by live amplitude
-            reactiveLobes = 6,
+            // Wavier than v1: the band reads as a live wave during speech
+            // (design matrix 2026-09-23), amplitude still follows loudness.
+            reactiveLobes = 9,
             opacity = 1.0f
         )
 

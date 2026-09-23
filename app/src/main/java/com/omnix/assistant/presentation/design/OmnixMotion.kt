@@ -29,6 +29,10 @@ data class OmnixMotionTokens(
     /** Audio-reactive follow: fast enough to feel live, slow enough to be calm. */
     val audioAttackMs: Int = 90,
     val audioReleaseMs: Int = 220,
+    /** Amplitude-tick sampling: how often a live level lands in the history. */
+    val amplitudeSampleMs: Int = 50,
+    /** Recognizing tail: how long the ticks fade after audio states end. */
+    val amplitudeTailMs: Int = 500,
 
     /** Thinking: slow internal progression, one revolution. */
     val thinkingCycleMs: Int = 2600,
@@ -75,6 +79,8 @@ data class OmnixMotionTokens(
         arcStepMs = 0,
         audioAttackMs = 0,
         audioReleaseMs = 0,
+        amplitudeSampleMs = 0,
+        amplitudeTailMs = 0,
         thinkingCycleMs = 0,
         thinkingPulseMs = 0,
         thinkingPulseAmplitude = 0f,
