@@ -181,7 +181,7 @@ fun OmnixCore(
         if (state.isAudioReactive && !reduced) {
             while (true) {
                 amplitudeHistory.push(currentAudioLevel)
-                delay(motion.amplitudeSampleMs.coerceAtLeast(10))
+                delay(motion.amplitudeSampleMs.coerceAtLeast(10).toLong())
             }
         }
     }
