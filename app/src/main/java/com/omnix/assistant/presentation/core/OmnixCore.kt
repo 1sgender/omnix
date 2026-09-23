@@ -1,13 +1,16 @@
 package com.omnix.assistant.presentation.core
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -15,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
@@ -35,6 +39,12 @@ import kotlin.math.sin
  * than loading. The signature three breaks and directional motion appear only
  * while OMNIX is interpreting or working. The halo is what makes the Core
  * read as light rather than as a drawn outline.
+ *
+ * The palette is monochrome: every state is white or graphite, told apart by
+ * halo brightness and the TEMPO of the motion — idle breathes slowly and dim,
+ * thinking pulses visibly faster and brighter. Colour exists for exactly one
+ * exception: an error lands as a sharp flash, a jerk of the shape and an
+ * alarm red that is unmistakable against the monochrome field.
  *
  * The Core is **not a button** (§8). It exposes no click handling; a caller
  * that genuinely needs a tap target wraps it explicitly and must also provide
@@ -85,6 +95,39 @@ fun OmnixCore(
 
     val base = CoreMotion.baseShape(state)
     val drivers = CoreMotion.rememberDrivers(state, motion)
+
+    // Brightness is a state signal now that the palette is monochrome: idle
+    // is a dim presence, the working states glow brighter, terminal states
+    // settle in between. Animated so a state change morphs, not swaps.
+    val haloStrength by animateFloatAsState(
+        targetValue = when (state) {
+            CoreState.IDLE -> 0.55f
+            CoreState.SUCCESS -> 0.85f
+            CoreState.ERROR -> 0.90f
+            else -> 1.0f
+        },
+        animationSpec = tween(motion.stateTransitionMs, easing = motion.standard),
+        label = "core_halo"
+    )
+
+    // One-shot error emphasis: a sharp brightness flash plus a scale jerk of
+    // the whole shape, decaying quickly. With reduced motion neither runs —
+    // the alarm red, the closed ring and the glyph still carry the state.
+    val errorFlash = remember { Animatable(0f) }
+    LaunchedEffect(state) {
+        if (state == CoreState.ERROR && !reduced && motion.errorFlashMs > 0) {
+            errorFlash.snapTo(1f)
+            errorFlash.animateTo(0f, tween(motion.errorFlashMs, easing = motion.gentle))
+        } else {
+            // Leaving ERROR mid-flash must not freeze the boost in place.
+            errorFlash.animateTo(0f, tween(motion.stateTransitionMs, easing = motion.gentle))
+        }
+    }
+    val flash = errorFlash.value
+
+    // The flash pushes the stroke towards the theme's brightest ink so the
+    // jerk reads on both dark and light surfaces.
+    val flashColor = lerp(color, colors.textPrimary, flash * 0.4f)
 
     // Every scalar is animated, so a state change is a transformation of one
     // object rather than a swap between two.
@@ -170,11 +213,23 @@ fun OmnixCore(
 
     // A ready Core breathes as emitted light, not as a loader. The ring's
     // movement stays almost imperceptible while the halo does most of the
-    // breathing, so the idle state reads as calm presence.
+    // breathing, so the idle state reads as calm presence. While thinking,
+    // the same mechanism pulses ~4x faster: the TEMPO, not the colour, is
+    // how "present" and "working" are told apart in a monochrome palette.
+    // An error adds a one-shot jerk of the whole shape.
     val readyBreath = if (state == CoreState.IDLE) drivers.breathing else 0f
-    val breathScale = 1f + motion.breathingAmplitude * readyBreath
-    val haloOpacity = 0.80f + readyBreath * 0.25f
-    val haloScale = 1f + readyBreath * 0.08f
+    val thinkingPulse = if (state == CoreState.THINKING) drivers.thinkingPulse else 0f
+    val breathScale = 1f +
+        motion.breathingAmplitude * readyBreath +
+        motion.thinkingPulseAmplitude * thinkingPulse +
+        motion.errorJerkAmplitude * flash
+    val haloOpacity = (
+        haloStrength +
+            readyBreath * 0.20f +
+            thinkingPulse * 0.15f +
+            flash * 0.90f
+        ).coerceIn(0f, 1.6f)
+    val haloScale = 1f + readyBreath * 0.08f + thinkingPulse * 0.05f + flash * 0.06f
 
     // The gaps narrow towards zero as the ring closes.
     val gaps = if (closure >= 0.999f) {
@@ -219,10 +274,10 @@ fun OmnixCore(
             drawHalo(
                 center = center,
                 baseRadius = baseRadius * haloScale,
-                color = color,
+                color = flashColor,
                 alpha = shape.opacity * haloOpacity
             )
-            drawRing(shape, center, baseRadius, color, shape.opacity)
+            drawRing(shape, center, baseRadius, flashColor, shape.opacity)
 
             if (innerSweep > 0.01f) {
                 drawInnerArc(
@@ -230,7 +285,7 @@ fun OmnixCore(
                     radius = baseRadius * 0.58f,
                     startAngle = innerRotation - 1.571f,
                     sweep = innerSweep,
-                    color = color,
+                    color = flashColor,
                     widthPx = CoreGeometry.STROKE_RATIO * baseRadius * 0.45f,
                     alpha = shape.opacity * 0.45f
                 )
@@ -245,7 +300,7 @@ fun OmnixCore(
                     center = center,
                     radius = baseRadius,
                     angle = innerRotation,
-                    color = color,
+                    color = flashColor,
                     dotRadius = CoreGeometry.STROKE_RATIO * baseRadius * 0.62f,
                     alpha = shape.opacity * orbitAlpha
                 )
@@ -256,7 +311,7 @@ fun OmnixCore(
                     CoreGlyph.CHECK -> drawCheckMark(
                         center = center,
                         unit = baseRadius * 0.42f,
-                        color = color,
+                        color = flashColor,
                         widthPx = CoreGeometry.STROKE_RATIO * baseRadius * 0.85f,
                         progress = glyphProgress
                     )
@@ -264,7 +319,7 @@ fun OmnixCore(
                     CoreGlyph.ALERT -> drawAlertMark(
                         center = center,
                         unit = baseRadius * 0.46f,
-                        color = color,
+                        color = flashColor,
                         widthPx = CoreGeometry.STROKE_RATIO * baseRadius * 0.85f,
                         progress = glyphProgress
                     )

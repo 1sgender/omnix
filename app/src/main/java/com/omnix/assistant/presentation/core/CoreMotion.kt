@@ -15,14 +15,18 @@ import com.omnix.assistant.presentation.design.OmnixMotionTokens
  * Per-state Core motion (§28, §58).
  *
  * Each animation answers "what changed?":
- *  - IDLE        continuous, gently breathing presence;
- *  - LISTENING   audio reactive;
+ *  - IDLE        continuous, gently breathing presence (slow, dim);
+ *  - LISTENING   audio reactive, bright;
  *  - RECOGNIZING subtle directional drift;
- *  - THINKING    slow internal progression;
+ *  - THINKING    a pulse visibly faster than the idle breath, plus slow
+ *                internal progression — the tempo is the message;
  *  - EXECUTING   controlled continuous motion;
  *  - SPEAKING    speech reactive;
  *  - SUCCESS     one confirmation, then settle;
- *  - ERROR       short interruption of the ring.
+ *  - ERROR       a sharp flash and a jerk of the shape, then settle.
+ *
+ * The palette is monochrome, so motion TEMPO and halo brightness — never
+ * hue — carry the difference between the working states.
  *
  * A moving discontinuous element is reserved for recognition, thought and
  * execution. In particular, the ready state never resembles a loading
@@ -159,6 +163,20 @@ internal object CoreMotion {
             still = 0f
         )
 
+        // The thinking pulse breathes like idle but ~4x faster — reading the
+        // tempo is how the user tells "present" from "working" now that the
+        // palette is monochrome.
+        val thinkingPulse by transition.animateFloatOrStill(
+            enabled = state == CoreState.THINKING && motion.thinkingPulseMs > 0,
+            durationMs = motion.thinkingPulseMs,
+            initial = 0f,
+            target = 1f,
+            repeatMode = RepeatMode.Reverse,
+            easing = motion.gentle,
+            label = "thinking_pulse",
+            still = 0f
+        )
+
         val executing by transition.animateFloatOrStill(
             enabled = state == CoreState.EXECUTING && motion.executingCycleMs > 0,
             durationMs = motion.executingCycleMs,
@@ -184,6 +202,7 @@ internal object CoreMotion {
         return Drivers(
             breathing = breathing,
             thinkingAngle = thinking,
+            thinkingPulse = thinkingPulse,
             executingAngle = executing,
             recognizingDrift = recognizing
         )
@@ -195,6 +214,8 @@ internal object CoreMotion {
         val breathing: Float,
         /** Radians, inner-arc rotation while thinking. */
         val thinkingAngle: Float,
+        /** 0..1 fast pulse phase, used only while thinking. */
+        val thinkingPulse: Float,
         /** Radians, inner-arc rotation while executing. */
         val executingAngle: Float,
         /** Radians, subtle drift of the whole shape while recognizing. */
