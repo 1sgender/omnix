@@ -12,6 +12,64 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+- Офлайн-льгота лицензии (PR #77): при недоступном сервере (нет сети,
+  5xx, 429 — не вердикт) вход по непросроченному кэшу лицензии до конца
+  её срока; диск в офлайне не пишется; явные вердикты (Invalid/Expired/
+  Revoked/Unauthorized/WrongDevice) блокируют сразу. Тесты:
+  OfflineGraceDecisionTest (JVM) + 2 офлайн в LicenseManagerInstrumentedTest.
+
+- Cloud-fallback при провале инициализации локальной модели (PR #79,
+  решение владельца 2026-09-21): новый исход `LocalAiResult.FailedToFallback`
+  (исключение из runtimeOrNull и LocalModelState.Failed) — запрос уходит
+  в облако по обычному privacy-гейту (PRIVATE/SENSITIVE без согласия
+  блокируются как раньше), а пользователь видит в истории SYSTEM-сообщение
+  «Офлайн-модель недоступна (причина). Отвечаю из облака.» (дедуп по
+  причине за сессию VM, не озвучивается, идёт перед ответом). Ошибки
+  ИНФЕРЕНСА остаются честным Error; «тихий» InsufficientMemory не тронут.
+
+- SHA-256 верификация файла модели (PR #80, регрессия v97: повреждённый
+  .task прошёл проверку по размеру и убил рантайм «Unable to open zip
+  archive»): `LocalModelSpec.expectedSha256` (эталон сверен с Hugging Face
+  `lfs.oid`), `ModelFileIntegrity` — размер + SHA-256 с sidecar-маркером
+  `<file>.sha256` (хеш+длина+mtime: 521 МБ хешируются один раз на файл,
+  замена файла инвалидирует маркер). Проверяются все точки: финиш загрузки
+  (`DownloadFailed «SHA-256 не совпал»`), initialize (self-healing —
+  битый файл удаляется и перекачивается), ensureModel, reattach, пак.
+
+- In-app захват крашей + страж нативного краша модели (PR #81, репорт
+  2026-09-22 «приложение выкидывает»): CrashCapture/CrashFileStore —
+  непойманные Java-исключения пишутся в files/crash/ (сборка+устройство+
+  поток+стек, ротация 5) и включаются в OMNIX DIAGNOSTICS → EXPORT REPORT
+  (приложение sideload-ится, других источников стека нет; системный диалог
+  сохраняется). ModelInitCrashGuard — маркер вокруг нативного create():
+  смерть процесса внутри create() (неловимый SIGSEGV/OOM-kill) блокирует
+  повтор для того же файла (Failed → облако + уведомление, краш-луп
+  невозможен); каждый новый файл модели = ровно одна свежая попытка
+  (загрузка/пак/удаление сбрасывают маркер).
+
+### Changed
+
+- Плагины переведены на алиасы version-catalog (PR #83): версии только в
+  `gradle/libs.versions.toml` ([plugins] +3: android-asset-pack, kotlin-jvm,
+  detekt); root/app/server/assetpacks — `alias(libs.plugins.*)`; удалено
+  мёртвое объявление `com.android.library` (не применял ни один модуль).
+
+### Fixed
+
+- R8 вырезал protо-классы MediaPipe LLM (PR #78): keep-правило для
+  `com.google.mediapipe.tasks.genai.llminference.jni.proto.**` — рефлексия
+  modelPath_ падала с «Field modelPath_ not found» в release-сборке.
+
+### Removed
+
+- Мёртвый код по ревизии проекта 2026-09-22 (PR #82): неиспользуемый
+  импорт `kotlinx.coroutines.flow.map` (OmnixViewModel), зависимость
+  `androidx.compose.ui:ui-tooling-preview` (0 использований @Preview во
+  всём app/src) + 2 записи из app/gradle.lockfile. Вне git удалены битые
+  артефакты скачивания («404: Not Found») и OCR-скратч.
+
+### Added
+
 - Wake word «Omni»: собственная модель `omni_v0.1.onnx` (синтетика Piper
   TTS, 20 голосов, adversarial-негативы) подключена по умолчанию;
   порог 0.35. Стриминговый recall 0.90–0.95, FP 3–5% на speaker-disjoint
