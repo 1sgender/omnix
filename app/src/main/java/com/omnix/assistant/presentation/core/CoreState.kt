@@ -45,3 +45,20 @@ enum class CoreGlyph {
     /** ERROR: an exclamation mark. */
     ALERT
 }
+
+/**
+ * Orthogonal status badges docked onto the Core ring (design matrix
+ * 2026-09-23).
+ *
+ * Badges never change the Core's shape or motion — they coexist with any
+ * layer (e.g. amplitude dashes + CLOUD during speech recognition) and follow
+ * the monochrome palette. Colour still belongs to ERROR alone.
+ */
+enum class CoreBadge {
+
+    /** The answer is being processed in the cloud. */
+    CLOUD,
+
+    /** No network connectivity. */
+    WIFI_OFF
+}
