@@ -156,6 +156,16 @@ class MediaPipeModelManager @Inject constructor(
         File(File(context.filesDir, MODEL_DIR), spec.fileName + ".init_crash")
     )
 
+    /**
+     * Страж нативного краша при ГЕНЕРАЦИИ: тот же файл-маркер, в который
+     * пишет рантайм (modelPath + ".inference_crash"). Менеджер читает его
+     * при загрузке: две последовательные смерти процесса в генерации —
+     * модель запрещается до перескачивания, чат уходит в облако.
+     */
+    private val inferenceCrashGuard = InferenceCrashGuard(
+        File(File(context.filesDir, MODEL_DIR), spec.fileName + ".inference_crash")
+    )
+
     init {
         registerTrimMemoryCallback()
         // Загрузка принадлежит системе и переживает смерть процесса:
@@ -274,6 +284,21 @@ class MediaPipeModelManager @Inject constructor(
             return@withLock currentState
         }
 
+        // Две ПОСЛЕДОВАТЕЛЬНЫЕ генерации убивали процесс (нативный сбой в
+        // инференсе, а не в загрузке — его init-страж не видит). Повтор для
+        // того же файла запрещён: каждое сообщение снова убивало бы приложение.
+        // Чат уходит в облако (fallback), как при любом отказе инициализации.
+        if (inferenceCrashGuard.isBanned()) {
+            setState(
+                LocalModelState.Failed(
+                    "Генерация на этой модели дважды роняла приложение (нативный сбой). " +
+                        "Удалите модель и скачайте заново: Настройки → ИИ → Модель на устройстве"
+                )
+            )
+            Log.e(TAG, "model load skipped: consecutive process deaths during generation")
+            return@withLock currentState
+        }
+
         setState(LocalModelState.Loading)
         Log.i(TAG, "model loading | id=${spec.modelId} | sizeMb=${spec.approxSizeMb}")
 
@@ -372,6 +397,7 @@ class MediaPipeModelManager @Inject constructor(
         if (packLocator.installFromPackIfPresent(file, spec.expectedSizeBytes)) {
             // Свежий файл из пакa — разрешаем одну новую попытку загрузки.
             initCrashGuard.reset()
+            inferenceCrashGuard.reset()
             if (currentState !is LocalModelState.Ready &&
                 currentState !is LocalModelState.Loading
             ) {
@@ -469,6 +495,7 @@ class MediaPipeModelManager @Inject constructor(
         // Файл удалён пользователем — следующий скачанный файл получит
         // одну свежую попытку загрузки (сбрасываем страж нативного краша).
         initCrashGuard.reset()
+        inferenceCrashGuard.reset()
         Log.i(TAG, "model file deleted | ${modelFile.absolutePath}")
         setState(LocalModelState.NotInstalled(modelFile.absolutePath))
         currentState
@@ -485,6 +512,7 @@ class MediaPipeModelManager @Inject constructor(
             if (packLocator.installFromPackIfPresent(modelFile, spec.expectedSizeBytes)) {
                 // Свежий файл из пакa — разрешаем одну новую попытку загрузки.
                 initCrashGuard.reset()
+                inferenceCrashGuard.reset()
                 if (currentState is LocalModelState.NotInstalled ||
                     currentState is LocalModelState.NotInitialized
                 ) {
@@ -566,6 +594,7 @@ class MediaPipeModelManager @Inject constructor(
                 // Свежий файл — разрешаем одну новую попытку загрузки,
                 // даже если прежний файл убивал процесс.
                 initCrashGuard.reset()
+                inferenceCrashGuard.reset()
                 // Ленивая загрузка при первом запросе: 1.3 ГБ RSS без нужды не занимаем.
                 setState(LocalModelState.NotInitialized)
             }

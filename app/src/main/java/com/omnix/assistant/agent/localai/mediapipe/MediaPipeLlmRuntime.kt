@@ -15,6 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
@@ -53,7 +54,10 @@ class DefaultMediaPipeRuntimeFactory @Inject constructor(
             .build()
 
         val engine = LlmInference.createFromOptions(context, options)
-        return MediaPipeLlmRuntime(engine)
+        // Маркер инференс-крашей живёт рядом с файлом модели — тот же файл,
+        // который читает MediaPipeModelManager при загрузке (initialize).
+        val inferenceGuard = InferenceCrashGuard(File(modelPath + ".inference_crash"))
+        return MediaPipeLlmRuntime(engine, inferenceGuard)
     }
 }
 
@@ -86,7 +90,8 @@ class DefaultMediaPipeRuntimeFactory @Inject constructor(
  * finally. Нативный движок один и переиспользуется.
  */
 class MediaPipeLlmRuntime(
-    private val engine: LlmInference
+    private val engine: LlmInference,
+    private val inferenceCrashGuard: InferenceCrashGuard
 ) : LocalModelRuntime, AutoCloseable {
 
     private companion object {
@@ -108,7 +113,16 @@ class MediaPipeLlmRuntime(
         onToken: ((String) -> Unit)?
     ): LocalGeneration = generationMutex.withLock {
         check(!closed.get()) { "MediaPipe runtime is closed" }
-        generateLocked(prompt, config, onToken)
+        // Нативная генерация может убить процесс без следа в Java: маркер
+        // страхует — две последовательные смерти запрещают модель, и чат
+        // уходит в облако вместо бесконечных вылетов (InferenceCrashGuard).
+        inferenceCrashGuard.generationStarted()
+        try {
+            generateLocked(prompt, config, onToken)
+        } finally {
+            // Любой возврат в Java (успех/исключение/отмена) — процесс выжил.
+            inferenceCrashGuard.generationFinished()
+        }
     }
 
     private suspend fun generateLocked(
