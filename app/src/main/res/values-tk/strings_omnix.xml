@@ -112,8 +112,6 @@
 
     <string name="omnix_pairing_title">Clip gözlenýär</string>
     <string name="omnix_pairing_searching">Cligi telefonyňyzyň ýanynda saklaň.</string>
-    <string name="omnix_pairing_detected">Tapylan</string>
-    <string name="omnix_pairing_verified">Enjam tassyklandy</string>
     <string name="omnix_pairing_code_link">Aktiwasiýa kodyny giriziň</string>
     <string name="omnix_pairing_not_found_title">Clip tapylmady</string>
     <string name="omnix_pairing_not_found_body">Cligiň zaryadlydygyny we Bluetooth-yň açykdygyny barlaň.</string>
@@ -311,8 +309,6 @@
     <string name="omnix_a11y_open_devices">Enjamlary aç</string>
 
     <!-- ===== Clip akym ýagdaýlary (§40, §70, §71) ===== -->
-    <string name="omnix_clip_connecting_title">Birikdirilýär…</string>
-    <string name="omnix_clip_connected_title">Clip birikdirildi</string>
     <string name="omnix_error_clip_failed_title">Birikdirip bolmady</string>
     <string name="omnix_clip_battery_low_title">Cligiň batareýasy pes</string>
     <string name="omnix_clip_last_seen">Soňky birikdirilen: %1$s</string>
