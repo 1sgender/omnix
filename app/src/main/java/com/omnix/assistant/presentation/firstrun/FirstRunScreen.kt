@@ -1,7 +1,6 @@
 package com.omnix.assistant.presentation.firstrun
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,6 +40,11 @@ import com.omnix.assistant.presentation.state.SystemStateType
  * The Core is present from the very first screen and stays in place across
  * every step — the user meets one object and watches it react, rather than
  * paging through a carousel of illustrations (§30).
+ *
+ * Композиция мока Welcome (2026-09-24), распространённая на ВСЕ шаги:
+ * заголовок и подзаголовок — над кольцом, в одну композицию (блок 82% ширины,
+ * логичный перенос); под кольцом — только действия. Кольцо между шагами не
+ * двигается, меняется лишь его состояние; заголовок обновляется на месте.
  */
 @Composable
 fun FirstRunScreen(
@@ -57,6 +61,11 @@ fun FirstRunScreen(
 ) {
     val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
+
+    // The durations are read here, in composable scope: `transitionSpec`
+    // runs outside it and cannot touch the theme.
+    val enterMs = OmnixTheme.motion.screenEnterMs
+    val exitMs = OmnixTheme.motion.screenExitMs
 
     Column(
         modifier = modifier
@@ -84,40 +93,23 @@ fun FirstRunScreen(
             )
         }
 
-        // Welcome (мок): заголовок и подзаголовок стоят НАД кольцом, в одну
-        // композицию с логичным переносом — ширина блока ограничена, чтобы
-        // «Голос в вашем ухе» не обрывалось одним словом. Остальные шаги
-        // остаются в прежней раскладке (заголовок под кольцом).
-        AnimatedVisibility(
-            visible = step == FirstRunStep.Welcome,
-            enter = fadeIn(tween(OmnixTheme.motion.screenEnterMs)),
-            exit = fadeOut(tween(OmnixTheme.motion.screenExitMs))
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(0.82f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(spacing.sm)
-            ) {
-                Spacer(Modifier.height(spacing.xxl))
-                Text(
-                    text = stringResource(R.string.omnix_welcome_headline),
-                    style = OmnixTheme.typography.display,
-                    color = colors.textPrimary,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = stringResource(R.string.omnix_welcome_body),
-                    style = OmnixTheme.typography.body,
-                    color = colors.textSecondary,
-                    textAlign = TextAlign.Center
-                )
-            }
+        // Заголовок шага — НАД кольцом (мок): шаги сменяются, композиция
+        // остаётся на месте, кольцо не прыгает.
+        AnimatedContent(
+            targetState = step,
+            transitionSpec = {
+                fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
+            },
+            label = "first-run-heading"
+        ) { current ->
+            StepHeading { HeadingOf(current, state, microphoneGranted) }
         }
 
         Spacer(Modifier.weight(1f))
 
         // Мок: кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
-        // волна «слушающих» столбиков внутри вместо абстрактного пустого круга.
+        // волна «слушающих» столбиков внутри; остальные шаги говорят
+        // состоянием ядра (монохром, §30).
         Box(contentAlignment = Alignment.Center) {
             OmnixCore(
                 state = coreStateFor(step, state, microphoneGranted),
@@ -136,22 +128,18 @@ fun FirstRunScreen(
 
         Spacer(Modifier.height(spacing.xxl))
 
-        // The durations are read here, in composable scope: `transitionSpec`
-        // runs outside it and cannot touch the theme.
-        val enterMs = OmnixTheme.motion.screenEnterMs
-        val exitMs = OmnixTheme.motion.screenExitMs
-
+        // Под кольцом — только действия шага.
         AnimatedContent(
             targetState = step,
             transitionSpec = {
                 fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
             },
-            label = "first-run-step"
+            label = "first-run-actions"
         ) { current ->
             when (current) {
-                FirstRunStep.Welcome -> WelcomeStep(onAdvance)
+                FirstRunStep.Welcome -> WelcomeActions(onAdvance)
 
-                FirstRunStep.DeviceDetection -> DeviceDetectionStep(
+                FirstRunStep.DeviceDetection -> DeviceDetectionActions(
                     clip = state.clip,
                     onAdvance = onAdvance,
                     onSkip = onSkipDevice,
@@ -159,19 +147,19 @@ fun FirstRunScreen(
                     onSearchAgain = onSearchAgain
                 )
 
-                FirstRunStep.ClipPairing -> ClipPairingStep(
+                FirstRunStep.ClipPairing -> ClipPairingActions(
                     clip = state.clip,
                     onAdvance = onAdvance
                 )
 
-                FirstRunStep.Microphone -> MicrophoneStep(
+                FirstRunStep.Microphone -> MicrophoneActions(
                     granted = microphoneGranted,
                     onRequest = onRequestMicrophone,
                     onOpenSettings = onOpenSystemSettings,
                     onAdvance = onAdvance
                 )
 
-                FirstRunStep.FirstCommand -> FirstCommandStep(
+                FirstRunStep.FirstCommand -> FirstCommandActions(
                     state = state,
                     onAdvance = onAdvance
                 )
@@ -209,42 +197,119 @@ private fun coreStateFor(
     FirstRunStep.Complete -> CoreState.IDLE
 }
 
+/**
+ * Заголовок шага в композиции мока: блок 82% ширины, центрированные тексты,
+ * сверху ритмический отступ. [content] отдаёт пару «заголовок/подзаголовок»
+ * шага — composables из-за stringResource/clipLabel.
+ */
 @Composable
-private fun StepScaffold(
-    title: String,
-    body: String?,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit = {}
-) {
-    val spacing = OmnixTheme.spacing
+private fun StepHeading(content: @Composable () -> Unit) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(0.82f),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.sm)
+        verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.sm)
     ) {
-        Text(
-            text = title,
-            style = OmnixTheme.typography.display,
-            color = OmnixTheme.colors.textPrimary,
-            textAlign = TextAlign.Center
-        )
-        body?.let {
-            Text(
-                text = it,
-                style = OmnixTheme.typography.body,
-                color = OmnixTheme.colors.textSecondary,
-                textAlign = TextAlign.Center
-            )
-        }
-        Spacer(Modifier.height(spacing.md))
+        Spacer(Modifier.height(OmnixTheme.spacing.xxl))
         content()
     }
 }
 
 @Composable
-private fun WelcomeStep(onAdvance: () -> Unit) {
-    // Заголовок и подзаголовок Welcome живут НАД кольцом (мок 2026-09-24);
-    // здесь остаётся только действие.
+private fun HeadingOf(
+    step: FirstRunStep,
+    state: OmnixUiState,
+    microphoneGranted: Boolean
+) {
+    when (step) {
+        FirstRunStep.Welcome -> Heading(
+            title = stringResource(R.string.omnix_welcome_headline),
+            body = stringResource(R.string.omnix_welcome_body)
+        )
+
+        FirstRunStep.DeviceDetection -> when (state.clip) {
+            is ClipState.Connected, is ClipState.Connecting -> Heading(
+                title = stringResource(R.string.omnix_pairing_detected),
+                body = clipLabel(state.clip)
+            )
+
+            ClipState.Searching -> Heading(
+                title = stringResource(R.string.omnix_pairing_title),
+                body = stringResource(R.string.omnix_pairing_searching)
+            )
+
+            else -> Heading(
+                title = stringResource(R.string.omnix_pairing_not_found_title),
+                body = stringResource(R.string.omnix_pairing_not_found_body)
+            )
+        }
+
+        FirstRunStep.ClipPairing ->
+            if (state.clip is ClipState.Connected) {
+                Heading(
+                    title = stringResource(R.string.omnix_clip_connected_title),
+                    body = stringResource(R.string.omnix_pairing_verified)
+                )
+            } else {
+                Heading(
+                    title = stringResource(R.string.omnix_clip_connecting_title),
+                    body = null
+                )
+            }
+
+        FirstRunStep.Microphone ->
+            if (microphoneGranted) {
+                Heading(
+                    title = stringResource(R.string.omnix_mic_ready),
+                    body = null
+                )
+            } else {
+                Heading(
+                    title = stringResource(R.string.omnix_mic_title),
+                    body = stringResource(R.string.omnix_mic_body)
+                )
+            }
+
+        FirstRunStep.FirstCommand ->
+            if (state.lastInteraction != null) {
+                Heading(
+                    title = stringResource(R.string.omnix_first_success_title),
+                    body = stringResource(R.string.omnix_first_success_body)
+                )
+            } else {
+                Heading(
+                    title = stringResource(R.string.omnix_clip_ready_title),
+                    body = stringResource(R.string.omnix_clip_ready_say)
+                )
+            }
+
+        FirstRunStep.Complete -> Unit
+    }
+}
+
+/** Пара «заголовок + подзаголовок» в типографике шага. */
+@Composable
+private fun Heading(title: String, body: String?) {
+    val colors = OmnixTheme.colors
+    Text(
+        text = title,
+        style = OmnixTheme.typography.display,
+        color = colors.textPrimary,
+        textAlign = TextAlign.Center
+    )
+    body?.let {
+        Text(
+            text = it,
+            style = OmnixTheme.typography.body,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+// ---- Действия шагов (под кольцом) ----
+
+@Composable
+private fun WelcomeActions(onAdvance: () -> Unit) {
     OmnixPrimaryButton(
         text = stringResource(R.string.omnix_welcome_cta),
         onClick = onAdvance
@@ -252,7 +317,7 @@ private fun WelcomeStep(onAdvance: () -> Unit) {
 }
 
 @Composable
-private fun DeviceDetectionStep(
+private fun DeviceDetectionActions(
     clip: ClipState,
     onAdvance: () -> Unit,
     onSkip: () -> Unit,
@@ -261,90 +326,53 @@ private fun DeviceDetectionStep(
 ) {
     val spacing = OmnixTheme.spacing
     when (clip) {
-        is ClipState.Connected, is ClipState.Connecting -> StepScaffold(
-            title = stringResource(R.string.omnix_pairing_detected),
-            body = clipLabel(clip)
-        ) {
+        is ClipState.Connected, is ClipState.Connecting ->
             OmnixPrimaryButton(stringResource(R.string.omnix_continue), onAdvance)
-        }
 
-        ClipState.Searching -> StepScaffold(
-            title = stringResource(R.string.omnix_pairing_title),
-            body = stringResource(R.string.omnix_pairing_searching)
-        ) {
+        ClipState.Searching ->
             // No Clip is required to use OMNIX, so the way forward is always
             // open — the user is never trapped by missing hardware (§34).
             OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onSkip)
-        }
 
-        else -> StepScaffold(
-            title = stringResource(R.string.omnix_pairing_not_found_title),
-            body = stringResource(R.string.omnix_pairing_not_found_body)
+        else -> Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.xs)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(spacing.xs)
-            ) {
-                OmnixPrimaryButton(stringResource(R.string.omnix_pairing_retry), onSearchAgain)
-                OmnixTextButton(stringResource(R.string.omnix_pairing_code_link), onEnterCode)
-                OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onSkip)
-            }
+            OmnixPrimaryButton(stringResource(R.string.omnix_pairing_retry), onSearchAgain)
+            OmnixTextButton(stringResource(R.string.omnix_pairing_code_link), onEnterCode)
+            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onSkip)
         }
     }
 }
 
 @Composable
-private fun ClipPairingStep(clip: ClipState, onAdvance: () -> Unit) {
-    val connected = clip is ClipState.Connected
-    StepScaffold(
-        title = if (connected) {
-            stringResource(R.string.omnix_clip_connected_title)
-        } else {
-            stringResource(R.string.omnix_clip_connecting_title)
-        },
-        body = if (connected) stringResource(R.string.omnix_pairing_verified) else null
-    ) {
-        if (connected) {
-            OmnixPrimaryButton(stringResource(R.string.omnix_clip_continue), onAdvance)
-        }
+private fun ClipPairingActions(clip: ClipState, onAdvance: () -> Unit) {
+    if (clip is ClipState.Connected) {
+        OmnixPrimaryButton(stringResource(R.string.omnix_clip_continue), onAdvance)
     }
 }
 
 /**
- * The microphone request (§38, §50).
- *
- * WHAT  — "Let OMNIX hear you"
- * WHY   — "Your microphone is needed for voice commands."
- * ACTION— a single button.
- *
- * The Android permission identifier is never shown.
+ * The microphone request (§38, §50): WHAT / WHY / ACTION. The WHAT-WHY pair
+ * живёт в заголовке над кольцом; здесь — единственное действие. The Android
+ * permission identifier is never shown.
  */
 @Composable
-private fun MicrophoneStep(
+private fun MicrophoneActions(
     granted: Boolean,
     onRequest: () -> Unit,
     onOpenSettings: () -> Unit,
     onAdvance: () -> Unit
 ) {
     if (granted) {
-        StepScaffold(
-            title = stringResource(R.string.omnix_mic_ready),
-            body = null
-        ) {
-            OmnixPrimaryButton(stringResource(R.string.omnix_mic_continue), onAdvance)
-        }
+        OmnixPrimaryButton(stringResource(R.string.omnix_mic_continue), onAdvance)
     } else {
-        StepScaffold(
-            title = stringResource(R.string.omnix_mic_title),
-            body = stringResource(R.string.omnix_mic_body)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
-            ) {
-                OmnixPrimaryButton(stringResource(R.string.omnix_error_mic_action), onRequest)
-                OmnixTextButton(stringResource(R.string.omnix_mic_open_settings), onOpenSettings)
-            }
+            OmnixPrimaryButton(stringResource(R.string.omnix_error_mic_action), onRequest)
+            OmnixTextButton(stringResource(R.string.omnix_mic_open_settings), onOpenSettings)
         }
     }
 }
@@ -354,32 +382,21 @@ private fun MicrophoneStep(
  * simulated one — the state comes from the live pipeline (§34).
  */
 @Composable
-private fun FirstCommandStep(state: OmnixUiState, onAdvance: () -> Unit) {
+private fun FirstCommandActions(state: OmnixUiState, onAdvance: () -> Unit) {
     val spacing = OmnixTheme.spacing
-    val succeeded = state.lastInteraction != null
 
-    if (succeeded) {
-        StepScaffold(
-            title = stringResource(R.string.omnix_first_success_title),
-            body = stringResource(R.string.omnix_first_success_body)
-        ) {
-            OmnixPrimaryButton(stringResource(R.string.omnix_first_success_cta), onAdvance)
-        }
+    if (state.lastInteraction != null) {
+        OmnixPrimaryButton(stringResource(R.string.omnix_first_success_cta), onAdvance)
     } else {
-        StepScaffold(
-            title = stringResource(R.string.omnix_clip_ready_title),
-            body = stringResource(R.string.omnix_clip_ready_say)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.xs)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(spacing.xs)
-            ) {
-                OmnixSpokenExample(stringResource(R.string.omnix_home_example_time))
-                if (state.systemState == SystemStateType.MICROPHONE_DENIED) {
-                    SystemStateView(type = SystemStateType.MICROPHONE_DENIED)
-                }
-                OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
+            OmnixSpokenExample(stringResource(R.string.omnix_home_example_time))
+            if (state.systemState == SystemStateType.MICROPHONE_DENIED) {
+                SystemStateView(type = SystemStateType.MICROPHONE_DENIED)
             }
+            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
         }
     }
 }
