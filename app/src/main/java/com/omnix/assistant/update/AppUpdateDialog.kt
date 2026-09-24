@@ -68,7 +68,7 @@ private sealed interface UpdateUiState {
  * сам находит и загружает совместимое обновление.
  */
 @Composable
-fun AppUpdatePrompt() {
+fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
     val channel = directUpdateChannel(
         flavor = BuildConfig.FLAVOR,
         buildType = BuildConfig.BUILD_TYPE
@@ -90,6 +90,8 @@ fun AppUpdatePrompt() {
             withContext(Dispatchers.IO) { manager.updateFile().exists() }
         return when (decideResume(pending, fileExists, current)) {
             ResumeAction.INSTALL -> {
+                // Загрузка завершена — дугу ядра гасим.
+                otaMonitor.end()
                 state = UpdateUiState.Ready(pending!!.versionCode)
                 true
             }
@@ -99,10 +101,13 @@ fun AppUpdatePrompt() {
                     versionCode = pending.versionCode,
                     expectedBytes = pending.expectedBytes
                 )
+                // Дуга ядра живёт независимо от видимости этого диалога.
+                watchDownload(otaMonitor, manager, pending.downloadId, pending.versionCode)
                 true
             }
             ResumeAction.DISCARD -> {
                 withContext(Dispatchers.IO) { manager.clearPending() }
+                otaMonitor.end()
                 false
             }
         }
@@ -130,6 +135,7 @@ fun AppUpdatePrompt() {
                     if (pending.status == DownloadManager.STATUS_FAILED) {
                         val failedVersion = pending.versionCode
                         withContext(Dispatchers.IO) { manager.clearPending() }
+                        otaMonitor.end()
                         state = UpdateUiState.Failed(failedVersion)
                     } else {
                         syncWithPending()
@@ -167,6 +173,7 @@ fun AppUpdatePrompt() {
                         versionCode = current.info.versionCode,
                         expectedBytes = current.info.sizeBytes
                     )
+                    watchDownload(otaMonitor, manager, id, current.info.versionCode)
                 }
             },
             onLater = { state = UpdateUiState.Idle }
@@ -180,10 +187,16 @@ fun AppUpdatePrompt() {
                 scope.launch {
                     // SUCCESSFUL в опросе: свериться с файлом и показать «Готово».
                     val resumed = syncWithPending()
-                    if (!resumed) state = UpdateUiState.Failed(current.versionCode)
+                    if (!resumed) {
+                        otaMonitor.end()
+                        state = UpdateUiState.Failed(current.versionCode)
+                    }
                 }
             },
-            onFailed = { state = UpdateUiState.Failed(current.versionCode) },
+            onFailed = {
+                otaMonitor.end()
+                state = UpdateUiState.Failed(current.versionCode)
+            },
             onHide = { state = UpdateUiState.Idle }
         )
         is UpdateUiState.Ready -> AlertDialog(
@@ -240,6 +253,22 @@ fun AppUpdatePrompt() {
                 }
             }
         )
+    }
+}
+
+/**
+ * Подключить монитор к загрузке: он опрашивает DownloadManager параллельно
+ * диалогу (запрос дешёвый — локальный content provider) и переживает скрытие
+ * диалога, питая дугу ядра до терминального исхода.
+ */
+private fun watchDownload(
+    otaMonitor: OtaDownloadMonitor,
+    manager: AppUpdateManager,
+    downloadId: Long,
+    versionCode: Long
+) {
+    otaMonitor.begin(downloadId, versionCode) {
+        withContext(Dispatchers.IO) { manager.queryProgress(downloadId) }
     }
 }
 

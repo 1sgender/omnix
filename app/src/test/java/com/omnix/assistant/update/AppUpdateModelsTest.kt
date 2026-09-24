@@ -178,4 +178,39 @@ class AppUpdateModelsTest {
         assertEquals("1.0 MB", formatMegaBytes(1048576L, Locale.ROOT, "MB"))
         assertEquals("132.5 MB", formatMegaBytes(138979810L, Locale.ROOT, "MB"))
     }
+
+    // ---- Доля OTA-загрузки для дуги ядра ----
+
+    @Test
+    fun `ota arc fraction is null without a download or total`() {
+        assertNull(otaArcFraction(null))
+        // Размер ещё неизвестен — дуга без знаменателя это ложный прогресс.
+        assertNull(
+            otaArcFraction(
+                OtaDownloadSnapshot(downloadId = 1L, versionCode = 2L, bytesSoFar = 0L, totalBytes = 0L)
+            )
+        )
+    }
+
+    @Test
+    fun `ota arc fraction maps and clamps`() {
+        assertEquals(
+            0.5f,
+            otaArcFraction(
+                OtaDownloadSnapshot(downloadId = 1L, versionCode = 2L, bytesSoFar = 500L, totalBytes = 1_000L)
+            )!!
+        )
+        assertEquals(
+            1f,
+            otaArcFraction(
+                OtaDownloadSnapshot(downloadId = 1L, versionCode = 2L, bytesSoFar = 1_000L, totalBytes = 1_000L)
+            )!!
+        )
+        assertEquals(
+            1f,
+            otaArcFraction(
+                OtaDownloadSnapshot(downloadId = 1L, versionCode = 2L, bytesSoFar = 1_500L, totalBytes = 1_000L)
+            )!!
+        )
+    }
 }

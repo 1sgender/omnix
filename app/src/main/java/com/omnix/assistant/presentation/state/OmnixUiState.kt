@@ -54,6 +54,14 @@ data class OmnixUiState(
     /** A system-level condition that must be surfaced (§18, §48). */
     val systemState: SystemStateType? = null,
 
+    /**
+     * Доля OTA-загрузки 0..1 для дуги ядра; null — активной загрузки нет или
+     * размер ещё неизвестен (дуга не показывается — без знаменателя это ложный
+     * прогресс). Живёт от реального хода DownloadManager (OtaDownloadMonitor),
+     * независимо от видимости диалога обновления.
+     */
+    val otaDownloadProgress: Float? = null,
+
     /** How much guidance the user still needs (§10, §82). */
     val guidance: GuidanceLevel = GuidanceLevel.New
 ) {

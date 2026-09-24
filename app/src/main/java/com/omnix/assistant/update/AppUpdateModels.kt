@@ -95,6 +95,17 @@ fun progressPercent(bytesSoFar: Long, totalBytes: Long): Int {
 }
 
 /**
+ * Доля OTA-загрузки 0..1 для дуги ядра (OmnixCore.progress). null — дугу
+ * не показываем: загрузки нет либо итоговый размер ещё неизвестен (дуга без
+ * знаменателя — ложный прогресс, честнее подождать первого снимка).
+ */
+fun otaArcFraction(snapshot: OtaDownloadSnapshot?): Float? {
+    if (snapshot == null) return null
+    if (snapshot.totalBytes <= 0L) return null
+    return (snapshot.bytesSoFar.toFloat() / snapshot.totalBytes).coerceIn(0f, 1f)
+}
+
+/**
  * Мегабайты с одним знаком после запятой («62,4 МБ»). Локаль и единица
  * измерения подаются снаружи — функция остаётся чистой для JVM-тестов.
  */

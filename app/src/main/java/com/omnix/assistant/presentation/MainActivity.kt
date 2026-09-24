@@ -19,6 +19,7 @@ import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.localmodel.LocalModelConsentDialog
 import com.omnix.assistant.presentation.navigation.OmnixNavGraph
 import com.omnix.assistant.update.AppUpdatePrompt
+import com.omnix.assistant.update.OtaDownloadMonitor
 import androidx.lifecycle.lifecycleScope
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.presentation.core.CoreState
@@ -45,6 +46,10 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsDataStore: SettingsDataStore
+
+    /** Ход OTA-загрузки для дуги ядра (см. AppUpdatePrompt). */
+    @Inject
+    lateinit var otaDownloadMonitor: OtaDownloadMonitor
 
     /** Guards the first frame while stored preferences are read. */
     private var splashHeld: Boolean by mutableStateOf(true)
@@ -168,7 +173,7 @@ class MainActivity : ComponentActivity() {
                     // старт на ВСЕХ экранах (включая активацию и онбординг) —
                     // иначе баг в активации лечится только ручной переустановкой.
                     // На остальных флейворах молчит.
-                    AppUpdatePrompt()
+                    AppUpdatePrompt(otaDownloadMonitor)
                 }
             }
         }

@@ -10,6 +10,9 @@ import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.NetworkMonitor
+import com.omnix.assistant.update.OtaDownloadMonitor
+import com.omnix.assistant.update.OtaDownloadSnapshot
+import com.omnix.assistant.update.otaArcFraction
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.orchestrator.OrchestratorMode
 import com.omnix.assistant.voice.orchestrator.VoiceInteractionOrchestrator
@@ -46,7 +49,8 @@ class OmnixViewModel @Inject constructor(
     private val clipRepository: ClipRepository,
     private val experienceStore: OmnixExperienceStore,
     networkMonitor: NetworkMonitor,
-    cloudProcessingMonitor: CloudProcessingMonitor
+    cloudProcessingMonitor: CloudProcessingMonitor,
+    otaDownloadMonitor: OtaDownloadMonitor
 ) : ViewModel() {
 
     /** Set by the pairing screen while it actively searches for a Clip. */
@@ -168,20 +172,23 @@ class OmnixViewModel @Inject constructor(
         val clip: ClipState,
         val isOnline: Boolean,
         val guidance: GuidanceLevel,
-        val microphoneGranted: Boolean
+        val microphoneGranted: Boolean,
+        val otaDownload: OtaDownloadSnapshot?
     )
 
     private val environmentSignals: StateFlow<EnvironmentSignals> = combine(
         clip,
         isOnline,
         guidance,
-        microphoneGranted
-    ) { clipState, online, guidanceLevel, micGranted ->
+        microphoneGranted,
+        otaDownloadMonitor.snapshot
+    ) { clipState, online, guidanceLevel, micGranted, otaSnapshot ->
         EnvironmentSignals(
             clip = clipState,
             isOnline = online,
             guidance = guidanceLevel,
-            microphoneGranted = micGranted
+            microphoneGranted = micGranted,
+            otaDownload = otaSnapshot
         )
     }.stateIn(
         viewModelScope,
@@ -192,7 +199,8 @@ class OmnixViewModel @Inject constructor(
             clip = ClipState.Unknown,
             isOnline = true,
             guidance = GuidanceLevel.New,
-            microphoneGranted = microphoneGranted.value
+            microphoneGranted = microphoneGranted.value,
+            otaDownload = null
         )
     )
 
@@ -222,7 +230,8 @@ class OmnixViewModel @Inject constructor(
             confirmation = confirmationOf(voice),
             lastInteraction = voice.lastInteraction,
             systemState = systemState,
-            guidance = env.guidance
+            guidance = env.guidance,
+            otaDownloadProgress = otaArcFraction(env.otaDownload)
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OmnixUiState())
 
