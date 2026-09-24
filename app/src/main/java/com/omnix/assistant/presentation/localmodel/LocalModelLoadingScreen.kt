@@ -1,15 +1,11 @@
 package com.omnix.assistant.presentation.localmodel
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -78,42 +74,48 @@ fun LocalModelLoadingScreen(modifier: Modifier = Modifier) {
 
 private val RING_SIZE = 112.dp
 private val RING_STROKE = 2.dp
-private val RING_CYCLE_MS = 2400
+private const val RING_DRAW_MS = 1500L
+private const val RING_HOLD_MS = 300L
+private const val RING_FADE_OUT_MS = 200L
+private const val RING_REST_MS = 450L
+/** The self-drawing arc is a static 3/4 ring when motion is reduced. */
 private const val RING_STATIC_TRIM = 0.75f
 
 /**
- * One cycle: ~1.5 s of drawing (ease-in-out), a closed moment, then a soft
- * fade while the arc resets — the new cycle starts from the same still
- * ground, so the loop never reads as a bouncing restart.
+ * One cycle, ~2.4 s: ~1.5 s of drawing (ease-in-out, compass-like), a
+ * closed moment, then a soft fade into the still ground circle while the
+ * arc resets — the new cycle starts from the same still ground, so the
+ * loop never reads as a bouncing restart.
  */
-private val ringDrawSpec = infiniteRepeatable(
-    animation = keyframes<Float> {
-        durationMillis = RING_CYCLE_MS
-        0f at 0
-        1f at 1500 with FastOutSlowInEasing
-        1f at 2050
-        0f at 2051
-        0f at RING_CYCLE_MS
-    },
-    repeatMode = RepeatMode.Restart
-)
-
-private val ringFadeSpec = infiniteRepeatable(
-    animation = keyframes<Float> {
-        durationMillis = RING_CYCLE_MS
-        1f at 0
-        1f at 1850
-        0f at 2050 with LinearEasing
-        1f at 2250 with LinearOutSlowInEasing
-        1f at RING_CYCLE_MS
-    },
-    repeatMode = RepeatMode.Restart
-)
-
 @Composable
 private fun SelfDrawingRing() {
     val colors = OmnixTheme.colors
-    val (trim, arcAlpha) = ringProgress()
+    val reducedMotion = OmnixTheme.reducedMotion
+    // Start empty: the first frame is the still ground circle, then the
+    // loop (or the reduced-motion snap) takes over without any pop.
+    val trim = remember { Animatable(0f) }
+    val arcAlpha = remember { Animatable(1f) }
+
+    LaunchedEffect(reducedMotion) {
+        if (reducedMotion) {
+            trim.snapTo(RING_STATIC_TRIM)
+            arcAlpha.snapTo(1f)
+            return@LaunchedEffect
+        }
+        while (true) {
+            trim.snapTo(0f)
+            arcAlpha.snapTo(1f)
+            // Draw itself around: slow start, slow close.
+            trim.animateTo(1f, tween(RING_DRAW_MS.toInt(), easing = FastOutSlowInEasing))
+            // The closed moment.
+            delay(RING_HOLD_MS)
+            // Soften into the ground ring, reset while invisible...
+            arcAlpha.animateTo(0f, tween(RING_FADE_OUT_MS.toInt(), easing = LinearEasing))
+            trim.snapTo(0f)
+            // ...then a still beat before the next cycle rises.
+            delay(RING_REST_MS)
+        }
+    }
 
     Canvas(modifier = Modifier.size(RING_SIZE)) {
         val stroke = RING_STROKE.toPx()
@@ -129,11 +131,11 @@ private fun SelfDrawingRing() {
             style = Stroke(width = stroke)
         )
 
-        if (trim > 0.002f && arcAlpha > 0.004f) {
+        if (trim.value > 0.002f && arcAlpha.value > 0.004f) {
             drawArc(
-                color = colors.textPrimary.copy(alpha = colors.textPrimary.alpha * arcAlpha),
+                color = colors.textPrimary.copy(alpha = colors.textPrimary.alpha * arcAlpha.value),
                 startAngle = -90f,
-                sweepAngle = 360f * trim,
+                sweepAngle = 360f * trim.value,
                 useCenter = false,
                 style = Stroke(width = stroke, cap = StrokeCap.Butt),
                 topLeft = topLeft,
@@ -141,16 +143,6 @@ private fun SelfDrawingRing() {
             )
         }
     }
-}
-
-@Composable
-private fun ringProgress(): Pair<Float, Float> {
-    if (OmnixTheme.reducedMotion) return RING_STATIC_TRIM to 1f
-
-    val infinite = rememberInfiniteTransition()
-    val trim by infinite.animateFloat(0f, 1f, ringDrawSpec)
-    val arcAlpha by infinite.animateFloat(1f, 0f, ringFadeSpec)
-    return trim to arcAlpha
 }
 
 // ----------------------------------------------------------- the wordmark
