@@ -295,6 +295,20 @@ class OmnixViewModel @Inject constructor(
         microphoneGranted.value = hasMicrophonePermission()
     }
 
+    /**
+     * True once the system microphone prompt has actually been shown. The
+     * first-run mic step uses it to tell "never asked" from "denied": a
+     * settings link is offered only after the user had a chance to answer
+     * the prompt (mock 2026-09-24).
+     */
+    val microphonePrompted: StateFlow<Boolean> = experienceStore.microphonePrompted
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    /** Persisted when the prompt is launched, not when the user answers. */
+    fun markMicrophonePrompted() {
+        viewModelScope.launch { experienceStore.setMicrophonePrompted(true) }
+    }
+
     /** Driven by the pairing screen (§40). */
     fun setSearching(active: Boolean) {
         searching.value = active

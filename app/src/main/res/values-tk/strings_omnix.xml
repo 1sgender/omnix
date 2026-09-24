@@ -123,9 +123,12 @@
     <string name="omnix_clip_ready_say">Aýdyň:</string>
     <string name="omnix_clip_continue">Dowam et</string>
 
-    <string name="omnix_mic_title">OMNIX sizi eşidsin</string>
-    <string name="omnix_mic_body">Sesli buýruklar üçin mikrofonyňyz gerek.</string>
-    <string name="omnix_mic_ready">Mikrofon taýýar.</string>
+    <string name="omnix_mic_request_title">Mikrofonyň rugsady</string>
+    <string name="omnix_mic_request_body">OMNIX sesli buýruklaryňyzy eşitmek üçin mikrofonyňyz gerek.</string>
+    <string name="omnix_mic_denied_title">Mikrofon öçürilen</string>
+    <string name="omnix_mic_denied_body">Ses bilen dolandyrmak üçin rugsady sazlamalarda açyň.</string>
+    <string name="omnix_mic_ready">Taýýar.</string>
+    <string name="omnix_mic_connected">Mikrofon birleşdirildi.</string>
     <string name="omnix_mic_continue">Dowam et</string>
     <string name="omnix_mic_open_settings">Sazlamalary aç</string>
 
