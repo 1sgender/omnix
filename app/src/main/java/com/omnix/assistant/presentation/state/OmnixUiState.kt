@@ -29,6 +29,13 @@ data class OmnixUiState(
     /** Network availability (§20, §53). */
     val isOnline: Boolean = true,
 
+    /**
+     * В облаке прямо сейчас выполняется запрос (любой: голос, чат) — источник
+     * бейджа CLOUD на ядре. Идёт от реального трафика (CloudProcessingMonitor),
+     * не от предположения о маршруте решения.
+     */
+    val isCloudProcessing: Boolean = false,
+
     /** Whether the voice pipeline is actually running in the foreground service. */
     val isListeningServiceActive: Boolean = false,
 

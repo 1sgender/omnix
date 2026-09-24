@@ -1,5 +1,6 @@
 package com.omnix.assistant.data.remote
 
+import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.ResponseBodyTooLargeException
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.core.security.SecurityManager
@@ -7,9 +8,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CountDownLatch
@@ -29,12 +33,14 @@ import org.junit.Test
 class OmnixApiClientTest {
     private lateinit var server: MockWebServer
     private lateinit var security: FakeSecurityManager
+    private lateinit var cloudMonitor: CloudProcessingMonitor
     private lateinit var client: OmnixApiClient
 
     @Before
     fun setUp() {
         server = MockWebServer().apply { start() }
         security = FakeSecurityManager(VALID_TOKEN)
+        cloudMonitor = CloudProcessingMonitor()
         val rewritingClient = OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val original = chain.request()
@@ -45,7 +51,8 @@ class OmnixApiClientTest {
         client = OmnixApiClient(
             rewritingClient,
             security,
-            Json { ignoreUnknownKeys = true; isLenient = false }
+            Json { ignoreUnknownKeys = true; isLenient = false },
+            cloudMonitor
         )
     }
 
@@ -281,6 +288,68 @@ class OmnixApiClientTest {
         assertTrue(result is Resource.Error)
         val message = (result as Resource.Error).message.orEmpty()
         assertTrue("expected code in: '$message'", message.contains("HTTP_502"))
+    }
+
+    // ---- Бейдж CLOUD: CloudProcessingMonitor как честный сигнал трафика ----
+
+    /**
+     * Пока ответ «висит» в облаке — монитор активен; после завершения (успех
+     * или разбор ошибки) — освобождён. Задержка тела ответа даёт окно, в
+     * котором запрос гарантированно в полёте.
+     */
+    @Test
+    fun `cloud monitor is active while a request is in flight and released after`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(200)
+                .setBodyDelay(700L, TimeUnit.MILLISECONDS)
+                .setBody(
+                    """{"success":true,"text":"slow answer","executionType":"CLOUD_AI","requestId":"r-3"}"""
+                )
+        )
+
+        val deferred = async {
+            client.execute("hello", "VOICE", "NORMAL", false)
+        }
+
+        // Запрос ушёл, ответ ещё не пришёл: бейдж должен гореть.
+        delay(250L)
+        assertTrue(
+            "monitor must be active while the request is in flight",
+            cloudMonitor.active.first()
+        )
+
+        val result = deferred.await()
+        assertEquals(Resource.Success("slow answer"), result)
+        assertFalse(
+            "monitor must be released after the response is parsed",
+            cloudMonitor.active.first()
+        )
+    }
+
+    /** Сетевая неудача тоже обязана освобождать монитор (finally), иначе бейдж зависнет навсегда. */
+    @Test
+    fun `cloud monitor is released after a network failure`() = runBlocking {
+        server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START))
+
+        val result = client.execute("hello", "CHAT", "NORMAL", false)
+
+        assertTrue(result is Resource.Error)
+        assertFalse(
+            "monitor must be released after a network failure",
+            cloudMonitor.active.first()
+        )
+    }
+
+    /** Отказ до сети (невалидный токен) облачным запросом не считается. */
+    @Test
+    fun `cloud monitor stays idle when the token is invalid`() = runBlocking {
+        security.saveAccessToken("short")
+
+        val result = client.execute("hello", "CHAT", "NORMAL", false)
+
+        assertTrue(result is Resource.Error)
+        assertFalse(cloudMonitor.active.first())
+        assertEquals(0, server.requestCount)
     }
 
     private companion object {

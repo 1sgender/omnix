@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolExecutionResult
+import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.NetworkMonitor
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.orchestrator.OrchestratorMode
@@ -44,7 +45,8 @@ class OmnixViewModel @Inject constructor(
     private val orchestrator: VoiceInteractionOrchestrator,
     private val clipRepository: ClipRepository,
     private val experienceStore: OmnixExperienceStore,
-    networkMonitor: NetworkMonitor
+    networkMonitor: NetworkMonitor,
+    cloudProcessingMonitor: CloudProcessingMonitor
 ) : ViewModel() {
 
     /** Set by the pairing screen while it actively searches for a Clip. */
@@ -70,6 +72,13 @@ class OmnixViewModel @Inject constructor(
 
     private val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    /**
+     * Бейдж CLOUD на ядре: истинно, пока OmnixApiClient выполняет хотя бы
+     * один облачный запрос (голос или чат). Сигнал — реальный трафик.
+     */
+    private val cloudActive: StateFlow<Boolean> = cloudProcessingMonitor.active
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     /**
      * Voice-layer inputs, grouped so the final `combine` stays readable.
@@ -150,18 +159,53 @@ class OmnixViewModel @Inject constructor(
         limits.levelFor(commands, firstDone)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GuidanceLevel.New)
 
-    /** The one state the whole frontend renders. */
-    val uiState: StateFlow<OmnixUiState> = combine(
-        voiceSignals,
+    /**
+     * Non-voice inputs, grouped so the final `combine` stays within Kotlin's
+     * five-flow typed overload — adding cloud activity made the flat version
+     * six flows (same reason [VoiceSignals] exists).
+     */
+    private data class EnvironmentSignals(
+        val clip: ClipState,
+        val isOnline: Boolean,
+        val guidance: GuidanceLevel,
+        val microphoneGranted: Boolean
+    )
+
+    private val environmentSignals: StateFlow<EnvironmentSignals> = combine(
         clip,
         isOnline,
         guidance,
         microphoneGranted
-    ) { voice, clipState, online, guidanceLevel, micGranted ->
-        val systemState = OmnixStateMapper.systemStateOf(
+    ) { clipState, online, guidanceLevel, micGranted ->
+        EnvironmentSignals(
             clip = clipState,
             isOnline = online,
-            microphoneGranted = micGranted,
+            guidance = guidanceLevel,
+            microphoneGranted = micGranted
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        // Реальные стартовые значения (а не заглушки), чтобы первая эмиссия
+        // uiState не мигнула ложным systemState (например, «нет микрофона»).
+        EnvironmentSignals(
+            clip = ClipState.Unknown,
+            isOnline = true,
+            guidance = GuidanceLevel.New,
+            microphoneGranted = microphoneGranted.value
+        )
+    )
+
+    /** The one state the whole frontend renders. */
+    val uiState: StateFlow<OmnixUiState> = combine(
+        voiceSignals,
+        environmentSignals,
+        cloudActive
+    ) { voice, env, cloudProcessing ->
+        val systemState = OmnixStateMapper.systemStateOf(
+            clip = env.clip,
+            isOnline = env.isOnline,
+            microphoneGranted = env.microphoneGranted,
             accessExpired = false,
             // The Clip is only *required* when the user chose headset-only
             // mode; otherwise the phone microphone is a valid path (§20).
@@ -169,15 +213,16 @@ class OmnixViewModel @Inject constructor(
         )
         OmnixUiState(
             phase = voice.phase,
-            clip = clipState,
-            isOnline = online,
+            clip = env.clip,
+            isOnline = env.isOnline,
+            isCloudProcessing = cloudProcessing,
             isListeningServiceActive = orchestrator.currentMode.value != OrchestratorMode.PAUSED_CALL_OR_SLEEP,
             audioLevel = voice.audioLevel,
             action = voice.action,
             confirmation = confirmationOf(voice),
             lastInteraction = voice.lastInteraction,
             systemState = systemState,
-            guidance = guidanceLevel
+            guidance = env.guidance
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OmnixUiState())
 
