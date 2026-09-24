@@ -92,9 +92,6 @@ fun FirstRunScreen(
 
     // The durations are read here, in composable scope: `transitionSpec`
     // runs outside it and cannot touch the theme.
-    val enterMs = OmnixTheme.motion.screenEnterMs
-    val exitMs = OmnixTheme.motion.screenExitMs
-
     // Мок «подключение Clip» (2026-09-24): флоу подключения живёт в своей
     // эстетике — маленький знак-кольцо без надписи вместо логотипа-текста,
     // тонкое кольцо вместо ядра; остальные шаги — в прежней композиции.
@@ -130,97 +127,202 @@ fun FirstRunScreen(
             }
         }
 
-        // Заголовок шага — НАД кольцом (мок): шаги сменяются, композиция
-        // остаётся на месте, кольцо не прыгает.
-        AnimatedContent(
-            targetState = step,
-            transitionSpec = {
-                fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
-            },
-            label = "first-run-heading"
-        ) { current ->
-            val clipFlow =
-                current == FirstRunStep.DeviceDetection || current == FirstRunStep.ClipPairing
-            StepHeading(clipFlow = clipFlow) { HeadingOf(current, state, microphoneGranted, microphonePrompted) }
-        }
-
-        Spacer(Modifier.weight(1f))
-
         if (isClipFlow) {
-            // Мок: тонкое кольцо с бегущей дугой — весь смысл экрана в нём.
+            // Мок 2026-09-25 (пересмотр): кольцо — «сцена» между знаком и
+            // копирайтом; заголовок ПОД кольцом, действия прижаты к низу.
+            Spacer(Modifier.weight(1f))
             ClipPairingRing(phase = clipRingPhase(state.clip))
+            Spacer(Modifier.weight(1f))
+            StepHeadingSlot(
+                step = step,
+                state = state,
+                microphoneGranted = microphoneGranted,
+                microphonePrompted = microphonePrompted
+            )
+            Spacer(Modifier.height(CLIP_ACTIONS_TOP_GAP))
+            // Мок: зона действий фиксированной минимальной высоты, содержимое
+            // прижато к низу — фазы меняются, кольцо и копирайт стоят на месте.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = CLIP_ACTIONS_MIN_HEIGHT),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                StepActionsSlot(
+                    step = step,
+                    state = state,
+                    onAdvance = onAdvance,
+                    onSkipDevice = onSkipDevice,
+                    onEnterActivationCode = onEnterActivationCode,
+                    onSearchAgain = onSearchAgain,
+                    onRequestMicrophone = onRequestMicrophone,
+                    onOpenSystemSettings = onOpenSystemSettings,
+                    microphoneGranted = microphoneGranted,
+                    microphonePrompted = microphonePrompted
+                )
+            }
+
+            // Мок: отступ копирайта/действий от нижнего края — 28px.
+            Spacer(Modifier.height(CLIP_BOTTOM_GAP))
         } else {
-            // Мок: кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
+            // Заголовок — НАД кольцом (мок онбординга): шаги сменяются,
+            // композиция остаётся на месте, кольцо не прыгает.
+            Spacer(Modifier.height(spacing.xxl))
+            StepHeadingSlot(
+                step = step,
+                state = state,
+                microphoneGranted = microphoneGranted,
+                microphonePrompted = microphonePrompted
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            // Кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
             // волна «слушающих» столбиков внутри; остальные шаги говорят
             // состоянием ядра (монохром, §30). Шум микрофона — своё тонкое
             // кольцо (мок 2026-09-24): три состояния «запрос / отказ / готово».
-            Box(contentAlignment = Alignment.Center) {
-                if (step == FirstRunStep.Microphone) {
-                    MicrophoneRing(microphoneVisualState(microphoneGranted, microphonePrompted))
+            StepCoreSlot(
+                step = step,
+                state = state,
+                microphoneGranted = microphoneGranted,
+                microphonePrompted = microphonePrompted
+            )
+
+            Spacer(Modifier.height(spacing.xxl))
+
+            StepActionsSlot(
+                step = step,
+                state = state,
+                onAdvance = onAdvance,
+                onSkipDevice = onSkipDevice,
+                onEnterActivationCode = onEnterActivationCode,
+                onSearchAgain = onSearchAgain,
+                onRequestMicrophone = onRequestMicrophone,
+                onOpenSystemSettings = onOpenSystemSettings,
+                microphoneGranted = microphoneGranted,
+                microphonePrompted = microphonePrompted
+            )
+
+            Spacer(Modifier.weight(1f))
+            // Мок: кнопка не прилипает к жест-бару — запас сверх systemBarsPadding.
+            Spacer(Modifier.height(spacing.xxxl))
+        }
+    }
+}
+
+/**
+ * Заголовок шага как анимированный слот: фейд между шагами; ширина и ритм —
+ * по флоу (онбординг — 82% ширины, подключение Clip — вся ширина).
+ */
+@Composable
+private fun StepHeadingSlot(
+    step: FirstRunStep,
+    state: OmnixUiState,
+    microphoneGranted: Boolean,
+    microphonePrompted: Boolean
+) {
+    AnimatedContent(
+        targetState = step,
+        transitionSpec = {
+            fadeIn(tween(OmnixTheme.motion.screenEnterMs)) togetherWith
+                fadeOut(tween(OmnixTheme.motion.screenExitMs))
+        },
+        label = "first-run-heading"
+    ) { current ->
+        val clipFlow =
+            current == FirstRunStep.DeviceDetection || current == FirstRunStep.ClipPairing
+        StepHeading(clipFlow = clipFlow) {
+            HeadingOf(current, state, microphoneGranted, microphonePrompted)
+        }
+    }
+}
+
+/**
+ * Сцена обычных шагов: ядро говорит состоянием, микрофон — своим тонким
+ * кольцом, Welcome — волной внутри брендового кольца.
+ */
+@Composable
+private fun StepCoreSlot(
+    step: FirstRunStep,
+    state: OmnixUiState,
+    microphoneGranted: Boolean,
+    microphonePrompted: Boolean
+) {
+    Box(contentAlignment = Alignment.Center) {
+        if (step == FirstRunStep.Microphone) {
+            MicrophoneRing(microphoneVisualState(microphoneGranted, microphonePrompted))
+        } else {
+            OmnixCore(
+                state = coreStateFor(step, state, microphoneGranted),
+                size = OmnixTheme.coreSizes.home,
+                audioLevel = state.audioLevel,
+                ringColor = if (step == FirstRunStep.Welcome) {
+                    OmnixTheme.colors.accentBrand
                 } else {
-                    OmnixCore(
-                        state = coreStateFor(step, state, microphoneGranted),
-                        size = OmnixTheme.coreSizes.home,
-                        audioLevel = state.audioLevel,
-                        ringColor = if (step == FirstRunStep.Welcome) {
-                            colors.accentBrand
-                        } else {
-                            null
-                        }
-                    )
-                    if (step == FirstRunStep.Welcome) {
-                        OnboardingWaveform()
-                    }
+                    null
                 }
+            )
+            if (step == FirstRunStep.Welcome) {
+                OnboardingWaveform()
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(spacing.xxl))
+/** Действия шага как анимированный слот — под сценой или копирайтом. */
+@Composable
+private fun StepActionsSlot(
+    step: FirstRunStep,
+    state: OmnixUiState,
+    onAdvance: () -> Unit,
+    onSkipDevice: () -> Unit,
+    onEnterActivationCode: () -> Unit,
+    onSearchAgain: () -> Unit,
+    onRequestMicrophone: () -> Unit,
+    onOpenSystemSettings: () -> Unit,
+    microphoneGranted: Boolean,
+    microphonePrompted: Boolean
+) {
+    // Под сценой/копирайтом — только действия шага.
+    AnimatedContent(
+        targetState = step,
+        transitionSpec = {
+            fadeIn(tween(OmnixTheme.motion.screenEnterMs)) togetherWith
+                fadeOut(tween(OmnixTheme.motion.screenExitMs))
+        },
+        label = "first-run-actions"
+    ) { current ->
+        when (current) {
+            FirstRunStep.Welcome -> WelcomeActions(onAdvance)
 
-        // Под кольцом — только действия шага.
-        AnimatedContent(
-            targetState = step,
-            transitionSpec = {
-                fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
-            },
-            label = "first-run-actions"
-        ) { current ->
-            when (current) {
-                FirstRunStep.Welcome -> WelcomeActions(onAdvance)
+            FirstRunStep.DeviceDetection -> DeviceDetectionActions(
+                clip = state.clip,
+                onAdvance = onAdvance,
+                onSkip = onSkipDevice,
+                onEnterCode = onEnterActivationCode,
+                onSearchAgain = onSearchAgain
+            )
 
-                FirstRunStep.DeviceDetection -> DeviceDetectionActions(
-                    clip = state.clip,
-                    onAdvance = onAdvance,
-                    onSkip = onSkipDevice,
-                    onEnterCode = onEnterActivationCode,
-                    onSearchAgain = onSearchAgain
-                )
+            FirstRunStep.ClipPairing -> ClipPairingActions(
+                clip = state.clip,
+                onAdvance = onAdvance
+            )
 
-                FirstRunStep.ClipPairing -> ClipPairingActions(
-                    clip = state.clip,
-                    onAdvance = onAdvance
-                )
+            FirstRunStep.Microphone -> MicrophoneActions(
+                granted = microphoneGranted,
+                prompted = microphonePrompted,
+                onRequest = onRequestMicrophone,
+                onOpenSettings = onOpenSystemSettings,
+                onAdvance = onAdvance
+            )
 
-                FirstRunStep.Microphone -> MicrophoneActions(
-                    granted = microphoneGranted,
-                    prompted = microphonePrompted,
-                    onRequest = onRequestMicrophone,
-                    onOpenSettings = onOpenSystemSettings,
-                    onAdvance = onAdvance
-                )
+            FirstRunStep.FirstCommand -> FirstCommandActions(
+                state = state,
+                onAdvance = onAdvance
+            )
 
-                FirstRunStep.FirstCommand -> FirstCommandActions(
-                    state = state,
-                    onAdvance = onAdvance
-                )
-
-                FirstRunStep.Complete -> Box(Modifier.fillMaxWidth())
-            }
+            FirstRunStep.Complete -> Box(Modifier.fillMaxWidth())
         }
-
-        Spacer(Modifier.weight(1f))
-        // Мок: кнопка не прилипает к жест-бару — запас сверх systemBarsPadding.
-        Spacer(Modifier.height(spacing.xxxl))
     }
 }
 
@@ -248,18 +350,20 @@ private fun coreStateFor(
 }
 
 /**
- * Заголовок шага в композиции мока: блок 82% ширины, центрированные тексты,
- * сверху ритмический отступ. [content] отдаёт пару «заголовок/подзаголовок»
- * шага — composables из-за stringResource.
+ * Пара «заголовок + подзаголовок» как блок: онбординг — 82% ширины, флоу
+ * подключения Clip — вся ширина и зазор мока 10px. Вертикальный ритм вокруг
+ * задаёт флоу, не блок. [content] отдаёт пару «заголовок/подзаголовок» шага —
+ * composables из-за stringResource.
  */
 @Composable
 private fun StepHeading(clipFlow: Boolean, content: @Composable () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(if (clipFlow) 1f else 0.82f),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.sm)
+        verticalArrangement = Arrangement.spacedBy(
+            if (clipFlow) CLIP_TITLE_GAP else OmnixTheme.spacing.sm
+        )
     ) {
-        Spacer(Modifier.height(OmnixTheme.spacing.xxl))
         content()
     }
 }
@@ -387,6 +491,14 @@ private val LINK_HEIGHT = 44.dp
 private val QUIET_HEIGHT = 40.dp
 private val CLIP_BODY_MIN_HEIGHT = 46.dp
 
+// Мок 2026-09-25 (пересмотр композиции): зазор заголовок→подзаголовок 10px,
+// отступ копирайт→действия 22px, зона действий от 150px (кнопки прижаты к
+// низу), нижний отступ 28px.
+private val CLIP_TITLE_GAP = 10.dp
+private val CLIP_ACTIONS_TOP_GAP = 22.dp
+private val CLIP_ACTIONS_MIN_HEIGHT = 150.dp
+private val CLIP_BOTTOM_GAP = 28.dp
+
 // ---- Действия шагов (под кольцом) ----
 
 @Composable
@@ -434,7 +546,8 @@ private fun ClipPairingActions(clip: ClipState, onAdvance: () -> Unit) {
 }
 
 /**
- * Ссылка мока: синий текст без рамки, 17sp, рост 44dp.
+ * Ссылка мока: системный синий без рамки, 17sp, рост 44dp (пересмотр
+ * 2026-09-25: дизайнер подтвердил системный синий вместо брендового).
  */
 @Composable
 private fun ClipLinkButton(text: String, onClick: () -> Unit) {
@@ -446,7 +559,7 @@ private fun ClipLinkButton(text: String, onClick: () -> Unit) {
             .omnixPressScale(interactionSource, pressedScale = 0.98f)
             .defaultMinSize(minHeight = LINK_HEIGHT),
         colors = ButtonDefaults.textButtonColors(
-            contentColor = OmnixTheme.colors.accentBrand
+            contentColor = OmnixTheme.colors.actionLink
         ),
         contentPadding = PaddingValues(horizontal = OmnixTheme.spacing.md, vertical = OmnixTheme.spacing.xs)
     ) {
