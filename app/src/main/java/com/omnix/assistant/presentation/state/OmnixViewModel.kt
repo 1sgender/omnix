@@ -18,6 +18,7 @@ import com.omnix.assistant.voice.orchestrator.OrchestratorMode
 import com.omnix.assistant.voice.orchestrator.VoiceInteractionOrchestrator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -293,6 +294,20 @@ class OmnixViewModel @Inject constructor(
     /** Called after any permission dialog so the UI reflects the real grant. */
     fun refreshPermissions() {
         microphoneGranted.value = hasMicrophonePermission()
+    }
+
+    /**
+     * True once the system microphone prompt has actually been shown. The
+     * first-run mic step uses it to tell "never asked" from "denied": a
+     * settings link is offered only after the user had a chance to answer
+     * the prompt (mock 2026-09-24).
+     */
+    val microphonePrompted: Flow<Boolean>
+        get() = experienceStore.microphonePrompted
+
+    /** Persisted when the prompt is launched, not when the user answers. */
+    fun markMicrophonePrompted() {
+        viewModelScope.launch { experienceStore.setMicrophonePrompted(true) }
     }
 
     /** Driven by the pairing screen (§40). */

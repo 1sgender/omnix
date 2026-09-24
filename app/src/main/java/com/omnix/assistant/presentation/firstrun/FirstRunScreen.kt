@@ -1,10 +1,14 @@
 package com.omnix.assistant.presentation.firstrun
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,13 +17,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSpokenExample
@@ -33,6 +48,7 @@ import com.omnix.assistant.presentation.design.OmnixWordmarkStyle
 import com.omnix.assistant.presentation.state.ClipState
 import com.omnix.assistant.presentation.state.OmnixUiState
 import com.omnix.assistant.presentation.state.SystemStateType
+import kotlinx.coroutines.delay
 
 /**
  * First run (§34, §67).
@@ -51,6 +67,7 @@ fun FirstRunScreen(
     step: FirstRunStep,
     state: OmnixUiState,
     microphoneGranted: Boolean,
+    microphonePrompted: Boolean,
     modifier: Modifier = Modifier,
     onAdvance: () -> Unit,
     onSkipDevice: () -> Unit,
@@ -102,27 +119,32 @@ fun FirstRunScreen(
             },
             label = "first-run-heading"
         ) { current ->
-            StepHeading { HeadingOf(current, state, microphoneGranted) }
+            StepHeading { HeadingOf(current, state, microphoneGranted, microphonePrompted) }
         }
 
         Spacer(Modifier.weight(1f))
 
         // Мок: кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
         // волна «слушающих» столбиков внутри; остальные шаги говорят
-        // состоянием ядра (монохром, §30).
+        // состоянием ядра (монохром, §30). Шум микрофона — своё тонкое кольцо
+        // (мок 2026-09-24): три состояния «запрос / отказ / готово».
         Box(contentAlignment = Alignment.Center) {
-            OmnixCore(
-                state = coreStateFor(step, state, microphoneGranted),
-                size = OmnixTheme.coreSizes.home,
-                audioLevel = state.audioLevel,
-                ringColor = if (step == FirstRunStep.Welcome) {
-                    colors.accentBrand
-                } else {
-                    null
+            if (step == FirstRunStep.Microphone) {
+                MicrophoneRing(microphoneVisualState(microphoneGranted, microphonePrompted))
+            } else {
+                OmnixCore(
+                    state = coreStateFor(step, state, microphoneGranted),
+                    size = OmnixTheme.coreSizes.home,
+                    audioLevel = state.audioLevel,
+                    ringColor = if (step == FirstRunStep.Welcome) {
+                        colors.accentBrand
+                    } else {
+                        null
+                    }
+                )
+                if (step == FirstRunStep.Welcome) {
+                    OnboardingWaveform()
                 }
-            )
-            if (step == FirstRunStep.Welcome) {
-                OnboardingWaveform()
             }
         }
 
@@ -154,6 +176,7 @@ fun FirstRunScreen(
 
                 FirstRunStep.Microphone -> MicrophoneActions(
                     granted = microphoneGranted,
+                    prompted = microphonePrompted,
                     onRequest = onRequestMicrophone,
                     onOpenSettings = onOpenSystemSettings,
                     onAdvance = onAdvance
@@ -218,7 +241,8 @@ private fun StepHeading(content: @Composable () -> Unit) {
 private fun HeadingOf(
     step: FirstRunStep,
     state: OmnixUiState,
-    microphoneGranted: Boolean
+    microphoneGranted: Boolean,
+    microphonePrompted: Boolean
 ) {
     when (step) {
         FirstRunStep.Welcome -> Heading(
@@ -256,18 +280,24 @@ private fun HeadingOf(
                 )
             }
 
-        FirstRunStep.Microphone ->
-            if (microphoneGranted) {
-                Heading(
-                    title = stringResource(R.string.omnix_mic_ready),
-                    body = null
-                )
-            } else {
-                Heading(
-                    title = stringResource(R.string.omnix_mic_title),
-                    body = stringResource(R.string.omnix_mic_body)
-                )
-            }
+        FirstRunStep.Microphone -> when (
+            microphoneVisualState(microphoneGranted, microphonePrompted)
+        ) {
+            MicrophoneVisualState.Request -> Heading(
+                title = stringResource(R.string.omnix_mic_request_title),
+                body = stringResource(R.string.omnix_mic_request_body)
+            )
+
+            MicrophoneVisualState.Denied -> Heading(
+                title = stringResource(R.string.omnix_mic_denied_title),
+                body = stringResource(R.string.omnix_mic_denied_body)
+            )
+
+            MicrophoneVisualState.Granted -> Heading(
+                title = stringResource(R.string.omnix_mic_ready),
+                body = stringResource(R.string.omnix_mic_connected)
+            )
+        }
 
         FirstRunStep.FirstCommand ->
             if (state.lastInteraction != null) {
@@ -353,28 +383,231 @@ private fun ClipPairingActions(clip: ClipState, onAdvance: () -> Unit) {
 }
 
 /**
- * The microphone request (§38, §50): WHAT / WHY / ACTION. The WHAT-WHY pair
- * живёт в заголовке над кольцом; здесь — единственное действие. The Android
- * permission identifier is never shown.
+ * The three visual states of the microphone step (mock 2026-09-24).
+ *
+ * Request and Denied both mean "the permission is not granted"; the
+ * difference is whether the system prompt was actually shown. Only after a
+ * real denial do we point at Settings — a settings link before the first
+ * prompt is confusing, because there is nothing to open yet.
+ */
+internal enum class MicrophoneVisualState {
+    Request,
+    Denied,
+    Granted
+}
+
+/**
+ * Derives the step's visual state from two real signals: the permission
+ * itself and whether the system prompt has already been shown. "Denied"
+ * cannot exist before a prompt.
+ */
+internal fun microphoneVisualState(granted: Boolean, prompted: Boolean): MicrophoneVisualState =
+    when {
+        granted -> MicrophoneVisualState.Granted
+        prompted -> MicrophoneVisualState.Denied
+        else -> MicrophoneVisualState.Request
+    }
+
+/**
+ * Auto-advance is only for a grant that happened on this screen. If the
+ * user arrives at the step already granted (back gesture from the first
+ * command), the step shows its way forward instead of bouncing them ahead.
+ */
+internal fun microphoneShouldAutoAdvance(granted: Boolean, grantedOnEntry: Boolean): Boolean =
+    granted && !grantedOnEntry
+
+// Мок 2026-09-24, геометрия: кольцо 132 px, трек/дуга 2 px, микрофон 32 px,
+// галочка 44 px — пропорции сохранены на размере ядра 150 dp.
+private const val MIC_RING_ARC_MS = 600L
+private const val MIC_MIC_FADE_MS = 250L
+private const val MIC_CHECK_FADE_MS = 300L
+private const val MIC_GLYPH_RATIO = 0.24f
+private const val MIC_CHECK_GLYPH_RATIO = 0.33f
+
+// Дуга закрывается на 600 мс, микрофон гаснет на 850, галочка проявляется к
+// 1150 мс — сверху добавлена пауза, чтобы текст «Готово» успели прочитать.
+private const val MIC_ADVANCE_DELAY_MS = 1600L
+
+/**
+ * The microphone actions (§38, §50) under the ring — three honest states
+ * (mock 2026-09-24); the WHAT-WHY heading lives above the ring in
+ * [HeadingOf].
+ *
+ *  - **Request** — the prompt has never been shown: "Allow" and
+ *    "Skip for now". No settings link yet — there is nothing to open.
+ *  - **Denied** — the prompt was shown and the microphone is still off, so
+ *    the system Settings screen becomes the primary button.
+ *  - **Granted** — the step advances on its own, because the thing it asked
+ *    for actually happened. On a revisit (back gesture) a Continue button
+ *    is shown instead.
+ *
+ * The Android permission identifier is never shown.
  */
 @Composable
 private fun MicrophoneActions(
     granted: Boolean,
+    prompted: Boolean,
     onRequest: () -> Unit,
     onOpenSettings: () -> Unit,
     onAdvance: () -> Unit
 ) {
-    if (granted) {
-        OmnixPrimaryButton(stringResource(R.string.omnix_mic_continue), onAdvance)
-    } else {
-        Column(
+    // Captured on entry to the step: true when the permission was already
+    // granted before this composition (back gesture from the first command).
+    val grantedOnEntry = remember { granted }
+    val autoAdvance = microphoneShouldAutoAdvance(granted, grantedOnEntry)
+
+    when (microphoneVisualState(granted, prompted)) {
+        MicrophoneVisualState.Request -> Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
         ) {
             OmnixPrimaryButton(stringResource(R.string.omnix_error_mic_action), onRequest)
-            OmnixTextButton(stringResource(R.string.omnix_mic_open_settings), onOpenSettings)
+            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
+        }
+
+        MicrophoneVisualState.Denied -> Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
+        ) {
+            OmnixPrimaryButton(stringResource(R.string.omnix_mic_open_settings), onOpenSettings)
+            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
+        }
+
+        MicrophoneVisualState.Granted -> Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
+        ) {
+            if (!autoAdvance) {
+                // Revisit of an already completed step — one honest way on.
+                OmnixPrimaryButton(stringResource(R.string.omnix_mic_continue), onAdvance)
+            }
         }
     }
+
+    // A genuine grant is its own confirmation: let the ring close and the
+    // check land (1150 ms), give the copy a beat, then move on — no button
+    // needed for something that already happened.
+    LaunchedEffect(granted, grantedOnEntry) {
+        if (autoAdvance) {
+            delay(MIC_ADVANCE_DELAY_MS)
+            onAdvance()
+        }
+    }
+}
+
+/**
+ * The microphone step's ring (mock 2026-09-24): a thin 2 dp track in the
+ * border tone (the mock's #2c2c2e) with the mic glyph inside.
+ *
+ *  - Request — the dim circle, the mic in primary ink.
+ *  - Denied — the mic dimmed and crossed with a diagonal slash.
+ *  - Granted — an ink circle draws itself over the track from the top
+ *    (600 ms, ease-out), the mic fades out (250 ms), and a check fades in
+ *    (300 ms). Reduced motion — everything instant.
+ */
+@Composable
+private fun MicrophoneRing(state: MicrophoneVisualState) {
+    val colors = OmnixTheme.colors
+    val reduced = OmnixTheme.reducedMotion
+
+    val arc = remember { Animatable(0f) }
+    val micAlpha = remember { Animatable(1f) }
+    val checkAlpha = remember { Animatable(0f) }
+
+    LaunchedEffect(state, reduced) {
+        if (state != MicrophoneVisualState.Granted) {
+            arc.snapTo(0f)
+            micAlpha.snapTo(1f)
+            checkAlpha.snapTo(0f)
+            return@LaunchedEffect
+        }
+        if (reduced) {
+            arc.snapTo(1f)
+            micAlpha.snapTo(0f)
+            checkAlpha.snapTo(1f)
+            return@LaunchedEffect
+        }
+        arc.animateTo(1f, tween(MIC_RING_ARC_MS.toInt(), easing = FastOutSlowInEasing))
+        micAlpha.animateTo(0f, tween(MIC_MIC_FADE_MS.toInt(), easing = LinearEasing))
+        checkAlpha.animateTo(1f, tween(MIC_CHECK_FADE_MS.toInt(), easing = LinearEasing))
+    }
+
+    Box(modifier = Modifier.size(OmnixTheme.coreSizes.home)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 2.dp.toPx()
+            // The track is always present — the mock's faint full circle.
+            drawCircle(color = colors.border, style = Stroke(strokeWidth))
+            if (arc.value > 0f) {
+                drawArc(
+                    color = colors.textPrimary,
+                    startAngle = -90f,
+                    sweepAngle = 360f * arc.value,
+                    useCenter = false,
+                    style = Stroke(strokeWidth, StrokeCap.Round)
+                )
+            }
+            if (micAlpha.value > 0f) {
+                val micColor = if (state == MicrophoneVisualState.Denied) {
+                    colors.textTertiary
+                } else {
+                    colors.textPrimary
+                }
+                drawMicGlyph(
+                    sizePx = size.minDimension * MIC_GLYPH_RATIO,
+                    color = micColor.copy(alpha = micAlpha.value),
+                    slashed = state == MicrophoneVisualState.Denied
+                )
+            }
+            if (checkAlpha.value > 0f) {
+                drawCheckGlyph(
+                    sizePx = size.minDimension * MIC_CHECK_GLYPH_RATIO,
+                    color = colors.textPrimary.copy(alpha = checkAlpha.value)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Mic glyph on a 24 dp design box (capsule, holder arc, stem, base),
+ * centered in the canvas; 2 dp round-capped stroke, the mock's 1.8 px at
+ * 32 px. [slashed] draws the denied state's diagonal over it.
+ */
+private fun DrawScope.drawMicGlyph(sizePx: Float, color: Color, slashed: Boolean) {
+    val u = sizePx / 24f
+    val origin = size.minDimension / 2f - sizePx / 2f
+    fun p(v: Float) = v * u + origin
+    val strokeWidth = 2.dp.toPx()
+    drawRoundRect(
+        topLeft = Offset(p(9f), p(3f)),
+        size = Size(6f * u, 11f * u),
+        cornerRadius = CornerRadius(3f * u, 3f * u),
+        color = color,
+        style = Stroke(strokeWidth, StrokeCap.Round)
+    )
+    drawArc(
+        topLeft = Offset(p(5.5f), p(4f)),
+        size = Size(13f * u, 13f * u),
+        startAngle = 0f,
+        sweepAngle = 180f,
+        color = color,
+        style = Stroke(strokeWidth, StrokeCap.Round)
+    )
+    drawLine(color, Offset(p(12f), p(17f)), Offset(p(12f), p(21f)), strokeWidth, StrokeCap.Round)
+    drawLine(color, Offset(p(9f), p(21f)), Offset(p(15f), p(21f)), strokeWidth, StrokeCap.Round)
+    if (slashed) {
+        drawLine(color, Offset(p(4.5f), p(19.5f)), Offset(p(19.5f), p(4.5f)), strokeWidth, StrokeCap.Round)
+    }
+}
+
+/** Check mark for the granted state — one stroke, round caps. */
+private fun DrawScope.drawCheckGlyph(sizePx: Float, color: Color) {
+    val u = sizePx / 24f
+    val origin = size.minDimension / 2f - sizePx / 2f
+    fun p(v: Float) = v * u + origin
+    val strokeWidth = 2.dp.toPx()
+    drawLine(color, Offset(p(5.5f), p(13f)), Offset(p(10.5f), p(17.5f)), strokeWidth, StrokeCap.Round)
+    drawLine(color, Offset(p(10.5f), p(17.5f)), Offset(p(18.5f), p(7f)), strokeWidth, StrokeCap.Round)
 }
 
 /**

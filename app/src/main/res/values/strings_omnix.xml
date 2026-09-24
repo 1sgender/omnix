@@ -124,9 +124,12 @@
     <string name="omnix_clip_ready_say">Say:</string>
     <string name="omnix_clip_continue">Continue</string>
 
-    <string name="omnix_mic_title">Let OMNIX hear you</string>
-    <string name="omnix_mic_body">Your microphone is needed for voice commands.</string>
-    <string name="omnix_mic_ready">Microphone ready.</string>
+    <string name="omnix_mic_request_title">Microphone access</string>
+    <string name="omnix_mic_request_body">OMNIX needs the microphone to hear your voice commands.</string>
+    <string name="omnix_mic_denied_title">Microphone is off</string>
+    <string name="omnix_mic_denied_body">Turn on access in Settings to control OMNIX by voice.</string>
+    <string name="omnix_mic_ready">Ready.</string>
+    <string name="omnix_mic_connected">Microphone connected.</string>
     <string name="omnix_mic_continue">Continue</string>
     <string name="omnix_mic_open_settings">Open settings</string>
 
