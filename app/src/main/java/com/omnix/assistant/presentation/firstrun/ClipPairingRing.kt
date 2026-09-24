@@ -42,12 +42,12 @@ enum class ClipRingPhase {
  * «не найден»: пользователь видит то, что может исправить.
  */
 fun clipRingPhase(clip: ClipState): ClipRingPhase = when (clip) {
-    ClipState.Searching, ClipState.Connecting -> ClipRingPhase.SEARCH
-    ClipState.Connected, ClipState.BatteryLow -> ClipRingPhase.FOUND
+    ClipState.Searching, is ClipState.Connecting -> ClipRingPhase.SEARCH
+    is ClipState.Connected, is ClipState.BatteryLow -> ClipRingPhase.FOUND
     ClipState.Unknown,
     ClipState.BluetoothOff,
-    ClipState.Disconnected,
-    ClipState.ConnectionFailed -> ClipRingPhase.LOST
+    is ClipState.Disconnected,
+    is ClipState.ConnectionFailed -> ClipRingPhase.LOST
 }
 
 /**
