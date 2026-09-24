@@ -55,12 +55,14 @@ internal fun OnboardingWaveform(
         for (i in 0 until barCount) {
             // Огибающая: крайние столбики ниже, центр выше — силуэт волны.
             val envelope = sin(PI * (i + 1) / (barCount + 1)).toFloat()
-            val level = if (reduced) {
-                REDUCED_LEVEL
+            // Считаем в Double (kotlin.math.sin), во Float — один раз на выходе.
+            val oscillation = if (reduced) {
+                REDUCED_LEVEL.toDouble()
             } else {
-                0.30f + 0.44f * (0.5f + 0.5f * sin(phase * 2f * PI + i * PHASE_STEP))
+                0.30 + 0.44 * (0.5 + 0.5 * sin(phase * 2.0 * PI + i * PHASE_STEP.toDouble()))
             }
-            val barHeight = size.height * level * (0.45f + 0.55f * envelope)
+            val barHeight = (size.height * oscillation.toFloat() * (0.45f + 0.55f * envelope))
+                .coerceIn(0f, size.height)
             drawRoundRect(
                 color = color,
                 topLeft = Offset(
