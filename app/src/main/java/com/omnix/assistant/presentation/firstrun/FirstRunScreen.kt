@@ -543,7 +543,7 @@ private fun MicrophoneRing(state: MicrophoneVisualState) {
                     startAngle = -90f,
                     sweepAngle = 360f * arc.value,
                     useCenter = false,
-                    style = Stroke(strokeWidth, StrokeCap.Round)
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
             }
             if (micAlpha.value > 0f) {
@@ -583,7 +583,7 @@ private fun DrawScope.drawMicGlyph(sizePx: Float, color: Color, slashed: Boolean
         size = Size(6f * u, 11f * u),
         cornerRadius = CornerRadius(3f * u, 3f * u),
         color = color,
-        style = Stroke(strokeWidth, StrokeCap.Round)
+        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
     )
     drawArc(
         topLeft = Offset(p(5.5f), p(4f)),
@@ -591,7 +591,7 @@ private fun DrawScope.drawMicGlyph(sizePx: Float, color: Color, slashed: Boolean
         startAngle = 0f,
         sweepAngle = 180f,
         color = color,
-        style = Stroke(strokeWidth, StrokeCap.Round)
+        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
     )
     drawLine(color, Offset(p(12f), p(17f)), Offset(p(12f), p(21f)), strokeWidth, StrokeCap.Round)
     drawLine(color, Offset(p(9f), p(21f)), Offset(p(15f), p(21f)), strokeWidth, StrokeCap.Round)
