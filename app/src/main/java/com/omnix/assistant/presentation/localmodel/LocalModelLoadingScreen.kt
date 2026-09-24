@@ -220,8 +220,11 @@ private fun LoadingCaption() {
         label = "loading-caption-alpha"
     )
 
+    // A truthful, self-contained statement of the state this screen covers
+    // (the model is being loaded into memory - not being downloaded; in the
+    // ru locale the download state already reads "Загружается… N%").
     Text(
-        text = stringResource(R.string.omnix_local_model_loading),
+        text = stringResource(R.string.omnix_local_model_loading_screen),
         style = OmnixTheme.typography.caption,
         color = OmnixTheme.colors.textSecondary,
         modifier = Modifier.alpha(alpha)

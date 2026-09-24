@@ -244,6 +244,7 @@
     <string name="omnix_local_model_downloading">Göçürilýär… %1$d%%</string>
     <string name="omnix_local_model_downloaded">Göçürildi, ilkinji haýyşda ýüklener</string>
     <string name="omnix_local_model_loading">Ýada ýüklenýär…</string>
+    <string name="omnix_local_model_loading_screen">Enjamdaky model ýada ýüklenýär…</string>
     <string name="omnix_local_model_ready">Oflaýn jogaplara taýýar</string>
     <string name="omnix_local_model_failed">Start edilmedi: %1$s</string>
     <string name="omnix_local_model_low_memory">Boş ýat ýeterlik däl (%1$d MB gerek) — bulutdan jogap berýärin</string>
