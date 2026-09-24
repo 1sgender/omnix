@@ -111,14 +111,15 @@
     <string name="omnix_welcome_cta">Get started</string>
     <string name="omnix_onboarding_step_a11y">Step %1$d of %2$d</string>
 
-    <string name="omnix_pairing_title">Meet your OMNIX Clip</string>
-    <string name="omnix_pairing_searching">Looking for your Clip…</string>
-    <string name="omnix_pairing_detected">Detected</string>
-    <string name="omnix_pairing_verified">Device verified</string>
-    <string name="omnix_pairing_code_link">Have an activation code?</string>
+    <string name="omnix_pairing_title">Searching for Clip</string>
+    <string name="omnix_pairing_searching">Keep the Clip near your phone.</string>
+    <string name="omnix_pairing_code_link">Enter activation code</string>
     <string name="omnix_pairing_not_found_title">No Clip found</string>
-    <string name="omnix_pairing_not_found_body">Make sure your Clip is charged and nearby.</string>
+    <string name="omnix_pairing_not_found_body">Make sure the Clip is charged and Bluetooth is on.</string>
     <string name="omnix_pairing_retry">Search again</string>
+    <string name="omnix_pairing_skip">Skip</string>
+    <string name="omnix_pairing_found_body">All set.</string>
+    <string name="omnix_pairing_found_title">Clip connected</string>
 
     <string name="omnix_clip_ready_title">You’re ready.</string>
     <string name="omnix_clip_ready_say">Say:</string>
@@ -313,8 +314,6 @@
     <string name="omnix_a11y_open_devices">Open devices</string>
 
     <!-- ===== Clip flow states (§40, §70, §71) ===== -->
-    <string name="omnix_clip_connecting_title">Connecting…</string>
-    <string name="omnix_clip_connected_title">Clip connected</string>
     <string name="omnix_error_clip_failed_title">Couldn\'t connect</string>
     <string name="omnix_clip_battery_low_title">Clip battery is low</string>
     <string name="omnix_clip_last_seen">Last connected %1$s</string>

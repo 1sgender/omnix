@@ -109,14 +109,15 @@
     <string name="omnix_welcome_cta">Начать</string>
     <string name="omnix_onboarding_step_a11y">Шаг %1$d из %2$d</string>
 
-    <string name="omnix_pairing_title">Знакомство с OMNIX Clip</string>
-    <string name="omnix_pairing_searching">Ищу ваш Clip…</string>
-    <string name="omnix_pairing_detected">Найден</string>
-    <string name="omnix_pairing_verified">Устройство подтверждено</string>
-    <string name="omnix_pairing_code_link">Есть код активации?</string>
+    <string name="omnix_pairing_title">Поиск Clip</string>
+    <string name="omnix_pairing_searching">Держите Clip рядом с телефоном.</string>
+    <string name="omnix_pairing_code_link">Ввести код активации</string>
     <string name="omnix_pairing_not_found_title">Clip не найден</string>
-    <string name="omnix_pairing_not_found_body">Проверьте, что Clip заряжен и находится рядом.</string>
+    <string name="omnix_pairing_not_found_body">Убедитесь, что Clip заряжен, а Bluetooth включён.</string>
     <string name="omnix_pairing_retry">Искать снова</string>
+    <string name="omnix_pairing_skip">Пропустить</string>
+    <string name="omnix_pairing_found_body">Всё готово.</string>
+    <string name="omnix_pairing_found_title">Clip подключён</string>
 
     <string name="omnix_clip_ready_title">Всё готово.</string>
     <string name="omnix_clip_ready_say">Скажите:</string>
@@ -310,8 +311,6 @@
     <string name="omnix_a11y_open_devices">Открыть устройства</string>
 
     <!-- ===== Clip flow states (§40, §70, §71) ===== -->
-    <string name="omnix_clip_connecting_title">Подключение…</string>
-    <string name="omnix_clip_connected_title">Clip подключён</string>
     <string name="omnix_error_clip_failed_title">Не удалось подключиться</string>
     <string name="omnix_clip_battery_low_title">Низкий заряд Clip</string>
     <string name="omnix_clip_last_seen">Последнее подключение: %1$s</string>

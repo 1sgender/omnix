@@ -10,6 +10,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -37,10 +48,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
+import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.components.OmnixSpokenExample
 import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.components.SystemStateView
-import com.omnix.assistant.presentation.components.clipLabel
 import com.omnix.assistant.presentation.core.CoreState
 import com.omnix.assistant.presentation.core.OmnixCore
 import com.omnix.assistant.presentation.design.OmnixTheme
@@ -84,6 +95,11 @@ fun FirstRunScreen(
     val enterMs = OmnixTheme.motion.screenEnterMs
     val exitMs = OmnixTheme.motion.screenExitMs
 
+    // Мок «подключение Clip» (2026-09-24): флоу подключения живёт в своей
+    // эстетике — маленький знак-кольцо без надписи вместо логотипа-текста,
+    // тонкое кольцо вместо ядра; остальные шаги — в прежней композиции.
+    val isClipFlow = step == FirstRunStep.DeviceDetection || step == FirstRunStep.ClipPairing
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -93,21 +109,25 @@ fun FirstRunScreen(
     ) {
         Spacer(Modifier.height(spacing.xxxl))
 
-        Text(
-            text = stringResource(R.string.omnix_wordmark),
-            style = OmnixWordmarkStyle,
-            color = colors.textSecondary
-        )
-
-        // Мок 2026-09-24: точки прогресса вместо «непонятного подчёркивания» —
-        // сразу видно, что это шаг 1 из 3 вех онбординга.
-        val progressIndex = step.progressIndex
-        if (progressIndex != null) {
-            Spacer(Modifier.height(spacing.sm))
-            OnboardingProgressDots(
-                total = step.progressTotal,
-                active = progressIndex
+        if (isClipFlow) {
+            OmnixRingMark()
+        } else {
+            Text(
+                text = stringResource(R.string.omnix_wordmark),
+                style = OmnixWordmarkStyle,
+                color = colors.textSecondary
             )
+
+            // Мок 2026-09-24: точки прогресса вместо «непонятного подчёркивания» —
+            // сразу видно, что это шаг 1 из 3 вех онбординга.
+            val progressIndex = step.progressIndex
+            if (progressIndex != null) {
+                Spacer(Modifier.height(spacing.sm))
+                OnboardingProgressDots(
+                    total = step.progressTotal,
+                    active = progressIndex
+                )
+            }
         }
 
         // Заголовок шага — НАД кольцом (мок): шаги сменяются, композиция
@@ -119,31 +139,38 @@ fun FirstRunScreen(
             },
             label = "first-run-heading"
         ) { current ->
-            StepHeading { HeadingOf(current, state, microphoneGranted, microphonePrompted) }
+            val clipFlow =
+                current == FirstRunStep.DeviceDetection || current == FirstRunStep.ClipPairing
+            StepHeading(clipFlow = clipFlow) { HeadingOf(current, state, microphoneGranted, microphonePrompted) }
         }
 
         Spacer(Modifier.weight(1f))
 
-        // Мок: кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
-        // волна «слушающих» столбиков внутри; остальные шаги говорят
-        // состоянием ядра (монохром, §30). Шум микрофона — своё тонкое кольцо
-        // (мок 2026-09-24): три состояния «запрос / отказ / готово».
-        Box(contentAlignment = Alignment.Center) {
-            if (step == FirstRunStep.Microphone) {
-                MicrophoneRing(microphoneVisualState(microphoneGranted, microphonePrompted))
-            } else {
-                OmnixCore(
-                    state = coreStateFor(step, state, microphoneGranted),
-                    size = OmnixTheme.coreSizes.home,
-                    audioLevel = state.audioLevel,
-                    ringColor = if (step == FirstRunStep.Welcome) {
-                        colors.accentBrand
-                    } else {
-                        null
+        if (isClipFlow) {
+            // Мок: тонкое кольцо с бегущей дугой — весь смысл экрана в нём.
+            ClipPairingRing(phase = clipRingPhase(state.clip))
+        } else {
+            // Мок: кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
+            // волна «слушающих» столбиков внутри; остальные шаги говорят
+            // состоянием ядра (монохром, §30). Шум микрофона — своё тонкое
+            // кольцо (мок 2026-09-24): три состояния «запрос / отказ / готово».
+            Box(contentAlignment = Alignment.Center) {
+                if (step == FirstRunStep.Microphone) {
+                    MicrophoneRing(microphoneVisualState(microphoneGranted, microphonePrompted))
+                } else {
+                    OmnixCore(
+                        state = coreStateFor(step, state, microphoneGranted),
+                        size = OmnixTheme.coreSizes.home,
+                        audioLevel = state.audioLevel,
+                        ringColor = if (step == FirstRunStep.Welcome) {
+                            colors.accentBrand
+                        } else {
+                            null
+                        }
+                    )
+                    if (step == FirstRunStep.Welcome) {
+                        OnboardingWaveform()
                     }
-                )
-                if (step == FirstRunStep.Welcome) {
-                    OnboardingWaveform()
                 }
             }
         }
@@ -223,12 +250,12 @@ private fun coreStateFor(
 /**
  * Заголовок шага в композиции мока: блок 82% ширины, центрированные тексты,
  * сверху ритмический отступ. [content] отдаёт пару «заголовок/подзаголовок»
- * шага — composables из-за stringResource/clipLabel.
+ * шага — composables из-за stringResource.
  */
 @Composable
-private fun StepHeading(content: @Composable () -> Unit) {
+private fun StepHeading(clipFlow: Boolean, content: @Composable () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth(0.82f),
+        modifier = Modifier.fillMaxWidth(if (clipFlow) 1f else 0.82f),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.sm)
     ) {
@@ -250,35 +277,28 @@ private fun HeadingOf(
             body = stringResource(R.string.omnix_welcome_body)
         )
 
-        FirstRunStep.DeviceDetection -> when (state.clip) {
-            is ClipState.Connected, is ClipState.Connecting -> Heading(
-                title = stringResource(R.string.omnix_pairing_detected),
-                body = clipLabel(state.clip)
-            )
-
-            ClipState.Searching -> Heading(
-                title = stringResource(R.string.omnix_pairing_title),
-                body = stringResource(R.string.omnix_pairing_searching)
-            )
-
-            else -> Heading(
-                title = stringResource(R.string.omnix_pairing_not_found_title),
-                body = stringResource(R.string.omnix_pairing_not_found_body)
-            )
-        }
-
-        FirstRunStep.ClipPairing ->
-            if (state.clip is ClipState.Connected) {
-                Heading(
-                    title = stringResource(R.string.omnix_clip_connected_title),
-                    body = stringResource(R.string.omnix_pairing_verified)
+        FirstRunStep.DeviceDetection, FirstRunStep.ClipPairing -> {
+            // Мок подключения Clip: копия зависит от фазы кольца, а не от шага.
+            when (clipRingPhase(state.clip)) {
+                ClipRingPhase.SEARCH -> Heading(
+                    title = stringResource(R.string.omnix_pairing_title),
+                    body = stringResource(R.string.omnix_pairing_searching),
+                    clip = true
                 )
-            } else {
-                Heading(
-                    title = stringResource(R.string.omnix_clip_connecting_title),
-                    body = null
+
+                ClipRingPhase.LOST -> Heading(
+                    title = stringResource(R.string.omnix_pairing_not_found_title),
+                    body = stringResource(R.string.omnix_pairing_not_found_body),
+                    clip = true
+                )
+
+                ClipRingPhase.FOUND -> Heading(
+                    title = stringResource(R.string.omnix_pairing_found_title),
+                    body = stringResource(R.string.omnix_pairing_found_body),
+                    clip = true
                 )
             }
+        }
 
         FirstRunStep.Microphone -> when (
             microphoneVisualState(microphoneGranted, microphonePrompted)
@@ -316,25 +336,56 @@ private fun HeadingOf(
     }
 }
 
-/** Пара «заголовок + подзаголовок» в типографике шага. */
+/**
+ * Пара «заголовок + подзаголовок». Обычные шаги — типографика темы; флоу
+ * подключения Clip — типографика мока: 28sp/600 с плотным трекингом и 17sp
+ * серым, подзаголовок с минимальной высотой (фазы сменяются без прыжков).
+ */
 @Composable
-private fun Heading(title: String, body: String?) {
+private fun Heading(title: String, body: String?, clip: Boolean = false) {
     val colors = OmnixTheme.colors
     Text(
         text = title,
-        style = OmnixTheme.typography.display,
+        style = if (clip) ClipTitleStyle else OmnixTheme.typography.display,
         color = colors.textPrimary,
         textAlign = TextAlign.Center
     )
     body?.let {
         Text(
             text = it,
-            style = OmnixTheme.typography.body,
+            style = if (clip) ClipBodyStyle else OmnixTheme.typography.body,
             color = colors.textSecondary,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = if (clip) {
+                Modifier.heightIn(min = CLIP_BODY_MIN_HEIGHT)
+            } else {
+                Modifier
+            }
         )
     }
 }
+
+/** Типографика мока подключения Clip: заголовок 28sp/600, трекинг −0.022em. */
+private val ClipTitleStyle = TextStyle(
+    fontSize = 28.sp,
+    fontWeight = FontWeight.SemiBold,
+    letterSpacing = (-0.62).sp
+)
+
+/** Подзаголовок мока: 17sp, трекинг −0.01em, интерлиньяж 1.35. */
+private val ClipBodyStyle = TextStyle(
+    fontSize = 17.sp,
+    letterSpacing = (-0.17).sp,
+    lineHeight = 23.sp
+)
+
+/** Тихая кнопка мока: 15sp. */
+private val ClipQuietStyle = TextStyle(fontSize = 15.sp)
+
+private val ACTION_GAP = 4.dp
+private val LINK_HEIGHT = 44.dp
+private val QUIET_HEIGHT = 40.dp
+private val CLIP_BODY_MIN_HEIGHT = 46.dp
 
 // ---- Действия шагов (под кольцом) ----
 
@@ -354,31 +405,73 @@ private fun DeviceDetectionActions(
     onEnterCode: () -> Unit,
     onSearchAgain: () -> Unit
 ) {
-    val spacing = OmnixTheme.spacing
-    when (clip) {
-        is ClipState.Connected, is ClipState.Connecting ->
-            OmnixPrimaryButton(stringResource(R.string.omnix_continue), onAdvance)
+    when (clipRingPhase(clip)) {
+        // Мок прячет кнопки на время поиска, но §34: путь вперёд всегда
+        // открыт — остаётся тихое «Пропустить» (отклонение зафиксировано).
+        ClipRingPhase.SEARCH ->
+            ClipQuietButton(stringResource(R.string.omnix_pairing_skip), onSkip)
 
-        ClipState.Searching ->
-            // No Clip is required to use OMNIX, so the way forward is always
-            // open — the user is never trapped by missing hardware (§34).
-            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onSkip)
-
-        else -> Column(
+        ClipRingPhase.LOST -> Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.xs)
+            verticalArrangement = Arrangement.spacedBy(ACTION_GAP)
         ) {
             OmnixPrimaryButton(stringResource(R.string.omnix_pairing_retry), onSearchAgain)
-            OmnixTextButton(stringResource(R.string.omnix_pairing_code_link), onEnterCode)
-            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onSkip)
+            ClipLinkButton(stringResource(R.string.omnix_pairing_code_link), onEnterCode)
+            ClipQuietButton(stringResource(R.string.omnix_pairing_skip), onSkip)
         }
+
+        ClipRingPhase.FOUND ->
+            OmnixPrimaryButton(stringResource(R.string.omnix_continue), onAdvance)
     }
 }
 
 @Composable
 private fun ClipPairingActions(clip: ClipState, onAdvance: () -> Unit) {
-    if (clip is ClipState.Connected) {
+    // Соединение ещё идёт — просто ждём у кольца; подключено — продолжаем.
+    if (clipRingPhase(clip) == ClipRingPhase.FOUND) {
         OmnixPrimaryButton(stringResource(R.string.omnix_clip_continue), onAdvance)
+    }
+}
+
+/**
+ * Ссылка мока: синий текст без рамки, 17sp, рост 44dp.
+ */
+@Composable
+private fun ClipLinkButton(text: String, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    TextButton(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        modifier = Modifier
+            .omnixPressScale(interactionSource, pressedScale = 0.98f)
+            .defaultMinSize(minHeight = LINK_HEIGHT),
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = OmnixTheme.colors.accentBrand
+        ),
+        contentPadding = PaddingValues(horizontal = OmnixTheme.spacing.md, vertical = OmnixTheme.spacing.xs)
+    ) {
+        Text(text = text, style = ClipBodyStyle)
+    }
+}
+
+/**
+ * Тихая кнопка мока: серый мелкий текст, 15sp, рост 40dp.
+ */
+@Composable
+private fun ClipQuietButton(text: String, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    TextButton(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        modifier = Modifier
+            .omnixPressScale(interactionSource, pressedScale = 0.98f)
+            .defaultMinSize(minHeight = QUIET_HEIGHT),
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = OmnixTheme.colors.textSecondary
+        ),
+        contentPadding = PaddingValues(horizontal = OmnixTheme.spacing.md, vertical = OmnixTheme.spacing.xs)
+    ) {
+        Text(text = text, style = ClipQuietStyle)
     }
 }
 
