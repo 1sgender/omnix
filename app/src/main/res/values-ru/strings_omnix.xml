@@ -123,9 +123,12 @@
     <string name="omnix_clip_ready_say">Скажите:</string>
     <string name="omnix_clip_continue">Продолжить</string>
 
-    <string name="omnix_mic_title">Дайте OMNIX себя услышать</string>
-    <string name="omnix_mic_body">Микрофон нужен для голосовых команд.</string>
-    <string name="omnix_mic_ready">Микрофон готов.</string>
+    <string name="omnix_mic_request_title">Доступ к микрофону</string>
+    <string name="omnix_mic_request_body">OMNIX нужен микрофон, чтобы слышать ваши голосовые команды.</string>
+    <string name="omnix_mic_denied_title">Микрофон выключен</string>
+    <string name="omnix_mic_denied_body">Включите доступ в настройках, чтобы управлять голосом.</string>
+    <string name="omnix_mic_ready">Готово.</string>
+    <string name="omnix_mic_connected">Микрофон подключён.</string>
     <string name="omnix_mic_continue">Продолжить</string>
     <string name="omnix_mic_open_settings">Открыть настройки</string>
 

@@ -9,6 +9,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +50,20 @@ fun FirstRunRoute(
 
     val microphoneGranted = state.systemState != SystemStateType.MICROPHONE_DENIED
 
+    // Persisted the moment the system prompt is shown, so "ask" and "denied"
+    // stay distinct across process deaths (mock 2026-09-24).
+    val microphonePrompted by viewModel.microphonePrompted.collectAsState()
+
+    // Re-read the real permission state whenever the screen comes back to
+    // the foreground: the user may have granted the microphone in the system
+    // settings, and "denied" must turn into "granted" without an extra tap.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refreshPermissions()
+        }
+    }
+
     // Searching only runs while the detection step is on screen, so the radio
     // is never scanning in the background for a screen nobody is looking at.
     LaunchedEffect(step) {
@@ -69,12 +86,14 @@ fun FirstRunRoute(
         step = step,
         state = state,
         microphoneGranted = microphoneGranted,
+        microphonePrompted = microphonePrompted,
         modifier = modifier,
         onAdvance = {
             step = step.next(clipFound = state.clip is ClipState.Connected)
         },
         onSkipDevice = { step = FirstRunStep.Microphone },
         onRequestMicrophone = {
+            viewModel.markMicrophonePrompted()
             val permissions = mutableListOf(Manifest.permission.RECORD_AUDIO)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissions += Manifest.permission.POST_NOTIFICATIONS
