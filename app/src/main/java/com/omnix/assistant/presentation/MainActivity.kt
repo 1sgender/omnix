@@ -17,6 +17,7 @@ import com.omnix.assistant.core.license.LicenseManager
 import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.localmodel.LocalModelConsentDialog
+import com.omnix.assistant.presentation.localmodel.LocalModelLoadingScreen
 import com.omnix.assistant.presentation.navigation.OmnixNavGraph
 import com.omnix.assistant.update.AppUpdatePrompt
 import androidx.lifecycle.lifecycleScope
@@ -123,7 +124,6 @@ class MainActivity : ComponentActivity() {
                             ActivationScreen(onActivationSuccess = { serverCheckComplete = true })
                         }
                         else -> {
-                            OmnixNavGraph()
                             // Одноразовый вопрос про локальную модель: только
                             // после активации, только если файла нет и пользователя
                             // ещё не спрашивали. Ответ записывается сразу —
@@ -133,34 +133,47 @@ class MainActivity : ComponentActivity() {
                             )
                             val modelConsent by settingsDataStore.localModelConsentFlow
                                 .collectAsState(initial = ModelDownloadPolicy.CONSENT_UNASKED)
-                            if (modelState is LocalModelState.NotInstalled &&
-                                modelConsent == ModelDownloadPolicy.CONSENT_UNASKED
-                            ) {
-                                LocalModelConsentDialog(
-                                    onDownloadAny = {
-                                        lifecycleScope.launch {
-                                            settingsDataStore.setLocalModelConsent(
-                                                ModelDownloadPolicy.CONSENT_ANY_NETWORK
-                                            )
-                                            localModelManager.ensureModel()
+                            if (modelState is LocalModelState.Loading) {
+                                // Первый запрос: модель грузится в память. Спокойный
+                                // экран загрузки на весь период Loading — навграф
+                                // перестраивается, когда состояние уйдёт (Ready,
+                                // Failed, InsufficientMemory — фолбэк в облако
+                                // делает приложение пригодным в любом исходе).
+                                // Downloading намеренно НЕ блокирует: у
+                                // пользователя должен остаться путь в настройки,
+                                // где загрузку можно отменить.
+                                LocalModelLoadingScreen()
+                            } else {
+                                OmnixNavGraph()
+                                if (modelState is LocalModelState.NotInstalled &&
+                                    modelConsent == ModelDownloadPolicy.CONSENT_UNASKED
+                                ) {
+                                    LocalModelConsentDialog(
+                                        onDownloadAny = {
+                                            lifecycleScope.launch {
+                                                settingsDataStore.setLocalModelConsent(
+                                                    ModelDownloadPolicy.CONSENT_ANY_NETWORK
+                                                )
+                                                localModelManager.ensureModel()
+                                            }
+                                        },
+                                        onDownloadWifi = {
+                                            lifecycleScope.launch {
+                                                settingsDataStore.setLocalModelConsent(
+                                                    ModelDownloadPolicy.CONSENT_WIFI_ONLY
+                                                )
+                                                localModelManager.ensureModel()
+                                            }
+                                        },
+                                        onLater = {
+                                            lifecycleScope.launch {
+                                                settingsDataStore.setLocalModelConsent(
+                                                    ModelDownloadPolicy.CONSENT_LATER
+                                                )
+                                            }
                                         }
-                                    },
-                                    onDownloadWifi = {
-                                        lifecycleScope.launch {
-                                            settingsDataStore.setLocalModelConsent(
-                                                ModelDownloadPolicy.CONSENT_WIFI_ONLY
-                                            )
-                                            localModelManager.ensureModel()
-                                        }
-                                    },
-                                    onLater = {
-                                        lifecycleScope.launch {
-                                            settingsDataStore.setLocalModelConsent(
-                                                ModelDownloadPolicy.CONSENT_LATER
-                                            )
-                                        }
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
                     }

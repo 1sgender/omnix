@@ -497,6 +497,9 @@ must be added only when the repository owner creates an actual release.
 - Supply-chain workflows, dependency locking/checksum verification, full-history
   secret-scan script, Trivy policy, and SBOM generation.
 
+### Added
+- **Экран «Загрузка локальной модели» со спокойной премиальной анимацией (решение владельца 2026-09-24).** Вместо «планетарного кольца» с вращающейся дугой: тонкий круг сам себя дорисовывает по кругу (~1,5 с, ease-in-out), на мгновение замыкается, мягко гаснет — и уходит на новый цикл. Буквы «OMNIX» появляются по одной — staggered fade-in снизу вверх, друг за другом, а не все разом. Экран покрывает состояние `Loading` (модель грузится в память при первом запросе); reduced motion — статичная ¾-дуга и мгновенный текст. Downloading намеренно не блокируется: путь в настройки с отменой загрузки сохраняется. Токен типографики `splashWordmark` — единственный крупный wordmark-момент, как и было задумано в §6.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with
