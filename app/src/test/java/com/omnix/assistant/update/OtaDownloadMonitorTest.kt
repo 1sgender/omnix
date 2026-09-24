@@ -7,7 +7,6 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -139,26 +138,33 @@ class OtaDownloadMonitorTest {
     @Test
     fun `rebegin replaces the previous watch`() = runBlocking {
         val monitor = OtaDownloadMonitor(pollMs = 5L)
+        var polls16 = 0
 
         monitor.begin(downloadId = 16L, versionCode = 205L) {
+            polls16++
             progress(bytes = 1L, total = 1_000L) // вечно RUNNING
         }
         withTimeout(5_000L) {
             monitor.snapshot.first { it?.downloadId == 16L }
         }
 
+        // Новая загрузка тоже вечно RUNNING: begin() синхронно публикует
+        // первичный снимок, поэтому first{} детерминирован. Терминальную
+        // загрузку здесь проверять нельзя — StateFlow конфлирует мимолётные
+        // значения быстрой последовательности «17 → null» ДО подписки.
         monitor.begin(downloadId = 17L, versionCode = 206L) {
-            progress(bytes = 999L, total = 2_000L, status = DownloadManager.STATUS_SUCCESSFUL)
+            progress(bytes = 999L, total = 2_000L)
         }
-
-        // Первый poll нового слежения уже отработал: в снимке — новая загрузка.
         withTimeout(5_000L) {
             monitor.snapshot.first { it?.downloadId == 17L }
         }
-        // Успех гасит снимок.
-        withTimeout(5_000L) {
-            while (monitor.snapshot.value != null) kotlinx.coroutines.delay(2L)
-        }
-        assertTrue(true)
+
+        monitor.end()
+
+        // Старое слежение (16) мертво: после замены оно не опрашивает.
+        val countedAtEnd = polls16
+        kotlinx.coroutines.delay(60L) // 12+ периодов старого опроса
+        assertEquals("old watch must be cancelled by re-begin", countedAtEnd, polls16)
+        assertNull(monitor.snapshot.value)
     }
 }
