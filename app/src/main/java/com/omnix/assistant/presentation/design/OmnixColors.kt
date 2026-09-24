@@ -93,10 +93,11 @@ val OmnixDarkColors = OmnixColorScheme(
     onActionPrimary = Color(0xFF01090F),
     actionSecondaryBorder = Color(0x2EFFFFFF),          // 0.18
 
-    // Синий в тон логотипа (мок онбординга 2026-09-24): единственный
-    // цветной момент вне монохрома ядра и красного ERROR.
-    accentBrand = Color(0xFF3878C8),
-    accentBrandSoft = Color(0xFF88B8E0),
+    // Синий в тон логотипа (мок онбординга 2026-09-24, калибровка по
+    // повторному рендеру): единственный цветной момент вне монохрома
+    // ядра и красного ERROR.
+    accentBrand = Color(0xFF3D7ECB),
+    accentBrandSoft = Color(0xFF8FB8E6),
 
     isNight = false
 )
@@ -164,8 +165,8 @@ val OmnixLightColors = OmnixColorScheme(
     actionSecondaryBorder = Color(0x1F000000),
 
     // Брендовые константы: не зависят от схемы (ночь наследует тёмные).
-    accentBrand = Color(0xFF3878C8),
-    accentBrandSoft = Color(0xFF88B8E0),
+    accentBrand = Color(0xFF3D7ECB),
+    accentBrandSoft = Color(0xFF8FB8E6),
 
     isNight = false
 )
