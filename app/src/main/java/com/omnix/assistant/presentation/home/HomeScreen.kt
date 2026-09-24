@@ -129,13 +129,22 @@ fun HomeScreen(
                         state = state.coreState,
                         size = OmnixTheme.coreSizes.home,
                         audioLevel = state.audioLevel,
-                        // Matrix: the offline badge docks onto the IDLE core
-                        // so "why is nothing answering" reads before the
-                        // first word is spoken.
-                        badge = if (state.coreState == CoreState.IDLE && !state.isOnline) {
-                            CoreBadge.WIFI_OFF
-                        } else {
-                            null
+                        // Matrix: badges are orthogonal to layers and never
+                        // change the Core's shape. CLOUD wins over WIFI_OFF
+                        // (a request in flight implies the network is back).
+                        // CLOUD docks only on the «busy» states — during
+                        // LISTENING/SPEAKING the ring itself is the signal.
+                        badge = when {
+                            state.isCloudProcessing && state.coreState in CLOUD_BADGE_STATES ->
+                                CoreBadge.CLOUD
+
+                            // The offline badge docks onto the IDLE core so
+                            // "why is nothing answering" reads before the
+                            // first word is spoken.
+                            state.coreState == CoreState.IDLE && !state.isOnline ->
+                                CoreBadge.WIFI_OFF
+
+                            else -> null
                         },
                         contentDescription = stringResource(
                             R.string.omnix_a11y_core_state,
@@ -167,6 +176,17 @@ fun HomeScreen(
         }
     }
 }
+
+/**
+ * Матрица: бейдж CLOUD стыкуется только на «занятых» состояниях, когда ответ
+ * действительно считается. В LISTENING/SPEAKING кольцо само по себе сигнал,
+ * а в IDLE/SUCCESS/ERROR облако уже ни о чём не говорит.
+ */
+private val CLOUD_BADGE_STATES = setOf(
+    CoreState.RECOGNIZING,
+    CoreState.THINKING,
+    CoreState.EXECUTING
+)
 
 /**
  * A fixed-width slot for the audio bars.

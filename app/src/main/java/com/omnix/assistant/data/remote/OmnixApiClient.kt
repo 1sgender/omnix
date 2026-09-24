@@ -2,6 +2,7 @@ package com.omnix.assistant.data.remote
 
 import android.util.Log
 import com.omnix.assistant.core.constants.AppConstants
+import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.ResponseBodyTooLargeException
 import com.omnix.assistant.core.network.readUtf8Bounded
 import com.omnix.assistant.core.request.RequestIds
@@ -94,7 +95,8 @@ class OmnixApiException(
 class OmnixApiClient @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val securityManager: SecurityManager,
-    private val json: Json
+    private val json: Json,
+    private val cloudMonitor: CloudProcessingMonitor
 ) {
     companion object {
         private const val TAG = "OmnixApiClient"
@@ -200,32 +202,42 @@ class OmnixApiClient @Inject constructor(
         // отменяла OkHttp Call (invokeOnCancellation → call.cancel()),
         // а не просто бросала ждать IO-поток в никуда.
         return@withContext try {
-            suspendCancellableCoroutine<Resource<String>> { cont ->
-                val call = apiHttpClient.newCall(request)
-                cont.invokeOnCancellation { call.cancel() }
-                call.enqueue(object : Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        if (!cont.isActive) return
-                        Log.w(TAG, "api failure | requestId=$effectiveRequestId | type=${e.javaClass.simpleName}")
-                        cont.resume(exceptionToResource(e, effectiveRequestId))
-                    }
+            // Бейдж CLOUD на ядре: запрос считается «облачным» от отправки до
+            // разбора ответа (parseHttpResponse выполняется в onResponse, то
+            // есть ещё внутри корутины). finally освобождает счётчик на любом
+            // выходе, включая отмену корутины (invokeOnCancellation →
+            // call.cancel() → CancellationException проходит через finally).
+            cloudMonitor.requestStarted()
+            try {
+                suspendCancellableCoroutine<Resource<String>> { cont ->
+                    val call = apiHttpClient.newCall(request)
+                    cont.invokeOnCancellation { call.cancel() }
+                    call.enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            if (!cont.isActive) return
+                            Log.w(TAG, "api failure | requestId=$effectiveRequestId | type=${e.javaClass.simpleName}")
+                            cont.resume(exceptionToResource(e, effectiveRequestId))
+                        }
 
-                    override fun onResponse(call: Call, response: Response) {
-                        if (!cont.isActive) {
-                            response.close()
-                            return
-                        }
-                        try {
-                            response.use { resp ->
-                                val body = resp.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
-                                Log.i(TAG, "api response | requestId=$effectiveRequestId | http=${resp.code}")
-                                cont.resume(parseHttpResponse(resp, body, effectiveRequestId))
+                        override fun onResponse(call: Call, response: Response) {
+                            if (!cont.isActive) {
+                                response.close()
+                                return
                             }
-                        } catch (t: Throwable) {
-                            if (cont.isActive) cont.resumeWithException(t) else throw t
+                            try {
+                                response.use { resp ->
+                                    val body = resp.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
+                                    Log.i(TAG, "api response | requestId=$effectiveRequestId | http=${resp.code}")
+                                    cont.resume(parseHttpResponse(resp, body, effectiveRequestId))
+                                }
+                            } catch (t: Throwable) {
+                                if (cont.isActive) cont.resumeWithException(t) else throw t
+                            }
                         }
-                    }
-                })
+                    })
+                }
+            } finally {
+                cloudMonitor.requestFinished()
             }
         } catch (e: ResponseBodyTooLargeException) {
             Log.w(TAG, "oversized response | requestId=$effectiveRequestId")
