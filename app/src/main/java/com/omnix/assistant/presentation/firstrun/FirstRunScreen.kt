@@ -102,7 +102,7 @@ fun FirstRunScreen(
             },
             label = "first-run-heading"
         ) { current ->
-            StepHeading { headingOf(current, state, microphoneGranted) }
+            StepHeading { HeadingOf(current, state, microphoneGranted) }
         }
 
         Spacer(Modifier.weight(1f))
@@ -215,7 +215,7 @@ private fun StepHeading(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun headingOf(
+private fun HeadingOf(
     step: FirstRunStep,
     state: OmnixUiState,
     microphoneGranted: Boolean
