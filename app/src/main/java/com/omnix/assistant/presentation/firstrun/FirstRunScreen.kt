@@ -1,11 +1,11 @@
 package com.omnix.assistant.presentation.firstrun
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSpokenExample
 import com.omnix.assistant.presentation.components.OmnixTextButton
@@ -75,24 +73,66 @@ fun FirstRunScreen(
             color = colors.textSecondary
         )
 
-        // The same restrained ice-cyan accent as Home and Activation: one
-        // brand moment, stated the same way on every screen that opens the
-        // product (§2, §9).
-        Spacer(Modifier.height(spacing.xs))
-        Box(
-            modifier = Modifier
-                .width(spacing.xxl)
-                .height(OmnixHairline)
-                .background(colors.stateIdle.copy(alpha = 0.72f))
-        )
+        // Мок 2026-09-24: точки прогресса вместо «непонятного подчёркивания» —
+        // сразу видно, что это шаг 1 из 3 вех онбординга.
+        val progressIndex = step.progressIndex
+        if (progressIndex != null) {
+            Spacer(Modifier.height(spacing.sm))
+            OnboardingProgressDots(
+                total = step.progressTotal,
+                active = progressIndex
+            )
+        }
+
+        // Welcome (мок): заголовок и подзаголовок стоят НАД кольцом, в одну
+        // композицию с логичным переносом — ширина блока ограничена, чтобы
+        // «Голос в вашем ухе» не обрывалось одним словом. Остальные шаги
+        // остаются в прежней раскладке (заголовок под кольцом).
+        AnimatedVisibility(
+            visible = step == FirstRunStep.Welcome,
+            enter = fadeIn(tween(OmnixTheme.motion.screenEnterMs)),
+            exit = fadeOut(tween(OmnixTheme.motion.screenExitMs))
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(0.82f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(spacing.sm)
+            ) {
+                Spacer(Modifier.height(spacing.xxl))
+                Text(
+                    text = stringResource(R.string.omnix_welcome_headline),
+                    style = OmnixTheme.typography.display,
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = stringResource(R.string.omnix_welcome_body),
+                    style = OmnixTheme.typography.body,
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
 
         Spacer(Modifier.weight(1f))
 
-        OmnixCore(
-            state = coreStateFor(step, state, microphoneGranted),
-            size = OmnixTheme.coreSizes.home,
-            audioLevel = state.audioLevel
-        )
+        // Мок: кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
+        // волна «слушающих» столбиков внутри вместо абстрактного пустого круга.
+        Box(contentAlignment = Alignment.Center) {
+            OmnixCore(
+                state = coreStateFor(step, state, microphoneGranted),
+                size = OmnixTheme.coreSizes.home,
+                audioLevel = state.audioLevel,
+                ringColor = if (step == FirstRunStep.Welcome) {
+                    colors.accentBrand
+                } else {
+                    null
+                }
+            )
+            if (step == FirstRunStep.Welcome) {
+                OnboardingWaveform()
+            }
+        }
 
         Spacer(Modifier.height(spacing.xxl))
 
@@ -141,7 +181,8 @@ fun FirstRunScreen(
         }
 
         Spacer(Modifier.weight(1f))
-        Spacer(Modifier.height(spacing.xxl))
+        // Мок: кнопка не прилипает к жест-бару — запас сверх systemBarsPadding.
+        Spacer(Modifier.height(spacing.xxxl))
     }
 }
 
@@ -202,15 +243,12 @@ private fun StepScaffold(
 
 @Composable
 private fun WelcomeStep(onAdvance: () -> Unit) {
-    StepScaffold(
-        title = stringResource(R.string.omnix_welcome_headline),
-        body = stringResource(R.string.omnix_welcome_body)
-    ) {
-        OmnixPrimaryButton(
-            text = stringResource(R.string.omnix_welcome_cta),
-            onClick = onAdvance
-        )
-    }
+    // Заголовок и подзаголовок Welcome живут НАД кольцом (мок 2026-09-24);
+    // здесь остаётся только действие.
+    OmnixPrimaryButton(
+        text = stringResource(R.string.omnix_welcome_cta),
+        onClick = onAdvance
+    )
 }
 
 @Composable

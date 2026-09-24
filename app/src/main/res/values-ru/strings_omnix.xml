@@ -107,6 +107,7 @@
     <string name="omnix_welcome_headline">Голос в вашем ухе.</string>
     <string name="omnix_welcome_body">Говорите как обычно.\nОстальное сделает OMNIX.</string>
     <string name="omnix_welcome_cta">Начать</string>
+    <string name="omnix_onboarding_step_a11y">Шаг %1$d из %2$d</string>
 
     <string name="omnix_pairing_title">Знакомство с OMNIX Clip</string>
     <string name="omnix_pairing_searching">Ищу ваш Clip…</string>

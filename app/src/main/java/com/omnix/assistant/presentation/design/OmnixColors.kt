@@ -46,6 +46,10 @@ data class OmnixColorScheme(
     val onActionPrimary: Color,
     val actionSecondaryBorder: Color,
 
+    // Brand accent (onboarding welcome, mock 2026-09-24)
+    val accentBrand: Color,
+    val accentBrandSoft: Color,
+
     /** True for the dimmed night variant (§54). */
     val isNight: Boolean
 )
@@ -88,6 +92,11 @@ val OmnixDarkColors = OmnixColorScheme(
     actionPrimary = TextPrimaryToken,
     onActionPrimary = Color(0xFF01090F),
     actionSecondaryBorder = Color(0x2EFFFFFF),          // 0.18
+
+    // Синий в тон логотипа (мок онбординга 2026-09-24): единственный
+    // цветной момент вне монохрома ядра и красного ERROR.
+    accentBrand = Color(0xFF3878C8),
+    accentBrandSoft = Color(0xFF88B8E0),
 
     isNight = false
 )
@@ -153,6 +162,10 @@ val OmnixLightColors = OmnixColorScheme(
     actionPrimary = Color(0xFF0C0D10),
     onActionPrimary = Color(0xFFF7F8FA),
     actionSecondaryBorder = Color(0x1F000000),
+
+    // Брендовые константы: не зависят от схемы (ночь наследует тёмные).
+    accentBrand = Color(0xFF3878C8),
+    accentBrandSoft = Color(0xFF88B8E0),
 
     isNight = false
 )

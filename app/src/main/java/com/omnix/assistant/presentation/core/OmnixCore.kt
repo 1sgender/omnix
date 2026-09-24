@@ -83,6 +83,9 @@ import kotlin.math.sin
  * @param badge       orthogonal status badge docked onto the ring (cloud
  *                    processing, no connectivity). Coexists with every
  *                    layer; never changes the Core's shape
+ * @param ringColor   optional ring colour override for brand moments that
+ *                    open the product (onboarding welcome) — the monochrome
+ *                    state language stays untouched for every other caller
  */
 @Composable
 fun OmnixCore(
@@ -93,13 +96,14 @@ fun OmnixCore(
     intensity: Float = 1f,
     contentDescription: String? = null,
     progress: Float? = null,
-    badge: CoreBadge? = null
+    badge: CoreBadge? = null,
+    ringColor: Color? = null
 ) {
     val colors = OmnixTheme.colors
     val motion = OmnixTheme.motion
     val reduced = OmnixTheme.reducedMotion
 
-    val targetColor = when (state) {
+    val targetColor = ringColor ?: when (state) {
         CoreState.IDLE -> colors.stateIdle
         CoreState.LISTENING -> colors.stateListening
         CoreState.RECOGNIZING -> colors.stateRecognizing
