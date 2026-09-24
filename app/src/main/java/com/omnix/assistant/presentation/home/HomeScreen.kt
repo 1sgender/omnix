@@ -129,6 +129,11 @@ fun HomeScreen(
                         state = state.coreState,
                         size = OmnixTheme.coreSizes.home,
                         audioLevel = state.audioLevel,
+                        // Дуга OTA (матрица): показывается только в IDLE — во
+                        // время диалога/прослушивания кольцо само занято
+                        // главным сигналом. Прогресс — реальный ход загрузки
+                        // из DownloadManager, не синтетика.
+                        progress = state.otaDownloadProgress,
                         // Matrix: badges are orthogonal to layers and never
                         // change the Core's shape. CLOUD wins over WIFI_OFF
                         // (a request in flight implies the network is back).
