@@ -3,6 +3,7 @@ package com.omnix.assistant.update
 import android.app.DownloadManager
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,6 +35,11 @@ data class OtaDownloadSnapshot(
  *
  * DownloadManager не шлёт промежуточных событий — только опрос (как и в
  * диалоге); константы статусов compile-time inline, JVM-безопасны.
+ *
+ * Гонки: отмена job не мгновенна — отменённое/заменённое слежение может
+ * дописать снимок ПОСЛЕ старта нового. Поэтому (1) job стартует лениво:
+ * [pollJob] присваивается до первого такта блока; (2) каждое запись и очистка
+ * guarded проверкой «я всё ещё текущее слежение».
  */
 @Singleton
 class OtaDownloadMonitor internal constructor(private val pollMs: Long) {
@@ -48,6 +54,8 @@ class OtaDownloadMonitor internal constructor(private val pollMs: Long) {
     /** Ход активной загрузки; null — загрузки нет (дуга скрыта). */
     val snapshot: StateFlow<OtaDownloadSnapshot?> = _snapshot
 
+    // @Volatile: пишется из begin/end (main), читается из poll-корутины.
+    @Volatile
     private var pollJob: Job? = null
 
     /**
@@ -63,13 +71,18 @@ class OtaDownloadMonitor internal constructor(private val pollMs: Long) {
         pollJob?.cancel()
         // Первичный снимок до первого опроса: размер неизвестен → дуги ещё нет.
         _snapshot.value = OtaDownloadSnapshot(downloadId, versionCode, 0L, 0L)
-        pollJob = scope.launch {
+        // LAZY: pollJob присваивается до первого такта корутины, иначе блок
+        // может успеть прочитаться «чужим» pollJob на другом потоке.
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            val self = coroutineContext[Job]
             while (true) {
                 val progress = poll()
                 if (progress == null) {
-                    end()
+                    // Запись исчезла — загрузку снесли; дугу гасим.
+                    clearIfMine(self)
                     break
                 }
+                if (!isMine(self)) break
                 _snapshot.value = OtaDownloadSnapshot(
                     downloadId = downloadId,
                     versionCode = versionCode,
@@ -79,7 +92,7 @@ class OtaDownloadMonitor internal constructor(private val pollMs: Long) {
                 when (progress.status) {
                     DownloadManager.STATUS_SUCCESSFUL,
                     DownloadManager.STATUS_FAILED -> {
-                        end()
+                        clearIfMine(self)
                         break
                     }
 
@@ -87,6 +100,8 @@ class OtaDownloadMonitor internal constructor(private val pollMs: Long) {
                 }
             }
         }
+        pollJob = job
+        job.start()
     }
 
     /** Прекратить слежение и погасить дугу (успех, ошибка, сброс). */
@@ -94,6 +109,17 @@ class OtaDownloadMonitor internal constructor(private val pollMs: Long) {
         pollJob?.cancel()
         pollJob = null
         _snapshot.value = null
+    }
+
+    /** Запись разрешена, только если это слежение всё ещё актуально. */
+    private fun isMine(self: Job?): Boolean = pollJob === self
+
+    /** Очистить снимок, только если актуальное слежение — наше. */
+    private fun clearIfMine(self: Job?) {
+        if (isMine(self)) {
+            pollJob = null
+            _snapshot.value = null
+        }
     }
 
     companion object {
