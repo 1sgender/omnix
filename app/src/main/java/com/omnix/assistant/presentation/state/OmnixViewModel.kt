@@ -301,8 +301,8 @@ class OmnixViewModel @Inject constructor(
      * settings link is offered only after the user had a chance to answer
      * the prompt (mock 2026-09-24).
      */
-    val microphonePrompted: Flow<Boolean>
-        get() = experienceStore.microphonePrompted
+    val microphonePrompted: StateFlow<Boolean> = experienceStore.microphonePrompted
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     /** Persisted when the prompt is launched, not when the user answers. */
     fun markMicrophonePrompted() {
