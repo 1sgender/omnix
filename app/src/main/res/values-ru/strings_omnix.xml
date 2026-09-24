@@ -243,6 +243,7 @@
     <string name="omnix_local_model_downloading">Загружается… %1$d%%</string>
     <string name="omnix_local_model_downloaded">Скачана, включится при первом запросе</string>
     <string name="omnix_local_model_loading">Загружается в память…</string>
+    <string name="omnix_local_model_loading_screen">Локальная модель загружается в память…</string>
     <string name="omnix_local_model_ready">Готова к офлайн-ответам</string>
     <string name="omnix_local_model_failed">Не запустилась: %1$s</string>
     <string name="omnix_local_model_low_memory">Не хватает свободной RAM (нужно %1$d МБ) — отвечаю из облака</string>
