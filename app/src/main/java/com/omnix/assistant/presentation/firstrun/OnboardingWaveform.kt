@@ -19,8 +19,13 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Волна внутри кольца на Welcome-шаге онбординга (мок 2026-09-24): кольцо
- * «несёт смысл» — столбики слушают, это про голос, а не абстрактный круг.
+ * Волна внутри кольца на Welcome-шаге онбординга (мок 2026-09-24, калибровка
+ * по повторному рендеру): кольцо «несёт смысл» — столбики слушают, это про
+ * голос, а не абстрактный круг.
+ *
+ * Калибровка по рендеру: 4 тонких столбика (ширина ~0.4 слота), волна занимает
+ * 30% диаметра кольца по ширине и 40% по высоте; крайние столбики приглушены
+ * до ~88% яркости — огибающая красит не только высоту, но и цвет.
  *
  * Это ИЛЛЮСТРАЦИЯ, не слой данных: микрофон на этом шаге ещё не запрошен,
  * реального audioLevel не существует, поэтому анимация детерминированная
@@ -31,10 +36,15 @@ import kotlin.math.sin
 @Composable
 internal fun OnboardingWaveform(
     modifier: Modifier = Modifier,
-    barCount: Int = 7
+    barCount: Int = 4
 ) {
     val color = OmnixTheme.colors.accentBrandSoft
     val reduced = OmnixTheme.reducedMotion
+
+    // Пропорции от размера кольца (мок): 30% ширины, 40% высоты.
+    val ringSize = OmnixTheme.coreSizes.home
+    val waveWidth = (ringSize.value * WIDTH_RATIO).dp
+    val waveHeight = (ringSize.value * HEIGHT_RATIO).dp
 
     val transition = rememberInfiniteTransition(label = "welcome_wave")
     val phase by transition.animateFloat(
@@ -46,14 +56,14 @@ internal fun OnboardingWaveform(
         label = "welcome_wave_phase"
     )
 
-    // Пропорции мока: ~46% ширины кольца, ~31% его диаметра.
     Canvas(
-        modifier = modifier.size(width = WAVE_WIDTH_DP, height = WAVE_HEIGHT_DP)
+        modifier = modifier.size(width = waveWidth, height = waveHeight)
     ) {
         val barSlot = size.width / (barCount * 2 - 1)
-        val barWidth = barSlot
+        val barWidth = barSlot * BAR_WIDTH_RATIO
         for (i in 0 until barCount) {
-            // Огибающая: крайние столбики ниже, центр выше — силуэт волны.
+            // Огибающая: крайние столбики ниже И тусклее (в моке — до ~88%
+            // яркости края), центр выше и ярче — силуэт волны.
             val envelope = sin(PI * (i + 1) / (barCount + 1)).toFloat()
             // Считаем в Double (kotlin.math.sin), во Float — один раз на выходе.
             val oscillation = if (reduced) {
@@ -64,9 +74,9 @@ internal fun OnboardingWaveform(
             val barHeight = (size.height * oscillation.toFloat() * (0.45f + 0.55f * envelope))
                 .coerceIn(0f, size.height)
             drawRoundRect(
-                color = color,
+                color = color.copy(alpha = EDGE_ALPHA_BASE + EDGE_ALPHA_SPAN * envelope),
                 topLeft = Offset(
-                    x = i * 2f * barSlot,
+                    x = i * 2f * barSlot + (barSlot - barWidth) / 2f,
                     y = (size.height - barHeight) / 2f
                 ),
                 size = Size(barWidth, barHeight),
@@ -76,8 +86,13 @@ internal fun OnboardingWaveform(
     }
 }
 
-private val WAVE_WIDTH_DP = 68.dp
-private val WAVE_HEIGHT_DP = 46.dp
+private const val WIDTH_RATIO = 0.30f
+private const val HEIGHT_RATIO = 0.40f
+private const val BAR_WIDTH_RATIO = 0.40f
 private const val WAVE_PERIOD_MS = 2_400
 private const val PHASE_STEP = 0.9f
 private const val REDUCED_LEVEL = 0.55f
+
+/** Крайний столбик ≈ 0.88 яркости центрального (замер по рендеру). */
+private const val EDGE_ALPHA_BASE = 0.72f
+private const val EDGE_ALPHA_SPAN = 0.28f

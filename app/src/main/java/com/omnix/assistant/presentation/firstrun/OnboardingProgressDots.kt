@@ -43,8 +43,10 @@ internal fun OnboardingProgressDots(
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(total) { index ->
+            // Калибровка по моку: активная точка — светлая капсула (синий
+            // живёт на кольце), пройденные и будущие — нейтральные.
             val dotColor = when {
-                index == active -> colors.accentBrand
+                index == active -> colors.textPrimary
                 index < active -> colors.textTertiary
                 else -> colors.actionSecondaryBorder
             }
@@ -67,4 +69,4 @@ internal fun OnboardingProgressDots(
 }
 
 private val DOT_HEIGHT = 6.dp
-private val ACTIVE_WIDTH = 18.dp
+private val ACTIVE_WIDTH = 20.dp
