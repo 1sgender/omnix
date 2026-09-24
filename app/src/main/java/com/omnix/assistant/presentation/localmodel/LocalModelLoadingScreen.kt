@@ -1,15 +1,15 @@
 package com.omnix.assistant.presentation.localmodel
 
-import androidx.compose.animation.animateDpAsState
-import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.infinite.infiniteTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -117,12 +117,13 @@ private fun SelfDrawingRing() {
     Canvas(modifier = Modifier.size(RING_SIZE)) {
         val stroke = RING_STROKE.toPx()
         val radius = size.minDimension / 2f - stroke / 2f
+        val center = Offset(size.minDimension / 2f, size.minDimension / 2f)
         val topLeft = Offset(stroke / 2f, stroke / 2f)
 
         // The faint full circle never moves: the bright arc resets into it.
         drawCircle(
             color = colors.stateIdle,
-            topLeft = topLeft,
+            center = center,
             radius = radius,
             style = Stroke(width = stroke)
         )
@@ -145,7 +146,7 @@ private fun SelfDrawingRing() {
 private fun ringProgress(): Pair<Float, Float> {
     if (OmnixTheme.reducedMotion) return RING_STATIC_TRIM to 1f
 
-    val infinite = infiniteTransition()
+    val infinite = rememberInfiniteTransition()
     val trim by infinite.animateFloat(0f, 1f, ringDrawSpec)
     val arcAlpha by infinite.animateFloat(1f, 0f, ringFadeSpec)
     return trim to arcAlpha
