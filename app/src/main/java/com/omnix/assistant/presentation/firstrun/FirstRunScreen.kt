@@ -590,6 +590,7 @@ private fun DrawScope.drawMicGlyph(sizePx: Float, color: Color, slashed: Boolean
         size = Size(13f * u, 13f * u),
         startAngle = 0f,
         sweepAngle = 180f,
+        useCenter = false,
         color = color,
         style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
     )
