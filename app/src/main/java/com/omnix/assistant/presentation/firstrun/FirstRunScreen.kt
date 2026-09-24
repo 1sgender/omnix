@@ -221,11 +221,13 @@ private fun StepHeadingSlot(
     microphoneGranted: Boolean,
     microphonePrompted: Boolean
 ) {
+    // Читаем до лямбды: transitionSpec — не композабельный контекст.
+    val enterMs = OmnixTheme.motion.screenEnterMs
+    val exitMs = OmnixTheme.motion.screenExitMs
     AnimatedContent(
         targetState = step,
         transitionSpec = {
-            fadeIn(tween(OmnixTheme.motion.screenEnterMs)) togetherWith
-                fadeOut(tween(OmnixTheme.motion.screenExitMs))
+            fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
         },
         label = "first-run-heading"
     ) { current ->
@@ -283,12 +285,14 @@ private fun StepActionsSlot(
     microphoneGranted: Boolean,
     microphonePrompted: Boolean
 ) {
-    // Под сценой/копирайтом — только действия шага.
+    // Под сценой/копирайтом — только действия шага. Читаем motion до
+    // лямбды: transitionSpec — не композабельный контекст.
+    val enterMs = OmnixTheme.motion.screenEnterMs
+    val exitMs = OmnixTheme.motion.screenExitMs
     AnimatedContent(
         targetState = step,
         transitionSpec = {
-            fadeIn(tween(OmnixTheme.motion.screenEnterMs)) togetherWith
-                fadeOut(tween(OmnixTheme.motion.screenExitMs))
+            fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
         },
         label = "first-run-actions"
     ) { current ->
