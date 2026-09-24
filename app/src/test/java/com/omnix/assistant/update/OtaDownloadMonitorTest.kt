@@ -71,7 +71,8 @@ class OtaDownloadMonitorTest {
             monitor.snapshot.first { it != null && it.bytesSoFar == 250L }
         }
 
-        assertEquals(12L, first.downloadId)
+        assertNotNull(first)
+        assertEquals(12L, first!!.downloadId)
         assertEquals(201L, first.versionCode)
         assertEquals(1_000L, first.totalBytes)
 
