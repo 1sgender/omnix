@@ -26,6 +26,8 @@ import com.omnix.assistant.R
 data class OmnixTypographyTokens(
     /** Large Title — first-run statements, the product wordmark moment. */
     val display: TextStyle,
+    /** Splash wordmark: the large OMNIX on the model-loading screen. */
+    val splashWordmark: TextStyle,
     /** Title 1 — screen titles: Settings, Devices, History. */
     val screenTitle: TextStyle,
     /** Title 2 — prominent section titles, translator panes. */
@@ -65,6 +67,12 @@ val OmnixTypography = OmnixTypographyTokens(
         fontSize = 34.sp,
         lineHeight = 41.sp,
         letterSpacing = (-0.4).sp
+    ),
+    splashWordmark = TextStyle(
+        fontFamily = OmnixSans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 40.sp,
+        lineHeight = 46.sp
     ),
     screenTitle = TextStyle(
         fontFamily = OmnixSans,
