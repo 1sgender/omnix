@@ -2,7 +2,7 @@ package com.omnix.assistant.core.network
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -78,17 +78,18 @@ class CloudProcessingMonitorTest {
         val monitor = CloudProcessingMonitor()
         val emissions = mutableListOf<Boolean>()
 
-        val job = launch {
+        // UnconfinedTestDispatcher: коллектор обрабатывает эмиссии синхронно,
+        // в момент изменения счётчика — тест детерминирован без виртуальных
+        // задержек (паттерн из документации kotlinx.coroutines).
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
             monitor.active.collect { emissions.add(it) }
         }
-        advanceUntilIdle()
 
         monitor.requestStarted()
         monitor.requestStarted()
         monitor.requestFinished()
         monitor.requestFinished()
         monitor.requestStarted()
-        advanceUntilIdle()
 
         job.cancel()
 
