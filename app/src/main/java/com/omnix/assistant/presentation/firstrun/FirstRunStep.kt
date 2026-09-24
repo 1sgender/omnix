@@ -1,5 +1,8 @@
 package com.omnix.assistant.presentation.firstrun
 
+/** Три видимые вехи онбординга (мок 2026-09-24). */
+const val ONBOARDING_PROGRESS_TOTAL = 3
+
 /**
  * The first-run sequence (§34, §67).
  *
@@ -33,7 +36,24 @@ enum class FirstRunStep {
     /** Finished — Home takes over. */
     Complete;
 
+    /** Сколько точек прогресса показывает онбординг (мок: три вехи). */
+    val progressTotal: Int get() = ONBOARDING_PROGRESS_TOTAL
+
     val isFirst: Boolean get() = this == Welcome
+
+    /**
+     * Индекс видимой точки прогресса онбординга (мок 2026-09-24: «шаг 1 из
+     * 3»). Три пользовательские вехи: знакомство → настройка (устройство и
+     * микрофон) → первая команда. Complete — не точка: флоу уходит на Home.
+     * null = точки скрыты.
+     */
+    val progressIndex: Int?
+        get() = when (this) {
+            Welcome -> 0
+            DeviceDetection, ClipPairing, Microphone -> 1
+            FirstCommand -> 2
+            Complete -> null
+        }
 
     /** The step that follows, given whether a Clip was actually found. */
     fun next(clipFound: Boolean): FirstRunStep = when (this) {

@@ -108,6 +108,7 @@
     <string name="omnix_welcome_headline">Gulagyňyzda ses.</string>
     <string name="omnix_welcome_body">Erkin gepleşiň.\nGalany OMNIX düzüşdirýär.</string>
     <string name="omnix_welcome_cta">Başla</string>
+    <string name="omnix_onboarding_step_a11y">%2$d ädimden %1$d-njisi</string>
 
     <string name="omnix_pairing_title">OMNIX Cligiňiz bilen tanyşyň</string>
     <string name="omnix_pairing_searching">Cligi gözleýärin…</string>

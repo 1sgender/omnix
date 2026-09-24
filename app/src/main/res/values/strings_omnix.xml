@@ -109,6 +109,7 @@
     <string name="omnix_welcome_headline">Voice in your ear.</string>
     <string name="omnix_welcome_body">Speak naturally.\nOMNIX takes care of the rest.</string>
     <string name="omnix_welcome_cta">Get started</string>
+    <string name="omnix_onboarding_step_a11y">Step %1$d of %2$d</string>
 
     <string name="omnix_pairing_title">Meet your OMNIX Clip</string>
     <string name="omnix_pairing_searching">Looking for your Clip…</string>
