@@ -5,14 +5,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.omnix.assistant.presentation.core.CoreState
 
 /**
  * Translation is a mode of OMNIX, not a separate app (§25).
  *
- * The route reuses the existing [LiveInterpreterViewModel] unchanged and maps
- * its state onto the same Core the rest of the product uses, so entering
- * translation never feels like leaving OMNIX.
+ * The route reuses the existing [LiveInterpreterViewModel] unchanged. The
+ * mock of 2026-09-25 replaced the Core on this screen with the calm
+ * translation ring, so the eight states are no longer painted here: listening
+ * shows up as the live waveform (the real microphone level), thinking as the
+ * settled result text.
  */
 @Composable
 fun TranslatorRoute(
@@ -23,22 +24,12 @@ fun TranslatorRoute(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    // The Core reports the same eight states here as everywhere else: it
-    // listens, it thinks while translating, it speaks the result.
-    val coreState = when {
-        state.isTranslating -> CoreState.THINKING
-        state.isListening && state.partialRecognizedText.isNotBlank() -> CoreState.RECOGNIZING
-        state.isListening -> CoreState.LISTENING
-        else -> CoreState.IDLE
-    }
-
     val latest = state.history.firstOrNull()
 
     TranslatorScreen(
         modifier = modifier,
         onBack = onBack,
         active = state.isListening,
-        coreState = coreState,
         audioLevel = audioLevel,
         sourceLanguage = (state.detectedSourceLanguage ?: state.sourceLanguage).displayName,
         targetLanguage = state.targetLanguage.displayName,

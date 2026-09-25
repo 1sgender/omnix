@@ -40,7 +40,8 @@ sealed class OmnixDestination(val route: String) {
     data class SettingsSection(val section: String) :
         OmnixDestination("omnix/settings/$section") {
         companion object {
-            const val ROUTE_PATTERN = "omnix/settings/{section}"
+            const val ROUTE_PREFIX = "omnix/settings/"
+            const val ROUTE_PATTERN = ROUTE_PREFIX + "{section}"
             const val ARG_SECTION = "section"
         }
     }
@@ -52,4 +53,26 @@ sealed class OmnixDestination(val route: String) {
         /** The three destinations that appear in the navigation bar. */
         val primary = listOf(History, Home, Me)
     }
+}
+
+/**
+ * The primary tab a route belongs to (mock 2026-09-25: the active tab is
+ * white + bold, the rest dimmed — "where am I" in one glance).
+ *
+ * Secondary screens keep their PARENT tab lit, the iOS reading: OMNIX's
+ * modes — Chat, Translator — keep the centre OMNIX tab lit; everything
+ * reached from Me (devices, privacy, settings sections) keeps Me lit. A
+ * route that belongs to no tab (first run, none) lights nothing.
+ */
+fun tabForRoute(route: String?): OmnixDestination? = when (route) {
+    OmnixDestination.History.route -> OmnixDestination.History
+    OmnixDestination.Home.route,
+    OmnixDestination.Chat.route,
+    OmnixDestination.Translator.route -> OmnixDestination.Home
+    OmnixDestination.Me.route,
+    OmnixDestination.Devices.route,
+    OmnixDestination.Privacy.route -> OmnixDestination.Me
+    else -> route
+        ?.takeIf { it.startsWith(OmnixDestination.SettingsSection.ROUTE_PREFIX) }
+        ?.let { OmnixDestination.Me }
 }

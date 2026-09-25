@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
@@ -40,10 +41,15 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  * Home is the single live state indicator; duplicating it in navigation made
  * its purpose ambiguous (status or action). The quiet wordmark tab retains a
  * clear way home without competing with that indicator.
+ *
+ * The active tab is unmistakable (mock 2026-09-25): white and bold against
+ * the dimmed, regular-weight rest — "where am I" in one glance. Secondary
+ * screens keep their parent tab lit via [tabForRoute]: OMNIX's modes keep
+ * the centre tab, everything reached from Me keeps Me.
  */
 @Composable
 fun OmnixNavigationBar(
-    currentRoute: String?,
+    currentTab: OmnixDestination?,
     onNavigate: (OmnixDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -74,14 +80,14 @@ fun OmnixNavigationBar(
         ) {
             NavigationItem(
                 label = stringResource(R.string.omnix_nav_history),
-                selected = currentRoute == OmnixDestination.History.route,
+                selected = currentTab == OmnixDestination.History,
                 onClick = { onNavigate(OmnixDestination.History) },
                 modifier = Modifier.weight(1f),
                 icon = { tint -> OmnixHistoryIcon(color = tint) }
             )
 
             HomeNavigationItem(
-                selected = currentRoute == OmnixDestination.Home.route,
+                selected = currentTab == OmnixDestination.Home,
                 onClick = { onNavigate(OmnixDestination.Home) },
                 modifier = Modifier.weight(1f)
             )
@@ -89,7 +95,7 @@ fun OmnixNavigationBar(
             NavigationItem(
                 label = stringResource(R.string.omnix_nav_me),
                 contentDescription = stringResource(R.string.omnix_a11y_open_settings),
-                selected = currentRoute == OmnixDestination.Me.route,
+                selected = currentTab == OmnixDestination.Me,
                 onClick = { onNavigate(OmnixDestination.Me) },
                 modifier = Modifier.weight(1f),
                 icon = { tint -> OmnixMeIcon(color = tint) }
@@ -124,7 +130,11 @@ private fun NavigationItem(
         Spacer(Modifier.height(2.dp))
         Text(
             text = label,
-            style = OmnixTheme.typography.overline,
+            // The active tab is white and bold, the rest dimmed (mock
+            // 2026-09-25): position reads in one glance.
+            style = OmnixTheme.typography.overline.copy(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            ),
             color = tint,
             textAlign = TextAlign.Center
         )
@@ -155,7 +165,9 @@ private fun HomeNavigationItem(
     ) {
         Text(
             text = stringResource(R.string.omnix_wordmark),
-            style = OmnixTheme.typography.overline,
+            style = OmnixTheme.typography.overline.copy(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            ),
             color = tint,
             textAlign = TextAlign.Center
         )
