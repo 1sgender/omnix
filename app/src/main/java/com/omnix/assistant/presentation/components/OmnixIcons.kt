@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Oval
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -535,7 +534,7 @@ fun OmnixGlobeIcon(
             moveTo(p(12f), p(3f))
             cubicTo(p(9.5f), p(5.7f), p(9.5f), p(18.3f), p(12f), p(21f))
         }
-        drawPath(meridian, color, stroke)
+        drawPath(meridian, color = color, style = stroke)
     }
 }
 
@@ -550,17 +549,25 @@ fun OmnixBellIcon(
         val w = this.size.minDimension * 0.12f
         fun p(v: Float) = v * u
         val stroke = Stroke(width = w, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // Dome: left rim (180°) over the top to the right rim.
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(p(7f), p(4f)),
+            size = Size(10f * u, 10f * u),
+            style = stroke
+        )
         val bell = Path().apply {
-            // Dome first: left rim (180°) over the top to the right rim.
-            moveTo(p(7f), p(9f))
-            arcTo(Oval(p(7f), p(4f), p(17f), p(14f)), 180f, 180f, false)
+            moveTo(p(17f), p(9f))
             lineTo(p(17f), p(12f))
             lineTo(p(19f), p(16f))
             lineTo(p(5f), p(16f))
             lineTo(p(7f), p(12f))
             lineTo(p(7f), p(9f))
         }
-        drawPath(bell, color, stroke)
+        drawPath(bell, color = color, style = stroke)
         drawArc(
             color = color,
             startAngle = 0f,
@@ -586,19 +593,14 @@ fun OmnixSunIcon(
         val stroke = Stroke(width = w, cap = StrokeCap.Round)
         val c = Offset(p(12f), p(12f))
         drawCircle(color = color, radius = 3f * u, center = c, style = stroke)
-        val rays = listOf(
-            12f to 3f to 12f to 6f,
-            12f to 18f to 12f to 21f,
-            3f to 12f to 6f to 12f,
-            18f to 12f to 21f to 12f,
-            6f to 6f to 8f to 8f,
-            16f to 16f to 18f to 18f,
-            6f to 18f to 8f to 16f,
-            16f to 8f to 18f to 6f
-        )
-        rays.forEach { (x1, y1, x2, y2) ->
-            drawLine(color, Offset(p(x1), p(y1)), Offset(p(x2), p(y2)), w, StrokeCap.Round)
-        }
+        drawLine(color, Offset(p(12f), p(3f)), Offset(p(12f), p(6f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(12f), p(18f)), Offset(p(12f), p(21f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(3f), p(12f)), Offset(p(6f), p(12f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(18f), p(12f)), Offset(p(21f), p(12f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(6f), p(6f)), Offset(p(8f), p(8f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(16f), p(16f)), Offset(p(18f), p(18f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(6f), p(18f)), Offset(p(8f), p(16f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(16f), p(8f)), Offset(p(18f), p(6f)), w, StrokeCap.Round)
     }
 }
 
@@ -646,8 +648,8 @@ fun OmnixStarIcon(
         }
         drawPath(
             star,
-            color,
-            Stroke(width = w, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            color = color,
+            style = Stroke(width = w, cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
     }
 }
@@ -671,7 +673,7 @@ fun OmnixCodeIcon(
             lineTo(p(20f), p(12f))
             lineTo(p(16f), p(15f))
         }
-        drawPath(brackets, color, stroke)
+        drawPath(brackets, color = color, style = stroke)
         drawLine(color, Offset(p(13f), p(6f)), Offset(p(11f), p(18f)), w, StrokeCap.Round)
     }
 }

@@ -295,8 +295,8 @@ fun OmnixSliderRow(
  */
 @Composable
 fun OmnixSettingIconTile(
-    icon: @Composable () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    icon: @Composable () -> Unit
 ) {
     Box(
         modifier = modifier
