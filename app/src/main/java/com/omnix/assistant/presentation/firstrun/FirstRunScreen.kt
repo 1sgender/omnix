@@ -44,6 +44,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
@@ -356,13 +359,17 @@ private fun coreStateFor(
 /**
  * Пара «заголовок + подзаголовок» как блок: онбординг — 82% ширины, флоу
  * подключения Clip — вся ширина и зазор мока 10px. Вертикальный ритм вокруг
- * задаёт флоу, не блок. [content] отдаёт пару «заголовок/подзаголовок» шага —
- * composables из-за stringResource.
+ * задаёт флоу, не блок. Копирайт клип-флоу — «живая» область (мок:
+ * aria-live="polite"): смена фазы объявляется скринридеру без взгляда на
+ * экран. [content] отдаёт пару «заголовок/подзаголовок» шага — composables
+ * из-за stringResource.
  */
 @Composable
 private fun StepHeading(clipFlow: Boolean, content: @Composable () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth(if (clipFlow) 1f else 0.82f),
+        modifier = Modifier
+            .fillMaxWidth(if (clipFlow) 1f else 0.82f)
+            .semantics { if (clipFlow) liveRegion = LiveRegionMode.Polite },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
             if (clipFlow) CLIP_TITLE_GAP else OmnixTheme.spacing.sm
