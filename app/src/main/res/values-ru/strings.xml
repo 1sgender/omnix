@@ -42,7 +42,7 @@
     <string name="bluetooth_naushnik">Bluetooth Наушник</string>
 
     <!-- ===== License & UseCase (audit #17) ===== -->
-    <string name="nevernyy_kod_aktivacii">Неверный код активации. Проверьте код на карточке в коробке наушников.</string>
+    <string name="nevernyy_kod_aktivacii">Такой код не найден. Проверьте цифры и попробуйте снова.</string>
     <string name="server_licenziy_nedostupen">Сервер активации временно недоступен. Код не был активирован — повторите позже.</string>
     <string name="proverte_internet">Нет соединения с сервером активации. Проверьте интернет и повторите.</string>
     <string name="slishkom_mnogo_popytok_aktivacii">Слишком много попыток активации. Подождите и повторите позже.</string>

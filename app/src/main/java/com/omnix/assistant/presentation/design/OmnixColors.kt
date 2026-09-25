@@ -22,6 +22,12 @@ data class OmnixColorScheme(
     val background: Color,
     val surface: Color,
     val surfaceElevated: Color,
+
+    // Уровень заливки (iOS fill): заметно, но тише карточки — выключенные
+    // кнопки, подчёркивание ячеек ввода (моки 2026-09-25: --faint
+    // #2C2C2E/#E5E5EA).
+    val surfaceFilled: Color,
+
     val border: Color,
     val scrim: Color,
 
@@ -71,6 +77,7 @@ val OmnixDarkColors = OmnixColorScheme(
     background = Color(0xFF01090F),
     surface = Color(0xFF0A1015),
     surfaceElevated = Color(0xFF121A20),
+    surfaceFilled = Color(0xFF2C2C2E),
     border = Color(0x14FFFFFF),                        // rgba(255,255,255,0.08)
     scrim = Color(0xB3000000),
 
@@ -116,6 +123,7 @@ val OmnixNightColors = OmnixDarkColors.copy(
     background = Color(0xFF000508),
     surface = Color(0xFF060B10),
     surfaceElevated = Color(0xFF0C1318),
+    surfaceFilled = Color(0xFF1C1C1E),
     border = Color(0x0FFFFFFF),
 
     textPrimary = Color(0xD6FFFFFF),
@@ -147,6 +155,7 @@ val OmnixLightColors = OmnixColorScheme(
     background = Color(0xFFF7F8FA),
     surface = Color(0xFFFFFFFF),
     surfaceElevated = Color(0xFFF0F2F5),
+    surfaceFilled = Color(0xFFE5E5EA),
     border = Color(0x0F000000),                        // 6 % black hairline
     scrim = Color(0x59000000),
 

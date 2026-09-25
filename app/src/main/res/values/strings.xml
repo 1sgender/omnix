@@ -47,7 +47,7 @@
     <string name="bluetooth_naushnik">Bluetooth headphones</string>
 
     <!-- ===== License & UseCase (audit #17) ===== -->
-    <string name="nevernyy_kod_aktivacii">Wrong activation code. Check the card in the headphone box.</string>
+    <string name="nevernyy_kod_aktivacii">That code wasn’t found. Check the digits and try again.</string>
     <string name="server_licenziy_nedostupen">The activation server is temporarily unavailable. The code wasn’t activated — try again later.</string>
     <string name="proverte_internet">Can’t reach the activation server. Check your internet and try again.</string>
     <string name="slishkom_mnogo_popytok_aktivacii">Too many activation attempts. Wait a moment and try again later.</string>
