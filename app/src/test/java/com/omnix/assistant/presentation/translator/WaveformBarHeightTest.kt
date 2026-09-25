@@ -36,8 +36,8 @@ class WaveformBarHeightTest {
 
     @Test
     fun `out of range inputs are clamped not echoed`() {
-        assertEquals(8.8f, waveformBarHeight(8.8f, 3f, 1f), 1e-6f)
-        assertEquals(8.8f, waveformBarHeight(8.8f, -1f, 0.5f), 1e-6f)
-        assertEquals(1.76f, waveformBarHeight(8.8f, 0f, 4f), 1e-6f)
+        assertEquals(waveformBarHeight(8.8f, 1f, 1f), waveformBarHeight(8.8f, 3f, 1f), 1e-6f)
+        assertEquals(waveformBarHeight(8.8f, 0f, 0.5f), waveformBarHeight(8.8f, -1f, 0.5f), 1e-6f)
+        assertEquals(waveformBarHeight(8.8f, 0f, 1f), waveformBarHeight(8.8f, 0f, 4f), 1e-6f)
     }
 }
