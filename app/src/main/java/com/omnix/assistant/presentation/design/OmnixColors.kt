@@ -40,6 +40,12 @@ data class OmnixColorScheme(
     val stateSpeaking: Color,
     val stateSuccess: Color,
     val stateError: Color,
+    /**
+     * Attention, not failure (mock 2026-09-25): the amber used when a live
+     * status needs a look — Bluetooth off in the Me screen. ERROR stays the
+     * only alarm red; warning is the only other hue in the monochrome field.
+     */
+    val stateWarning: Color,
 
     // Interactive
     val actionPrimary: Color,
@@ -92,6 +98,7 @@ val OmnixDarkColors = OmnixColorScheme(
     stateSpeaking = Color(0xFFEDF1F4),
     stateSuccess = Color(0xFFEDF1F4),
     stateError = Color(0xFFFF5A3C),
+    stateWarning = Color(0xFFF5C451),
 
     actionPrimary = TextPrimaryToken,
     onActionPrimary = Color(0xFF01090F),
@@ -131,6 +138,7 @@ val OmnixNightColors = OmnixDarkColors.copy(
     stateSpeaking = Color(0xFFB7BEC3),
     stateSuccess = Color(0xFFB7BEC3),
     stateError = Color(0xFFD1615B),
+    stateWarning = Color(0xFFD1A94E),
 
     actionPrimary = Color(0xD6FFFFFF),
     isNight = true
@@ -165,6 +173,7 @@ val OmnixLightColors = OmnixColorScheme(
     stateSpeaking = Color(0xFF20262B),
     stateSuccess = Color(0xFF20262B),
     stateError = Color(0xFFD70015),
+    stateWarning = Color(0xFF8A6400),
 
     actionPrimary = Color(0xFF0C0D10),
     onActionPrimary = Color(0xFFF7F8FA),

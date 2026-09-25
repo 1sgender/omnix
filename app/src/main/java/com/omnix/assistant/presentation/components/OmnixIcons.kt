@@ -6,10 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Oval
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -27,6 +32,9 @@ object OmnixIcons {
 
     /** Default optical size for navigation icons. */
     val NavSize: Dp = 22.dp
+
+    /** Default size for the settings grid glyphs (mock 2026-09-25). */
+    val SettingSize: Dp = 15.dp
 }
 
 /** A clock: the History destination. */
@@ -354,5 +362,316 @@ fun OmnixCheckIcon(
             strokeWidth = w,
             cap = StrokeCap.Round
         )
+    }
+}
+
+// ---- Settings grid icons (mock 2026-09-25) ----
+//
+// The Me screen's rows carry a thin linear glyph in a grey tile, the iOS
+// Settings reading. 24-unit design box, 1.8-unit stroke at the default
+// 15 dp, round caps — the same line language as the navigation set.
+
+@Composable
+fun OmnixTranslateIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        drawLine(color, Offset(p(5f), p(8f)), Offset(p(19f), p(16f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(19f), p(8f)), Offset(p(5f), p(16f)), w, StrokeCap.Round)
+    }
+}
+
+@Composable
+fun OmnixChatLinesIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        drawLine(color, Offset(p(4f), p(6f)), Offset(p(15f), p(6f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(4f), p(12f)), Offset(p(20f), p(12f)), w, StrokeCap.Round)
+        drawLine(color, Offset(p(4f), p(18f)), Offset(p(12f), p(18f)), w, StrokeCap.Round)
+    }
+}
+
+/** Sound source: stem with two radiating lower arcs (the mock's voice glyph). */
+@Composable
+fun OmnixVoiceWaveIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        drawLine(color, Offset(p(12f), p(3f)), Offset(p(12f), p(15f)), w, StrokeCap.Round)
+        drawArc(
+            color = color,
+            startAngle = 0f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(p(8f), p(5f)),
+            size = Size(8f * u, 8f * u),
+            style = stroke
+        )
+        drawArc(
+            color = color,
+            startAngle = 0f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(p(6f), p(6f)),
+            size = Size(12f * u, 12f * u),
+            style = stroke
+        )
+    }
+}
+
+@Composable
+fun OmnixPrivacyIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        drawRoundRect(
+            topLeft = Offset(p(4f), p(9f)),
+            size = Size(16f * u, 10f * u),
+            cornerRadius = CornerRadius(2f * u, 2f * u),
+            color = color,
+            style = stroke
+        )
+        drawLine(color, Offset(p(8f), p(9f)), Offset(p(8f), p(6f)), w, StrokeCap.Round)
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(p(8f), p(2f)),
+            size = Size(8f * u, 8f * u),
+            style = stroke
+        )
+        drawLine(color, Offset(p(16f), p(6f)), Offset(p(16f), p(9f)), w, StrokeCap.Round)
+    }
+}
+
+@Composable
+fun OmnixPhoneIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        drawRoundRect(
+            topLeft = Offset(p(4f), p(3f)),
+            size = Size(16f * u, 18f * u),
+            cornerRadius = CornerRadius(2f * u, 2f * u),
+            color = color,
+            style = stroke
+        )
+        drawLine(color, Offset(p(9f), p(21f)), Offset(p(15f), p(21f)), w, StrokeCap.Round)
+    }
+}
+
+/** Atom: a nucleus circle crossed by one tilted orbit. */
+@Composable
+fun OmnixAtomIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        val c = Offset(p(12f), p(12f))
+        drawCircle(color = color, radius = 7f * u, center = c, style = stroke)
+        rotate(-20f, pivot = c) {
+            drawOval(
+                color = color,
+                topLeft = Offset(p(2f), p(9.2f)),
+                size = Size(20f * u, 5.6f * u),
+                style = stroke
+            )
+        }
+    }
+}
+
+@Composable
+fun OmnixGlobeIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        val c = Offset(p(12f), p(12f))
+        drawCircle(color = color, radius = 9f * u, center = c, style = stroke)
+        drawLine(color, Offset(p(3f), p(12f)), Offset(p(21f), p(12f)), w, StrokeCap.Round)
+        val meridian = Path().apply {
+            moveTo(p(12f), p(3f))
+            cubicTo(p(14.5f), p(5.7f), p(14.5f), p(18.3f), p(12f), p(21f))
+            moveTo(p(12f), p(3f))
+            cubicTo(p(9.5f), p(5.7f), p(9.5f), p(18.3f), p(12f), p(21f))
+        }
+        drawPath(meridian, color, stroke)
+    }
+}
+
+@Composable
+fun OmnixBellIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        val bell = Path().apply {
+            // Dome first: left rim (180°) over the top to the right rim.
+            moveTo(p(7f), p(9f))
+            arcTo(Oval(p(7f), p(4f), p(17f), p(14f)), 180f, 180f, false)
+            lineTo(p(17f), p(12f))
+            lineTo(p(19f), p(16f))
+            lineTo(p(5f), p(16f))
+            lineTo(p(7f), p(12f))
+            lineTo(p(7f), p(9f))
+        }
+        drawPath(bell, color, stroke)
+        drawArc(
+            color = color,
+            startAngle = 0f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(p(10f), p(18f)),
+            size = Size(4f * u, 4f * u),
+            style = stroke
+        )
+    }
+}
+
+@Composable
+fun OmnixSunIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        val c = Offset(p(12f), p(12f))
+        drawCircle(color = color, radius = 3f * u, center = c, style = stroke)
+        val rays = listOf(
+            12f to 3f to 12f to 6f,
+            12f to 18f to 12f to 21f,
+            3f to 12f to 6f to 12f,
+            18f to 12f to 21f to 12f,
+            6f to 6f to 8f to 8f,
+            16f to 16f to 18f to 18f,
+            6f to 18f to 8f to 16f,
+            16f to 8f to 18f to 6f
+        )
+        rays.forEach { (x1, y1, x2, y2) ->
+            drawLine(color, Offset(p(x1), p(y1)), Offset(p(x2), p(y2)), w, StrokeCap.Round)
+        }
+    }
+}
+
+@Composable
+fun OmnixInfoIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        val c = Offset(p(12f), p(12f))
+        drawCircle(color = color, radius = 9f * u, center = c, style = stroke)
+        drawLine(color, Offset(p(12f), p(8f)), Offset(p(12f), p(13f)), w, StrokeCap.Round)
+        // The round cap of a hairline makes the dot.
+        drawLine(color, Offset(p(12f), p(15.75f)), Offset(p(12f), p(16.25f)), w, StrokeCap.Round)
+    }
+}
+
+@Composable
+fun OmnixStarIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val star = Path().apply {
+            moveTo(p(12f), p(3f))
+            lineTo(p(14f), p(8f))
+            lineTo(p(19f), p(8.8f))
+            lineTo(p(15.4f), p(12.3f))
+            lineTo(p(16.3f), p(17.5f))
+            lineTo(p(12f), p(15f))
+            lineTo(p(7.7f), p(17.5f))
+            lineTo(p(8.6f), p(12.3f))
+            lineTo(p(5f), p(8.8f))
+            lineTo(p(10f), p(8f))
+            close()
+        }
+        drawPath(
+            star,
+            color,
+            Stroke(width = w, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
+@Composable
+fun OmnixCodeIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.SettingSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        val brackets = Path().apply {
+            moveTo(p(8f), p(9f))
+            lineTo(p(4f), p(12f))
+            lineTo(p(8f), p(15f))
+            moveTo(p(16f), p(9f))
+            lineTo(p(20f), p(12f))
+            lineTo(p(16f), p(15f))
+        }
+        drawPath(brackets, color, stroke)
+        drawLine(color, Offset(p(13f), p(6f)), Offset(p(11f), p(18f)), w, StrokeCap.Round)
     }
 }

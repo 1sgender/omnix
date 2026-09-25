@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -35,6 +36,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
 import com.omnix.assistant.presentation.components.OmnixChevronRightIcon
 import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.design.OmnixRadius
@@ -60,6 +62,12 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  *                full-bleed within the card.
  * @param chevron true for rows that open another page. Opt-in: an action or
  *                choice row must never promise navigation.
+ * @param titleColor optional title tint for live status rows (mock
+ *                2026-09-25: the Bluetooth-off title reads as a warning
+ *                instead of a silent dot).
+ * @param verticalAlignment row content alignment; multi-line rows pass
+ *                [Alignment.Top] so the chevron and the icon sit at the
+ *                top edge instead of floating mid-block (mock 2026-09-25).
  * @param leading optional slot before the title (a status dot, an icon).
  * @param trailing optional slot after the value (a checkmark, a badge).
  */
@@ -74,6 +82,8 @@ fun OmnixSettingRow(
     onClick: (() -> Unit)? = null,
     inset: Boolean = false,
     chevron: Boolean = false,
+    titleColor: Color? = null,
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
@@ -121,7 +131,7 @@ fun OmnixSettingRow(
             .defaultMinSize(minHeight = spacing.touchTarget)
             .padding(vertical = spacing.sm),
         horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = verticalAlignment
     ) {
         leading?.let {
             it()
@@ -130,7 +140,7 @@ fun OmnixSettingRow(
             Text(
                 text = title,
                 style = OmnixTheme.typography.body,
-                color = if (enabled) colors.textPrimary else colors.textDisabled
+                color = titleColor ?: if (enabled) colors.textPrimary else colors.textDisabled
             )
             subtitle?.let {
                 Text(
@@ -275,6 +285,26 @@ fun OmnixSliderRow(
                 inactiveTrackColor = colors.border
             )
         )
+    }
+}
+
+/**
+ * The grey tile behind a settings row glyph (mock 2026-09-25): a 26 dp
+ * tile in the hairline tone with the ink glyph centred in it — the iOS
+ * Settings reading, so a wall of text rows scans by icon first.
+ */
+@Composable
+fun OmnixSettingIconTile(
+    icon: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(26.dp)
+            .background(OmnixTheme.colors.border, RoundedCornerShape(7.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        icon()
     }
 }
 
