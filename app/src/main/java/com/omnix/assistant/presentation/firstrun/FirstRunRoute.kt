@@ -59,7 +59,7 @@ fun FirstRunRoute(
     var searchTimedOut by remember { mutableStateOf(false) }
     LaunchedEffect(step, searchAttempt) {
         searchTimedOut = false
-        if (step == FirstRunStep.DeviceDetection) {
+        if (step == FirstRunStep.DeviceDetection || step == FirstRunStep.ClipPairing) {
             delay(CLIP_SEARCH_TIMEOUT_MS)
             searchTimedOut = true
         }

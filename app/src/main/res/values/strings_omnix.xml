@@ -123,7 +123,6 @@
 
     <string name="omnix_clip_ready_title">You’re ready.</string>
     <string name="omnix_clip_ready_say">Say:</string>
-    <string name="omnix_clip_continue">Continue</string>
 
     <string name="omnix_mic_request_title">Microphone access</string>
     <string name="omnix_mic_request_body">OMNIX needs the microphone to hear your voice commands.</string>

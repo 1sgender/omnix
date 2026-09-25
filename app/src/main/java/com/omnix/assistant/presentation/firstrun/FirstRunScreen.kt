@@ -314,17 +314,15 @@ private fun StepActionsSlot(
         when (current) {
             FirstRunStep.Welcome -> WelcomeActions(onAdvance)
 
-            FirstRunStep.DeviceDetection -> DeviceDetectionActions(
+            // Оба шага клип-флоу делят одни действия: подтверждение — «Продолжить»,
+            // потеря связи на подтверждении — те же «Искать снова / код / Пропустить»
+            // (§34: отключившийся Clip не запирает экран без кнопок).
+            FirstRunStep.DeviceDetection, FirstRunStep.ClipPairing -> ClipFlowActions(
                 phase = clipPhase,
                 onAdvance = onAdvance,
                 onSkip = onSkipDevice,
                 onEnterCode = onEnterActivationCode,
                 onSearchAgain = onSearchAgain
-            )
-
-            FirstRunStep.ClipPairing -> ClipPairingActions(
-                phase = clipPhase,
-                onAdvance = onAdvance
             )
 
             FirstRunStep.Microphone -> MicrophoneActions(
@@ -534,7 +532,7 @@ private fun WelcomeActions(onAdvance: () -> Unit) {
 }
 
 @Composable
-private fun DeviceDetectionActions(
+private fun ClipFlowActions(
     phase: ClipRingPhase,
     onAdvance: () -> Unit,
     onSkip: () -> Unit,
@@ -558,14 +556,6 @@ private fun DeviceDetectionActions(
 
         ClipRingPhase.FOUND ->
             OmnixPrimaryButton(stringResource(R.string.omnix_continue), onAdvance)
-    }
-}
-
-@Composable
-private fun ClipPairingActions(phase: ClipRingPhase, onAdvance: () -> Unit) {
-    // Соединение ещё идёт — просто ждём у кольца; подключено — продолжаем.
-    if (phase == ClipRingPhase.FOUND) {
-        OmnixPrimaryButton(stringResource(R.string.omnix_clip_continue), onAdvance)
     }
 }
 
