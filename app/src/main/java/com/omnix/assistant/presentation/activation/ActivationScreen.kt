@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,53 +72,61 @@ fun ActivationScreen(
             .padding(horizontal = spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(TOP_GAP))
+        // Контент — в скроллируемой области с весом: на высоком экране
+        // занимает всё свободное место (кнопка прижата к низу, как в моке),
+        // на низком с клавиатурой — скроллится, кнопка остаётся над IME.
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(TOP_GAP))
 
-        OmnixRingMark(width = MARK_WIDTH, height = MARK_HEIGHT)
+            OmnixRingMark(width = MARK_WIDTH, height = MARK_HEIGHT)
 
-        Spacer(Modifier.height(AFTER_MARK_GAP))
+            Spacer(Modifier.height(AFTER_MARK_GAP))
 
-        Text(
-            text = stringResource(R.string.omnix_activation_title),
-            style = ActivationTitleStyle,
-            color = colors.textPrimary,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = stringResource(R.string.omnix_activation_title),
+                style = ActivationTitleStyle,
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(Modifier.height(TITLE_BODY_GAP))
+            Spacer(Modifier.height(TITLE_BODY_GAP))
 
-        Text(
-            text = stringResource(R.string.omnix_activation_body),
-            style = ActivationBodyStyle,
-            color = colors.textSecondary,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = stringResource(R.string.omnix_activation_body),
+                style = ActivationBodyStyle,
+                color = colors.textSecondary,
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(Modifier.height(BODY_FIELD_GAP))
+            Spacer(Modifier.height(BODY_FIELD_GAP))
 
-        Text(
-            text = stringResource(R.string.omnix_activation_field),
-            style = ActivationLabelStyle,
-            color = colors.textSecondary,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
+            Text(
+                text = stringResource(R.string.omnix_activation_field),
+                style = ActivationLabelStyle,
+                color = colors.textSecondary,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Spacer(Modifier.height(LABEL_CELLS_GAP))
+            Spacer(Modifier.height(LABEL_CELLS_GAP))
 
-        ActivationCodeCells(
-            code = uiState.inputCode,
-            onCodeChange = viewModel::onCodeChanged,
-            isError = uiState.errorMessage != null,
-            enabled = !uiState.isLoading
-        )
+            ActivationCodeCells(
+                code = uiState.inputCode,
+                onCodeChange = viewModel::onCodeChanged,
+                isError = uiState.errorMessage != null,
+                enabled = !uiState.isLoading
+            )
 
-        // Резерв под сообщение (min-height 20px мока) — появление и уход
-        // ошибки не двигают кнопку.
-        Spacer(Modifier.height(HINT_TOP_GAP))
-        ActivationErrorHint(message = uiState.errorMessage)
-
-        Spacer(Modifier.weight(1f))
+            // Резерв под сообщение (min-height 20px мока) — появление и уход
+            // ошибки не двигают кнопку.
+            Spacer(Modifier.height(HINT_TOP_GAP))
+            ActivationErrorHint(message = uiState.errorMessage)
+        }
 
         OmnixPrimaryButton(
             text = stringResource(R.string.omnix_activation_cta),
