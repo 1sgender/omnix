@@ -5,8 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
@@ -20,6 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.omnix.assistant.presentation.activation.ActivationScreen
+import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.state.ClipState
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.presentation.state.SystemStateType
@@ -39,6 +44,11 @@ fun FirstRunRoute(
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
     var step by remember { mutableStateOf(FirstRunStep.Welcome) }
+
+    // Ссылка «Ввести код активации» (мок подключения Clip) открывает настоящий
+    // ввод кода — онбординг идёт ДО гейта лицензии, так что код из комплекта
+    // Clip активирует лицензию прямо здесь, не покидая поток.
+    var showActivation by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -82,36 +92,56 @@ fun FirstRunRoute(
         if (step == FirstRunStep.Complete) onFinished()
     }
 
-    FirstRunScreen(
-        step = step,
-        state = state,
-        microphoneGranted = microphoneGranted,
-        microphonePrompted = microphonePrompted,
-        modifier = modifier,
-        onAdvance = {
-            step = step.next(clipFound = state.clip is ClipState.Connected)
-        },
-        onSkipDevice = { step = FirstRunStep.Microphone },
-        onRequestMicrophone = {
-            viewModel.markMicrophonePrompted()
-            val permissions = mutableListOf(Manifest.permission.RECORD_AUDIO)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissions += Manifest.permission.POST_NOTIFICATIONS
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                permissions += Manifest.permission.BLUETOOTH_CONNECT
-            }
-            permissionLauncher.launch(permissions.toTypedArray())
-        },
-        onOpenSystemSettings = {
-            context.startActivity(
-                Intent(
-                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", context.packageName, null)
-                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    Crossfade(
+        targetState = showActivation,
+        animationSpec = tween(OmnixTheme.motion.screenEnterMs),
+        label = "first-run-activation"
+    ) { showingActivation ->
+        if (showingActivation) {
+            // Назад — жестом назад, к живому поиску: Bluetooth-поиск не
+            // останавливается, пока открыт ввод кода (эффекты живут в
+            // маршруте). Успешная активация ведёт на тот же шаг, что и
+            // «Пропустить» (микрофон), но заработанный реальным действием.
+            BackHandler { showActivation = false }
+            ActivationScreen(
+                onActivationSuccess = {
+                    showActivation = false
+                    step = FirstRunStep.Microphone
+                }
             )
-        },
-        onEnterActivationCode = { step = FirstRunStep.Microphone },
-        onSearchAgain = { viewModel.setSearching(true) }
-    )
+        } else {
+            FirstRunScreen(
+                step = step,
+                state = state,
+                microphoneGranted = microphoneGranted,
+                microphonePrompted = microphonePrompted,
+                modifier = modifier,
+                onAdvance = {
+                    step = step.next(clipFound = state.clip is ClipState.Connected)
+                },
+                onSkipDevice = { step = FirstRunStep.Microphone },
+                onRequestMicrophone = {
+                    viewModel.markMicrophonePrompted()
+                    val permissions = mutableListOf(Manifest.permission.RECORD_AUDIO)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissions += Manifest.permission.POST_NOTIFICATIONS
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        permissions += Manifest.permission.BLUETOOTH_CONNECT
+                    }
+                    permissionLauncher.launch(permissions.toTypedArray())
+                },
+                onOpenSystemSettings = {
+                    context.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", context.packageName, null)
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                },
+                onEnterActivationCode = { showActivation = true },
+                onSearchAgain = { viewModel.setSearching(true) }
+            )
+        }
+    }
 }
