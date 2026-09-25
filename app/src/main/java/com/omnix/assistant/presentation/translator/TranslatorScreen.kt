@@ -199,8 +199,9 @@ private fun LanguagePairPill(
                 indication = null,
                 onClick = onSwap
             )
+            // clickable() already carries the button semantics for TalkBack;
+            // the label states the one action the pill has.
             .clearAndSetSemantics {
-                this[Role] = Role.Button
                 this.contentDescription = swapLabel
             }
             .padding(horizontal = spacing.lg, vertical = spacing.sm),
