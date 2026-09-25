@@ -53,6 +53,14 @@ data class OmnixColorScheme(
      */
     val stateWarning: Color,
 
+    /**
+     * Muted brand blue of the translation ring (mock 2026-09-25): the calm
+     * outline the Перевод screen asks for — no halo, no glow, closer to a
+     * system icon than to the Core's emitted light. Quieter than
+     * `accentBrand`, which stays reserved for logo moments.
+     */
+    val accentRing: Color,
+
     // Interactive
     val actionPrimary: Color,
     val onActionPrimary: Color,
@@ -107,6 +115,10 @@ val OmnixDarkColors = OmnixColorScheme(
     stateError = Color(0xFFFF5A3C),
     stateWarning = Color(0xFFF5C451),
 
+    // Muted steel blue (mock 2026-09-25): the ring must not carry the logo's
+    // saturated brand blue — it is chrome, not a brand moment.
+    accentRing = Color(0xFF3E6C9F),
+
     actionPrimary = TextPrimaryToken,
     onActionPrimary = Color(0xFF01090F),
     actionSecondaryBorder = Color(0x2EFFFFFF),          // 0.18
@@ -148,6 +160,8 @@ val OmnixNightColors = OmnixDarkColors.copy(
     stateError = Color(0xFFD1615B),
     stateWarning = Color(0xFFD1A94E),
 
+    accentRing = Color(0xFF2C4C72),
+
     actionPrimary = Color(0xD6FFFFFF),
     isNight = true
 )
@@ -183,6 +197,8 @@ val OmnixLightColors = OmnixColorScheme(
     stateSuccess = Color(0xFF20262B),
     stateError = Color(0xFFD70015),
     stateWarning = Color(0xFF8A6400),
+
+    accentRing = Color(0xFF33629A),
 
     actionPrimary = Color(0xFF0C0D10),
     onActionPrimary = Color(0xFFF7F8FA),

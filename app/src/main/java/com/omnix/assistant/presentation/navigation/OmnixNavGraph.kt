@@ -187,9 +187,10 @@ fun OmnixNavGraph(
 
         // Navigation stays outside the NavHost so it remains a stable way to
         // reach Home, History and Profile while the live Core itself keeps a
-        // single, unambiguous home on the Home screen.
+        // single, unambiguous home on the Home screen. Secondary routes keep
+        // their parent tab lit (mock 2026-09-25).
         OmnixNavigationBar(
-            currentRoute = currentRoute,
+            currentTab = tabForRoute(currentRoute),
             onNavigate = { navController.navigateSingleTop(it) }
         )
     }
