@@ -201,7 +201,7 @@ private fun LanguagePairPill(
                 onClick = onSwap
             )
             .clearAndSetSemantics {
-                role = Role.Button
+                this[Role] = Role.Button
                 this.contentDescription = swapLabel
             }
             .padding(horizontal = spacing.lg, vertical = spacing.sm),
