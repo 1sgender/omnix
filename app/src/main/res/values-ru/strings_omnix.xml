@@ -197,10 +197,13 @@
     <!-- ===== Настройки ===== -->
     <string name="omnix_settings_title">Настройки</string>
     <string name="omnix_settings_section_modes">Режимы</string>
+    <string name="omnix_settings_section_general">Основное</string>
+    <string name="omnix_settings_section_support">Поддержка</string>
+    <string name="omnix_settings_section_developer">Разработчикам</string>
     <string name="omnix_settings_voice">Голос</string>
     <string name="omnix_settings_privacy">Приватность</string>
     <string name="omnix_settings_devices">Устройства</string>
-    <string name="omnix_settings_ai">AI</string>
+    <string name="omnix_settings_ai">AI-модель</string>
     <string name="omnix_settings_language">Язык</string>
     <string name="omnix_settings_notifications">Уведомления</string>
     <string name="omnix_settings_appearance">Оформление</string>
@@ -287,7 +290,7 @@
     <string name="omnix_about_device_code">Код устройства</string>
 
     <string name="omnix_advanced_title">Для разработчика</string>
-    <string name="omnix_advanced_body">Диагностика и служебные параметры. Обычному использованию OMNIX они не нужны.</string>
+    <string name="omnix_advanced_body">Диагностика и служебные параметры — обычному использованию не нужны.</string>
     <string name="omnix_advanced_access_token">Токен доступа</string>
     <string name="omnix_advanced_access_token_body">Выдаётся при активации. Ключи AI-провайдеров на телефоне не хранятся.</string>
     <string name="omnix_advanced_show_hide">Показать или скрыть</string>

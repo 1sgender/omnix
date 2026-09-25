@@ -199,10 +199,13 @@
     <!-- ===== Settings (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Settings</string>
     <string name="omnix_settings_section_modes">Modes</string>
+    <string name="omnix_settings_section_general">General</string>
+    <string name="omnix_settings_section_support">Support</string>
+    <string name="omnix_settings_section_developer">For developers</string>
     <string name="omnix_settings_voice">Voice</string>
     <string name="omnix_settings_privacy">Privacy</string>
     <string name="omnix_settings_devices">Devices</string>
-    <string name="omnix_settings_ai">AI</string>
+    <string name="omnix_settings_ai">AI model</string>
     <string name="omnix_settings_language">Language</string>
     <string name="omnix_settings_notifications">Notifications</string>
     <string name="omnix_settings_appearance">Appearance</string>

@@ -198,10 +198,13 @@
     <!-- ===== Sazlamalar (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Sazlamalar</string>
     <string name="omnix_settings_section_modes">Rejimler</string>
+    <string name="omnix_settings_section_general">Esasy</string>
+    <string name="omnix_settings_section_support">Goldaw</string>
+    <string name="omnix_settings_section_developer">Işlediji üçin</string>
     <string name="omnix_settings_voice">Dawuş</string>
     <string name="omnix_settings_privacy">Hususylyk</string>
     <string name="omnix_settings_devices">Enjamlar</string>
-    <string name="omnix_settings_ai">AI</string>
+    <string name="omnix_settings_ai">AI modeli</string>
     <string name="omnix_settings_language">Dil</string>
     <string name="omnix_settings_notifications">Bildirişler</string>
     <string name="omnix_settings_appearance">Görnüş</string>
