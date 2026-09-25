@@ -121,7 +121,6 @@
 
     <string name="omnix_clip_ready_title">Всё готово.</string>
     <string name="omnix_clip_ready_say">Скажите:</string>
-    <string name="omnix_clip_continue">Продолжить</string>
 
     <string name="omnix_mic_request_title">Доступ к микрофону</string>
     <string name="omnix_mic_request_body">OMNIX нужен микрофон, чтобы слышать ваши голосовые команды.</string>
