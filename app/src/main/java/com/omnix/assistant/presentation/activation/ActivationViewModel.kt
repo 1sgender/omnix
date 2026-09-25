@@ -52,10 +52,10 @@ class ActivationViewModel @Inject constructor(
     }
 
     fun onCodeChanged(newCode: String) {
-        val clean = newCode.uppercase()
-            .filter { it.isLetterOrDigit() || it == '-' }
-            .take(27)
-        _uiState.update { it.copy(inputCode = clean, errorMessage = null) }
+        // Мок 2026-09-25: код — шесть цифр в ячейках; всё остальное ввод
+        // отсеивает (цифровая клавиатура уже ограничивает, здесь — защита
+        // от вставки).
+        _uiState.update { it.copy(inputCode = sanitizeActivationInput(newCode), errorMessage = null) }
     }
 
     fun activate() {

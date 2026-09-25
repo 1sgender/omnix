@@ -30,14 +30,14 @@ class ActivationViewModelTest {
     }
 
     @Test
-    fun `input is normalized and bounded by production view model`() =
+    fun `input keeps digits only and is bounded by the six cells`() =
         runTest(mainDispatcher.dispatcher) {
             val viewModel = ActivationViewModel(context, FakeLicenseManager())
 
-            viewModel.onCodeChanged(" ab_cd!ef 123456789012345678901234567890 ")
+            viewModel.onCodeChanged(" a1b_2c!3 4567890 ")
 
-            assertEquals("ABCDEF123456789012345678901", viewModel.uiState.value.inputCode)
-            assertEquals(27, viewModel.uiState.value.inputCode.length)
+            assertEquals("123456", viewModel.uiState.value.inputCode)
+            assertEquals(6, viewModel.uiState.value.inputCode.length)
         }
 
     @Test
@@ -65,12 +65,12 @@ class ActivationViewModelTest {
                 activationResult = ActivationResult.Success(info, "Активировано")
             )
             val viewModel = ActivationViewModel(context, manager)
-            viewModel.onCodeChanged("box-code-123")
+            viewModel.onCodeChanged("472915")
 
             viewModel.activate()
             advanceUntilIdle()
 
-            assertEquals("BOX-CODE-123", manager.lastCode)
+            assertEquals("472915", manager.lastCode)
             assertTrue(viewModel.uiState.value.isActivated)
             assertEquals(info, viewModel.uiState.value.licenseInfo)
             assertEquals("Активировано", viewModel.uiState.value.successMessage)
@@ -84,7 +84,7 @@ class ActivationViewModelTest {
                 activationResult = ActivationResult.ServiceUnavailable("Сервер недоступен")
             )
             val viewModel = ActivationViewModel(context, manager)
-            viewModel.onCodeChanged("valid-code")
+            viewModel.onCodeChanged("654321")
 
             viewModel.activate()
             advanceUntilIdle()

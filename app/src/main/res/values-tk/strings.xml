@@ -47,7 +47,7 @@
     <string name="bluetooth_naushnik">Bluetooth nauşnik</string>
 
     <!-- ===== Ulgam (ruhsatnama) we UseCase (audit #17) ===== -->
-    <string name="nevernyy_kod_aktivacii">Aktiwasiýa kody nädogry. Nauşnik gutusyndaky kartany barlaň.</string>
+    <string name="nevernyy_kod_aktivacii">Bu kod tapylmady. Sanlary barlap, gaýtadan synanyşyň.</string>
     <string name="server_licenziy_nedostupen">Aktiwasiýa serweri wagtlaýyn elýeterli däl. Kod aktiwlendirilmedi — soňrak gaýtadan synanyşyň.</string>
     <string name="proverte_internet">Aktiwasiýa serwerine birikip bolanok. Internedi barlaň we gaýtadan synanyşyň.</string>
     <string name="slishkom_mnogo_popytok_aktivacii">Aktiwasiýa synanyşyklary örän köp. Biraz garaşyp, soňrak gaýtadan synanyşyň.</string>

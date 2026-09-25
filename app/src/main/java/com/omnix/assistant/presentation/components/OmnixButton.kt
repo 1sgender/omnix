@@ -13,6 +13,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.presentation.design.OmnixTheme
@@ -34,7 +35,11 @@ fun OmnixPrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    // Выключенное состояние можно калибровать под конкретный мок, не ломая
+    // общий вид (по умолчанию — системные цвета кнопки).
+    disabledContainerColor: Color = Color.Unspecified,
+    disabledContentColor: Color = Color.Unspecified
 ) {
     val colors = OmnixTheme.colors
     val spacing = OmnixTheme.spacing
@@ -50,8 +55,16 @@ fun OmnixPrimaryButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = colors.actionPrimary,
             contentColor = colors.onActionPrimary,
-            disabledContainerColor = colors.surfaceElevated,
-            disabledContentColor = colors.textDisabled
+            disabledContainerColor = if (disabledContainerColor == Color.Unspecified) {
+                colors.surfaceElevated
+            } else {
+                disabledContainerColor
+            },
+            disabledContentColor = if (disabledContentColor == Color.Unspecified) {
+                colors.textDisabled
+            } else {
+                disabledContentColor
+            }
         ),
         contentPadding = PaddingValues(horizontal = spacing.xl, vertical = spacing.sm)
     ) {

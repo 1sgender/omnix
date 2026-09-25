@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.design.OmnixTheme
@@ -24,12 +25,15 @@ import com.omnix.assistant.presentation.design.OmnixTheme
 @Composable
 internal fun OmnixRingMark(
     modifier: Modifier = Modifier,
-    color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary
+    color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary,
+    // Моки задают разные размеры знака: клип-флоу 28×22, активация 26×20.
+    width: Dp = MARK_WIDTH,
+    height: Dp = MARK_HEIGHT
 ) {
     val markLabel = stringResource(R.string.omnix_wordmark)
     Canvas(
         modifier = modifier
-            .size(width = MARK_WIDTH, height = MARK_HEIGHT)
+            .size(width = width, height = height)
             .semantics { contentDescription = markLabel }
     ) {
         val ink = color
