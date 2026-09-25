@@ -50,6 +50,20 @@ fun clipRingPhase(clip: ClipState): ClipRingPhase = when (clip) {
     is ClipState.ConnectionFailed -> ClipRingPhase.LOST
 }
 
+/** Сколько ищем, прежде чем честно сказать «Clip не найден» (мок: поиск завершается LOST). */
+const val CLIP_SEARCH_TIMEOUT_MS = 30_000L
+
+/**
+ * Фаза с учётом таймаута поиска: дуга не крутится вечно — если Clip так и не
+ * нашёлся за [CLIP_SEARCH_TIMEOUT_MS], экран переходит к «не найден» (кнопки
+ * «Искать снова» и ввод кода становятся достижимы). Активное подключение
+ * (Connecting) таймаут не трогает — у него свой исход; подключившийся в фоне
+ * Clip сразу покажет FOUND.
+ */
+fun clipVisualPhase(clip: ClipState, searchTimedOut: Boolean): ClipRingPhase =
+    if (searchTimedOut && clip is ClipState.Searching) ClipRingPhase.LOST
+    else clipRingPhase(clip)
+
 /**
  * Тонкое кольцо подключения из мока: трек (faint, 2dp) + дуга (ink, 2dp,
  * круглая кромка). Переходы — dasharray 0.6s cubic-bezier(.2,.8,.2,1) и

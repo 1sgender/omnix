@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,20 @@ fun FirstRunRoute(
     // ввод кода — онбординг идёт ДО гейта лицензии, так что код из комплекта
     // Clip активирует лицензию прямо здесь, не покидая поток.
     var showActivation by remember { mutableStateOf(false) }
+
+    // Мок: поиск не крутится вечно — без результата за CLIP_SEARCH_TIMEOUT_MS
+    // экран честно переходит к «Clip не найден» (LOST). Сама фоновая проверка
+    // продолжается: подключившийся Clip сразу покажет FOUND. «Искать снова»
+    // открывает новое окно поиска (счётчик перезапускает таймер).
+    var searchAttempt by remember { mutableStateOf(0) }
+    var searchTimedOut by remember { mutableStateOf(false) }
+    LaunchedEffect(step, searchAttempt) {
+        searchTimedOut = false
+        if (step == FirstRunStep.DeviceDetection) {
+            delay(CLIP_SEARCH_TIMEOUT_MS)
+            searchTimedOut = true
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -139,8 +154,12 @@ fun FirstRunRoute(
                         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                 },
+                clipSearchTimedOut = searchTimedOut,
                 onEnterActivationCode = { showActivation = true },
-                onSearchAgain = { viewModel.setSearching(true) }
+                onSearchAgain = {
+                    searchAttempt++
+                    viewModel.setSearching(true)
+                }
             )
         }
     }

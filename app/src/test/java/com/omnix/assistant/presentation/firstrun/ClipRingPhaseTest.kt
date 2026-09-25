@@ -46,4 +46,37 @@ class ClipRingPhaseTest {
         )
         assertEquals(ClipRingPhase.FOUND, clipRingPhase(connected))
     }
+    // ---- clipVisualPhase: таймаут поиска ----
+
+    @Test
+    fun `timed-out search shows the lost phase`() {
+        assertEquals(
+            ClipRingPhase.LOST,
+            clipVisualPhase(ClipState.Searching, searchTimedOut = true)
+        )
+    }
+
+    @Test
+    fun `a running search without timeout keeps spinning`() {
+        assertEquals(
+            ClipRingPhase.SEARCH,
+            clipVisualPhase(ClipState.Searching, searchTimedOut = false)
+        )
+    }
+
+    @Test
+    fun `timeout never interrupts an active connection attempt`() {
+        assertEquals(
+            ClipRingPhase.SEARCH,
+            clipVisualPhase(ClipState.Connecting("OMNIX Clip"), searchTimedOut = true)
+        )
+    }
+
+    @Test
+    fun `timeout does not override a real connection`() {
+        assertEquals(
+            ClipRingPhase.FOUND,
+            clipVisualPhase(ClipState.Connected("OMNIX Clip"), searchTimedOut = true)
+        )
+    }
 }

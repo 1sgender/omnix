@@ -83,6 +83,7 @@ fun FirstRunScreen(
     microphoneGranted: Boolean,
     microphonePrompted: Boolean,
     modifier: Modifier = Modifier,
+    clipSearchTimedOut: Boolean = false,
     onAdvance: () -> Unit,
     onSkipDevice: () -> Unit,
     onRequestMicrophone: () -> Unit,
@@ -92,6 +93,11 @@ fun FirstRunScreen(
 ) {
     val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
+
+    // Единая фаза кольца для всего клип-флоу: кольцо, копия и кнопки видят
+    // одно и то же состояние (мок: поиск завершается «не найден», а не
+    // крутится вечно).
+    val clipPhase = clipVisualPhase(state.clip, clipSearchTimedOut)
 
     // The durations are read here, in composable scope: `transitionSpec`
     // runs outside it and cannot touch the theme.
@@ -134,11 +140,12 @@ fun FirstRunScreen(
             // Мок 2026-09-25 (пересмотр): кольцо — «сцена» между знаком и
             // копирайтом; заголовок ПОД кольцом, действия прижаты к низу.
             Spacer(Modifier.weight(1f))
-            ClipPairingRing(phase = clipRingPhase(state.clip))
+            ClipPairingRing(phase = clipPhase)
             Spacer(Modifier.weight(1f))
             StepHeadingSlot(
                 step = step,
                 state = state,
+                clipPhase = clipPhase,
                 microphoneGranted = microphoneGranted,
                 microphonePrompted = microphonePrompted
             )
@@ -154,6 +161,7 @@ fun FirstRunScreen(
                 StepActionsSlot(
                     step = step,
                     state = state,
+                    clipPhase = clipPhase,
                     onAdvance = onAdvance,
                     onSkipDevice = onSkipDevice,
                     onEnterActivationCode = onEnterActivationCode,
@@ -174,6 +182,7 @@ fun FirstRunScreen(
             StepHeadingSlot(
                 step = step,
                 state = state,
+                clipPhase = clipPhase,
                 microphoneGranted = microphoneGranted,
                 microphonePrompted = microphonePrompted
             )
@@ -196,6 +205,7 @@ fun FirstRunScreen(
             StepActionsSlot(
                 step = step,
                 state = state,
+                clipPhase = clipPhase,
                 onAdvance = onAdvance,
                 onSkipDevice = onSkipDevice,
                 onEnterActivationCode = onEnterActivationCode,
@@ -221,6 +231,7 @@ fun FirstRunScreen(
 private fun StepHeadingSlot(
     step: FirstRunStep,
     state: OmnixUiState,
+    clipPhase: ClipRingPhase,
     microphoneGranted: Boolean,
     microphonePrompted: Boolean
 ) {
@@ -237,7 +248,7 @@ private fun StepHeadingSlot(
         val clipFlow =
             current == FirstRunStep.DeviceDetection || current == FirstRunStep.ClipPairing
         StepHeading(clipFlow = clipFlow) {
-            HeadingOf(current, state, microphoneGranted, microphonePrompted)
+            HeadingOf(current, state, clipPhase, microphoneGranted, microphonePrompted)
         }
     }
 }
@@ -279,6 +290,7 @@ private fun StepCoreSlot(
 private fun StepActionsSlot(
     step: FirstRunStep,
     state: OmnixUiState,
+    clipPhase: ClipRingPhase,
     onAdvance: () -> Unit,
     onSkipDevice: () -> Unit,
     onEnterActivationCode: () -> Unit,
@@ -303,7 +315,7 @@ private fun StepActionsSlot(
             FirstRunStep.Welcome -> WelcomeActions(onAdvance)
 
             FirstRunStep.DeviceDetection -> DeviceDetectionActions(
-                clip = state.clip,
+                phase = clipPhase,
                 onAdvance = onAdvance,
                 onSkip = onSkipDevice,
                 onEnterCode = onEnterActivationCode,
@@ -311,7 +323,7 @@ private fun StepActionsSlot(
             )
 
             FirstRunStep.ClipPairing -> ClipPairingActions(
-                clip = state.clip,
+                phase = clipPhase,
                 onAdvance = onAdvance
             )
 
@@ -383,6 +395,7 @@ private fun StepHeading(clipFlow: Boolean, content: @Composable () -> Unit) {
 private fun HeadingOf(
     step: FirstRunStep,
     state: OmnixUiState,
+    clipPhase: ClipRingPhase,
     microphoneGranted: Boolean,
     microphonePrompted: Boolean
 ) {
@@ -394,7 +407,7 @@ private fun HeadingOf(
 
         FirstRunStep.DeviceDetection, FirstRunStep.ClipPairing -> {
             // Мок подключения Clip: копия зависит от фазы кольца, а не от шага.
-            when (clipRingPhase(state.clip)) {
+            when (clipPhase) {
                 ClipRingPhase.SEARCH -> Heading(
                     title = stringResource(R.string.omnix_pairing_title),
                     body = stringResource(R.string.omnix_pairing_searching),
@@ -522,13 +535,13 @@ private fun WelcomeActions(onAdvance: () -> Unit) {
 
 @Composable
 private fun DeviceDetectionActions(
-    clip: ClipState,
+    phase: ClipRingPhase,
     onAdvance: () -> Unit,
     onSkip: () -> Unit,
     onEnterCode: () -> Unit,
     onSearchAgain: () -> Unit
 ) {
-    when (clipRingPhase(clip)) {
+    when (phase) {
         // Мок прячет кнопки на время поиска, но §34: путь вперёд всегда
         // открыт — остаётся тихое «Пропустить» (отклонение зафиксировано).
         ClipRingPhase.SEARCH ->
@@ -549,9 +562,9 @@ private fun DeviceDetectionActions(
 }
 
 @Composable
-private fun ClipPairingActions(clip: ClipState, onAdvance: () -> Unit) {
+private fun ClipPairingActions(phase: ClipRingPhase, onAdvance: () -> Unit) {
     // Соединение ещё идёт — просто ждём у кольца; подключено — продолжаем.
-    if (clipRingPhase(clip) == ClipRingPhase.FOUND) {
+    if (phase == ClipRingPhase.FOUND) {
         OmnixPrimaryButton(stringResource(R.string.omnix_clip_continue), onAdvance)
     }
 }
