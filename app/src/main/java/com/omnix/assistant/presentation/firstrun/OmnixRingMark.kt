@@ -7,21 +7,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.omnix.assistant.R
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
  * Маленький знак логотипа (мок подключения Clip, 2026-09-24): кольцо-эллипс
  * и наклонная орбита, без надписи. SVG мока: viewBox 34×26, эллипс
  * (17,13 r=11) stroke 3 + эллипс (17,14 rx=16 ry=4.6) stroke 1.4,
- * повёрнутый на −20°.
+ * повёрнутый на −20°. Знак доступен скринридеру как «OMNIX» — как в моке
+ * (role="img" aria-label="OMNIX").
  */
 @Composable
 internal fun OmnixRingMark(
     modifier: Modifier = Modifier,
     color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary
 ) {
-    Canvas(modifier = modifier.size(width = MARK_WIDTH, height = MARK_HEIGHT)) {
+    val markLabel = stringResource(R.string.omnix_wordmark)
+    Canvas(
+        modifier = modifier
+            .size(width = MARK_WIDTH, height = MARK_HEIGHT)
+            .semantics { contentDescription = markLabel }
+    ) {
         val ink = color
         // Кольцо: центр (17,13), r=11 из 34×26.
         val ringCenter = Offset(x = size.width * (17f / 34f), y = size.height * (13f / 26f))
