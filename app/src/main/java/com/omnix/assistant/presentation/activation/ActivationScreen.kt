@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -113,25 +114,7 @@ fun ActivationScreen(
         // Резерв под сообщение (min-height 20px мока) — появление и уход
         // ошибки не двигают кнопку.
         Spacer(Modifier.height(HINT_TOP_GAP))
-        Box(modifier = Modifier.heightIn(min = HINT_MIN_HEIGHT)) {
-            AnimatedVisibility(
-                visible = uiState.errorMessage != null,
-                enter = fadeIn(tween(durationMillis = 200)),
-                exit = fadeOut(tween(durationMillis = 200))
-            ) {
-                Text(
-                    text = uiState.errorMessage.orEmpty(),
-                    style = ActivationHintStyle,
-                    color = colors.stateError,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        // Ошибка должна дойти до скринридера без взгляда на
-                        // экран (§28) — «живая» область, как в клип-флоу.
-                        .semantics { liveRegion = LiveRegionMode.Polite }
-                )
-            }
-        }
+        ActivationErrorHint(message = uiState.errorMessage)
 
         Spacer(Modifier.weight(1f))
 
@@ -148,6 +131,34 @@ fun ActivationScreen(
         )
 
         Spacer(Modifier.height(BOTTOM_GAP))
+    }
+}
+
+/**
+ * Сообщение об ошибке: резервирует высоту (min-height 20px мока), появляется
+ * фейдом 0.2s. Отдельный composable вне ColumnScope — иначе компилятор
+ * разрешает AnimatedVisibility в расширение колонки.
+ */
+@Composable
+private fun ActivationErrorHint(message: String?) {
+    Box(modifier = Modifier.heightIn(min = HINT_MIN_HEIGHT)) {
+        AnimatedVisibility(
+            visible = message != null,
+            enter = fadeIn(tween(durationMillis = 200)),
+            exit = fadeOut(tween(durationMillis = 200))
+        ) {
+            Text(
+                text = message.orEmpty(),
+                style = ActivationHintStyle,
+                color = OmnixTheme.colors.stateError,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Ошибка должна дойти до скринридера без взгляда на
+                    // экран (§28) — «живая» область, как в клип-флоу.
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+            )
+        }
     }
 }
 
