@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -201,5 +202,10 @@ private fun triggerStats(rule: AutomationUiModel): String {
         DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
             .format(Date(rule.lastTriggeredAt))
     }
-    return stringResource(R.string.omnix_automations_fired, rule.triggerCount, formatted)
+    return pluralStringResource(
+        R.plurals.omnix_automations_fired,
+        rule.triggerCount,
+        rule.triggerCount,
+        formatted
+    )
 }

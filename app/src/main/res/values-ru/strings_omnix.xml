@@ -400,5 +400,10 @@
     <string name="omnix_automations_action_briefing">Брифинг</string>
     <string name="omnix_automations_action_other">Действие</string>
     <string name="omnix_automations_never_fired">Ни разу не срабатывало</string>
-    <string name="omnix_automations_fired">Сработало: %1$d · последний раз %2$s</string>
+    <plurals name="omnix_automations_fired">
+        <item quantity="one">Сработал 1 раз · последний %1$s</item>
+        <item quantity="few">Сработало %1$d раза · последний %1$s</item>
+        <item quantity="many">Сработало %1$d раз · последний %1$s</item>
+        <item quantity="other">Сработало %1$d раз · последний %1$s</item>
+    </plurals>
 </resources>

@@ -401,5 +401,8 @@
     <string name="omnix_automations_action_briefing">Brifiň</string>
     <string name="omnix_automations_action_other">Hereket</string>
     <string name="omnix_automations_never_fired">Hiç wagt çalışmady</string>
-    <string name="omnix_automations_fired">Işledi: %1$d · iň soňky %2$s</string>
+    <plurals name="omnix_automations_fired">
+        <item quantity="one">Işledi: %1$d · iň soňky %1$s</item>
+        <item quantity="other">Işledi: %1$d · iň soňky %1$s</item>
+    </plurals>
 </resources>

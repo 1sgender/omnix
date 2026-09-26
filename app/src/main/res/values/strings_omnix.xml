@@ -403,5 +403,8 @@
     <string name="omnix_automations_action_briefing">Briefing</string>
     <string name="omnix_automations_action_other">Action</string>
     <string name="omnix_automations_never_fired">Never fired</string>
-    <string name="omnix_automations_fired">Fired %1$d times · last %2$s</string>
+    <plurals name="omnix_automations_fired">
+        <item quantity="one">Fired once · last %1$s</item>
+        <item quantity="other">Fired %1$d times · last %1$s</item>
+    </plurals>
 </resources>
