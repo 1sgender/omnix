@@ -181,7 +181,9 @@ fun OmnixNavGraph(
                     onBlockPackage = policyViewModel::blockPackage,
                     onUnblockPackage = policyViewModel::unblockPackage,
                     onAllowPackage = policyViewModel::allowPackage,
-                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance
+                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance,
+                    onForgetMemory = policyViewModel::forgetMemory,
+                    onRemoveFact = policyViewModel::removeFact
                 )
             }
 

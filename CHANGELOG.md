@@ -14,6 +14,15 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+- Memory browser on the Privacy screen ("What OMNIX remembers", frontend
+  rebuild plan 2026-09-26): memories and structured facts are listed from
+  the same live Room streams the memory engine reads, with a type caption
+  (fact / preference / event / scenario) instead of raw enum names.
+  Forgetting is per entry through the shared confirmation sheet — the row
+  the user sees is the row that gets deleted by id, no semantic matching on
+  the UI path. Working memory and the procedural store are untouched.
+### Added
+
 - Privacy screen grew working controls (frontend-rebuild plan 2026-09-26):
   confirmation policies for calls (always / trusted-only / never) and
   messages (always / money-only / never) now write straight into the policy

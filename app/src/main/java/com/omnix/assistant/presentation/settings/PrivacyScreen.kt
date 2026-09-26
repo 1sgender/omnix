@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
 import com.omnix.assistant.agent.policy.CallConfirmationPolicy
 import com.omnix.assistant.agent.policy.MessagingConfirmationPolicy
 import com.omnix.assistant.presentation.components.ConfirmationSheet
@@ -72,10 +73,17 @@ fun PrivacyScreen(
     onBlockPackage: (String) -> Unit = {},
     onUnblockPackage: (String) -> Unit = {},
     onAllowPackage: (String) -> Unit = {},
-    onRevokePackageAllowance: (String) -> Unit = {}
+    onRevokePackageAllowance: (String) -> Unit = {},
+    onForgetMemory: (Long) -> Unit = {},
+    onRemoveFact: (String) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
+    // Браузер памяти: удаление одного воспоминания/факта — деструктивное
+    // действие, через общий confirmation sheet (вес тот же, что у удаления
+    // истории: одно нажатие теряет данные безвозвратно).
+    var forgetArmedMemory by remember { mutableStateOf<MemoryEntryUi?>(null) }
+    var removeArmedFact by remember { mutableStateOf<FactEntryUi?>(null) }
 
     SectionScaffold(
         stringResource(R.string.omnix_privacy_title),
@@ -197,26 +205,13 @@ fun PrivacyScreen(
                     title = stringResource(R.string.omnix_privacy_contacts_hint),
                     inset = true
                 )
-                if (policyState.trustedContacts.isEmpty()) {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_contacts_empty),
-                        inset = true
-                    )
-                } else {
-                    policyState.trustedContacts.forEachIndexed { index, contact ->
-                        if (index > 0) OmnixGroupDivider()
-                        OmnixSettingRow(
-                            title = contact,
-                            inset = true,
-                            trailing = {
-                                OmnixTextButton(
-                                    text = stringResource(R.string.omnix_privacy_remove),
-                                    onClick = { onRemoveTrustedContact(contact) }
-                                )
-                            }
-                        )
-                    }
-                }
+                EntryListGroup(
+                    entries = policyState.trustedContacts,
+                    emptyText = stringResource(R.string.omnix_privacy_contacts_empty),
+                    removeLabel = stringResource(R.string.omnix_privacy_remove),
+                    onRemove = onRemoveTrustedContact,
+                    rowTitle = { it }
+                )
                 OmnixGroupDivider()
                 AddRow(
                     fieldHint = stringResource(R.string.omnix_privacy_contact_add_hint),
@@ -251,26 +246,13 @@ fun PrivacyScreen(
                     title = stringResource(R.string.omnix_privacy_blocked_apps),
                     inset = true
                 )
-                if (policyState.blockedPackages.isEmpty()) {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_blocked_empty),
-                        inset = true
-                    )
-                } else {
-                    policyState.blockedPackages.forEachIndexed { index, packageName ->
-                        if (index > 0) OmnixGroupDivider()
-                        OmnixSettingRow(
-                            title = packageName,
-                            inset = true,
-                            trailing = {
-                                OmnixTextButton(
-                                    text = stringResource(R.string.omnix_privacy_remove),
-                                    onClick = { onUnblockPackage(packageName) }
-                                )
-                            }
-                        )
-                    }
-                }
+                EntryListGroup(
+                    entries = policyState.blockedPackages,
+                    emptyText = stringResource(R.string.omnix_privacy_blocked_empty),
+                    removeLabel = stringResource(R.string.omnix_privacy_remove),
+                    onRemove = onUnblockPackage,
+                    rowTitle = { it }
+                )
                 OmnixGroupDivider()
                 AddRow(
                     fieldHint = stringResource(R.string.omnix_privacy_package_hint),
@@ -284,26 +266,13 @@ fun PrivacyScreen(
                     title = stringResource(R.string.omnix_privacy_allowed_apps),
                     inset = true
                 )
-                if (policyState.allowedPackages.isEmpty()) {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_allowed_empty),
-                        inset = true
-                    )
-                } else {
-                    policyState.allowedPackages.forEachIndexed { index, packageName ->
-                        if (index > 0) OmnixGroupDivider()
-                        OmnixSettingRow(
-                            title = packageName,
-                            inset = true,
-                            trailing = {
-                                OmnixTextButton(
-                                    text = stringResource(R.string.omnix_privacy_remove),
-                                    onClick = { onRevokePackageAllowance(packageName) }
-                                )
-                            }
-                        )
-                    }
-                }
+                EntryListGroup(
+                    entries = policyState.allowedPackages,
+                    emptyText = stringResource(R.string.omnix_privacy_allowed_empty),
+                    removeLabel = stringResource(R.string.omnix_privacy_remove),
+                    onRemove = onRevokePackageAllowance,
+                    rowTitle = { it }
+                )
                 OmnixGroupDivider()
                 AddRow(
                     fieldHint = stringResource(R.string.omnix_privacy_package_hint),
@@ -311,6 +280,44 @@ fun PrivacyScreen(
                     onAdd = onAllowPackage
                 )
             }
+
+        OmnixSettingsSectionHeader(
+            text = stringResource(R.string.omnix_privacy_section_memory)
+        )
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_memories_hint),
+                inset = true
+            )
+            // Подписи типов разрешаются в composable-контексте ДО входа
+            // в общий хелпер списка (stringResource вне его лямбд).
+            val memoriesWithType = policyState.memories.map { memory ->
+                memory to memoryTypeText(memory.typeLabel)
+            }
+            EntryListGroup(
+                entries = memoriesWithType,
+                emptyText = stringResource(R.string.omnix_privacy_memories_empty),
+                removeLabel = stringResource(R.string.omnix_privacy_forget),
+                onRemove = { (memory, _) -> forgetArmedMemory = memory },
+                rowTitle = { (memory, _) -> memory.content },
+                rowValue = { (_, typeText) -> typeText }
+            )
+        }
+        Spacer(Modifier.height(spacing.sm))
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_facts_hint),
+                inset = true
+            )
+            EntryListGroup(
+                entries = policyState.facts,
+                emptyText = stringResource(R.string.omnix_privacy_facts_empty),
+                removeLabel = stringResource(R.string.omnix_privacy_remove),
+                onRemove = { removeArmedFact = it },
+                rowTitle = { it.key },
+                rowValue = { it.value }
+            )
+        }
 
         if (onDeleteHistory != null) {
             Spacer(Modifier.height(spacing.xl))
@@ -338,6 +345,88 @@ fun PrivacyScreen(
             onCancel = { deleteArmed = false }
         )
     }
+
+    // Memory browser: one entry, one question — the row the user sees is the
+    // row that gets deleted (no semantic matching on the UI path).
+    forgetArmedMemory?.let { memory ->
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
+                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, memory.content),
+                confirmLabel = stringResource(R.string.omnix_privacy_forget),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = {
+                onForgetMemory(memory.id)
+                forgetArmedMemory = null
+            },
+            onCancel = { forgetArmedMemory = null }
+        )
+    }
+    removeArmedFact?.let { fact ->
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
+                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, "${fact.key}: ${fact.value}"),
+                confirmLabel = stringResource(R.string.omnix_privacy_remove),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = {
+                onRemoveFact(fact.key)
+                removeArmedFact = null
+            },
+            onCancel = { removeArmedFact = null }
+        )
+    }
+}
+
+/**
+ * Одна строка-список с кнопкой удаления: пустое состояние или записи с
+ * разделителями. Общий вид для контактов, пакетов, воспоминаний и фактов —
+ * один и тот же жест удаления везде.
+ */
+@Composable
+private fun <T> EntryListGroup(
+    entries: List<T>,
+    emptyText: String,
+    removeLabel: String,
+    onRemove: (T) -> Unit,
+    rowTitle: (T) -> String,
+    rowValue: ((T) -> String)? = null
+) {
+    if (entries.isEmpty()) {
+        OmnixSettingRow(title = emptyText, inset = true)
+    } else {
+        entries.forEachIndexed { index, entry ->
+            if (index > 0) OmnixGroupDivider()
+            OmnixSettingRow(
+                title = rowTitle(entry),
+                value = rowValue?.invoke(entry),
+                inset = true,
+                trailing = {
+                    OmnixTextButton(
+                        text = removeLabel,
+                        onClick = { onRemove(entry) }
+                    )
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Подпись типа воспоминания: токен из домена → string-ресурс. Сырые
+ * enum-имена (FACT/PREFERENCE/…) пользователю не показываются.
+ */
+@Composable
+private fun memoryTypeText(label: MemoryTypeLabel): String = when (label) {
+    MemoryTypeLabel.FACT -> stringResource(R.string.omnix_memory_type_fact)
+    MemoryTypeLabel.PREFERENCE -> stringResource(R.string.omnix_memory_type_preference)
+    MemoryTypeLabel.EPISODIC -> stringResource(R.string.omnix_memory_type_episodic)
+    MemoryTypeLabel.PROCEDURAL -> stringResource(R.string.omnix_memory_type_procedural)
+    MemoryTypeLabel.OTHER -> stringResource(R.string.omnix_memory_type_other)
 }
 
 /**

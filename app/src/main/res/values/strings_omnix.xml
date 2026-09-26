@@ -438,4 +438,17 @@
     <string name="omnix_privacy_allowed_apps">Allowed apps</string>
     <string name="omnix_privacy_allowed_empty">Nothing is allowed explicitly</string>
     <string name="omnix_privacy_package_hint">App package, e.g. com.example.app</string>
+    <string name="omnix_privacy_section_memory">What OMNIX remembers</string>
+    <string name="omnix_privacy_memories_hint">Memories used in answers when they are relevant</string>
+    <string name="omnix_privacy_memories_empty">Nothing is remembered yet</string>
+    <string name="omnix_privacy_forget">Forget</string>
+    <string name="omnix_privacy_forget_confirm_title">Forget this?</string>
+    <string name="omnix_privacy_forget_confirm_body">OMNIX will no longer remember this: %1$s</string>
+    <string name="omnix_privacy_facts_hint">Structured facts, like your name or city</string>
+    <string name="omnix_privacy_facts_empty">No facts are stored</string>
+    <string name="omnix_memory_type_fact">Fact</string>
+    <string name="omnix_memory_type_preference">Preference</string>
+    <string name="omnix_memory_type_episodic">Event</string>
+    <string name="omnix_memory_type_procedural">Scenario</string>
+    <string name="omnix_memory_type_other">Memory</string>
 </resources>

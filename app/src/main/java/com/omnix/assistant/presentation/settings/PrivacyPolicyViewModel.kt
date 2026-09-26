@@ -2,6 +2,10 @@ package com.omnix.assistant.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.omnix.assistant.agent.memory.dao.FactDao
+import com.omnix.assistant.agent.memory.dao.MemoryDao
+import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
+import com.omnix.assistant.agent.memory.model.memoryTypeLabel
 import com.omnix.assistant.agent.policy.ActionPolicySettingsProvider
 import com.omnix.assistant.agent.policy.CallConfirmationPolicy
 import com.omnix.assistant.agent.policy.MessagingConfirmationPolicy
@@ -15,10 +19,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Одна строка браузера памяти: содержимое + тип для подписи. */
+data class MemoryEntryUi(
+    val id: Long,
+    val content: String,
+    val typeLabel: MemoryTypeLabel
+)
+
+/** Структурированный факт (user.name → Александр). */
+data class FactEntryUi(
+    val key: String,
+    val value: String
+)
+
 /**
- * Состояние рабочих органов Privacy-экрана (блок 3 плана пересборки
+ * Состояние рабочих органов Privacy-экрана (блоки 3–4 плана пересборки
  * фронта, 2026-09-26): политики подтверждений, доверенные контакты,
- * граница чтения экрана.
+ * граница чтения экрана, браузер памяти «Что помнит OMNIX».
  */
 data class PrivacyPolicyUiState(
     val callPolicy: CallConfirmationPolicy = CallConfirmationPolicy.ALWAYS,
@@ -26,7 +43,9 @@ data class PrivacyPolicyUiState(
     val trustedContacts: List<String> = emptyList(),
     val allowListMode: Boolean = false,
     val blockedPackages: List<String> = emptyList(),
-    val allowedPackages: List<String> = emptyList()
+    val allowedPackages: List<String> = emptyList(),
+    val memories: List<MemoryEntryUi> = emptyList(),
+    val facts: List<FactEntryUi> = emptyList()
 )
 
 /**
@@ -43,7 +62,9 @@ data class PrivacyPolicyUiState(
 @HiltViewModel
 class PrivacyPolicyViewModel @Inject constructor(
     private val policyProvider: ActionPolicySettingsProvider,
-    private val accessibilityStore: AccessibilityPrivacyStore
+    private val accessibilityStore: AccessibilityPrivacyStore,
+    private val memoryDao: MemoryDao,
+    private val factDao: FactDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrivacyPolicyUiState())
@@ -58,6 +79,36 @@ class PrivacyPolicyViewModel @Inject constructor(
                         callPolicy = settings.callPolicy,
                         messagingPolicy = settings.messagingPolicy,
                         trustedContacts = settings.trustedContacts.toList()
+                    )
+                }
+            }
+        }
+        // Браузер памяти (блок 4): те же живые Room-стримы, по которым
+        // движок памяти читает воспоминания и факты.
+        viewModelScope.launch {
+            memoryDao.getAllMemoriesStream().collectLatest { entries ->
+                _uiState.update { state ->
+                    state.copy(
+                        memories = entries
+                            .sortedByDescending { it.createdAt }
+                            .map { memory ->
+                                MemoryEntryUi(
+                                    id = memory.id,
+                                    content = memory.content,
+                                    typeLabel = memoryTypeLabel(memory.type)
+                                )
+                            }
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
+            factDao.getAllFactsStream().collectLatest { entries ->
+                _uiState.update { state ->
+                    state.copy(
+                        facts = entries
+                            .sortedBy { it.factKey }
+                            .map { fact -> FactEntryUi(key = fact.factKey, value = fact.factValue) }
                     )
                 }
             }
@@ -119,6 +170,23 @@ class PrivacyPolicyViewModel @Inject constructor(
     fun revokePackageAllowance(packageName: String) {
         accessibilityStore.revokeAllowance(packageName)
         refreshAccessibility()
+    }
+
+    /**
+     * Точное удаление одного воспоминания по id (браузер памяти):
+     * без семантического матчинга — строка, которую видит пользователь,
+     * и есть строка, которая удаляется.
+     */
+    fun forgetMemory(memoryId: Long) {
+        viewModelScope.launch {
+            memoryDao.deleteMemoryById(memoryId)
+        }
+    }
+
+    fun removeFact(factKey: String) {
+        viewModelScope.launch {
+            factDao.deleteFact(factKey)
+        }
     }
 
     private fun refreshAccessibility() {

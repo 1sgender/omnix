@@ -437,4 +437,17 @@
     <string name="omnix_privacy_allowed_apps">Разрешённые приложения</string>
     <string name="omnix_privacy_allowed_empty">Явно не разрешено ничего</string>
     <string name="omnix_privacy_package_hint">Пакет приложения, например com.example.app</string>
+    <string name="omnix_privacy_section_memory">Что помнит OMNIX</string>
+    <string name="omnix_privacy_memories_hint">Воспоминания, которые используются в ответах, когда уместны</string>
+    <string name="omnix_privacy_memories_empty">Пока ничего не запомнено</string>
+    <string name="omnix_privacy_forget">Забыть</string>
+    <string name="omnix_privacy_forget_confirm_title">Забыть это?</string>
+    <string name="omnix_privacy_forget_confirm_body">OMNIX больше не будет это помнить: %1$s</string>
+    <string name="omnix_privacy_facts_hint">Структурированные факты: имя, город и т.п.</string>
+    <string name="omnix_privacy_facts_empty">Факты не сохранены</string>
+    <string name="omnix_memory_type_fact">Факт</string>
+    <string name="omnix_memory_type_preference">Предпочтение</string>
+    <string name="omnix_memory_type_episodic">Событие</string>
+    <string name="omnix_memory_type_procedural">Сценарий</string>
+    <string name="omnix_memory_type_other">Воспоминание</string>
 </resources>
