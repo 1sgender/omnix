@@ -1,6 +1,7 @@
 package com.omnix.assistant.voice.wakeword
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
