@@ -172,19 +172,25 @@ private fun ActionsText(rule: AutomationUiModel): String {
     if (rule.actions.isEmpty()) {
         return stringResource(R.string.omnix_automations_no_actions)
     }
-    return rule.actions.joinToString(" + ") { action ->
-        when (action.label) {
-            AutomationActionLabel.OPEN_APP ->
-                stringResource(R.string.omnix_automations_action_app, action.param.orEmpty())
-            AutomationActionLabel.WEATHER -> stringResource(R.string.omnix_automations_action_weather)
-            AutomationActionLabel.TIME -> stringResource(R.string.omnix_automations_action_time)
-            AutomationActionLabel.MEMORY -> stringResource(R.string.omnix_automations_action_memory)
-            AutomationActionLabel.VOLUME -> stringResource(R.string.omnix_automations_action_volume)
-            AutomationActionLabel.MEDIA -> stringResource(R.string.omnix_automations_action_media)
-            AutomationActionLabel.BRIEFING -> stringResource(R.string.omnix_automations_action_briefing)
-            AutomationActionLabel.OTHER -> stringResource(R.string.omnix_automations_action_other)
-        }
+    // Явный цикл, а не joinToString{}: лямбба не является composable-контекстом,
+    // stringResource внутри неё не компилируется.
+    val parts = ArrayList<String>(rule.actions.size)
+    for (action in rule.actions) {
+        parts.add(
+            when (action.label) {
+                AutomationActionLabel.OPEN_APP ->
+                    stringResource(R.string.omnix_automations_action_app, action.param.orEmpty())
+                AutomationActionLabel.WEATHER -> stringResource(R.string.omnix_automations_action_weather)
+                AutomationActionLabel.TIME -> stringResource(R.string.omnix_automations_action_time)
+                AutomationActionLabel.MEMORY -> stringResource(R.string.omnix_automations_action_memory)
+                AutomationActionLabel.VOLUME -> stringResource(R.string.omnix_automations_action_volume)
+                AutomationActionLabel.MEDIA -> stringResource(R.string.omnix_automations_action_media)
+                AutomationActionLabel.BRIEFING -> stringResource(R.string.omnix_automations_action_briefing)
+                AutomationActionLabel.OTHER -> stringResource(R.string.omnix_automations_action_other)
+            }
+        )
     }
+    return parts.joinToString(" + ")
 }
 
 @Composable
