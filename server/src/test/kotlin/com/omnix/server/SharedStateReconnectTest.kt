@@ -12,6 +12,7 @@ import org.junit.Test
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Proxy
 import java.sql.SQLException
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.sql.DataSource
@@ -63,7 +64,9 @@ class SharedStateReconnectTest : PostgresTestSupport() {
             errorCode = "TEST",
             promptChars = 0,
             responseChars = 0,
-            timestamp = Instant.parse("2026-08-22T00:00:00Z")
+            // Динамичная дата: фиксированная 2026-08-22 протухла относительно
+            // 30-дневного retention с реальными часами и удалялась сразу.
+            timestamp = Instant.now().minus(Duration.ofMinutes(10))
         )
 
         assertTrue(runCatching { repository.record(usage) }.exceptionOrNull() is SQLException)
