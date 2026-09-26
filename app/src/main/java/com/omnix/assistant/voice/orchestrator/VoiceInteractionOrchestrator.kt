@@ -261,6 +261,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             _currentMode.value = OrchestratorMode.PAUSED_CALL_OR_SLEEP
                             _assistantState.value = VoiceAssistantState.Error(context.getString(R.string.naushniki_otklyucheny_ozhidanie))
                         } else {
+                            // Потеря аудиопути: недетектированную до этого
+                            // patience-серию сбрасываем явно (owner review
+                            // 2026-09-26, п.6) — «Omni», ударенное в старой
+                            // акустике, не должно подтвердиться в новой.
+                            wakeWordEngine.resetDetectionSeries()
                             startStandbyMode()
                         }
                     }
@@ -293,8 +298,14 @@ class VoiceInteractionOrchestrator @Inject constructor(
         scope.launch {
             wakeWordEngine.errors.collectLatest { error ->
                 Log.e(TAG, "wakeword engine error: $error")
+                // ModelCorrupted — подменённая/повреждённая ONNX-модель
+                // (digest mismatch, owner review 2026-09-26); MicrophoneDeadSignal
+                // — «живой» AudioRecord с константным потоком (баг прошивок).
+                // Оба — состояние, в котором детекция невозможна: показываем.
                 if (error is WakeWordEngineError.ModelMissing ||
-                    error is WakeWordEngineError.PermissionDenied
+                    error is WakeWordEngineError.ModelCorrupted ||
+                    error is WakeWordEngineError.PermissionDenied ||
+                    error is WakeWordEngineError.MicrophoneDeadSignal
                 ) {
                     _assistantState.value = VoiceAssistantState.Error(
                         context.getString(R.string.wakeword_engine_unavailable),

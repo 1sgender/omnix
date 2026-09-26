@@ -44,15 +44,28 @@ openWakeWord v0.5.1 (акустика v0.1 детектирует legacy-фра�
 ## Карта файлов
 
 - `voice/wakeword/WakeWordEngine.kt` — интерфейс, `WakeWordDetection`,
-  `WakeWordConfig`, `WakeWordEngineError` (ModelMissing громко падает на сборке без модели).
+  `WakeWordConfig`, `WakeWordEngineError` (ModelMissing/ModelCorrupted громко
+  падают на битой/подменённой модели, MicrophoneDeadSignal — на «мёртвом»
+  микрофоне, `resetDetectionSeries` — сброс patience-серии без рестарта).
 - `voice/wakeword/NeuralWakeWordEngine.kt` — Android-оболочка: AudioRecord
-  16 кГц mono, владение микрофоном только пока запущен.
+  16 кГц mono, владение микрофоном только пока запущен; сессии ONNX и
+  пайплайн на уровне движка (один раз до destroy, owner review п.3).
 - `voice/wakeword/oww/OpenWakeWordPipeline.kt` — чистый стриминг (сессии инжектятся).
 - `voice/wakeword/oww/OwwInference.kt` — интерфейсы стадий + контракт.
-- `voice/wakeword/oww/OrtOwwSessions.kt` — ORT-реализация (сессии переиспользуются).
-- `voice/wakeword/DetectionPolicy.kt` — threshold + patience + cooldown (чистый).
+- `voice/wakeword/oww/OrtOwwSessions.kt` — ORT-реализация (сессии переиспользуются)
+  + проверка sha256 ассета ДО загрузки (`ModelDigestMismatch`).
+- `voice/wakeword/ModelDigests.kt` — закреплённые в коде sha256 моделей (пин).
+- `voice/wakeword/DetectionPolicy.kt` — threshold (+ per-кадр override) + patience
+  + cooldown (чистый).
+- `voice/wakeword/NoiseAdaptiveThreshold.kt` — шумовой пол (20-й перцентиль
+  окна 25 кадров) + буст порога по SNR (чистый).
+- `voice/wakeword/DeadSignalDetector.kt` — константный поток = мёртвый
+  микрофон (чистый).
+- `voice/wakeword/NearMissRecorder.kt` — near-miss WAV-захват для данных
+  v0.2: решение о захвате, WAV, манифест, кап хранилища (чистый).
 - `voice/wakeword/AudioRingBuffer.kt` — кольцо 640 мс (чистое).
-- `voice/wakeword/WakeWordMetrics.kt` — счётчики и задержки стадий (чистое).
+- `voice/wakeword/WakeWordMetrics.kt` — счётчики, средние И P95 задержек
+  стадий (чистое).
 - `assets/wakeword/` — 3 модели + SHA256SUMS (~3.7 МБ в APK).
 - `training/` — фаза 2: спецификация и проверка кастомной модели «Omni».
 - `device-validation/06-wakeword-metrics.sh` — протокол замеров на устройстве.
@@ -82,12 +95,77 @@ openWakeWord v0.5.1 (акустика v0.1 детектирует legacy-фра�
 | Ключ | Дефолт | Смысл |
 |---|---|---|
 | `wakeword.enabled` | true | мастер-выключатель |
-| `wakeword.threshold` | 0.5 | порог скора (дефолт oWW; точное значение — по протоколу ниже) |
+| `wakeword.threshold` | 0.35 | базовый порог скора (0.35 — по отчёту omni_v0.1; точный — по протоколу ниже) |
 | `wakeword.patience_frames` | 2 | хитов подряд для срабатывания |
 | `wakeword.cooldown_ms` | 2000 | тишина после срабатывания |
-| `wakeword.debug_logging` | false | скор каждого 25-го чанка + onset в logcat |
+| `wakeword.debug_logging` | false | скор каждого 25-го чанка + onset в logcat (+ разбор стадий и шумовой пол) |
+| `noiseAdaptiveThreshold` | true | динамический буст порога по шуму (см. ниже) |
+| `nearMissCapture` | **false** | near-miss WAV-захват для данных v0.2 (только явная бета/дев) |
+| `nearMissMinScore` | 0.25 | минимальный скор кадра для near-miss захвата |
 
 UI-ручки настроек — будущая работа; движок читает DataStore напрямую.
+
+## Харденинг (owner review 2026-09-26)
+
+### Пиннинг моделей по sha256 (п.7)
+`ModelDigests.EXPECTED` держит sha256 всех четырёх ONNX-ассетов в КОДЕ
+(`SHA256SUMS` в assets — контроль бильда, его можно подменить вместе с
+моделями). `OrtOwwSessions.openSession` проверяет дайджест байтов ДО
+`createSession`: подмена/повреждение → `WakeWordEngineError.ModelCorrupted`
+(ожидание и факт дайджеста) → оркестратор показывает Error-состояние. Тест
+`ModelDigestsTest.expectedMatchesActualAssetFiles` держит пин в синхроне с
+файлами: сменили модель в assets без обновления пина — CI падает.
+
+### Динамический порог по шуму (п.2b)
+`NoiseAdaptiveThreshold` считает RMS каждого 80-мс чанка (один проход,
+без аллокаций), шумовой пол — 20-й перцентиль окна 25 кадров (2 с): он не
+гоняется за громкой речью, но быстро оседает в тишине. Кадр с SNR ≥ 10 дБ —
+базовый порог; ниже — линейный буст до +0.10 при SNR = 0 дБ; кадр тише пола
+буста не даёт. Эффективный порог жмётся в [0; 0.6]. Выключается
+`noiseAdaptiveThreshold=false` (тогда — статичный `threshold`, поведение
+до ревью). Per-user калибровка (3–5 произнесений при первом запуске) —
+отдельная задача с UI.
+
+### Мёртвый микрофон (п.5)
+`DeadSignalDetector`: окно 250 чанков (20 с); если размах (max−min) ВСЕГО
+окна ≤ 4 LSB — поток константа (баг прошивок носимых устройств: AudioRecord
+«живой», микрофон глухой). Живая тишина всегда несёт ADC-джиттер (размах
+десятки LSB) — ложных срабатываний на тишине нет. Детект →
+`WakeWordEngineError.MicrophoneDeadSignal` → Error-состояние вместо
+молчаливой работы вслепую.
+
+### Потеря аудиопути (п.6)
+Отключение клипа/наушников (не-headset-only режим) →
+`wakeWordEngine.resetDetectionSeries()`: недодетектированная patience-серия
+сбрасывается явно — «Omni», ударенное в старой акустике, не подтвердится в
+новой. В headset-only режиме standby и так останавливается (`stopAll`).
+
+### Задержки по стадиям + p95 (п.4)
+`WakeWordMetrics.Snapshot` несёт средние И p95 задержки mel/embedding/
+classifier (окно 64 кадра): среднее маскирует всплески (GC, теплота CPU),
+p95 их показывает — узкое место для INT8-квантизации видно точечно.
+Debug-лог дополнен разбором стадий: `score=… infer=…ms (mel=… emb=… clf=…)
+thr=… floor=…` — формат `infer=NNNms` для 06-скрипта сохранён.
+
+### Near-miss захват для v0.2 (п.1)
+Флаг `nearMissCapture` (дефолт **false** — штатно сырое аудио НЕ
+записывается). Включённый захват пишет WAV (16 кГц mono, 2.5 с хвост до
+кадра) на кадры со скором ≥ 0.25, которые НЕ стали детекцией: это будущие
+negative-ы retrain'а на реальных голосах/шуме, ценнее синтетических
+adversarial. Приватность: только app-private каталог (`filesDir/nearmiss/`),
+наружу не покидает (upload-пути нет), кап 40 МБ (уходят самые старые),
+манифест `manifest.jsonl` — только время/скор/модель/порог/SNR, без
+метаданных пользователя. Дебаунс 30 с (одна фраза — один файл).
+
+### Холодный старт (п.3) — статус
+Инфраструктура готова: сессии ONNX и пайплайн переехали с уровня
+runLoop на уровень движка — каждый вход в STANDBY больше не перечитывает
+~3.7 МБ ассетов и не создаёт три OrtSession заново. Сами 1.3 с «оглушения»
+(16 эмбеддингов контекста) закрываются ТОЛЬКО если движок получает свежее
+аудио во время фаз без STT: единственный безопасный слот — `AI_THINKING`
+(микрофон свободен, OMNIX молчит; в `TTS_SPEAKING` запуск невозможен —
+self-trigger). Это изменение ядра голосового контура — отдельная задача,
+здесь намеренно не затронута.
 
 ## Подбор порога (протокол, на устройстве)
 

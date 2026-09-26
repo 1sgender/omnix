@@ -37,10 +37,13 @@ class DetectionPolicy(
 
     /**
      * Скор очередного 80-мс фрейма.
+     * @param thresholdOverride действующий порог кадра — например, базовый
+     *        порог + динамический буст по шуму (NoiseAdaptiveThreshold).
+     *        По умолчанию — настройка [threshold].
      * @return true ровно в момент подтверждённой детекции.
      */
-    fun observe(score: Float): Boolean {
-        if (score >= threshold) {
+    fun observe(score: Float, thresholdOverride: Float = threshold): Boolean {
+        if (score >= thresholdOverride) {
             consecutiveHits++
         } else {
             consecutiveHits = 0

@@ -90,6 +90,7 @@ class WakeWordHandoffTest {
         every { tts.ttsState } returns MutableStateFlow(TtsState.Idle)
         every { engine.start() } just Runs
         every { engine.stop() } just Runs
+        every { engine.resetDetectionSeries() } just Runs
         every { stt.startListening() } just Runs
         every { stt.stopListening() } just Runs
         every { bluetooth.routeAudioToSpeaker() } just Runs

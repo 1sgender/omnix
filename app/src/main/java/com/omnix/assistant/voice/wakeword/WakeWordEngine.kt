@@ -25,6 +25,19 @@ data class WakeWordConfig(
     val patienceFrames: Int = 2,
     val cooldownMs: Long = 2000L,
     val debugLogging: Boolean = false,
+    /**
+     * Динамический буст порога по шуму (owner review 2026-09-26, п.2b):
+     * при низком SNR порог временно растёт до +0.10, в тишине — базовый.
+     */
+    val noiseAdaptiveThreshold: Boolean = true,
+    /**
+     * Near-miss захват для данных v0.2 (owner review 2026-09-26, п.1).
+     * По умолчанию ВЫКЛ: сырое аудио записывается только в явной
+     * бете/деве, только в app-private хранилище, наружу не уходит.
+     */
+    val nearMissCapture: Boolean = false,
+    /** Минимальный скор кадра для near-miss захвата (ниже — чистый шум). */
+    val nearMissMinScore: Float = 0.25f,
 )
 
 /**
@@ -45,12 +58,29 @@ data class WakeWordDetection(
 sealed interface WakeWordEngineError {
     /** ONNX-файл отсутствует в assets (сборка без модели). */
     data class ModelMissing(val assetPath: String) : WakeWordEngineError
+    /**
+     * ONNX-файл подменён/повреждён: sha256 не совпал с закреплённым в коде
+     * (ModelDigests, owner review 2026-09-26, п.7). Грузить модель с
+     * чужим дайджестом нельзя — детекция стала бы непредсказуемой.
+     */
+    data class ModelCorrupted(
+        val assetPath: String,
+        val expectedSha256: String,
+        val actualSha256: String,
+    ) : WakeWordEngineError
     /** Падение инференса (битый тензор, OOM ORT и т.п.). */
     data class InferenceFailed(val reason: String) : WakeWordEngineError
     /** AudioRecord не инициализировался / микрофон занят. */
     data object MicrophoneUnavailable : WakeWordEngineError
     /** RECORD_AUDIO отозвано. */
     data object PermissionDenied : WakeWordEngineError
+    /**
+     * «Мёртвый» микрофон (owner review 2026-09-26, п.5): AudioRecord жив,
+     * но поток — константа (баг прошивок носимых устройств). 20 секунд
+     * сигнала с размахом ≤ 4 LSB — движок останавливается с этой ошибкой
+     * вместо молчаливой работы вслепую.
+     */
+    data object MicrophoneDeadSignal : WakeWordEngineError
 }
 
 /**
@@ -67,4 +97,11 @@ interface WakeWordEngine {
     fun stop()
     fun isRunning(): Boolean
     fun destroy()
+    /**
+     * Сбросить текущую patience-серию детекции БЕЗ перезапуска движка
+     * (owner review 2026-09-26, п.6). Назначение: потеря аудиопути
+     * (клип/наушники отключились) — удар «Omni» в старой акустике не
+     * должен доживаться до подтверждения в новой.
+     */
+    fun resetDetectionSeries()
 }

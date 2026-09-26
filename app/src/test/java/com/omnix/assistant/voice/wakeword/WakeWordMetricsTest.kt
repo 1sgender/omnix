@@ -1,6 +1,7 @@
 package com.omnix.assistant.voice.wakeword
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -55,5 +56,27 @@ class WakeWordMetricsTest {
         assertEquals(0L, snap.framesObserved)
         assertEquals(0L, snap.detections)
         assertEquals(0f, snap.maxScore, 0f)
+    }
+
+    @Test
+    fun `p95 выделяет всплеск, который среднее маскирует`() {
+        val metrics = WakeWordMetrics()
+        // 60 кадров по 1 мс + 4 всплеска по 100 мс: среднее ≈ 7.3, p95 = 100.
+        for (i in 0 until 60) metrics.recordFrame(0.1f, false, 1, 1, 1)
+        for (i in 0 until 4) metrics.recordFrame(0.1f, false, 100, 1, 1)
+        val snap = metrics.snapshot()
+        assertTrue("среднее маскирует всплески", snap.avgMelMs < 10.0)
+        assertEquals(100.0, snap.p95MelMs, 1e-9)
+        assertEquals(1.0, snap.p95EmbMs, 1e-9)
+        assertEquals(1.0, snap.p95ClfMs, 1e-9)
+    }
+
+    @Test
+    fun `p95 на пустых метриках ноль без деления`() {
+        val metrics = WakeWordMetrics()
+        val snap = metrics.snapshot()
+        assertEquals(0.0, snap.p95MelMs, 1e-9)
+        assertEquals(0.0, snap.p95EmbMs, 1e-9)
+        assertEquals(0.0, snap.p95ClfMs, 1e-9)
     }
 }

@@ -16,6 +16,10 @@ class WakeWordMetrics {
         val avgMelMs: Double,
         val avgEmbMs: Double,
         val avgClfMs: Double,
+        /** P95 задержек стадий, мс: среднее маскирует всплески (GC, теплота CPU). */
+        val p95MelMs: Double,
+        val p95EmbMs: Double,
+        val p95ClfMs: Double,
     )
 
     private val lock = Any()
@@ -42,6 +46,9 @@ class WakeWordMetrics {
     fun snapshot(): Snapshot {
         synchronized(lock) {
             val n = latencies.size.coerceAtLeast(1)
+            val mel = latencies.map { it.first }.sorted()
+            val emb = latencies.map { it.second }.sorted()
+            val clf = latencies.map { it.third }.sorted()
             return Snapshot(
                 framesObserved = frames,
                 detections = fires,
@@ -49,8 +56,17 @@ class WakeWordMetrics {
                 avgMelMs = latencies.sumOf { it.first.toDouble() } / n,
                 avgEmbMs = latencies.sumOf { it.second.toDouble() } / n,
                 avgClfMs = latencies.sumOf { it.third.toDouble() } / n,
+                p95MelMs = p95(mel),
+                p95EmbMs = p95(emb),
+                p95ClfMs = p95(clf),
             )
         }
+    }
+
+    private fun p95(sorted: List<Long>): Double {
+        if (sorted.isEmpty()) return 0.0
+        val idx = ((sorted.size * 0.95).toInt()).coerceIn(0, sorted.size - 1)
+        return sorted[idx].toDouble()
     }
 
     fun reset() {

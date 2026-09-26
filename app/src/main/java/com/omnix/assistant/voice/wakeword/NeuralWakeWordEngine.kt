@@ -11,10 +11,13 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.omnix.assistant.data.preferences.SettingsDataStore
+import com.omnix.assistant.voice.wakeword.oww.ModelDigestMismatch
 import com.omnix.assistant.voice.wakeword.oww.OpenWakeWordPipeline
 import com.omnix.assistant.voice.wakeword.oww.OrtOwwSessions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import java.io.IOException
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,14 +32,23 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Neural wake-word движок (§4 ТЗ): AudioRecord 16 кГц -> OpenWakeWordPipeline -> DetectionPolicy.
+ * Neural wake-word движок (§4 ТЗ): AudioRecord 16 кГц -> OpenWakeWordPipeline
+ * -> DetectionPolicy (+ NoiseAdaptiveThreshold, owner review 2026-09-26).
  *
- * Владение микрофоном: AudioRecord создаётся в [start] и освобождается в [stop].
- * Оркестратор держит движок запущенным ТОЛЬКО в STANDBY — перед STT движок
- * останавливается, конфликта за микрофон нет по построению.
+ * Владение микрофоном: AudioRecord создаётся в [start] и освобождается в
+ * [stop]. Оркестратор держит движок запущенным ТОЛЬКО в STANDBY — перед
+ * STT движок останавливается, конфликта за микрофон нет по построению.
  *
- * Ошибки громкие: отсутствующая модель, падение инференса, занятый микрофон
- * и отозванный пермишен уходят в [errors], тихих мёртвых состояний нет.
+ * Сессии ONNX и пайплайн живут на уровне движка (вытеснено из runLoop,
+ * owner review 2026-09-26, п.3/п.4): раньше каждый вход в STANDBY перечитывал
+ * ~3.7 МБ ассетов и создавал три OrtSession заново — теперь один раз до
+ * [destroy] (или до смены путей моделей в конфиге). Это же инфраструктура
+ * для «тёплого» буфера: когда движок будет получать аудио и в фазе
+ * AI_THINKING, стартовый прогон 1.3 с закроется без пересоздания.
+ *
+ * Ошибки громкие: отсутствующая модель, ПОВРЕЖДЁННАЯ модель (digest
+ * mismatch), падение инференса, занятый микрофон, МЁРТВЫЙ микрофон
+ * (константный поток, баг прошивок) и отозванный пермишен уходят в [errors].
  */
 @Singleton
 class NeuralWakeWordEngine @Inject constructor(
@@ -67,6 +79,23 @@ class NeuralWakeWordEngine @Inject constructor(
     private val ring = AudioRingBuffer(RING_SAMPLES)
     private val metrics = WakeWordMetrics()
 
+    // Живут на уровне движка: переиспользуются между start/stop (owner
+    // review п.3). Создаются в ensureSessions (worker-поток), закрываются в
+    // [destroy] (произвольный поток) — volatile-видимость обязательна.
+    @Volatile
+    private var sessions: OrtOwwSessions? = null
+    @Volatile
+    private var pipeline: OpenWakeWordPipeline? = null
+    @Volatile
+    private var sessionAssetPaths: AssetPaths? = null
+
+    /** Near-miss (owner review п.1): кольцо 2.5 с + рекордер, живут между запусками. */
+    private val nearMissRing = AudioRingBuffer(
+        SAMPLE_RATE * NearMissRecorder.CAPTURE_WINDOW_MS / 1000
+    )
+    @Volatile
+    private var recorder: NearMissRecorder? = null
+
     @Volatile
     private var debugLogging = false
 
@@ -89,11 +118,28 @@ class NeuralWakeWordEngine @Inject constructor(
 
     override fun destroy() {
         stop()
+        sessions?.close()
+        sessions = null
+        pipeline = null
+        sessionAssetPaths = null
         scope.cancel()
+    }
+
+    /**
+     * Сброс patience-серии без перезапуска (owner review п.6): потеря
+     * аудиопути (клип/наушники отключились) не должна допускать
+     * «додумывания» детекции в новой акустике. Дёшево: только счётчики
+     * [DetectionPolicy], запуск не трогаем.
+     */
+    override fun resetDetectionSeries() {
+        policy.reset()
     }
 
     /** Снапшот метрик для device-validation (§12 ТЗ). */
     fun metricsSnapshot(): WakeWordMetrics.Snapshot = metrics.snapshot()
+
+    /** Пути моделей — то, от чего зависят сессии (остальной конфиг сессий не меняет). */
+    private data class AssetPaths(val model: String, val mel: String, val embedding: String)
 
     private suspend fun runLoop() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
@@ -117,9 +163,17 @@ class NeuralWakeWordEngine @Inject constructor(
         }
         applyConfig(config)
 
-        val sessions = OrtOwwSessions(context.assets, config)
-        try {
-            sessions.open()
+        val s = try {
+            ensureSessions(config)
+        } catch (e: ModelDigestMismatch) {
+            Log.e(TAG, "wakeword model digest mismatch", e)
+            _errors.emit(
+                WakeWordEngineError.ModelCorrupted(
+                    e.assetPath, e.expectedSha256, e.actualSha256
+                )
+            )
+            running.set(false)
+            return
         } catch (e: IOException) {
             Log.e(TAG, "wakeword model load failed", e)
             val missing = missingAssetPath(config, e)
@@ -132,14 +186,24 @@ class NeuralWakeWordEngine @Inject constructor(
             return
         }
 
-        val pipeline = OpenWakeWordPipeline(sessions, sessions, sessions)
+        val p = pipeline ?: OpenWakeWordPipeline(s, s, s).also { pipeline = it }
         val record = createAudioRecord()
         if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
             record?.release()
-            sessions.close()
             _errors.emit(WakeWordEngineError.MicrophoneUnavailable)
             running.set(false)
             return
+        }
+
+        // Компоненты кадра — на цикл: шумовой пол и окно мёртвого сигнала
+        // перенабатываются с каждого входа в STANDBY (акустика могла
+        // сменить комнату/устройство).
+        val noise = NoiseAdaptiveThreshold()
+        val dead = DeadSignalDetector()
+        val nearMiss = if (config.nearMissCapture) {
+            (recorder ?: NearMissRecorder(config.nearMissMinScore).also { recorder = it })
+        } else {
+            null
         }
 
         try {
@@ -163,10 +227,25 @@ class NeuralWakeWordEngine @Inject constructor(
                     continue
                 }
                 if (read == 0) continue
+                val frame = if (read == chunk.size) chunk else chunk.copyOf(read)
+
+                // «Мёртвый» микрофон: 20 с константного потока (owner review п.5).
+                if (dead.observe(frame)) {
+                    Log.e(TAG, "microphone dead signal: constant stream for 20s")
+                    _errors.emit(WakeWordEngineError.MicrophoneDeadSignal)
+                    running.set(false)
+                    break
+                }
+
+                // RMS до мел-спектрограммы: один проход, для шумового пола.
+                val rms = noise.rmsLsb(frame)
+                noise.update(rms)
+
                 ring.write(chunk, 0, read)
+                if (nearMiss != null) nearMissRing.write(chunk, 0, read)
                 // Пайплайн сам добирает 1280-сэмпловые чанки из потока.
                 val result = try {
-                    if (read == chunk.size) pipeline.accept(chunk) else pipeline.accept(chunk.copyOf(read))
+                    p.accept(frame)
                 } catch (e: Exception) {
                     Log.e(TAG, "wakeword inference failed", e)
                     _errors.emit(WakeWordEngineError.InferenceFailed(e.message ?: "inference failed"))
@@ -175,10 +254,22 @@ class NeuralWakeWordEngine @Inject constructor(
                 }
                 chunkIndex++
                 if (result == null) continue
-                val fired = policy.observe(result.score)
+
+                // Динамический порог: базовый + буст по SNR (owner review п.2b).
+                val threshold = if (config.noiseAdaptiveThreshold) {
+                    noise.effectiveThreshold(config.threshold, rms)
+                } else {
+                    config.threshold
+                }
+                val fired = policy.observe(result.score, threshold)
                 metrics.recordFrame(result.score, fired, result.melMs, result.embMs, result.clfMs)
                 if (debugLogging && chunkIndex % DEBUG_LOG_EVERY_CHUNK == 0L) {
-                    Log.d(TAG, "score=${result.score} infer=${result.melMs + result.embMs + result.clfMs}ms")
+                    Log.d(
+                        TAG,
+                        "score=${result.score} infer=${result.melMs + result.embMs + result.clfMs}ms" +
+                            " (mel=${result.melMs} emb=${result.embMs} clf=${result.clfMs}) " +
+                            "thr=$threshold floor=${noise.noiseFloorLsb}"
+                    )
                 }
                 if (fired) {
                     val onset = ring.snapshotLast(RING_SAMPLES)
@@ -193,6 +284,8 @@ class NeuralWakeWordEngine @Inject constructor(
                             inferenceLatencyMs = result.melMs + result.embMs + result.clfMs,
                         ),
                     )
+                } else {
+                    captureNearMiss(nearMiss, result.score, rms, noise, config)
                 }
             }
         } finally {
@@ -201,9 +294,12 @@ class NeuralWakeWordEngine @Inject constructor(
             } catch (_: Exception) {
             }
             record.release()
-            sessions.close()
-            pipeline.reset()
+            // Сессии НЕ закрываем (переиспользуются в следующем start);
+            // контекст пайплайна сбрасываем — без stale-фич после STT.
+            p.reset()
             ring.clear()
+            nearMissRing.clear()
+            policy.reset()
         }
     }
 
@@ -214,6 +310,66 @@ class NeuralWakeWordEngine @Inject constructor(
         policy.reset()
         debugLogging = config.debugLogging
         activeWakeWord = config.wakeWord
+    }
+
+    /**
+     * Сессии ONNX по путям текущего конфига: переиспользуются, пока пути не
+     * поменялись; при смене — закрытые старые уходят, открываются новые.
+     */
+    private fun ensureSessions(config: WakeWordConfig): OrtOwwSessions {
+        val paths = AssetPaths(config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath)
+        val current = sessions
+        if (current != null && sessionAssetPaths == paths) return current
+        current?.close()
+        val fresh = OrtOwwSessions(context.assets, config).also { it.open() }
+        sessions = fresh
+        pipeline = null
+        sessionAssetPaths = paths
+        return fresh
+    }
+
+    /**
+     * Near-miss захват (owner review п.1): аудио-хвост кадра с скором ≥
+     * nearMissMinScore, который НЕ стал детекцией — будущие негативы v0.2.
+     * Только app-private, с капом и манифестом без метаданных пользователя.
+     */
+    private fun captureNearMiss(
+        nearMiss: NearMissRecorder?,
+        score: Float,
+        rms: Float,
+        noise: NoiseAdaptiveThreshold,
+        config: WakeWordConfig,
+    ) {
+        if (nearMiss == null) return
+        val decision = nearMiss.shouldCapture(score, fired = false)
+        if (!decision.capture) return
+        val samples = nearMissRing.snapshotLast(nearMissRing.sizeSamples)
+        val epochMs = System.currentTimeMillis()
+        val file = File(
+            context.filesDir.nearMissDir(),
+            "nm-${epochMs}-${String.format(Locale.US, "score%.3f", score)}.wav"
+        )
+        try {
+            val bytes = nearMiss.writeWav(file, samples, NearMissRecorder.SAMPLE_RATE)
+            val line = nearMiss.manifestLine(
+                epochMs = epochMs,
+                score = score,
+                model = config.modelAssetPath.substringAfterLast('/'),
+                threshold = config.threshold,
+                snrDb = noise.snrDb(rms),
+            )
+            File(context.filesDir.nearMissDir(), "manifest.jsonl")
+                .appendText(line + "\n", Charsets.UTF_8)
+            // Кап хранилища: самые старые (имена = таймстампы) уходят первыми.
+            val toDelete = nearMiss.filesToDelete(context.filesDir.listNearMissWavs())
+            toDelete.forEach { it.delete() }
+            if (debugLogging) {
+                Log.d(TAG, "NEAR-MISS captured ${bytes}B -> ${file.name}")
+            }
+        } catch (e: Exception) {
+            // Захват данных не должен ронять детекцию: лог и дальше.
+            Log.w(TAG, "near-miss capture failed", e)
+        }
     }
 
     private fun createAudioRecord(): AudioRecord? {

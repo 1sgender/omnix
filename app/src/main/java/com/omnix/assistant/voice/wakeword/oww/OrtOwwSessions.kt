@@ -4,10 +4,24 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import android.content.res.AssetManager
+import com.omnix.assistant.voice.wakeword.ModelDigests
 import com.omnix.assistant.voice.wakeword.WakeWordConfig
 import java.io.Closeable
 import java.io.IOException
 import java.nio.FloatBuffer
+
+/**
+ * Пингинг модели провален: sha256 ассета не совпадает с закреплённым в
+ * ModelDigests (owner review 2026-09-26, п.7). Движок превращает в
+ * громкую WakeWordEngineError.ModelCorrupted.
+ */
+class ModelDigestMismatch(
+    val assetPath: String,
+    val expectedSha256: String,
+    val actualSha256: String,
+) : IOException(
+    "wakeword model digest mismatch: $assetPath expected=$expectedSha256 actual=$actualSha256"
+)
 
 /**
  * ORT-реализация трёх стадий openWakeWord (§3 ТЗ).
@@ -51,6 +65,17 @@ class OrtOwwSessions(
             assets.open(assetPath).use { it.readBytes() }
         } catch (e: IOException) {
             throw IOException("wakeword model asset missing: $assetPath", e)
+        }
+        // Пин по дайджесту ДО загрузки в ORT: подменённую/повреждённую
+        // модель не должно быть даже можно запустить (owner review п.7).
+        ModelDigests.verify(assetPath, bytes)?.let { ok ->
+            if (!ok) {
+                throw ModelDigestMismatch(
+                    assetPath,
+                    ModelDigests.expectedFor(assetPath).orEmpty(),
+                    ModelDigests.sha256Hex(bytes),
+                )
+            }
         }
         return env.createSession(bytes)
     }
