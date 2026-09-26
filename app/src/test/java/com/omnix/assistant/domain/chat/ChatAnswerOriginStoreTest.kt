@@ -45,6 +45,9 @@ class ChatAnswerOriginStoreTest {
         val job = launch {
             store.onDeviceMessageIds.take(3).toList(emissions)
         }
+        // Прогрев: коллектор обязан подписаться ДО первой пометки, иначе
+        // стартовая пустая эмиссия пропущена и take(3) не наберёт три.
+        advanceUntilIdle()
 
         store.markOnDevice(42L)
         advanceUntilIdle()
