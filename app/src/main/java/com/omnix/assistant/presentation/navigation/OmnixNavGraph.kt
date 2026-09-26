@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.omnix.assistant.presentation.automations.AutomationsScreen
 import com.omnix.assistant.presentation.chat.ChatViewModel
 import com.omnix.assistant.presentation.chat.OmnixChatScreen
 import com.omnix.assistant.presentation.components.ConfirmationSheet
@@ -167,6 +168,12 @@ fun OmnixNavGraph(
                 )
             }
 
+            composable(OmnixDestination.Automations.route) {
+                AutomationsScreen(
+                    onBack = navController::popBackStack
+                )
+            }
+
             composable(
                 route = OmnixDestination.SettingsSection.ROUTE_PATTERN,
                 arguments = listOf(
@@ -180,7 +187,10 @@ fun OmnixNavGraph(
                     .orEmpty()
                 SettingsSectionRoute(
                     section = section,
-                    onBack = navController::popBackStack
+                    onBack = navController::popBackStack,
+                    onOpenAutomations = {
+                        navController.navigateSingleTop(OmnixDestination.Automations)
+                    }
                 )
             }
         }

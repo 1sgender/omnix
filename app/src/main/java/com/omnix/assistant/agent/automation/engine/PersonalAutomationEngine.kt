@@ -43,7 +43,8 @@ class PersonalAutomationEngine @Inject constructor(
     private val ruleMatcher: AutomationRuleMatcher,
     private val scheduleManager: AutomationScheduleManager,
     private val json: Json,
-    private val planGate: ClientPlanGate
+    private val planGate: ClientPlanGate,
+    private val deletionStore: AutomationDeletionStore
 ) {
     companion object {
         private const val TAG = "AutomationEngine"
@@ -217,12 +218,15 @@ class PersonalAutomationEngine @Inject constructor(
      * Теперь проверяет каждое правило отдельно и добавляет только отсутствующие.
      */
     private suspend fun initDefaultAutomations() {
-        val defaultRules = listOf(
-            createMorningHeadphonesRule(),
-            createHomeWifiRule(),
-            createBatteryLowRule(),
-            createHeadphonesDisconnectedRule(),
-            createMorningScheduleRule()
+        val defaultRules = survivingDefaults(
+            listOf(
+                createMorningHeadphonesRule(),
+                createHomeWifiRule(),
+                createBatteryLowRule(),
+                createHeadphonesDisconnectedRule(),
+                createMorningScheduleRule()
+            ),
+            deletionStore.deletedRuleIds()
         )
 
         for (rule in defaultRules) {
