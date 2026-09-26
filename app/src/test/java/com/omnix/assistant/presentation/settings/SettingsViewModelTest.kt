@@ -1,5 +1,6 @@
 package com.omnix.assistant.presentation.settings
 
+import android.content.Context
 import com.omnix.assistant.agent.automation.dao.AutomationDao
 import com.omnix.assistant.agent.automation.entity.AutomationEntity
 import com.omnix.assistant.agent.localai.LocalModelManager
@@ -170,9 +171,12 @@ class SettingsViewModelTest {
         mockk {
             every { localModelConsentFlow } returns flowOf("unasked")
             every { localModelDownloadIdFlow } returns flowOf(-1L)
+            every { nearMissCaptureFlow } returns flowOf(false)
             coEvery { setLocalModelConsent(any()) } returns Unit
             coEvery { setLocalModelDownloadId(any()) } returns Unit
-        }
+            coEvery { setNearMissCapture(any()) } returns Unit
+        },
+        mockk<Context>()
     )
 
     private fun mockDao(rules: List<AutomationEntity> = emptyList()): AutomationDao = mockk {

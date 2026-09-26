@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.voice.wakeword.WakeWordConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -43,6 +44,16 @@ internal fun resolveWakeWordThreshold(stored: Float?, legacySensitivity: Float?)
     return (1f - legacySensitivity).coerceIn(MIN_WAKE_WORD_THRESHOLD, MAX_WAKE_WORD_THRESHOLD)
 }
 
+/**
+ * Near-miss захват (данные v0.2): явное включение пользователем в
+ * developer-настройках И только в dev/staging-сборках. В prod (flavorAllowed
+ * = false) запись аудио невозможна ни при каком значении ключа — защита в
+ * глубину: даже устаревшее true в DataStore старого устройства ничего не
+ * включает. Чистая функция — JVM-тест.
+ */
+internal fun resolveNearMissCapture(stored: Boolean?, flavorAllowed: Boolean): Boolean =
+    flavorAllowed && (stored ?: false)
+
 @Singleton
 class SettingsDataStore @Inject constructor(
     @ApplicationContext private val context: Context
@@ -60,6 +71,7 @@ class SettingsDataStore @Inject constructor(
         val WAKEWORD_PATIENCE = intPreferencesKey("wakeword.patience_frames")
         val WAKEWORD_COOLDOWN_MS = longPreferencesKey("wakeword.cooldown_ms")
         val WAKEWORD_DEBUG = booleanPreferencesKey("wakeword.debug_logging")
+        val WAKEWORD_NEAR_MISS_CAPTURE = booleanPreferencesKey("wakeword.near_miss_capture")
         val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
         val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")
     }
@@ -179,6 +191,8 @@ class SettingsDataStore @Inject constructor(
      * Neural wake-word конфиг (§11 ТЗ). Дефолты совпадают с [WakeWordConfig].
      * Порог — через [resolveWakeWordThreshold]: ключ wakeword.threshold,
      * при его отсутствии — однократная миграция с legacy-чувствительности.
+     * nearMissCapture — только явное включение + dev/staging-гейт
+     * ([resolveNearMissCapture]); в prod всегда false.
      */
     val wakeWordConfig: Flow<WakeWordConfig> = context.dataStore.data
         .catch { exception ->
@@ -194,8 +208,30 @@ class SettingsDataStore @Inject constructor(
                 patienceFrames = preferences[PreferencesKeys.WAKEWORD_PATIENCE] ?: 2,
                 cooldownMs = preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] ?: 2000L,
                 debugLogging = preferences[PreferencesKeys.WAKEWORD_DEBUG] ?: false,
+                nearMissCapture = resolveNearMissCapture(
+                    preferences[PreferencesKeys.WAKEWORD_NEAR_MISS_CAPTURE],
+                    BuildConfig.NEAR_MISS_CAPTURE_ENABLED
+                ),
             )
         }
+
+    /**
+     * Состояние near-miss переключателя для UI (raw ключ, без flavor-гейта —
+     * гейт нужен для записи, а переключатель в prod просто не показывается).
+     */
+    val nearMissCaptureFlow: Flow<Boolean> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_NEAR_MISS_CAPTURE] ?: false
+        }
+
+    suspend fun setNearMissCapture(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_NEAR_MISS_CAPTURE] = enabled
+        }
+    }
 
     suspend fun setWakeWordEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->

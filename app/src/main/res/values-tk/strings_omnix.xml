@@ -299,6 +299,9 @@
     <string name="omnix_advanced_accessibility">Ekrany okamak we basmak</string>
     <string name="omnix_advanced_accessibility_body">OMNIX-e ekraňyzy okap we sizin üçin basyp bermäge mümkinçilik berýär.</string>
     <string name="omnix_advanced_accessibility_action">Android sazlamalaryny aç</string>
+    <string name="omnix_advanced_nearmiss_title">Near-miss ýazmak (model v0.2)</string>
+    <string name="omnix_advanced_nearmiss_body">«Omni» tanalmazdan öňki 2,5 sekundyň sesini ýatda saklaýar — has takyk model öwretmek üçin. Diňe şu enjimde (iň köp 40 MB), şahyý maglumatlarsyz, islendik wagt silip bolar.</string>
+    <string name="omnix_advanced_nearmiss_clear">Ýazgylary sil</string>
     <string name="omnix_advanced_save">Sakla</string>
     <string name="omnix_advanced_saved">Saklandy</string>
 

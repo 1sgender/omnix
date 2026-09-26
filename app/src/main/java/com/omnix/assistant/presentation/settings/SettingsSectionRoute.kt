@@ -1,6 +1,7 @@
 package com.omnix.assistant.presentation.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -136,7 +137,13 @@ fun SettingsSectionRoute(
                     Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
-            }
+            },
+            // Near-miss захват (данные v0.2) — только dev/staging: в prod
+            // запись аудио не существует (BuildConfig-гейт, PR-протокол).
+            nearMissCaptureEnabled = BuildConfig.NEAR_MISS_CAPTURE_ENABLED,
+            nearMissCapture = state.nearMissCapture,
+            onNearMissCaptureChange = viewModel::onNearMissCaptureChanged,
+            onClearNearMissCaptures = viewModel::clearNearMissCaptures
         )
 
         SECTION_DIAGNOSTICS -> DiagnosticsScreen(
@@ -293,7 +300,13 @@ private fun AdvancedSettingsScreen(
     onSave: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    // Near-miss захват (данные v0.2) — dev/staging только: в prod запись
+    // аудио не существует (BuildConfig-гейт, протокол COLLECTING.md).
+    nearMissCaptureEnabled: Boolean = false,
+    nearMissCapture: Boolean = false,
+    onNearMissCaptureChange: (Boolean) -> Unit = {},
+    onClearNearMissCaptures: () -> Unit = {}
 ) {
     SectionScaffold(stringResource(R.string.omnix_advanced_title), modifier, onBack) {
         val spacing = OmnixTheme.spacing
@@ -340,6 +353,30 @@ private fun AdvancedSettingsScreen(
                 chevron = true,
                 onClick = onOpenAccessibilitySettings
             )
+        }
+
+        // Near-miss захват (данные v0.2, protocol training/COLLECTING.md §5):
+        // явное опциональное включение, запись только локальная.
+        if (nearMissCaptureEnabled) {
+            Spacer(Modifier.height(spacing.md))
+            OmnixSettingsGroup {
+                OmnixToggleRow(
+                    title = stringResource(R.string.omnix_advanced_nearmiss_title),
+                    subtitle = stringResource(R.string.omnix_advanced_nearmiss_body),
+                    checked = nearMissCapture,
+                    onCheckedChange = onNearMissCaptureChange,
+                    inset = true
+                )
+                if (nearMissCapture) {
+                    OmnixGroupDivider()
+                    Row(Modifier.padding(horizontal = spacing.md)) {
+                        OmnixTextButton(
+                            text = stringResource(R.string.omnix_advanced_nearmiss_clear),
+                            onClick = onClearNearMissCaptures
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -142,6 +142,9 @@ android {
             buildConfigField("String", "OMNIX_API_BASE_URL", quoted(devApiUrl))
             buildConfigField("String", "OMNIX_LICENSE_BASE_URL", quoted(devApiUrl))
             buildConfigField("boolean", "ALLOW_CLEARTEXT_BACKEND", (devApiUrl.startsWith("http://")).toString())
+            // Near-miss захват (данные v0.2) — только в dev/staging; в prod
+            // запись аудио не существует ни при каких настройках.
+            buildConfigField("boolean", "NEAR_MISS_CAPTURE_ENABLED", "true")
             manifestPlaceholders["appLabel"] = "OMNIX Dev"
         }
         create("staging") {
@@ -151,6 +154,7 @@ android {
             buildConfigField("String", "OMNIX_API_BASE_URL", quoted(stagingApiUrl))
             buildConfigField("String", "OMNIX_LICENSE_BASE_URL", quoted(stagingApiUrl))
             buildConfigField("boolean", "ALLOW_CLEARTEXT_BACKEND", "false")
+            buildConfigField("boolean", "NEAR_MISS_CAPTURE_ENABLED", "true")
             manifestPlaceholders["appLabel"] = "OMNIX Staging"
         }
         create("prod") {
@@ -158,6 +162,7 @@ android {
             buildConfigField("String", "OMNIX_API_BASE_URL", quoted(productionApiUrl))
             buildConfigField("String", "OMNIX_LICENSE_BASE_URL", quoted(productionApiUrl))
             buildConfigField("boolean", "ALLOW_CLEARTEXT_BACKEND", "false")
+            buildConfigField("boolean", "NEAR_MISS_CAPTURE_ENABLED", "false")
             manifestPlaceholders["appLabel"] = "OMNIX"
         }
     }

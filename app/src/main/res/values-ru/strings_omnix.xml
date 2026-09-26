@@ -298,6 +298,9 @@
     <string name="omnix_advanced_accessibility">Чтение экрана и нажатия</string>
     <string name="omnix_advanced_accessibility_body">Позволяет OMNIX читать экран и нажимать за вас.</string>
     <string name="omnix_advanced_accessibility_action">Открыть настройки Android</string>
+    <string name="omnix_advanced_nearmiss_title">Запись near-miss (модель v0.2)</string>
+    <string name="omnix_advanced_nearmiss_body">Сохраняет 2,5 секунды аудио перед почти-распознаванием «Omni» — для обучения более точной модели. Только на этом устройстве (до 40 МБ), без персональных данных, можно удалить в любой момент.</string>
+    <string name="omnix_advanced_nearmiss_clear">Удалить записи</string>
     <string name="omnix_advanced_save">Сохранить</string>
     <string name="omnix_advanced_saved">Сохранено</string>
 
