@@ -288,10 +288,17 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun observeWakeEngine() {
         scope.launch {
             wakeWordEngine.detections.collectLatest { detection ->
-                if (_currentMode.value == OrchestratorMode.STANDBY_WAKE_WORD) {
-                    if (!isHeadsetOnlyMode || bluetoothAudioRouter.isHeadsetConnected()) {
-                        onWakeWordDetected(detection)
+                // Единственная точка маршрутизации wake-детекта (чистая логика,
+                // JVM-тест): STANDBY — обычное слушание; AI_THINKING — барридж-ин.
+                when (resolveWakeDetectionAction(_currentMode.value)) {
+                    WakeDetectionAction.START_LISTENING -> {
+                        if (!isHeadsetOnlyMode || bluetoothAudioRouter.isHeadsetConnected()) {
+                            onWakeWordDetected(detection)
+                        }
                     }
+                    WakeDetectionAction.CANCEL_THINKING_AND_LISTEN ->
+                        onWakeWordDetectedDuringThinking(detection)
+                    WakeDetectionAction.IGNORE -> Unit
                 }
             }
         }
@@ -593,6 +600,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
         // §13: новый запрос останавливает очередь TTS — недосказанное
         // от прошлого ответа не должно доигрываться поверх нового.
         textToSpeechManager.stop()
+        // think-phase: движок живёт и в AI_THINKING (тёплая ONNX-сессия —
+        // без перечитывания ассетов, см. «Холодный старт» в
+        // docs/WAKEWORD_NEURAL.md): «Omni» во время раздумий = барридж-ин отмена.
+        // Self-voice guard — в observeTtsEngine: на TtsState.Speaking движок
+        // гасится (стриминг §13 запускает TTS, не меняя режим).
+        wakeWordEngine.start()
         val captureEpoch = sessionEpoch.get()
         // §13: счётчик предложений, уже озвученных стримом (см. onSentence
         // ниже). Если > 0 — финальный speak целиком пропускаем, чтобы не
@@ -922,6 +935,9 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 // §13: повтор после consent — тоже новый запрос: очередь TTS
                 // останавливаем, счётчик стрим-предложений заводим заново.
                 textToSpeechManager.stop()
+                // think-phase: то же, что в processUserQuery — движок жив в
+                // AI_THINKING, self-voice guard тот же (TtsState.Speaking).
+                wakeWordEngine.start()
                 val consentStreamedSentences = AtomicInteger(0)
 
                 aiJob = scope.launch {
@@ -1032,6 +1048,14 @@ class VoiceInteractionOrchestrator @Inject constructor(
         scope.launch {
             textToSpeechManager.ttsState.collectLatest { ttsState ->
                 when (ttsState) {
+                    is TtsState.Speaking -> {
+                        // Self-voice guard (think-phase): собственное аудио OMNIX
+                        // не должно попадать в wake-движок — «Omni» из уст
+                        // ассистента = self-trigger. Одна точка покрывает все
+                        // места старта TTS, включая стриминг §13 (speakQueued
+                        // при режиме, который всё ещё AI_THINKING).
+                        wakeWordEngine.stop()
+                    }
                     is TtsState.Done -> {
                         when (_currentMode.value) {
                             OrchestratorMode.TTS_SPEAKING -> {
@@ -1081,20 +1105,61 @@ class VoiceInteractionOrchestrator @Inject constructor(
         }
     }
 
-    private fun handleCancel() {
+    /**
+     * Отмена in-flight голосового взаимодействия (без chime и без возврата в
+     * STANDBY — продолжение определяет вызывающий): эпоха CR-07 инвалидирует
+     * поздние результаты отменённого aiJob, TTS-очередь сбрасывается (§13),
+     * pending-состояния чистятся.
+     */
+    private fun cancelInFlightInteraction() {
         silenceJob?.cancel()
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
         confirmationTimeoutJob = null
+        // CR-07: инкремент эпохи — поздний результат aiJob (даже «вернувшийся»
+        // после отмены) отбрасывается обеими проверками эпохи и не мутирует
+        // контур.
+        sessionEpoch.incrementAndGet()
         pendingToolCall = null
         pendingConfirmationToken = null
+        pendingConfirmationPrompt = ""
+        pendingCloudConsentQuery = null
+        pendingCloudConsentLevel = PrivacyLevel.UNKNOWN
+        pendingCloudConsentCaptureEpoch = 0
         toolExecutor.clearPendingConfirmation()
         isProcessingQuery.set(false)
         aiJob?.cancel()
         aiJob = null
+        // §13: очередь TTS сбрасываем (стриминг / недосказанный ответ).
         textToSpeechManager.stop()
+        _currentToolCall.value = null
+        _confirmationPrompt.value = null
+        _lastToolResult.value = null
+    }
+
+    private fun handleCancel() {
+        cancelInFlightInteraction()
         playCancelChime()
         startStandbyMode()
+    }
+
+    /**
+     * «Omni» в фазе AI_THINKING — голосовой barge-in: отменяем in-flight
+     * запрос и СРАЗУ слушаем новую команду (пользователь сказал wake word,
+     * чтобы сказать что-то новое — повторять его не заставляем). Chime —
+     * wake, а не cancel: для пользователя это сработавший wake word.
+     * Движок гасится в switchToSpeechRecognition (STT забирает микрофон).
+     */
+    private fun onWakeWordDetectedDuringThinking(detection: WakeWordDetection) {
+        Log.i(
+            TAG,
+            "wakeword '${detection.wakeWord}' in AI_THINKING: cancelling in-flight " +
+                "query, listening for new command (score=${detection.score} " +
+                "infer=${detection.inferenceLatencyMs}ms)",
+        )
+        cancelInFlightInteraction()
+        playWakeChime()
+        switchToSpeechRecognition()
     }
 
     private fun playWakeChime() {
