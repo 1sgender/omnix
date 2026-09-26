@@ -16,6 +16,9 @@ import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
+import com.omnix.assistant.agent.decision.ExecutionType
+import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
+import com.omnix.assistant.domain.models.handledOnDevice
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,7 +40,8 @@ class SendPromptUseCase @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val memoryManager: OmniMemoryManager,
     private val agentPipeline: AgentPipeline,
-    private val localModelManager: LocalModelManager
+    private val localModelManager: LocalModelManager,
+    private val answerOriginStore: ChatAnswerOriginStore
 ) {
     /**
      * Дедупликация офлайн-fallback-уведомлений: одна и та же причина сбоя
@@ -189,11 +193,11 @@ class SendPromptUseCase @Inject constructor(
                             )
                         }
                     }
-                    saveAssistantMessage(persistedText)
+                    saveAssistantMessage(persistedText, exec.executionType)
                     memoryManager.workingMemory.updateEntityFromResponse(persistedText)
                 }
                 is PromptExecutionResult.ConfirmationRequired -> {
-                    saveAssistantMessage(exec.promptMessage)
+                    saveAssistantMessage(exec.promptMessage, null)
                 }
             }
         } else if (result is Resource.Error) {
@@ -226,14 +230,23 @@ class SendPromptUseCase @Inject constructor(
         return base + " " + context.getString(R.string.oflayn_model_ne_skachana)
     }
 
-    private suspend fun saveAssistantMessage(text: String) {
-        messageRepository.insertMessage(
+    /**
+     * Сохраняет ответ ассистента и, если он получен локальным путём
+     * (DEVICE_TOOL / LOCAL_AI), помечает id строки для on-device бейджа
+     * в чате (audit 2026-09-26). Облачные ответы бейджа не получают —
+     * облако = «норма».
+     */
+    private suspend fun saveAssistantMessage(text: String, executionType: ExecutionType?) {
+        val messageId = messageRepository.insertMessage(
             Message(
                 role = MessageRole.ASSISTANT,
                 text = text,
                 timestamp = System.currentTimeMillis()
             )
         )
+        if (executionType.handledOnDevice) {
+            answerOriginStore.markOnDevice(messageId)
+        }
     }
 
     private suspend fun saveErrorMessage(text: String) {

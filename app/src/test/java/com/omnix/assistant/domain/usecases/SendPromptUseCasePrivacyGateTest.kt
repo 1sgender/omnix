@@ -9,6 +9,7 @@ import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
 import com.omnix.assistant.agent.pipeline.AgentPipeline
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.PromptExecutionResult
+import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
 import io.mockk.*
@@ -66,7 +67,7 @@ class SendPromptUseCasePrivacyGateTest {
         coEvery { pipeline.process(any<ExecutionRequest>()) } returns
             Resource.Success(PromptExecutionResult.DirectAnswer("ok"))
 
-        useCase = SendPromptUseCase(context, messageRepo, settingsRepo, memoryManager, pipeline, localModelManager)
+        useCase = SendPromptUseCase(context, messageRepo, settingsRepo, memoryManager, pipeline, localModelManager, ChatAnswerOriginStore())
     }
 
     @After

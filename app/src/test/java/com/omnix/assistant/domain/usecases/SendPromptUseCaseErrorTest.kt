@@ -12,6 +12,7 @@ import com.omnix.assistant.agent.pipeline.AgentPipeline
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
+import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
 import io.mockk.clearAllMocks
@@ -75,7 +76,7 @@ class SendPromptUseCaseErrorTest {
 
         pipeline = mockk(relaxed = true)
 
-        useCase = SendPromptUseCase(context, messageRepo, settingsRepo, memoryManager, pipeline, localModelManager)
+        useCase = SendPromptUseCase(context, messageRepo, settingsRepo, memoryManager, pipeline, localModelManager, ChatAnswerOriginStore())
     }
 
     @After

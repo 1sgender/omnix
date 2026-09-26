@@ -11,6 +11,15 @@ must be added only when the repository owner creates an actual release.
 ## [Unreleased]
 
 ### Added
+
+- On-device badge in chat: answers the pipeline executed locally (device
+  commands and the offline layer) carry a quiet dot + caption under the
+  bubble; cloud stays the unbadged norm. The execution path now survives
+  the pipeline boundary (`DirectAnswer.executionType`) instead of being
+  dropped. Marks are in-memory per process — a deliberate stopgap until
+  the messages-table schema migration.
+
+### Added
 - **Экран «Автоматизации» — первый блок пересборки фронта под реальный бэкенд (отчёт о разрыве 2026-09-26, план владельца).** Крупнейший разрыв закрывается вертикально: список правил живёт на том же Room-стриме, по которому матчится движок (выключенное здесь правило реально перестаёт срабатывать — UI не прячет, а меняет состояние), карточка правила показывает триггер, резюме действий, счётчик и время последнего срабатывания, тумблер `isEnabled`, удаление через общий ConfirmationSheet. «Прослушать брифинг сейчас» — pinned-строка сверху: тот же `productivity.ear_briefing`-инструмент, что и голосовой путь (генерация + тарифная квота в одном месте), успех озвучивается общим TTS, провал показывается честным текстом результата и НЕ озвучивается. Пустое состояние учит голосовой фразе вместо формы (§41). Дефолтные правила больше не воскресают после удаления: `AutomationDeletionStore` (SharedPreferences) маркирует удалённые ruleId, `initDefaultAutomations` фильтрует их через чистую `survivingDefaults` (проверка №8 плана: создать → удалить → триггер не срабатывает). Триггеры/действия форматируются в домене токенами (`AutomationDescriptions`), UI мапит токены в string-ресурсы трёх локалей — никакого дублирования строк. Подключён существовавший мёртвый шеврон `onOpenAutomations` из Voice-настроек. Меняется только TIME_SCHEDULE-слот будильника через `scheduleManager.reconcile()` после toggle/delete. Тесты: `AutomationDescriptionsTest` (6), `DefaultRuleDeletionTest` (3). Схема Room не менялась — миграций нет.
 
 ### Changed

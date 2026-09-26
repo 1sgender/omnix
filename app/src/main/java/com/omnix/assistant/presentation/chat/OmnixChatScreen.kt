@@ -207,7 +207,8 @@ fun OmnixChatScreen(
                     val animateEntry = remember(message.id) { animatedIds.add(message.id) }
                     ChatMessageRow(
                         message = message,
-                        animateEntry = animateEntry
+                        animateEntry = animateEntry,
+                        onDevice = message.id in state.onDeviceMessageIds
                     )
                 }
                 if (showThinking) {
@@ -348,7 +349,8 @@ fun OmnixChatScreen(
 private fun ChatMessageRow(
     message: Message,
     animateEntry: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDevice: Boolean = false
 ) {
     val colors = OmnixTheme.colors
     val spacing = OmnixTheme.spacing
@@ -372,6 +374,9 @@ private fun ChatMessageRow(
     )
 
     val label = stringResource(if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix)
+    // On-device бейдж (audit 2026-09-26): подпись нужна и в a11y-описании —
+    // голосовой пользователь слышит «обработано на устройстве», не видя точку.
+    val onDeviceCaption = stringResource(R.string.omnix_chat_on_device)
     val bubbleBackground = when {
         isUser -> colors.bubbleUser
         isError -> colors.errorBubble
@@ -386,7 +391,13 @@ private fun ChatMessageRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clearAndSetSemantics { contentDescription = "$label: ${message.text}" }
+            .clearAndSetSemantics {
+                contentDescription = if (onDevice) {
+                    "$label: ${message.text}. $onDeviceCaption"
+                } else {
+                    "$label: ${message.text}"
+                }
+            }
             .graphicsLayer {
                 alpha = progress
                 translationY = (1f - progress) * 12.dp.toPx()
@@ -420,6 +431,38 @@ private fun ChatMessageRow(
                 color = ink
             )
         }
+        if (onDevice) {
+            Spacer(Modifier.height(spacing.xxs))
+            OnDeviceBadge(caption = onDeviceCaption)
+        }
+    }
+}
+
+/**
+ * «Обработано на устройстве»: тихая точка + мелкая подпись под бабблом
+ * (план владельца 2026-09-26: точка/иконка с подписью, НЕ плашка — облако
+ * остаётся «нормой» и бейджа не получает). stateSuccess, а не accentBrand:
+ * акцентный синий зарезервирован под лого-моменты (OmnixColors).
+ */
+@Composable
+private fun OnDeviceBadge(caption: String, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xxs)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(colors.stateSuccess)
+        )
+        Text(
+            text = caption,
+            style = OmnixTheme.typography.caption2,
+            color = colors.textSecondary
+        )
     }
 }
 
