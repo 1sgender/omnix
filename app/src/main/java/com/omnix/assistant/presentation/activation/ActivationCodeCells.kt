@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,15 +34,18 @@ import com.omnix.assistant.presentation.design.OmnixTheme
 /**
  * Ячейки кода активации (мок «OMNIX — активация», 2026-09-25): шесть коротких
  * полей с подчёркиванием вместо рамки — длина кода видна сразу, курсор сам
- * прыгает к следующей цифре. Ввод цифровой (inputMode=numeric мока).
+ * прыгает к следующему символу. Код — буквы и цифры неом ambiguity-алфавита
+ * карточки (0/O/1/I на ней не печатаются), поэтому клавиатура текстовая с
+ * автоверхним регистром (отклонение от inputMode=numeric демо-мока; письмо
+ * дизайнера: «цифр или букв»).
  */
 internal const val CODE_CELL_COUNT = 6
 
 /**
- * Чистая санитайзка ввода: только цифры, не длиннее кода.
+ * Чистая санитайзка ввода: буквы и цифры, верхний регистр, не длиннее кода.
  */
 internal fun sanitizeActivationInput(raw: String, cellCount: Int = CODE_CELL_COUNT): String =
-    raw.filter { it.isDigit() }.take(cellCount)
+    raw.filter { it.isLetterOrDigit() }.uppercase().take(cellCount)
 
 /**
  * Чистая логика ячейки: что сделать с кодом и куда перевести фокус.
@@ -69,7 +73,7 @@ internal fun cellInputResult(
         raw.length > 1 && raw.endsWith(current) -> raw.dropLast(current.length)
         else -> raw
     }
-    val digits = typed.filter { it.isDigit() }
+    val chars = typed.filter { it.isLetterOrDigit() }
     return when {
         raw.isEmpty() -> {
             val filled = index < code.length
@@ -77,13 +81,13 @@ internal fun cellInputResult(
             val focus = if (filled) index else (index - 1).coerceAtLeast(0)
             newCode to focus
         }
-        digits.isEmpty() -> code to index
+        chars.isEmpty() -> code to index
         else -> {
             val merged = sanitizeActivationInput(
-                code.take(index) + digits + code.drop(index + digits.length),
+                code.take(index) + chars + code.drop(index + chars.length),
                 cellCount
             )
-            merged to (index + digits.length).coerceAtMost(cellCount - 1)
+            merged to (index + chars.length).coerceAtMost(cellCount - 1)
         }
     }
 }
@@ -161,7 +165,10 @@ internal fun ActivationCodeCells(
                     textAlign = TextAlign.Center,
                     color = textColor
                 ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Characters
+                ),
                 cursorBrush = SolidColor(colors.actionLink),
                 decorationBox = { innerTextField ->
                     Box(contentAlignment = Alignment.Center) { innerTextField() }

@@ -38,7 +38,9 @@ class LicenseCodeValidator {
     }
 
     private companion object {
-        const val MIN_CODE_LENGTH = 8
+        // 6 — короткий код с карточки Clip (мок активации 2026-09-25); верхняя
+        // граница оставляет легаси-кодек OMX-/JRV- принимаемым.
+        const val MIN_CODE_LENGTH = 6
         const val MAX_CODE_LENGTH = 64
         const val MAX_LICENSE_DAYS = 3_650L
     }

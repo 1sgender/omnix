@@ -30,13 +30,13 @@ class ActivationViewModelTest {
     }
 
     @Test
-    fun `input keeps digits only and is bounded by the six cells`() =
+    fun `input keeps letters and digits, uppercased, bounded by the six cells`() =
         runTest(mainDispatcher.dispatcher) {
             val viewModel = ActivationViewModel(context, FakeLicenseManager())
 
             viewModel.onCodeChanged(" a1b_2c!3 4567890 ")
 
-            assertEquals("123456", viewModel.uiState.value.inputCode)
+            assertEquals("A1B2C3", viewModel.uiState.value.inputCode)
             assertEquals(6, viewModel.uiState.value.inputCode.length)
         }
 

@@ -32,7 +32,10 @@ class LicenseService(
 
         val now = clock.instant()
         repeat(5) {
-            val code = crypto.generateLicenseCode()
+            // Мок 2026-09-25: новые коды — короткие, под карточку из коробки
+            // Clip и шесть ячеек приложения. Длинные OMX-/JRV- остаются
+            // погашаемыми (normalizeLicenseCode принимает оба формата).
+            val code = crypto.generateBoxCode()
             val id = UUID.randomUUID()
             try {
                 repository.insertIssuedLicense(

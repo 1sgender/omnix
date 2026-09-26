@@ -19,6 +19,14 @@ class LicenseCrypto(
         private const val API_TOKEN_PREFIX = "omx_"
         private const val BASE32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
         private val CODE_REGEX = Regex("^(?:OMX|JRV)(?:-[A-Z2-9]{5}){4}$")
+
+        // Короткий код на карточке из коробки Clip (мок активации 2026-09-25):
+        // шесть символов того же неом ambiguity-алфавита (без 0/O/1/I — их нет
+        // и на карточке). Единая точка смены длины: здесь и CODE_CELL_COUNT в
+        // приложении. Легаси-кодек OMX-/JRV- остаётся принимаемым — как когда-то
+        // остался JRV- после ребрендинга.
+        const val BOX_CODE_LENGTH = 6
+        private val BOX_CODE_REGEX = Regex("^[A-Z2-9]{$BOX_CODE_LENGTH}$")
     }
 
     private val key = pepper.toByteArray(StandardCharsets.UTF_8).also {
@@ -31,9 +39,19 @@ class LicenseCrypto(
         return CODE_PREFIX + chars.concatToString().chunked(5).joinToString(separator = "-", prefix = "-")
     }
 
+    fun generateBoxCode(): String {
+        val bytes = ByteArray(BOX_CODE_LENGTH).also(random::nextBytes)
+        return CharArray(BOX_CODE_LENGTH) { index -> BASE32[bytes[index].toInt() and 31] }
+            .concatToString()
+    }
+
     fun normalizeLicenseCode(raw: String): String? {
         val compact = raw.trim().uppercase()
             .replace(Regex("\\s+"), "")
+        // Короткий код с карточки: шесть символов, регистр и пробелы прощаются.
+        // Дефис внутри короткого кода не предусмотрен карточкой, но строгать его
+        // здесь дешевле, чем объяснять пользователю ошибку ввода.
+        compact.replace("-", "").takeIf(BOX_CODE_REGEX::matches)?.let { return it }
         val canonical = if ((compact.startsWith("OMX-") || compact.startsWith("JRV-")) &&
             compact.count { it == '-' } == 4
         ) {
@@ -53,7 +71,11 @@ class LicenseCrypto(
 
     fun licenseCodeHash(canonicalCode: String): ByteArray = hmac("license:$canonicalCode")
 
-    fun codeHint(canonicalCode: String): String = canonicalCode.takeLast(5)
+    fun codeHint(canonicalCode: String): String =
+        // Для короткого кода хвост в 5 символов раскрывал бы почти весь код;
+        // трёх достаточно для опознания в админ-списке.
+        if (canonicalCode.length <= BOX_CODE_LENGTH) canonicalCode.takeLast(3)
+        else canonicalCode.takeLast(5)
 
     fun generateAccessToken(): String = API_TOKEN_PREFIX + Base64.getUrlEncoder().withoutPadding()
         .encodeToString(ByteArray(32).also(random::nextBytes))

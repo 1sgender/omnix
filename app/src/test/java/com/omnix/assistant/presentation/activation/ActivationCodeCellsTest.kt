@@ -10,11 +10,12 @@ import org.junit.Test
 class ActivationCodeCellsTest {
 
     @Test
-    fun `sanitizer keeps digits only and caps at six cells`() {
-        assertEquals("", sanitizeActivationInput(" ab_cd!ef "))
+    fun `sanitizer keeps letters and digits, uppercases, caps at six cells`() {
+        assertEquals("ABCDEF", sanitizeActivationInput(" ab_cd!ef "))
         assertEquals("123456", sanitizeActivationInput("123456"))
         assertEquals("123456", sanitizeActivationInput("1234567890"))
-        assertEquals("42", sanitizeActivationInput("4x2"))
+        assertEquals("4X2", sanitizeActivationInput("4x2"))
+        assertEquals("A7B2C3", sanitizeActivationInput("a7b2c3"))
     }
 
     @Test
