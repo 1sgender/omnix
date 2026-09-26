@@ -30,6 +30,7 @@ import com.omnix.server.billing.WebhookVerificationResult
 import com.omnix.server.clip.JdbcClipDeviceRepository
 import com.omnix.server.config.ValidationConfig
 import com.omnix.server.license.IssueLicenseCommand
+import com.omnix.server.license.LicenseCrypto
 import com.omnix.server.license.LicenseService
 import com.omnix.server.license.LicenseValidationOutcome
 import com.omnix.server.license.PlanCatalog
