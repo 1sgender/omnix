@@ -17,6 +17,7 @@ import com.omnix.assistant.voice.wakeword.oww.OrtOwwSessions
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -267,7 +268,7 @@ class NeuralWakeWordEngine @Inject constructor(
                         TAG,
                         "score=${result.score} infer=${result.melMs + result.embMs + result.clfMs}ms" +
                             " (mel=${result.melMs} emb=${result.embMs} clf=${result.clfMs}) " +
-                            "thr=$threshold floor=${String.format("%.0f", noise.noiseFloorLsb)}"
+                            "thr=$threshold floor=${noise.noiseFloorLsb}"
                     )
                 }
                 if (fired) {
@@ -346,7 +347,7 @@ class NeuralWakeWordEngine @Inject constructor(
         val epochMs = System.currentTimeMillis()
         val file = File(
             context.filesDir.nearMissDir(),
-            "nm-${epochMs}-${String.format("score%.3f", score)}.wav"
+            "nm-${epochMs}-${String.format(Locale.US, "score%.3f", score)}.wav"
         )
         try {
             val bytes = nearMiss.writeWav(file, samples, NearMissRecorder.SAMPLE_RATE)

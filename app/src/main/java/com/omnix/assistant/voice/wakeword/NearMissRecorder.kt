@@ -3,6 +3,7 @@ package com.omnix.assistant.voice.wakeword
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.Locale
 
 /**
  * Near-miss захват для сбора данных модели v0.2 (owner review 2026-09-26, п.1).
@@ -94,7 +95,7 @@ class NearMissRecorder(
      * числовые/фиксированные поля — метаданных пользователя нет.
      */
     fun manifestLine(epochMs: Long, score: Float, model: String, threshold: Float, snrDb: Float?): String {
-        val snr = snrDb?.let { String.format("%.1f", it) } ?: "null"
+        val snr = snrDb?.let { String.format(Locale.US, "%.1f", it) } ?: "null"
         return "{\"epochMs\":$epochMs,\"score\":$score,\"model\":\"$model\",\"threshold\":$threshold,\"snrDb\":$snr}"
     }
 
