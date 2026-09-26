@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -29,8 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.components.OmnixAtomIcon
 import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixHistoryIcon
+import com.omnix.assistant.presentation.components.OmnixIcons
 import com.omnix.assistant.presentation.components.OmnixMeIcon
 import com.omnix.assistant.presentation.design.OmnixTheme
 
@@ -142,8 +143,11 @@ private fun NavigationItem(
 }
 
 /**
- * Clear navigation affordance for Home. Its wordmark and small underline are
- * intentionally unlike the Core's glowing circular status form.
+ * Centre of the bar: the OMNIX atom mark over the "Home" label (mock
+ * 2026-09-26). The wordmark reading "OMNIX" used to duplicate the sender
+ * labels on the chat screen; now the mark carries the brand and the label
+ * the destination, in the same icon-plus-label shape as the two neighbour
+ * tabs.
  */
 @Composable
 private fun HomeNavigationItem(
@@ -163,20 +167,20 @@ private fun HomeNavigationItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = LayoutArrangement.Center
     ) {
+        OmnixAtomIcon(
+            color = tint,
+            size = OmnixIcons.NavSize
+        )
+        Spacer(Modifier.height(2.dp))
         Text(
-            text = stringResource(R.string.omnix_wordmark),
+            text = stringResource(R.string.omnix_nav_home),
+            // The active tab is white and bold, the rest dimmed (mock
+            // 2026-09-25): position reads in one glance.
             style = OmnixTheme.typography.overline.copy(
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
             ),
             color = tint,
             textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .width(OmnixTheme.spacing.lg)
-                .height(OmnixHairline)
-                .background(if (selected) colors.stateIdle else Color.Transparent)
         )
     }
 }

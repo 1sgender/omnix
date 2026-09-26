@@ -180,6 +180,7 @@
     <string name="omnix_chat_thinking">OMNIX pikirlenýär…</string>
     <string name="omnix_chat_dictation_start">Ses bilen ýazdyr</string>
     <string name="omnix_chat_dictation_stop">Ýazdyrmany bes et</string>
+    <string name="omnix_chat_network_error">Toryň kakyty. Baglanyşygy barlaň we gaýtalaryň.</string>
     <string name="omnix_privacy_badge_private">Hususy</string>
     <string name="omnix_privacy_badge_sensitive">Duýgur</string>
     <string name="omnix_privacy_badge_hint">Bu enjamdan çýkmazdan öň OMNIX soraýar</string>
