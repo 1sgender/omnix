@@ -63,8 +63,9 @@ v0.1 — `training/metrics_v0.1.json`; итоговая модель —
 ## Критерии приёмки фазы 2
 
 1. `verify_model.py` зелёный.
-2. Офлайн-оценка на speaker-disjoint тесте не хуже hey_jarvis по FRR
-   при том же FAR (протокол — `docs/WAKEWORD_NEURAL.md`).
+2. Офлайн-оценка на НОВОМ живом speaker-disjoint тест-сплите не хуже
+   v0.1 по recall при том же уровне FP (протокол — `COLLECTING.md` §9;
+   регрессия на синтетическом holdout — обязательна рядом).
 3. `device-validation/06-wakeword-metrics.sh` на Clip: инференс чанка <80 мс,
    деградация батареи <2%/ч vs baseline без движка.
 4. Обновлены NOTICE/SHA256SUMS/дока, старый файл модели удалён из assets.
