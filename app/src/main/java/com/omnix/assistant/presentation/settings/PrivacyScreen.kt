@@ -59,8 +59,8 @@ import com.omnix.assistant.presentation.state.ConfirmationRequest
 fun PrivacyScreen(
     microphoneAllowed: Boolean,
     historyStored: Boolean,
-    policyState: PrivacyPolicyUiState = PrivacyPolicyUiState(),
     modifier: Modifier = Modifier,
+    policyState: PrivacyPolicyUiState = PrivacyPolicyUiState(),
     onBack: (() -> Unit)? = null,
     onManagePermissions: (() -> Unit)? = null,
     onDeleteHistory: (() -> Unit)? = null,
