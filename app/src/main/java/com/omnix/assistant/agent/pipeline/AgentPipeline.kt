@@ -92,7 +92,10 @@ class AgentPipeline @Inject constructor(
                         // Причина офлайн-fallback (решение владельца 2026-09-21):
                         // движок кладёт её в metadata при провале инициализации
                         // локальной модели — UI покажет сообщение в чате.
-                        localFallbackReason = result.metadata["local_fallback_reason"]
+                        localFallbackReason = result.metadata["local_fallback_reason"],
+                        // Audit 2026-09-26, on-device бейдж: путь выполнения
+                        // доезжает до UI, а не теряется на границе конвейера.
+                        executionType = result.executionType
                     )
                 )
 

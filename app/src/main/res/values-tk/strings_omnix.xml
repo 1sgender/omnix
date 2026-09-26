@@ -408,4 +408,5 @@
         <item quantity="one">Işledi: %1$d · iň soňky %1$s</item>
         <item quantity="other">Işledi: %1$d · iň soňky %1$s</item>
     </plurals>
+    <string name="omnix_chat_on_device">Enjide işlendi</string>
 </resources>

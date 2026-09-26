@@ -8,6 +8,7 @@ import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.domain.models.VoiceSettings
+import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.usecases.ClearChatHistoryUseCase
 import com.omnix.assistant.domain.usecases.GetChatHistoryUseCase
@@ -103,7 +104,8 @@ class ChatViewModelPrivacyConsentTest {
         textToSpeechManager = tts,
         speechRecognizerManager = stt,
         toolExecutor = toolExecutor,
-        messageRepository = messageRepository
+        messageRepository = messageRepository,
+        answerOriginStore = ChatAnswerOriginStore()
     )
 
     @Test

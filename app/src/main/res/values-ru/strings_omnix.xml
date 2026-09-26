@@ -409,4 +409,5 @@
         <item quantity="many">Сработало %1$d раз · последний %1$s</item>
         <item quantity="other">Сработало %1$d раз · последний %1$s</item>
     </plurals>
+    <string name="omnix_chat_on_device">Обработано на устройстве</string>
 </resources>

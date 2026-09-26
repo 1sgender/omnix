@@ -14,6 +14,7 @@ import com.omnix.assistant.agent.executor.ToolExecutor
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.result.Resource
+import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
@@ -72,7 +73,12 @@ data class ChatUiState(
         PrivacyClassification.unknown(PrivacyReason.NOT_CLASSIFIED),
     val pendingConfirmation: PendingConfirmationUi? = null,
     /** C-02: запрос на отправку приватных данных в облако, ожидающий ответа пользователя. */
-    val pendingCloudConsent: PendingCloudConsentUi? = null
+    val pendingCloudConsent: PendingCloudConsentUi? = null,
+    /**
+     * Audit 2026-09-26, on-device бейдж: id ответов ассистента, обработанных
+     * локально (DEVICE_TOOL / LOCAL_AI). Облако — «норма», без бейджа.
+     */
+    val onDeviceMessageIds: Set<Long> = emptySet()
 )
 
 @HiltViewModel
@@ -85,7 +91,8 @@ class ChatViewModel @Inject constructor(
     private val textToSpeechManager: TextToSpeechManager,
     private val speechRecognizerManager: SpeechRecognizerManager,
     private val toolExecutor: ToolExecutor,
-    private val messageRepository: MessageRepository
+    private val messageRepository: MessageRepository,
+    private val answerOriginStore: ChatAnswerOriginStore
 ) : ViewModel() {
 
     companion object {
@@ -153,6 +160,13 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             getChatHistoryUseCase().collectLatest { messageList ->
                 _uiState.update { it.copy(messages = messageList) }
+            }
+        }
+        // On-device бейдж: метки проставляет SendPromptUseCase при сохранении
+        // ответа — стрим мерджится в состояние независимо от истории.
+        viewModelScope.launch {
+            answerOriginStore.onDeviceMessageIds.collectLatest { ids ->
+                _uiState.update { it.copy(onDeviceMessageIds = ids) }
             }
         }
     }

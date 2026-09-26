@@ -410,4 +410,5 @@
         <item quantity="one">Fired once · last %1$s</item>
         <item quantity="other">Fired %1$d times · last %1$s</item>
     </plurals>
+    <string name="omnix_chat_on_device">Processed on device</string>
 </resources>
