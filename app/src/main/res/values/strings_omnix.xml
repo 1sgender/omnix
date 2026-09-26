@@ -300,6 +300,9 @@
     <string name="omnix_advanced_accessibility">Screen reading and tapping</string>
     <string name="omnix_advanced_accessibility_body">Lets OMNIX read your screen and tap for you.</string>
     <string name="omnix_advanced_accessibility_action">Open Android settings</string>
+    <string name="omnix_advanced_nearmiss_title">Record near-misses (model v0.2)</string>
+    <string name="omnix_advanced_nearmiss_body">Saves a 2.5-second audio tail whenever \"Omni\" is almost recognized, to train a more accurate model. Stored only on this device (max 40 MB), no personal data, can be deleted anytime.</string>
+    <string name="omnix_advanced_nearmiss_clear">Delete recordings</string>
     <string name="omnix_advanced_save">Save</string>
     <string name="omnix_advanced_saved">Saved</string>
 

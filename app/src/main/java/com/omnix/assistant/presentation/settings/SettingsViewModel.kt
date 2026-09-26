@@ -1,5 +1,6 @@
 package com.omnix.assistant.presentation.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.automation.dao.AutomationDao
@@ -14,7 +15,9 @@ import com.omnix.assistant.core.security.SecurityManager
 import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.domain.usecases.GetSettingsUseCase
 import com.omnix.assistant.domain.usecases.SaveSettingsUseCase
+import com.omnix.assistant.voice.wakeword.clearNearMiss
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +40,8 @@ data class SettingsUiState(
     val selectedModel: String = "server-managed",
     val isHeadsetOnlyMode: Boolean = false,
     val wakeWordSensitivity: Float = 0.65f,
+    /** Near-miss захват (данные v0.2): доступен только в dev/staging. */
+    val nearMissCapture: Boolean = false,
     val automations: List<AutomationEntity> = emptyList(),
     val licenseInfo: LicenseInfo? = null,
     val isSavedSuccess: Boolean = false
@@ -50,7 +55,8 @@ class SettingsViewModel @Inject constructor(
     private val automationDao: AutomationDao,
     private val licenseManager: LicenseManager,
     private val localModelManager: LocalModelManager,
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState(licenseInfo = licenseManager.getLicenseInfo()))
@@ -66,6 +72,7 @@ class SettingsViewModel @Inject constructor(
         loadSettings()
         loadAutomations()
         observeLicense()
+        observeNearMissCapture()
     }
 
     private fun loadSettings() {
@@ -92,6 +99,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             automationDao.getAllAutomationsStream().collectLatest { rules ->
                 _uiState.update { it.copy(automations = rules) }
+            }
+        }
+    }
+
+    private fun observeNearMissCapture() {
+        viewModelScope.launch {
+            settingsDataStore.nearMissCaptureFlow.collectLatest { enabled ->
+                _uiState.update { it.copy(nearMissCapture = enabled) }
             }
         }
     }
@@ -169,6 +184,23 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             saveSettingsUseCase.saveWakeWordSensitivity(sensitivity)
         }
+    }
+
+    /**
+     * Near-miss захват (данные v0.2, только dev/staging): запись 2.5-с
+     * аудио-хвостов на кадры, где «Omni» почти распознано. Только явное
+     * включение; запись app-private, с капом 40 МБ.
+     */
+    fun onNearMissCaptureChanged(enabled: Boolean) {
+        _uiState.update { it.copy(nearMissCapture = enabled) }
+        viewModelScope.launch {
+            settingsDataStore.setNearMissCapture(enabled)
+        }
+    }
+
+    /** Удаление всех near-miss записей (privacy-выход). Возвращает число файлов. */
+    fun clearNearMissCaptures(): Int {
+        return context.filesDir.clearNearMiss()
     }
 
     /**
