@@ -55,9 +55,16 @@ class ActivationCodeCellsTest {
     }
 
     @Test
-    fun `non-digit input is ignored`() {
-        val (code, focus) = cellInputResult(code = "47", index = 2, raw = "x")
+    fun `non-alphanumeric input is ignored`() {
+        val (code, focus) = cellInputResult(code = "47", index = 2, raw = "!")
         assertEquals("47", code)
         assertEquals(2, focus)
+    }
+
+    @Test
+    fun `a letter is accepted like a digit and uppercased`() {
+        val (code, focus) = cellInputResult(code = "47", index = 2, raw = "x")
+        assertEquals("47X", code)
+        assertEquals(3, focus)
     }
 }
