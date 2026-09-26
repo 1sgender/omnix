@@ -411,4 +411,31 @@
         <item quantity="other">Fired %1$d times · last %1$s</item>
     </plurals>
     <string name="omnix_chat_on_device">Processed on device</string>
+    <string name="omnix_privacy_section_confirmations">Action confirmations</string>
+    <string name="omnix_privacy_calls">Calls</string>
+    <string name="omnix_privacy_calls_always">Always ask</string>
+    <string name="omnix_privacy_calls_trusted">Ask, except trusted contacts</string>
+    <string name="omnix_privacy_calls_never">Never ask</string>
+    <string name="omnix_privacy_messages">Messages</string>
+    <string name="omnix_privacy_messages_always">Always ask</string>
+    <string name="omnix_privacy_messages_money">Ask only when money amounts are mentioned</string>
+    <string name="omnix_privacy_messages_never">Never ask (amounts are still confirmed)</string>
+    <string name="omnix_privacy_forced_title">Always confirmed</string>
+    <string name="omnix_privacy_forced_body">Money, deletions, typing in other apps and anything run by automations ask first. This cannot be turned off.</string>
+    <string name="omnix_privacy_section_contacts">Trusted contacts</string>
+    <string name="omnix_privacy_contacts_hint">Calls and messages to these contacts may skip confirmation, when the policy allows it</string>
+    <string name="omnix_privacy_contact_add_hint">Name or phone number</string>
+    <string name="omnix_privacy_add">Add</string>
+    <string name="omnix_privacy_remove">Remove</string>
+    <string name="omnix_privacy_contacts_empty">No trusted contacts yet</string>
+    <string name="omnix_privacy_section_screen">Screen reading</string>
+    <string name="omnix_privacy_screen_mode_block">Everything except blocked apps</string>
+    <string name="omnix_privacy_screen_mode_block_hint">Default: OMNIX reads the screen unless you forbid an app</string>
+    <string name="omnix_privacy_screen_mode_allow">Only apps I allow</string>
+    <string name="omnix_privacy_screen_mode_allow_hint">Stricter: reading works only where you allowed it</string>
+    <string name="omnix_privacy_blocked_apps">Blocked apps</string>
+    <string name="omnix_privacy_blocked_empty">Nothing is blocked</string>
+    <string name="omnix_privacy_allowed_apps">Allowed apps</string>
+    <string name="omnix_privacy_allowed_empty">Nothing is allowed explicitly</string>
+    <string name="omnix_privacy_package_hint">App package, e.g. com.example.app</string>
 </resources>

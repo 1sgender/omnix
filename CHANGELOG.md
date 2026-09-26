@@ -12,6 +12,20 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+### Added
+
+- Privacy screen grew working controls (frontend-rebuild plan 2026-09-26):
+  confirmation policies for calls (always / trusted-only / never) and
+  messages (always / money-only / never) now write straight into the policy
+  engine's DataStore-backed settings — every tap takes effect immediately,
+  there is no batch "Save" on the screen. Trusted contacts are managed
+  inline (add by name or number, remove with one tap). The screen-reading
+  boundary edits the same store the accessibility service reads: mode
+  (everything-except-blocked vs allow-only) plus blocked/allowed app lists.
+  Forced rules (money, deletions, typing in other apps, automation actions)
+  are stated as facts with no switch — the engine keeps them on by design.
+  Unknown values in storage fall back to the strict ALWAYS defaults, so a
+  corrupt or future enum name can never weaken a confirmation.
 - On-device badge in chat: answers the pipeline executed locally (device
   commands and the offline layer) carry a quiet dot + caption under the
   bubble; cloud stays the unbadged norm. The execution path now survives

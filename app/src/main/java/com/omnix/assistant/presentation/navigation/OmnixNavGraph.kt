@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,6 +33,7 @@ import com.omnix.assistant.presentation.devices.DevicesScreen
 import com.omnix.assistant.presentation.history.HistoryScreen
 import com.omnix.assistant.presentation.home.HomeScreen
 import com.omnix.assistant.presentation.settings.MeScreen
+import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
 import com.omnix.assistant.presentation.settings.SECTION_ABOUT
 import com.omnix.assistant.presentation.settings.SECTION_ADVANCED
@@ -148,12 +150,18 @@ fun OmnixNavGraph(
                 // Privacy states facts, but its two actions must be real:
                 // "manage permissions" opens this app's system page, and
                 // "delete history" clears the one shared log (§3).
+                // Working controls (rebuild plan 2026-09-26): policies,
+                // trusted contacts and the screen-reading boundary write
+                // through immediately — no batch save.
                 val context = LocalContext.current
                 val privacyChatViewModel: ChatViewModel = hiltViewModel()
+                val policyViewModel: PrivacyPolicyViewModel = hiltViewModel()
+                val policyState by policyViewModel.uiState.collectAsStateWithLifecycle()
                 PrivacyScreen(
                     microphoneAllowed =
                         uiState.systemState != SystemStateType.MICROPHONE_DENIED,
                     historyStored = true,
+                    policyState = policyState,
                     onBack = navController::popBackStack,
                     onManagePermissions = {
                         context.startActivity(
@@ -164,7 +172,16 @@ fun OmnixNavGraph(
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     },
-                    onDeleteHistory = privacyChatViewModel::clearAllHistory
+                    onDeleteHistory = privacyChatViewModel::clearAllHistory,
+                    onCallPolicyChange = policyViewModel::setCallPolicy,
+                    onMessagingPolicyChange = policyViewModel::setMessagingPolicy,
+                    onAddTrustedContact = policyViewModel::addTrustedContact,
+                    onRemoveTrustedContact = policyViewModel::removeTrustedContact,
+                    onScreenReaderModeChange = policyViewModel::setScreenReaderAllowList,
+                    onBlockPackage = policyViewModel::blockPackage,
+                    onUnblockPackage = policyViewModel::unblockPackage,
+                    onAllowPackage = policyViewModel::allowPackage,
+                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance
                 )
             }
 
