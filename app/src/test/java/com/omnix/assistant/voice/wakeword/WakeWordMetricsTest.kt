@@ -57,7 +57,6 @@ class WakeWordMetricsTest {
         assertEquals(0L, snap.detections)
         assertEquals(0f, snap.maxScore, 0f)
     }
-}
 
     @Test
     fun `p95 выделяет всплеск, который среднее маскирует`() {
@@ -80,3 +79,4 @@ class WakeWordMetricsTest {
         assertEquals(0.0, snap.p95EmbMs, 1e-9)
         assertEquals(0.0, snap.p95ClfMs, 1e-9)
     }
+}

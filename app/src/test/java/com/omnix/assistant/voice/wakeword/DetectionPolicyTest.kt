@@ -83,7 +83,6 @@ class DetectionPolicyTest {
         assertEquals(1, policy.patienceFrames)
         assertEquals(0L, policy.cooldownMs)
     }
-}
 
     @Test
     fun `thresholdOverride поднимает порог для кадра (динамический шум-буст)`() {
@@ -107,3 +106,4 @@ class DetectionPolicyTest {
         assertFalse(policy.observe(0.40f, thresholdOverride = 0.45f))
         assertFalse(policy.observe(0.40f))
     }
+}

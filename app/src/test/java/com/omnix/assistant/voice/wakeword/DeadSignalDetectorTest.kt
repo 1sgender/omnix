@@ -60,13 +60,12 @@ class DeadSignalDetectorTest {
     fun oneRealChunkResetsWindow() {
         val detector = DeadSignalDetector(framesWindow = 50, maxSpanLsb = 4)
         repeat(49) { detector.observe(constantChunk(1000)) }
+        // 50-й кадр живой: размах окна ~32000 LSB — не мёртвый.
         assertFalse(detector.observe(liveSpeechChunk()))
-        // Живой чанк в окне растягивает размах: даже 49 констант после него
-        // не дают детекта (окно = 49 констант + 1 живой).
+        // Живой кадр ещё в окне (окно = 49 констант + 1 живой):
+        // 49 констант после него детекта не дают.
         repeat(49) { detector.observe(constantChunk(1000)) }
-        assertFalse(detector.observe(constantChunk(1000)))
-        // И лишь полное новое окно константы даёт детект.
-        repeat(49) { detector.observe(constantChunk(1000)) }
+        // 100-м кадром живой выталкивается из окна — чистое константное окно.
         assertTrue(detector.observe(constantChunk(1000)))
     }
 
@@ -75,8 +74,11 @@ class DeadSignalDetectorTest {
         val detector = DeadSignalDetector(framesWindow = 10, maxSpanLsb = 4)
         repeat(9) { detector.observe(constantChunk(0)) }
         detector.reset()
-        repeat(9) { detector.observe(constantChunk(0)) }
+        repeat(8) { detector.observe(constantChunk(0)) }
+        // 9 < 10: окно после reset ещё не набралось.
         assertFalse("после reset окно набирается заново", detector.observe(constantChunk(0)))
+        // 10-й константный кадр — полное окно.
+        assertTrue(detector.observe(constantChunk(0)))
     }
 
     @Test
