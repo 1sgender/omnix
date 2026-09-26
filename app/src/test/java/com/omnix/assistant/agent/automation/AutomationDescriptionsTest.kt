@@ -94,7 +94,7 @@ class AutomationDescriptionsTest {
 
     @Test
     fun `broken json returns empty list instead of throwing`() {
-        assertEquals(emptyList(), AutomationDescriptions.actionLabels("not json at all"))
-        assertEquals(emptyList(), AutomationDescriptions.actionLabels(""))
+        assertEquals(emptyList<LabeledAction>(), AutomationDescriptions.actionLabels("not json at all"))
+        assertEquals(emptyList<LabeledAction>(), AutomationDescriptions.actionLabels(""))
     }
 }
