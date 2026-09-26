@@ -360,7 +360,7 @@ class NeuralWakeWordEngine @Inject constructor(
             File(context.filesDir.nearMissDir(), "manifest.jsonl")
                 .appendText(line + "\n", Charsets.UTF_8)
             // Кап хранилища: самые старые (имена = таймстампы) уходят первыми.
-            val toDelete = nearMiss.filesToDelete(listNearMissWavs(File(context.filesDir)))
+            val toDelete = nearMiss.filesToDelete(context.filesDir.listNearMissWavs())
             toDelete.forEach { it.delete() }
             if (debugLogging) {
                 Log.d(TAG, "NEAR-MISS captured ${bytes}B -> ${file.name}")

@@ -63,7 +63,8 @@ class NoiseAdaptiveThreshold(
     fun snrDb(frameRmsLsb: Float): Float? {
         val floor = noiseFloorLsb
         if (frameRmsLsb <= floor) return null
-        return 20f * (ln(frameRmsLsb / floor) / LN10)
+        // ln из kotlin.math принимает Double — переходим и возвращаемся в Float.
+        return (20.0 * ln((frameRmsLsb / floor).toDouble()) / LN10).toFloat()
     }
 
     /**
@@ -71,13 +72,11 @@ class NoiseAdaptiveThreshold(
      * [update] для этого кадра должен быть вызван ДО (пол учитывает кадр).
      */
     fun effectiveThreshold(base: Float, frameRmsLsb: Float): Float {
-        val floor = noiseFloorLsb
-        if (frameRmsLsb <= floor) return base.coerceIn(0f, maxEffective)
-        val snrDb = 20f * (ln(frameRmsLsb / floor) / LN10)
+        val snr = snrDb(frameRmsLsb) ?: return base.coerceIn(0f, maxEffective)
         val boost = when {
-            snrDb >= refSnrDb -> 0f
-            snrDb <= 0f -> maxBoost
-            else -> (refSnrDb - snrDb) * (maxBoost / refSnrDb)
+            snr >= refSnrDb -> 0f
+            snr <= 0f -> maxBoost
+            else -> (refSnrDb - snr) * (maxBoost / refSnrDb)
         }
         return (base + boost).coerceIn(0f, maxEffective)
     }

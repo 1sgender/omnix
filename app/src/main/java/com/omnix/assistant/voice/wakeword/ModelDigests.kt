@@ -32,8 +32,9 @@ object ModelDigests {
         val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
         return buildString(digest.size * 2) {
             for (b in digest) {
-                append(HEX[(b shr 4) and 0x0F])
-                append(HEX[b and 0x0F])
+                val v = b.toInt() and 0xFF
+                append(HEX[v ushr 4])
+                append(HEX[v and 0x0F])
             }
         }
     }

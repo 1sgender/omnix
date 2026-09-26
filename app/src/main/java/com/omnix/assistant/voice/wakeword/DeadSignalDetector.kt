@@ -34,7 +34,7 @@ class DeadSignalDetector(
             if (s < min) min = s
             if (s > max) max = s
         }
-        chunkExtents.addLast(ChunkExtent(min, max))
+        chunkExtents.addLast(ChunkExtent(min.toInt(), max.toInt()))
         while (chunkExtents.size > framesWindow) chunkExtents.removeFirst()
         if (chunkExtents.size < framesWindow) return false
         var windowMin = Int.MAX_VALUE
