@@ -128,7 +128,9 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds
     @Singleton
     abstract fun bindActionPolicySettingsProvider(
-        impl: com.omnix.assistant.agent.policy.DefaultActionPolicySettingsProvider
+        // DataStore-персистентность (план пересборки фронта 2026-09-26):
+        // in-memory дефолт остаётся фолбэком тестов, DI отдаёт persistent.
+        impl: com.omnix.assistant.data.preferences.DataStoreActionPolicySettingsProvider
     ): com.omnix.assistant.agent.policy.ActionPolicySettingsProvider
 
     @Binds

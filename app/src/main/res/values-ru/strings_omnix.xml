@@ -410,4 +410,31 @@
         <item quantity="other">Сработало %1$d раз · последний %1$s</item>
     </plurals>
     <string name="omnix_chat_on_device">Обработано на устройстве</string>
+    <string name="omnix_privacy_section_confirmations">Подтверждения действий</string>
+    <string name="omnix_privacy_calls">Звонки</string>
+    <string name="omnix_privacy_calls_always">Всегда спрашивать</string>
+    <string name="omnix_privacy_calls_trusted">Спрашивать, кроме доверенных контактов</string>
+    <string name="omnix_privacy_calls_never">Не спрашивать</string>
+    <string name="omnix_privacy_messages">Сообщения</string>
+    <string name="omnix_privacy_messages_always">Всегда спрашивать</string>
+    <string name="omnix_privacy_messages_money">Спрашивать только при суммах денег</string>
+    <string name="omnix_privacy_messages_never">Не спрашивать (суммы подтверждаются всегда)</string>
+    <string name="omnix_privacy_forced_title">Всегда с подтверждением</string>
+    <string name="omnix_privacy_forced_body">Деньги, удаления, ввод в других приложениях и любые действия автоматизаций сначала спрашивают. Это нельзя отключить.</string>
+    <string name="omnix_privacy_section_contacts">Доверенные контакты</string>
+    <string name="omnix_privacy_contacts_hint">Звонки и сообщения этим контактам могут пропускать подтверждение, если политика это разрешает</string>
+    <string name="omnix_privacy_contact_add_hint">Имя или номер телефона</string>
+    <string name="omnix_privacy_add">Добавить</string>
+    <string name="omnix_privacy_remove">Убрать</string>
+    <string name="omnix_privacy_contacts_empty">Доверенных контактов пока нет</string>
+    <string name="omnix_privacy_section_screen">Чтение экрана</string>
+    <string name="omnix_privacy_screen_mode_block">Всё, кроме запрещённых приложений</string>
+    <string name="omnix_privacy_screen_mode_block_hint">По умолчанию: OMNIX читает экран, пока приложение не запрещено</string>
+    <string name="omnix_privacy_screen_mode_allow">Только разрешённые мной приложения</string>
+    <string name="omnix_privacy_screen_mode_allow_hint">Строже: чтение работает только там, где разрешено</string>
+    <string name="omnix_privacy_blocked_apps">Запрещённые приложения</string>
+    <string name="omnix_privacy_blocked_empty">Ничего не запрещено</string>
+    <string name="omnix_privacy_allowed_apps">Разрешённые приложения</string>
+    <string name="omnix_privacy_allowed_empty">Явно не разрешено ничего</string>
+    <string name="omnix_privacy_package_hint">Пакет приложения, например com.example.app</string>
 </resources>

@@ -409,4 +409,31 @@
         <item quantity="other">Işledi: %1$d · iň soňky %1$s</item>
     </plurals>
     <string name="omnix_chat_on_device">Enjide işlendi</string>
+    <string name="omnix_privacy_section_confirmations">Hereketleri tassyklamak</string>
+    <string name="omnix_privacy_calls">Jaňlar</string>
+    <string name="omnix_privacy_calls_always">Hemiše sora</string>
+    <string name="omnix_privacy_calls_trusted">Ynamly baglanyşyklardan başga sora</string>
+    <string name="omnix_privacy_calls_never">Sorama</string>
+    <string name="omnix_privacy_messages">Habarlar</string>
+    <string name="omnix_privacy_messages_always">Hemiše sora</string>
+    <string name="omnix_privacy_messages_money">Diňe pul mukdary agzalanda sora</string>
+    <string name="omnix_privacy_messages_never">Sorama (summalar hemişe tassyklanýar)</string>
+    <string name="omnix_privacy_forced_title">Hemişe tassyklanýar</string>
+    <string name="omnix_privacy_forced_body">Pul, öçürmeler, beýleki programmalarda ýazmak we awtomatiki hereketler ilki soraýar. Ýapyp bolmaýar.</string>
+    <string name="omnix_privacy_section_contacts">Ynamly baglanyşyklar</string>
+    <string name="omnix_privacy_contacts_hint">Bu baglanyşyklara jaňlar we habarlar tassyklamany geçip bilýär, syýasat rugsat berende</string>
+    <string name="omnix_privacy_contact_add_hint">Ad ýa-da telefon belgisi</string>
+    <string name="omnix_privacy_add">Goş</string>
+    <string name="omnix_privacy_remove">Aýyr</string>
+    <string name="omnix_privacy_contacts_empty">Ynamly baglanyşyk häzirlikçe ýok</string>
+    <string name="omnix_privacy_section_screen">Ekrany okamak</string>
+    <string name="omnix_privacy_screen_mode_block">Blok edilenlerden başgasyny</string>
+    <string name="omnix_privacy_screen_mode_block_hint">Aslynda: OMNIX ekrany okaýar, programa blok goýulmadykça</string>
+    <string name="omnix_privacy_screen_mode_allow">Diňe rugsat beren programmalarym</string>
+    <string name="omnix_privacy_screen_mode_allow_hint">Has berk: diňe rugsat berlen ýerde okalýar</string>
+    <string name="omnix_privacy_blocked_apps">Blok edilen programmalar</string>
+    <string name="omnix_privacy_blocked_empty">Hiç zat blok edilmedi</string>
+    <string name="omnix_privacy_allowed_apps">Rugsat berlen programmalar</string>
+    <string name="omnix_privacy_allowed_empty">Aç-açan rugsat berlen zat ýok</string>
+    <string name="omnix_privacy_package_hint">Programma paketi, meselem com.example.app</string>
 </resources>
