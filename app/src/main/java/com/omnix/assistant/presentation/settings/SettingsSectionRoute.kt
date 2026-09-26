@@ -299,12 +299,14 @@ private fun AdvancedSettingsScreen(
     onToggleVisibility: () -> Unit,
     onSave: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
+    // Near-miss захват (данные v0.2) — dev/staging только: в prod запись
+    // аудио не существует (BuildConfig-гейт, протокол COLLECTING.md).
     nearMissCaptureEnabled: Boolean = false,
     nearMissCapture: Boolean = false,
     onNearMissCaptureChange: (Boolean) -> Unit = {},
-    onClearNearMissCaptures: () -> Unit = {},
-    modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null
+    onClearNearMissCaptures: () -> Unit = {}
 ) {
     SectionScaffold(stringResource(R.string.omnix_advanced_title), modifier, onBack) {
         val spacing = OmnixTheme.spacing
