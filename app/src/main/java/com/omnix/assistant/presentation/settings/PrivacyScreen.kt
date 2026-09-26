@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
 import com.omnix.assistant.agent.policy.CallConfirmationPolicy
 import com.omnix.assistant.agent.policy.MessagingConfirmationPolicy
 import com.omnix.assistant.presentation.components.ConfirmationSheet
@@ -72,10 +73,17 @@ fun PrivacyScreen(
     onBlockPackage: (String) -> Unit = {},
     onUnblockPackage: (String) -> Unit = {},
     onAllowPackage: (String) -> Unit = {},
-    onRevokePackageAllowance: (String) -> Unit = {}
+    onRevokePackageAllowance: (String) -> Unit = {},
+    onForgetMemory: (Long) -> Unit = {},
+    onRemoveFact: (String) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
+    // Браузер памяти: удаление одного воспоминания/факта — деструктивное
+    // действие, через общий confirmation sheet (вес тот же, что у удаления
+    // истории: одно нажатие теряет данные безвозвратно).
+    var forgetArmedMemory by remember { mutableStateOf<MemoryEntryUi?>(null) }
+    var removeArmedFact by remember { mutableStateOf<FactEntryUi?>(null) }
 
     SectionScaffold(
         stringResource(R.string.omnix_privacy_title),
@@ -312,6 +320,65 @@ fun PrivacyScreen(
                 )
             }
 
+        OmnixSettingsSectionHeader(
+            text = stringResource(R.string.omnix_privacy_section_memory)
+        )
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_memories_hint),
+                inset = true
+            )
+            if (policyState.memories.isEmpty()) {
+                OmnixSettingRow(
+                    title = stringResource(R.string.omnix_privacy_memories_empty),
+                    inset = true
+                )
+            } else {
+                policyState.memories.forEachIndexed { index, memory ->
+                    if (index > 0) OmnixGroupDivider()
+                    OmnixSettingRow(
+                        title = memory.content,
+                        value = memoryTypeText(memory.typeLabel),
+                        inset = true,
+                        trailing = {
+                            OmnixTextButton(
+                                text = stringResource(R.string.omnix_privacy_forget),
+                                onClick = { forgetArmedMemory = memory }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(spacing.sm))
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_facts_hint),
+                inset = true
+            )
+            if (policyState.facts.isEmpty()) {
+                OmnixSettingRow(
+                    title = stringResource(R.string.omnix_privacy_facts_empty),
+                    inset = true
+                )
+            } else {
+                policyState.facts.forEachIndexed { index, fact ->
+                    if (index > 0) OmnixGroupDivider()
+                    OmnixSettingRow(
+                        title = fact.key,
+                        value = fact.value,
+                        inset = true,
+                        trailing = {
+                            OmnixTextButton(
+                                text = stringResource(R.string.omnix_privacy_remove),
+                                onClick = { removeArmedFact = fact }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+
         if (onDeleteHistory != null) {
             Spacer(Modifier.height(spacing.xl))
             OmnixTextButton(
@@ -338,6 +405,54 @@ fun PrivacyScreen(
             onCancel = { deleteArmed = false }
         )
     }
+
+    // Memory browser: one entry, one question — the row the user sees is the
+    // row that gets deleted (no semantic matching on the UI path).
+    forgetArmedMemory?.let { memory ->
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
+                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, memory.content),
+                confirmLabel = stringResource(R.string.omnix_privacy_forget),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = {
+                onForgetMemory(memory.id)
+                forgetArmedMemory = null
+            },
+            onCancel = { forgetArmedMemory = null }
+        )
+    }
+    removeArmedFact?.let { fact ->
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
+                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, "${fact.key}: ${fact.value}"),
+                confirmLabel = stringResource(R.string.omnix_privacy_remove),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = {
+                onRemoveFact(fact.key)
+                removeArmedFact = null
+            },
+            onCancel = { removeArmedFact = null }
+        )
+    }
+}
+
+/**
+ * Подпись типа воспоминания: токен из домена → string-ресурс. Сырые
+ * enum-имена (FACT/PREFERENCE/…) пользователю не показываются.
+ */
+@Composable
+private fun memoryTypeText(label: MemoryTypeLabel): String = when (label) {
+    MemoryTypeLabel.FACT -> stringResource(R.string.omnix_memory_type_fact)
+    MemoryTypeLabel.PREFERENCE -> stringResource(R.string.omnix_memory_type_preference)
+    MemoryTypeLabel.EPISODIC -> stringResource(R.string.omnix_memory_type_episodic)
+    MemoryTypeLabel.PROCEDURAL -> stringResource(R.string.omnix_memory_type_procedural)
+    MemoryTypeLabel.OTHER -> stringResource(R.string.omnix_memory_type_other)
 }
 
 /**

@@ -436,4 +436,17 @@
     <string name="omnix_privacy_allowed_apps">Rugsat berlen programmalar</string>
     <string name="omnix_privacy_allowed_empty">Aç-açan rugsat berlen zat ýok</string>
     <string name="omnix_privacy_package_hint">Programma paketi, meselem com.example.app</string>
+    <string name="omnix_privacy_section_memory">OMNIX näme ýatda saklaýar</string>
+    <string name="omnix_privacy_memories_hint">Laýyk gelende jogaplarda ulanylýan ýatlar</string>
+    <string name="omnix_privacy_memories_empty">Häzirlikçe ýatda hiç zat ýok</string>
+    <string name="omnix_privacy_forget">Ýatdan çykar</string>
+    <string name="omnix_privacy_forget_confirm_title">Buny ýatdan çykarmymy?</string>
+    <string name="omnix_privacy_forget_confirm_body">OMNIX muny indi ýatda saklamaýar: %1$s</string>
+    <string name="omnix_privacy_facts_hint">Düzgünli faktlar: ad, şäher we ş.m.</string>
+    <string name="omnix_privacy_facts_empty">Faktlar saklanmady</string>
+    <string name="omnix_memory_type_fact">Fakt</string>
+    <string name="omnix_memory_type_preference">Halaýyş</string>
+    <string name="omnix_memory_type_episodic">Waka</string>
+    <string name="omnix_memory_type_procedural">Senariýa</string>
+    <string name="omnix_memory_type_other">Ýat</string>
 </resources>
