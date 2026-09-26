@@ -120,7 +120,12 @@ class LicenseApiIntegrationTest : PostgresTestSupport() {
         )!!
         assertEquals(201, issue.status)
         val issued = json.decodeFromString(LicenseIssueResponse.serializer(), issue.body)
-        assertTrue(issued.code.startsWith("OMX-"))
+        // issue() теперь выпускает короткие box-коды (BASE32 без I/O), а не OMX-…-формат.
+        assertTrue(
+            issued.code.matches(
+                Regex("[A-HJ-NP-Z2-9]{${LicenseCrypto.BOX_CODE_LENGTH}}")
+            )
+        )
 
         val redeem = handler.handle(
             request(

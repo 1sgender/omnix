@@ -17,7 +17,10 @@ class JdbcUsageRepositoryTest : PostgresTestSupport() {
     private fun record(
         requestId: String,
         clientId: String = "client-a",
-        timestamp: Instant = Instant.parse("2026-08-22T00:00:00Z")
+        // Динамичная дата: record() чистит записи старше retention (30 дней по
+        // умолчанию, реальные часы), фиксированная дата протухла 2026-09-21 и
+        // записи удалялись в той же транзакции вставки.
+        timestamp: Instant = Instant.now().minus(Duration.ofMinutes(10))
     ) = AiUsageRecord(
         requestId = requestId,
         clientId = clientId,

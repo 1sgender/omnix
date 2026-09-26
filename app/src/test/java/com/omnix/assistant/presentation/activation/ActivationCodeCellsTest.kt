@@ -10,11 +10,12 @@ import org.junit.Test
 class ActivationCodeCellsTest {
 
     @Test
-    fun `sanitizer keeps digits only and caps at six cells`() {
-        assertEquals("", sanitizeActivationInput(" ab_cd!ef "))
+    fun `sanitizer keeps letters and digits, uppercases, caps at six cells`() {
+        assertEquals("ABCDEF", sanitizeActivationInput(" ab_cd!ef "))
         assertEquals("123456", sanitizeActivationInput("123456"))
         assertEquals("123456", sanitizeActivationInput("1234567890"))
-        assertEquals("42", sanitizeActivationInput("4x2"))
+        assertEquals("4X2", sanitizeActivationInput("4x2"))
+        assertEquals("A7B2C3", sanitizeActivationInput("a7b2c3"))
     }
 
     @Test
@@ -54,9 +55,16 @@ class ActivationCodeCellsTest {
     }
 
     @Test
-    fun `non-digit input is ignored`() {
-        val (code, focus) = cellInputResult(code = "47", index = 2, raw = "x")
+    fun `non-alphanumeric input is ignored`() {
+        val (code, focus) = cellInputResult(code = "47", index = 2, raw = "!")
         assertEquals("47", code)
         assertEquals(2, focus)
+    }
+
+    @Test
+    fun `a letter is accepted like a digit and uppercased`() {
+        val (code, focus) = cellInputResult(code = "47", index = 2, raw = "x")
+        assertEquals("47X", code)
+        assertEquals(3, focus)
     }
 }

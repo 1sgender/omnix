@@ -30,6 +30,7 @@ import com.omnix.server.billing.WebhookVerificationResult
 import com.omnix.server.clip.JdbcClipDeviceRepository
 import com.omnix.server.config.ValidationConfig
 import com.omnix.server.license.IssueLicenseCommand
+import com.omnix.server.license.LicenseCrypto
 import com.omnix.server.license.LicenseService
 import com.omnix.server.license.LicenseValidationOutcome
 import com.omnix.server.license.PlanCatalog
@@ -195,7 +196,8 @@ class LicenseBillingHttpHandler(
         val parsed = decode(request.body, LicenseRedeemRequest.serializer())
             ?: return error(ApiErrorCode.INVALID_REQUEST, fallbackRequestId)
         val requestId = validRequestId(parsed.requestId) ?: fallbackRequestId
-        if (parsed.code.length !in 8..64 || parsed.deviceId.length !in 8..128) {
+        // Короче BOX_CODE_LENGTH кодов не бывает; верхняя граница отсекает мусор.
+        if (parsed.code.length !in LicenseCrypto.BOX_CODE_LENGTH..64 || parsed.deviceId.length !in 8..128) {
             return error(ApiErrorCode.INVALID_REQUEST, requestId)
         }
         // Наблюдаемость redeem: раньше попытки активации не оставляли никакого

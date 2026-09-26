@@ -85,14 +85,20 @@ class LicensePersistenceIntegrationTest : PostgresTestSupport() {
         val second = issue(service)
 
         assertNotEquals(first.code, second.code)
-        assertTrue(first.code.matches(Regex("OMX(?:-[A-Z2-9]{5}){4}")))
+        // Box-код: BASE32-алфавит генерации (без I/O/0/1), длина BOX_CODE_LENGTH.
+        assertTrue(
+            first.code.matches(
+                Regex("[A-HJ-NP-Z2-9]{${LicenseCrypto.BOX_CODE_LENGTH}}")
+            )
+        )
         dataSource.connection.use { connection ->
             connection.prepareStatement("SELECT code_hash, code_hint, metadata::text FROM licenses WHERE id = ?").use {
                 it.setObject(1, first.licenseId)
                 it.executeQuery().use { result ->
                     assertTrue(result.next())
                     assertEquals(32, result.getBytes("code_hash").size)
-                    assertEquals(first.code.takeLast(5), result.getString("code_hint"))
+                    // Хинт короткого кода — 3 последних символа (5 раскрыли бы почти весь код).
+                    assertEquals(first.code.takeLast(3), result.getString("code_hint"))
                     assertFalse(result.getString("metadata").contains(first.code))
                 }
             }

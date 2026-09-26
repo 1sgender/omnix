@@ -55,6 +55,50 @@ class LicenseCryptoTest {
     }
 
     @Test
+    fun `box code from the clip card normalizes to itself`() {
+        assertEquals("A7B2C3", crypto.normalizeLicenseCode("A7B2C3"))
+    }
+
+    @Test
+    fun `box code is case-insensitive, whitespace and dash tolerant`() {
+        assertEquals("A7B2C3", crypto.normalizeLicenseCode(" a7b2c3 "))
+        assertEquals("A7B2C3", crypto.normalizeLicenseCode("a7b2-c3"))
+    }
+
+    @Test
+    fun `box codes never contain ambiguous characters`() {
+        repeat(200) {
+            val code = crypto.generateBoxCode()
+            assertEquals(LicenseCrypto.BOX_CODE_LENGTH, code.length)
+            assertTrue(code.all { it in "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" })
+            assertEquals(code, crypto.normalizeLicenseCode(code))
+        }
+    }
+
+    @Test
+    fun `seven characters or digits zero and one are not box codes`() {
+        assertNull(crypto.normalizeLicenseCode("A7B2C3D"))
+        assertNull(crypto.normalizeLicenseCode("ABC01E"))
+        // Формат мягкий (как у длинного кодека): I/O проходят normalize и
+        // попадают в not-found по хэшу — на карточке их не печатают.
+        assertEquals("ABCDIO", crypto.normalizeLicenseCode("ABCDIO"))
+    }
+
+    @Test
+    fun `long omx codes still normalize after the box-code change`() {
+        assertEquals(
+            "OMX-J6P2F-RGTJ6-A63JK-5LYXS",
+            crypto.normalizeLicenseCode("omx-j6p2f-rgtj6-a63jk-5lyxs")
+        )
+    }
+
+    @Test
+    fun `code hint exposes less of a short code than of a long one`() {
+        assertEquals("2C3", crypto.codeHint("A7B2C3"))
+        assertEquals("5LYXS", crypto.codeHint("OMX-J6P2F-RGTJ6-A63JK-5LYXS"))
+    }
+
+    @Test
     fun `generated codes carry the omx prefix`() {
         repeat(50) {
             assertTrue(crypto.generateLicenseCode().startsWith("OMX-"))
