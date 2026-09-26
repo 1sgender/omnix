@@ -374,4 +374,31 @@
     <string name="omnix_update_action_retry">Повторить</string>
     <string name="omnix_update_download_title">OMNIX: обновление</string>
     <string name="omnix_update_download_desc">Загрузка новой сборки</string>
+    <!-- Экран автоматизаций (отчёт о разрыве 2026-09-26). -->
+    <string name="omnix_automations_briefing_now">Прослушать брифинг сейчас</string>
+    <string name="omnix_automations_briefing_body">Время, заряд, погода и планы — офлайн, в наушник.</string>
+    <string name="omnix_automations_briefing_running">Готовлю брифинг…</string>
+    <string name="omnix_automations_briefing_ok">Озвучивается</string>
+    <string name="omnix_automations_delete">Удалить правило</string>
+    <string name="omnix_automations_delete_title">Удалить эту автоматизацию?</string>
+    <string name="omnix_automations_delete_body">«%1$s» будет удалена навсегда. Рутина перестанет срабатывать.</string>
+    <string name="omnix_automations_delete_confirm">Удалить</string>
+    <string name="omnix_automations_trigger_time">Каждый день в %1$s</string>
+    <string name="omnix_automations_trigger_headphones_on">При подключении наушников</string>
+    <string name="omnix_automations_trigger_headphones_off">При отключении наушников</string>
+    <string name="omnix_automations_trigger_battery">При низком заряде батареи</string>
+    <string name="omnix_automations_trigger_wifi">При подключении к Wi-Fi</string>
+    <string name="omnix_automations_trigger_voice">Голосовой триггер</string>
+    <string name="omnix_automations_trigger_unknown">Свой триггер</string>
+    <string name="omnix_automations_no_actions">Нет действий</string>
+    <string name="omnix_automations_action_app">Открыть %1$s</string>
+    <string name="omnix_automations_action_weather">Погода</string>
+    <string name="omnix_automations_action_time">Время</string>
+    <string name="omnix_automations_action_memory">Память</string>
+    <string name="omnix_automations_action_volume">Громкость</string>
+    <string name="omnix_automations_action_media">Медиа</string>
+    <string name="omnix_automations_action_briefing">Брифинг</string>
+    <string name="omnix_automations_action_other">Действие</string>
+    <string name="omnix_automations_never_fired">Ни разу не срабатывало</string>
+    <string name="omnix_automations_fired">Сработало: %1$d · последний раз %2$s</string>
 </resources>

@@ -375,4 +375,31 @@
     <string name="omnix_update_action_retry">Gaýtadan synanyş</string>
     <string name="omnix_update_download_title">OMNIX: täzeleme</string>
     <string name="omnix_update_download_desc">Täze ýygynty göçürilýär</string>
+    <!-- Awtomatiki işler ekrany (2026-09-26 hasabaty). -->
+    <string name="omnix_automations_briefing_now">Brifiňi şimdi diňle</string>
+    <string name="omnix_automations_briefing_body">Wagt, batareýa, howa we meýilnama — oflaýn, gulaga.</string>
+    <string name="omnix_automations_briefing_running">Brifiňi taýýarlaýaryn…</string>
+    <string name="omnix_automations_briefing_ok">Aýdylýar</string>
+    <string name="omnix_automations_delete">Düzgüni poz</string>
+    <string name="omnix_automations_delete_title">Bu awtomatik işi pozýarysyzmy?</string>
+    <string name="omnix_automations_delete_body">«%1$s» hemişelik pozular. Bu iş indiket çalışmaz.</string>
+    <string name="omnix_automations_delete_confirm">Poz</string>
+    <string name="omnix_automations_trigger_time">Her gün %1$s</string>
+    <string name="omnix_automations_trigger_headphones_on">Gulaklyk birikdirilende</string>
+    <string name="omnix_automations_trigger_headphones_off">Gulaklyk aýrylanda</string>
+    <string name="omnix_automations_trigger_battery">Batareýa gowşanda</string>
+    <string name="omnix_automations_trigger_wifi">Wi-Fi birikdirilende</string>
+    <string name="omnix_automations_trigger_voice">Dawuş tetigi</string>
+    <string name="omnix_automations_trigger_unknown">Öz tetigi</string>
+    <string name="omnix_automations_no_actions">Hereket ýok</string>
+    <string name="omnix_automations_action_app">%1$s aç</string>
+    <string name="omnix_automations_action_weather">Howa</string>
+    <string name="omnix_automations_action_time">Wagt</string>
+    <string name="omnix_automations_action_memory">Ýat</string>
+    <string name="omnix_automations_action_volume">Ses</string>
+    <string name="omnix_automations_action_media">Media</string>
+    <string name="omnix_automations_action_briefing">Brifiň</string>
+    <string name="omnix_automations_action_other">Hereket</string>
+    <string name="omnix_automations_never_fired">Hiç wagt çalışmady</string>
+    <string name="omnix_automations_fired">Işledi: %1$d · iň soňky %2$s</string>
 </resources>

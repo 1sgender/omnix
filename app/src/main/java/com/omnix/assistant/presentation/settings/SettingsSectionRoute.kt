@@ -39,6 +39,7 @@ fun SettingsSectionRoute(
     section: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    onOpenAutomations: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     appearanceViewModel: AppearanceViewModel = hiltViewModel()
 ) {
@@ -65,7 +66,8 @@ fun SettingsSectionRoute(
             onWakeSensitivityChange = viewModel::onWakeWordSensitivityChanged,
             onHeadsetOnlyChange = viewModel::onHeadsetOnlyModeChanged,
             onVoiceFeedbackChange = appearanceViewModel::setVoiceFeedback,
-            onCommitChanges = viewModel::saveAllSettings
+            onCommitChanges = viewModel::saveAllSettings,
+            onOpenAutomations = onOpenAutomations
         )
 
         SECTION_AI -> {

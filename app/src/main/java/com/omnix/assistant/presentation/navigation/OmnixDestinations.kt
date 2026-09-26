@@ -35,6 +35,13 @@ sealed class OmnixDestination(val route: String) {
     /** Secondary: the Clip and other devices (§40). */
     data object Devices : OmnixDestination("omnix/devices")
 
+    /**
+     * Secondary: automation rules — list, toggle, delete, briefing now
+     * (gap report 2026-09-26). Reached from the Voice settings chevron;
+     * belongs to the Me subtree.
+     */
+    data object Automations : OmnixDestination("omnix/automations")
+
     /** Secondary: what OMNIX keeps and where it goes (§42, §52). */
     data object Privacy : OmnixDestination("omnix/privacy")
 
@@ -73,7 +80,8 @@ fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Translator.route -> OmnixDestination.Home
     OmnixDestination.Me.route,
     OmnixDestination.Devices.route,
-    OmnixDestination.Privacy.route -> OmnixDestination.Me
+    OmnixDestination.Privacy.route,
+    OmnixDestination.Automations.route -> OmnixDestination.Me
     else -> route
         ?.takeIf { it.startsWith(OmnixDestination.SettingsSection.ROUTE_PREFIX) }
         ?.let { OmnixDestination.Me }

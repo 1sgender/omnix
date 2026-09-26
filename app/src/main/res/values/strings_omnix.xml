@@ -377,4 +377,31 @@
     <string name="omnix_update_action_retry">Retry</string>
     <string name="omnix_update_download_title">OMNIX: update</string>
     <string name="omnix_update_download_desc">Downloading a new build</string>
+    <!-- Automations screen (gap report 2026-09-26). -->
+    <string name="omnix_automations_briefing_now">Play ear briefing now</string>
+    <string name="omnix_automations_briefing_body">Time, battery, weather and plans — offline, in your ear.</string>
+    <string name="omnix_automations_briefing_running">Preparing the briefing…</string>
+    <string name="omnix_automations_briefing_ok">Playing</string>
+    <string name="omnix_automations_delete">Delete rule</string>
+    <string name="omnix_automations_delete_title">Delete this automation?</string>
+    <string name="omnix_automations_delete_body">“%1$s” will be deleted permanently. The routine will stop firing.</string>
+    <string name="omnix_automations_delete_confirm">Delete</string>
+    <string name="omnix_automations_trigger_time">Every day at %1$s</string>
+    <string name="omnix_automations_trigger_headphones_on">When headphones connect</string>
+    <string name="omnix_automations_trigger_headphones_off">When headphones disconnect</string>
+    <string name="omnix_automations_trigger_battery">When battery is low</string>
+    <string name="omnix_automations_trigger_wifi">When Wi-Fi connects</string>
+    <string name="omnix_automations_trigger_voice">Voice trigger</string>
+    <string name="omnix_automations_trigger_unknown">Custom trigger</string>
+    <string name="omnix_automations_no_actions">No actions</string>
+    <string name="omnix_automations_action_app">Open %1$s</string>
+    <string name="omnix_automations_action_weather">Weather</string>
+    <string name="omnix_automations_action_time">Time</string>
+    <string name="omnix_automations_action_memory">Memory</string>
+    <string name="omnix_automations_action_volume">Volume</string>
+    <string name="omnix_automations_action_media">Media</string>
+    <string name="omnix_automations_action_briefing">Briefing</string>
+    <string name="omnix_automations_action_other">Action</string>
+    <string name="omnix_automations_never_fired">Never fired</string>
+    <string name="omnix_automations_fired">Fired %1$d times · last %2$s</string>
 </resources>
