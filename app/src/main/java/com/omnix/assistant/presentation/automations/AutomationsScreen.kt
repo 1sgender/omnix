@@ -124,19 +124,18 @@ private fun AutomationCard(
     onToggle: (Boolean) -> Unit,
     onDelete: () -> Unit
 ) {
-    val spacing = OmnixTheme.spacing
     OmnixSettingsGroup {
         OmnixToggleRow(
             title = rule.name,
-            subtitle = TriggerText(rule),
+            subtitle = triggerText(rule),
             checked = rule.isEnabled,
             onCheckedChange = onToggle,
             inset = true
         )
         OmnixGroupDivider()
         OmnixSettingRow(
-            title = ActionsText(rule),
-            value = TriggerStats(rule),
+            title = actionsText(rule),
+            value = triggerStats(rule),
             inset = true
         )
         OmnixSettingRow(
@@ -150,7 +149,7 @@ private fun AutomationCard(
 }
 
 @Composable
-private fun TriggerText(rule: AutomationUiModel): String = when (rule.trigger) {
+private fun triggerText(rule: AutomationUiModel): String = when (rule.trigger) {
     AutomationTriggerLabel.TIME_SCHEDULE ->
         stringResource(R.string.omnix_automations_trigger_time, rule.triggerParam.orEmpty())
     AutomationTriggerLabel.HEADPHONES_CONNECTED ->
@@ -168,7 +167,7 @@ private fun TriggerText(rule: AutomationUiModel): String = when (rule.trigger) {
 }
 
 @Composable
-private fun ActionsText(rule: AutomationUiModel): String {
+private fun actionsText(rule: AutomationUiModel): String {
     if (rule.actions.isEmpty()) {
         return stringResource(R.string.omnix_automations_no_actions)
     }
@@ -194,7 +193,7 @@ private fun ActionsText(rule: AutomationUiModel): String {
 }
 
 @Composable
-private fun TriggerStats(rule: AutomationUiModel): String {
+private fun triggerStats(rule: AutomationUiModel): String {
     if (rule.lastTriggeredAt == null || rule.triggerCount <= 0) {
         return stringResource(R.string.omnix_automations_never_fired)
     }
