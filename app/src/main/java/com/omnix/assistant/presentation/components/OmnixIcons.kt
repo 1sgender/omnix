@@ -702,3 +702,39 @@ fun OmnixSwapIcon(
         drawLine(color, Offset(p(8.5f), p(19.5f)), Offset(p(4.5f), p(15.5f)), w, StrokeCap.Round)
     }
 }
+
+/**
+ * Warning glyph (mock 2026-09-26): the circle-and-exclamation mark that leads
+ * an error bubble in the chat. 24-box units, standard icon stroke.
+ */
+@Composable
+fun OmnixAlertIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 16.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val u = this.size.minDimension / 24f
+        val w = this.size.minDimension * 0.12f
+        fun p(v: Float) = v * u
+        val stroke = Stroke(width = w, cap = StrokeCap.Round)
+        drawCircle(
+            color = color,
+            radius = 9f * u,
+            center = Offset(p(12f), p(12f)),
+            style = stroke
+        )
+        drawLine(
+            color = color,
+            start = Offset(p(12f), p(8f)),
+            end = Offset(p(12f), p(13f)),
+            strokeWidth = w,
+            cap = StrokeCap.Round
+        )
+        drawCircle(
+            color = color,
+            radius = w * 0.55f,
+            center = Offset(p(12f), p(16f))
+        )
+    }
+}

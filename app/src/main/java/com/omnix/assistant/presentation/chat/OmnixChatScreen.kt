@@ -60,12 +60,15 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.presentation.components.ConfirmationSheet
+import com.omnix.assistant.presentation.components.OmnixAlertIcon
 import com.omnix.assistant.presentation.components.OmnixArrowUpIcon
 import com.omnix.assistant.presentation.components.OmnixBackIcon
 import com.omnix.assistant.presentation.components.OmnixEmptyState
@@ -86,10 +89,15 @@ import kotlin.math.sin
 /**
  * Chat — the quiet alternative to speaking (§21, §24).
  *
- * Stage 2 of the Apple HIG rebuild. The speaker is carried by layout: the
- * user's words sit in an inverted bubble (near-black in light, near-white in
- * dark — the logo palette), OMNIX answers as plain document text. No avatars,
- * no model picker, no regenerate button.
+ * Stage 2 of the Apple HIG rebuild, bubbles pass (mock 2026-09-26): both
+ * sides of the dialogue now speak in bubbles — the user's words in a light
+ * bubble on the right, OMNIX's answers in a dark grey bubble on the left,
+ * each with its sender label directly above as one block. A failed round
+ * trip is its own message kind ([MessageRole.ERROR]): a dim red-tinted
+ * bubble with a warning mark, so an error is never mistaken for an answer.
+ * Regular font weight everywhere except the screen title; the composer is a
+ * one-line capsule with compact round mic and send buttons beside it. No
+ * avatars, no model picker, no regenerate button.
  *
  * The screen wires three capabilities the ViewModel already exposes but the
  * old view never rendered: the dictation control (partial results land in the
@@ -155,9 +163,12 @@ fun OmnixChatScreen(
                 OmnixBackIcon(color = OmnixTheme.colors.textSecondary)
             }
             Spacer(Modifier.width(spacing.xs))
+            // Mock 2026-09-26: the title is the single bold element on the
+            // screen (20 sp, semibold) — everything inside the thread stays
+            // regular weight.
             Text(
                 text = stringResource(R.string.omnix_chat_title),
-                style = OmnixTheme.typography.screenTitle,
+                style = OmnixTheme.typography.heading,
                 color = OmnixTheme.colors.textPrimary
             )
             Spacer(Modifier.weight(1f))
@@ -325,9 +336,13 @@ fun OmnixChatScreen(
 }
 
 /**
- * One message. The user speaks in an inverted bubble; OMNIX answers as a
- * document paragraph. Both carry a spoken label so the speaker is legible
- * without sight — alignment alone never encodes meaning (§29).
+ * One message. Bubbles on both sides (mock 2026-09-26): the user's words in
+ * a light bubble on the right, OMNIX's answers in a dark grey bubble on the
+ * left, a failed round trip in a dim red-tinted bubble with a warning mark.
+ * The sender label sits directly above its bubble — 4 dp apart, same side —
+ * so label and bubble read as one block, and the whole message is one
+ * accessibility node ("You: …" / "OMNIX: …"): alignment alone never
+ * encodes meaning (§29).
  */
 @Composable
 private fun ChatMessageRow(
@@ -339,6 +354,7 @@ private fun ChatMessageRow(
     val spacing = OmnixTheme.spacing
     val reduced = LocalReducedMotion.current
     val isUser = message.role == MessageRole.USER
+    val isError = message.role == MessageRole.ERROR
 
     var settled by remember(message.id) { mutableStateOf(!animateEntry) }
     LaunchedEffect(Unit) { settled = true }
@@ -355,9 +371,22 @@ private fun ChatMessageRow(
         label = "omnixChatMessageEnter"
     )
 
+    val label = stringResource(if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix)
+    val bubbleBackground = when {
+        isUser -> colors.bubbleUser
+        isError -> colors.errorBubble
+        else -> colors.bubbleAi
+    }
+    val ink = when {
+        isUser -> colors.onBubbleUser
+        isError -> colors.stateError
+        else -> colors.onBubbleAi
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .clearAndSetSemantics { contentDescription = "$label: ${message.text}" }
             .graphicsLayer {
                 alpha = progress
                 translationY = (1f - progress) * 12.dp.toPx()
@@ -365,38 +394,41 @@ private fun ChatMessageRow(
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
         Text(
-            text = stringResource(
-                if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix
-            ),
-            style = OmnixTheme.typography.overline,
-            color = colors.textTertiary
+            text = label,
+            style = OmnixTheme.typography.overline.copy(letterSpacing = 0.sp),
+            color = colors.textSecondary
         )
         Spacer(Modifier.height(spacing.xxs))
-        if (isUser) {
+        Row(
+            modifier = Modifier
+                .widthIn(max = 300.dp)
+                .clip(RoundedCornerShape(OmnixTheme.radius.medium))
+                .background(bubbleBackground)
+                .padding(horizontal = spacing.md, vertical = spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        ) {
+            if (isError) {
+                OmnixAlertIcon(
+                    color = colors.stateError,
+                    size = 16.dp
+                )
+            }
             Text(
                 text = message.text,
-                style = OmnixTheme.typography.body,
-                color = colors.onActionPrimary,
-                modifier = Modifier
-                    .widthIn(max = 300.dp)
-                    .clip(RoundedCornerShape(OmnixTheme.radius.large))
-                    .background(colors.actionPrimary)
-                    .padding(horizontal = spacing.md, vertical = spacing.xs)
-            )
-        } else {
-            Text(
-                text = message.text,
-                style = OmnixTheme.typography.body,
-                color = colors.textPrimary
+                style = OmnixTheme.typography.subheadline,
+                color = ink
             )
         }
     }
 }
 
 /**
- * The pause between send and answer. Three dots breathe in the thinking
- * colour — motion answers "what changed?" (the request is working), and it
- * collapses to static dots under reduced motion (§29).
+ * The pause between send and answer. Three dots breathe inside the same
+ * dark bubble OMNIX answers in (mock 2026-09-26) — it reads as "OMNIX is
+ * typing", not as a separate status widget. Motion answers "what changed?"
+ * (the request is working) and collapses to static dots under reduced motion
+ * (§29).
  */
 @Composable
 private fun ThinkingRow(modifier: Modifier = Modifier) {
@@ -420,11 +452,17 @@ private fun ThinkingRow(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResource(R.string.omnix_chat_omnix),
-            style = OmnixTheme.typography.overline,
-            color = colors.textTertiary
+            style = OmnixTheme.typography.overline.copy(letterSpacing = 0.sp),
+            color = colors.textSecondary
         )
         Spacer(Modifier.height(spacing.xxs))
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(OmnixTheme.radius.medium))
+                .background(colors.bubbleAi)
+                .padding(horizontal = spacing.md, vertical = spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        ) {
             repeat(3) { index ->
                 val pulse = if (reduced) {
                     0.45f
@@ -538,9 +576,12 @@ private fun PrivacyBadge(level: PrivacyLevel, modifier: Modifier = Modifier) {
 }
 
 /**
- * The composer: one capsule field carrying dictation and send inside it, so
- * every action on the sentence lives on the sentence. The field stays
- * editable while a request is in flight — the ViewModel guards double sends.
+ * The composer (mock 2026-09-26): a one-line input capsule with the mic and
+ * send as compact round buttons OUTSIDE it — 44 dp of touch target each
+ * (§57), a 32 dp visible circle. The placeholder never wraps, so the bar
+ * stays one line; the field only grows vertically while the user types. The
+ * field stays editable while a request is in flight — the ViewModel guards
+ * double sends.
  */
 @Composable
 private fun ChatComposer(
@@ -566,92 +607,107 @@ private fun ChatComposer(
     val dictationInteraction = remember { MutableInteractionSource() }
     val sendInteraction = remember { MutableInteractionSource() }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.screenHorizontal)
-            .padding(top = spacing.xs, bottom = spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = modifier.fillMaxWidth()
     ) {
+        // Hairline between the thread and the composer, as in the mock.
         Box(
             modifier = Modifier
-                .weight(1f)
-                .clip(fieldShape)
-                .background(colors.surfaceElevated)
-                .border(width = OmnixHairline, color = colors.border, shape = fieldShape)
+                .fillMaxWidth()
+                .height(OmnixHairline)
+                .background(colors.border)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.screenHorizontal)
+                .padding(top = spacing.xs, bottom = spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(
-                    start = spacing.md,
-                    end = spacing.xs,
-                    top = spacing.xxs,
-                    bottom = spacing.xxs
-                ),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(fieldShape)
+                    .background(colors.surfaceElevated)
+                    .border(width = OmnixHairline, color = colors.border, shape = fieldShape)
+                    .padding(horizontal = spacing.md, vertical = spacing.xs)
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    if (text.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.omnix_chat_input_hint),
-                            style = OmnixTheme.typography.body,
-                            color = colors.textTertiary
+                if (text.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.omnix_chat_input_hint),
+                        style = OmnixTheme.typography.subheadline,
+                        color = colors.textTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                BasicTextField(
+                    value = text,
+                    onValueChange = onTextChange,
+                    singleLine = false,
+                    maxLines = 6,
+                    textStyle = OmnixTheme.typography.subheadline.copy(color = colors.textPrimary),
+                    cursorBrush = SolidColor(colors.textPrimary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { onSend() }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 132.dp)
+                        .verticalScroll(rememberScrollState())
+                )
+            }
+
+            Spacer(Modifier.width(spacing.xs))
+
+            Box(
+                modifier = Modifier
+                    .size(spacing.touchTarget)
+                    .omnixPressScale(dictationInteraction)
+                    .clip(CircleShape)
+                    .clickable(
+                        interactionSource = dictationInteraction,
+                        indication = null,
+                        onClickLabel = dictationLabel,
+                        onClick = onToggleDictation
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                OmnixMicIcon(
+                    color = if (isDictating) colors.stateListening else colors.textSecondary,
+                    size = 18.dp
+                )
+            }
+
+            Spacer(Modifier.width(spacing.xs))
+
+            Box(
+                modifier = Modifier
+                    .size(spacing.touchTarget)
+                    .omnixPressScale(sendInteraction)
+                    .clickable(
+                        interactionSource = sendInteraction,
+                        indication = null,
+                        enabled = canSend,
+                        onClickLabel = sendLabel,
+                        onClick = onSend
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(spacing.xxl)
+                        .clip(CircleShape)
+                        .background(if (canSend) colors.actionPrimary else colors.surfaceElevated)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        OmnixArrowUpIcon(
+                            color = if (canSend) colors.onActionPrimary else colors.textDisabled,
+                            size = 16.dp
                         )
                     }
-                    BasicTextField(
-                        value = text,
-                        onValueChange = onTextChange,
-                        singleLine = false,
-                        maxLines = 6,
-                        textStyle = OmnixTheme.typography.body.copy(color = colors.textPrimary),
-                        cursorBrush = SolidColor(colors.textPrimary),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(onSend = { onSend() }),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 132.dp)
-                            .verticalScroll(rememberScrollState())
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(spacing.touchTarget)
-                        .omnixPressScale(dictationInteraction)
-                        .clip(CircleShape)
-                        .clickable(
-                            interactionSource = dictationInteraction,
-                            indication = null,
-                            onClickLabel = dictationLabel,
-                            onClick = onToggleDictation
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    OmnixMicIcon(
-                        color = if (isDictating) colors.stateListening else colors.textTertiary,
-                        size = 20.dp
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(spacing.touchTarget)
-                        .omnixPressScale(sendInteraction)
-                        .clip(CircleShape)
-                        .background(if (canSend) colors.actionPrimary else colors.surface)
-                        .border(width = OmnixHairline, color = colors.border, shape = CircleShape)
-                        .clickable(
-                            interactionSource = sendInteraction,
-                            indication = null,
-                            enabled = canSend,
-                            onClickLabel = sendLabel,
-                            onClick = onSend
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    OmnixArrowUpIcon(
-                        color = if (canSend) colors.onActionPrimary else colors.textDisabled,
-                        size = 18.dp
-                    )
                 }
             }
         }

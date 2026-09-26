@@ -181,6 +181,7 @@
     <string name="omnix_chat_thinking">OMNIX is thinking…</string>
     <string name="omnix_chat_dictation_start">Dictate</string>
     <string name="omnix_chat_dictation_stop">Stop dictation</string>
+    <string name="omnix_chat_network_error">Network error. Check your connection and try again.</string>
     <string name="omnix_privacy_badge_private">Private</string>
     <string name="omnix_privacy_badge_sensitive">Sensitive</string>
     <string name="omnix_privacy_badge_hint">OMNIX will ask before this leaves the device</string>

@@ -3,10 +3,12 @@ package com.omnix.assistant.presentation.navigation
 /**
  * The OMNIX destination map (§20, §44, §66).
  *
- * Three primary destinations, with the Core in the centre:
+ * Three primary destinations, with the OMNIX atom mark over the "Home"
+ * label in the centre (mock 2026-09-26 — the wordmark used to duplicate
+ * the chat's sender labels):
  *
  * ```
- * History  |  ◎ Core  |  Me
+ * History  |  ◎ Home  |  Me
  * ```
  *
  * Everything else — Chat, Translator, Devices, Privacy, the first-run flow —

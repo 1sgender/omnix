@@ -61,6 +61,24 @@ data class OmnixColorScheme(
      */
     val accentRing: Color,
 
+    /**
+     * Chat bubble surfaces (mock 2026-09-26): both sides of the dialogue
+     * speak in bubbles — the user's in a light bubble on the right, OMNIX's
+     * in a dark grey bubble on the left. The light scheme flips the user
+     * bubble to system blue, exactly as the mock does.
+     */
+    val bubbleUser: Color,
+    val onBubbleUser: Color,
+    val bubbleAi: Color,
+    val onBubbleAi: Color,
+
+    /**
+     * Failed round trips (mock 2026-09-26): a dim red-tinted bubble ground.
+     * The ink stays the existing `stateError` alarm red — the background is
+     * what makes it read as "something is off" without shouting.
+     */
+    val errorBubble: Color,
+
     // Interactive
     val actionPrimary: Color,
     val onActionPrimary: Color,
@@ -119,6 +137,13 @@ val OmnixDarkColors = OmnixColorScheme(
     // saturated brand blue — it is chrome, not a brand moment.
     accentRing = Color(0xFF3E6C9F),
 
+    // Bubbles sampled from the approved mock (2026-09-26).
+    bubbleUser = Color(0xFFF5F5F7),
+    onBubbleUser = Color(0xFF0A1118),
+    bubbleAi = Color(0xFF1C1C1E),
+    onBubbleAi = TextPrimaryToken,
+    errorBubble = Color(0xFF241412),
+
     actionPrimary = TextPrimaryToken,
     onActionPrimary = Color(0xFF01090F),
     actionSecondaryBorder = Color(0x2EFFFFFF),          // 0.18
@@ -162,6 +187,13 @@ val OmnixNightColors = OmnixDarkColors.copy(
 
     accentRing = Color(0xFF2C4C72),
 
+    // Same mock, dimmed for the night ground.
+    bubbleUser = Color(0xFFC9C9CE),
+    onBubbleUser = Color(0xFF0A1118),
+    bubbleAi = Color(0xFF141B21),
+    onBubbleAi = Color(0xD6FFFFFF),
+    errorBubble = Color(0xFF1D100E),
+
     actionPrimary = Color(0xD6FFFFFF),
     isNight = true
 )
@@ -199,6 +231,13 @@ val OmnixLightColors = OmnixColorScheme(
     stateWarning = Color(0xFF8A6400),
 
     accentRing = Color(0xFF33629A),
+
+    // Light scheme: the user bubble is system blue, the mock's exact choice.
+    bubbleUser = Color(0xFF0A84FF),
+    onBubbleUser = Color(0xFFFFFFFF),
+    bubbleAi = Color(0xFFE9E9EB),
+    onBubbleAi = Color(0xF00C0D10),
+    errorBubble = Color(0xFFFDECEA),
 
     actionPrimary = Color(0xFF0C0D10),
     onActionPrimary = Color(0xFFF7F8FA),

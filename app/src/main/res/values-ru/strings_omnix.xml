@@ -179,6 +179,7 @@
     <string name="omnix_chat_thinking">OMNIX думает…</string>
     <string name="omnix_chat_dictation_start">Голосовой ввод</string>
     <string name="omnix_chat_dictation_stop">Остановить голосовой ввод</string>
+    <string name="omnix_chat_network_error">Ошибка сети. Проверьте соединение и повторите.</string>
     <string name="omnix_privacy_badge_private">Личное</string>
     <string name="omnix_privacy_badge_sensitive">Чувствительное</string>
     <string name="omnix_privacy_badge_hint">OMNIX спросит, прежде чем отправить это в облако</string>

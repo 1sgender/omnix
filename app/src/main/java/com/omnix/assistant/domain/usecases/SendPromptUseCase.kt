@@ -197,24 +197,30 @@ class SendPromptUseCase @Inject constructor(
                 }
             }
         } else if (result is Resource.Error) {
-            saveAssistantMessage(withOfflineModelHint(result.message, result.exception))
+            // Авария сохраняется СОБСТВЕННОЙ ролью (mock 2026-09-26), чтобы чат
+            // отрисовал её ошибочным пузырём, а не обычным ответом OMNIX.
+            saveErrorMessage(errorTextFor(result.message, result.exception))
         }
 
         return result
     }
 
     /**
-     * Сетевой сбой при НЕскачанной офлайн-модели — самая непонятная для
-     * пользователя комбинация: выбран офлайн-режим, а в ответ «Ошибка
-     * сети». Отвечать в офлайне пока нечем, и без подсказки пользователь
-     * не понимает, из-за чего ошибка и что делать. Дополняем сообщение
-     * адресом, где скачать модель.
+     * Текст сообщения об ошибке. Сетевой сбой получает спокойную
+     * формулировку из утверждённого мока — раньше в чат уходил «сырой»
+     * текст исключения. При НЕскачанной офлайн-модели подсказка с местом
+     * скачивания остаётся: это диагностическая часть, по ней пользователь
+     * понимает, что именно не так и что делать.
      */
-    private fun withOfflineModelHint(message: String?, exception: Throwable?): String {
-        val base = message ?: context.getString(R.string.oshibka_vypolneniya_zaprosa)
+    private fun errorTextFor(message: String?, exception: Throwable?): String {
         val networkFailure = exception is IOException
         val offlineModelMissing = localModelManager.state.let {
             it is LocalModelState.NotInstalled || it is LocalModelState.DownloadFailed
+        }
+        val base = if (networkFailure) {
+            context.getString(R.string.omnix_chat_network_error)
+        } else {
+            message ?: context.getString(R.string.oshibka_vypolneniya_zaprosa)
         }
         if (!networkFailure || !offlineModelMissing) return base
         return base + " " + context.getString(R.string.oflayn_model_ne_skachana)
@@ -224,6 +230,16 @@ class SendPromptUseCase @Inject constructor(
         messageRepository.insertMessage(
             Message(
                 role = MessageRole.ASSISTANT,
+                text = text,
+                timestamp = System.currentTimeMillis()
+            )
+        )
+    }
+
+    private suspend fun saveErrorMessage(text: String) {
+        messageRepository.insertMessage(
+            Message(
+                role = MessageRole.ERROR,
                 text = text,
                 timestamp = System.currentTimeMillis()
             )
