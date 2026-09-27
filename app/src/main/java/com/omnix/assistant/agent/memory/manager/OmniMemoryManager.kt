@@ -4,6 +4,7 @@ import com.omnix.assistant.agent.memory.WorkingMemory
 import com.omnix.assistant.agent.memory.dao.FactDao
 import com.omnix.assistant.agent.memory.dao.MemoryDao
 import com.omnix.assistant.agent.memory.dao.PreferenceDao
+import com.omnix.assistant.agent.memory.dao.ProcedureDao
 import com.omnix.assistant.agent.memory.entity.*
 import com.omnix.assistant.agent.memory.extractor.AutonomousMemoryExtractor
 import com.omnix.assistant.agent.memory.model.ForgetResult
@@ -28,6 +29,7 @@ class OmniMemoryManager @Inject constructor(
     private val memoryDao: MemoryDao,
     private val factDao: FactDao,
     private val preferenceDao: PreferenceDao,
+    private val procedureDao: ProcedureDao,
     private val featureEngine: SemanticTextMatcher,
     private val memoryExtractor: AutonomousMemoryExtractor
 ) {
@@ -175,14 +177,18 @@ class OmniMemoryManager @Inject constructor(
     suspend fun forgetMemory(targetQuery: String): ForgetResult = withContext(Dispatchers.IO) {
         val cleanTarget = targetQuery.lowercase().trim()
         if (cleanTarget.isEmpty() || cleanTarget == "всё" || cleanTarget == "все") {
-            // Полная очистка памяти — ВСЕ три таблицы: воспоминания, факты и
-            // предпочтения. Факты/предпочтения — структурированные близнецы
-            // воспоминаний (remember() пишет их одним пакетом); оставить их
-            // значило бы показать в браузере памяти «помню» после «забудь всё».
+            // Полная очистка памяти — ВСЕ четыре таблицы: воспоминания,
+            // факты, предпочтения и процедуры. Факты/предпочтения —
+            // структурированные близнецы воспоминаний (remember() пишет их
+            // одним пакетом); процедуры — записанные сценарии, которые
+            // WorkflowExecutor исполняет по триггеру («сон», «работа»).
+            // Оставить любой из этих слоёв значило бы показать в браузере
+            // памяти «помню» после «забудь всё».
             val all = memoryDao.getAllMemoriesForVectorSearch()
             all.forEach { memoryDao.deleteMemoryById(it.id) }
             factDao.getAllFacts().forEach { factDao.deleteFact(it.factKey) }
             preferenceDao.getAllPreferences().forEach { preferenceDao.deletePreference(it.prefKey) }
+            procedureDao.getAllProcedures().forEach { procedureDao.deleteProcedure(it.triggerPhrase) }
             return@withContext ForgetResult(
                 isSuccess = true,
                 deletedCount = all.size,

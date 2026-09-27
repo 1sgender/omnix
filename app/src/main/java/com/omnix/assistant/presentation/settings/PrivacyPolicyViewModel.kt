@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.memory.dao.FactDao
 import com.omnix.assistant.agent.memory.dao.MemoryDao
 import com.omnix.assistant.agent.memory.dao.PreferenceDao
+import com.omnix.assistant.agent.memory.dao.ProcedureDao
 import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
 import com.omnix.assistant.agent.memory.model.memoryTypeLabel
 import com.omnix.assistant.agent.policy.ActionPolicySettingsProvider
@@ -35,6 +36,11 @@ data class FactEntryUi(
     val value: String
 )
 
+data class ProcedureEntryUi(
+    val trigger: String,
+    val executions: Int
+)
+
 /**
  * Состояние рабочих органов Privacy-экрана (блоки 3–4 плана пересборки
  * фронта, 2026-09-26): политики подтверждений, доверенные контакты,
@@ -48,7 +54,8 @@ data class PrivacyPolicyUiState(
     val blockedPackages: List<String> = emptyList(),
     val allowedPackages: List<String> = emptyList(),
     val memories: List<MemoryEntryUi> = emptyList(),
-    val facts: List<FactEntryUi> = emptyList()
+    val facts: List<FactEntryUi> = emptyList(),
+    val procedures: List<ProcedureEntryUi> = emptyList()
 )
 
 /**
@@ -68,7 +75,8 @@ class PrivacyPolicyViewModel @Inject constructor(
     private val accessibilityStore: AccessibilityPrivacyStore,
     private val memoryDao: MemoryDao,
     private val factDao: FactDao,
-    private val preferenceDao: PreferenceDao
+    private val preferenceDao: PreferenceDao,
+    private val procedureDao: ProcedureDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrivacyPolicyUiState())
@@ -114,6 +122,17 @@ class PrivacyPolicyViewModel @Inject constructor(
                         facts = entries
                             .sortedBy { it.factKey }
                             .map { fact -> FactEntryUi(key = fact.factKey, value = fact.factValue) }
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
+            procedureDao.getAllProceduresStream().collectLatest { entries ->
+                _uiState.update { state ->
+                    state.copy(
+                        procedures = entries
+                            .sortedBy { it.triggerPhrase }
+                            .map { proc -> ProcedureEntryUi(trigger = proc.triggerPhrase, executions = proc.executionCount) }
                     )
                 }
             }
@@ -201,6 +220,16 @@ class PrivacyPolicyViewModel @Inject constructor(
             factDao.deleteFact(factKey)
             memoryDao.deleteMemoryByKey(factKey)
             preferenceDao.deletePreference(factKey)
+        }
+    }
+
+    /**
+     * Удаление записанной процедуры по триггеру. В отличие от фактов у
+     * процедуры нет близнецов в других таблицах — сущность самостоятельная.
+     */
+    fun removeProcedure(trigger: String) {
+        viewModelScope.launch {
+            procedureDao.deleteProcedure(trigger)
         }
     }
 
