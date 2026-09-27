@@ -103,17 +103,23 @@ fun SettingsSectionRoute(
             onReduceMotionChange = appearanceViewModel::setReduceMotionOverride
         )
 
-        SECTION_ABOUT -> AboutScreen(
-            modifier = modifier,
-            onBack = onBack,
-            accessState = when {
-                state.licenseInfo?.isExpired == true -> AccessDisplayState.Expired
-                state.licenseInfo?.isActivated == true -> AccessDisplayState.Active
-                else -> AccessDisplayState.NotConfigured
-            },
-            versionName = BuildConfig.VERSION_NAME,
-            deviceCode = null
-        )
+        SECTION_ABOUT -> {
+            // Long-press по версии открывает dev-секцию метрик в Diagnostics
+            // (план пересборки фронта 2026-09-26, блок 8).
+            val aboutViewModel: AboutViewModel = hiltViewModel()
+            AboutScreen(
+                modifier = modifier,
+                onBack = onBack,
+                accessState = when {
+                    state.licenseInfo?.isExpired == true -> AccessDisplayState.Expired
+                    state.licenseInfo?.isActivated == true -> AccessDisplayState.Active
+                    else -> AccessDisplayState.NotConfigured
+                },
+                versionName = BuildConfig.VERSION_NAME,
+                deviceCode = null,
+                onVersionLongPress = aboutViewModel::revealDevMetrics
+            )
+        }
 
         SECTION_LANGUAGE -> LanguageSettingsScreen(modifier = modifier, onBack = onBack)
 

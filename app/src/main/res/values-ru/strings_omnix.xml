@@ -469,4 +469,12 @@
     <string name="omnix_capability_status_user_action">Включите в системных настройках</string>
     <string name="omnix_capability_status_unsupported">Недоступно</string>
     <string name="omnix_capability_grant_hint">Нажмите, чтобы дать разрешение</string>
+    <string name="omnix_diagnostics_dev_metrics">Метрики (dev)</string>
+    <string name="omnix_metrics_local_execution">Локальное выполнение</string>
+    <string name="omnix_metrics_cloud_execution">Облачное выполнение</string>
+    <string name="omnix_metrics_escalations">из них эскалаций после локальной полосы:</string>
+    <string name="omnix_metrics_ai_local">AI на устройстве</string>
+    <string name="omnix_metrics_ai_cloud">AI в облаке</string>
+    <string name="omnix_metrics_percentiles">P50 / P95 / P99, мс</string>
+    <string name="omnix_metrics_no_data">данных пока нет</string>
 </resources>
