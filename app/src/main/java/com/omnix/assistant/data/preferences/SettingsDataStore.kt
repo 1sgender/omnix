@@ -45,14 +45,18 @@ internal fun resolveWakeWordThreshold(stored: Float?, legacySensitivity: Float?)
 }
 
 /**
- * Near-miss захват (данные v0.2): явное включение пользователем в
- * developer-настройках И только в dev/staging-сборках. В prod (flavorAllowed
- * = false) запись аудио невозможна ни при каком значении ключа — защита в
- * глубину: даже устаревшее true в DataStore старого устройства ничего не
- * включает. Чистая функция — JVM-тест.
+ * Near-miss захват (данные v0.2). Семантика (решение владельца 2026-09-26 —
+ * старт сбора датасета v0.2: бету выпускать с записью ВКЛЮЧЁННОЙ):
+ * - пользователь НИКОГДА не трогал переключатель (stored = null) →
+ *   dev/staging (flavorAllowed = true) — включено по умолчанию, prod — выкл;
+ * - явный выбор пользователя respected: выключивший остался выключен,
+ *   включивший — включён;
+ * - prod (flavorAllowed = false) — НИКОГДА не записывает, даже при
+ *   устаревшем true в DataStore — защита в глубину.
+ * Чистая функция — JVM-тест.
  */
 internal fun resolveNearMissCapture(stored: Boolean?, flavorAllowed: Boolean): Boolean =
-    flavorAllowed && (stored ?: false)
+    flavorAllowed && (stored ?: flavorAllowed)
 
 @Singleton
 class SettingsDataStore @Inject constructor(
@@ -191,8 +195,9 @@ class SettingsDataStore @Inject constructor(
      * Neural wake-word конфиг (§11 ТЗ). Дефолты совпадают с [WakeWordConfig].
      * Порог — через [resolveWakeWordThreshold]: ключ wakeword.threshold,
      * при его отсутствии — однократная миграция с legacy-чувствительности.
-     * nearMissCapture — только явное включение + dev/staging-гейт
-     * ([resolveNearMissCapture]); в prod всегда false.
+     * nearMissCapture — dev/staging: включено ПО УМОЛЧАНИЮ (сбор датасета
+     * v0.2, решение владельца 2026-09-26), явный off пользователя respected;
+     * prod — всегда false ([resolveNearMissCapture]).
      */
     val wakeWordConfig: Flow<WakeWordConfig> = context.dataStore.data
         .catch { exception ->
@@ -216,15 +221,18 @@ class SettingsDataStore @Inject constructor(
         }
 
     /**
-     * Состояние near-miss переключателя для UI (raw ключ, без flavor-гейта —
-     * гейт нужен для записи, а переключатель в prod просто не показывается).
+     * Состояние near-miss переключателя для UI: явный выбор пользователя, а
+     * при его отсутствии — flavor-дефолт (dev/staging: вкл — сбор v0.2,
+     * prod: выкл; строка в prod всё равно не показывается — flavor-гейт
+     * экрана).
      */
     val nearMissCaptureFlow: Flow<Boolean> = context.dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }
         .map { preferences ->
-            preferences[PreferencesKeys.WAKEWORD_NEAR_MISS_CAPTURE] ?: false
+            preferences[PreferencesKeys.WAKEWORD_NEAR_MISS_CAPTURE]
+                ?: BuildConfig.NEAR_MISS_CAPTURE_ENABLED
         }
 
     suspend fun setNearMissCapture(enabled: Boolean) {
