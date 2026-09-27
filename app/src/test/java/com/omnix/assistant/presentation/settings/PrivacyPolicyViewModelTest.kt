@@ -2,6 +2,7 @@ package com.omnix.assistant.presentation.settings
 
 import com.omnix.assistant.agent.memory.dao.FactDao
 import com.omnix.assistant.agent.memory.dao.MemoryDao
+import com.omnix.assistant.agent.memory.dao.PreferenceDao
 import com.omnix.assistant.agent.memory.entity.FactEntity
 import com.omnix.assistant.agent.memory.entity.MemoryEntity
 import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
@@ -58,6 +59,7 @@ class PrivacyPolicyViewModelTest {
     private lateinit var accessibilityStore: AccessibilityPrivacyStore
     private lateinit var memoryDao: MemoryDao
     private lateinit var factDao: FactDao
+    private lateinit var preferenceDao: PreferenceDao
 
     @Before
     fun setUp() {
@@ -84,6 +86,7 @@ class PrivacyPolicyViewModelTest {
         every { memoryDao.getAllMemoriesStream() } returns flowOf(listOf(older, newer))
 
         factDao = mockk(relaxed = true)
+        preferenceDao = mockk(relaxed = true)
         every { factDao.getAllFactsStream() } returns flowOf(
             listOf(
                 FactEntity(factKey = "user.city", factValue = "Франкфурт"),
@@ -101,7 +104,8 @@ class PrivacyPolicyViewModelTest {
         policyProvider = provider,
         accessibilityStore = accessibilityStore,
         memoryDao = memoryDao,
-        factDao = factDao
+        factDao = factDao,
+        preferenceDao = preferenceDao
     )
 
     @Test
@@ -181,18 +185,33 @@ class PrivacyPolicyViewModelTest {
     }
 
     @Test
-    fun `forget memory deletes exactly the shown row`() = runTest {
+    fun `forget memory without key deletes only the shown row`() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
-        vm.forgetMemory(2L)
+        vm.forgetMemory(2L, keyName = null)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { memoryDao.deleteMemoryById(2L) }
+        coVerify(exactly = 0) { factDao.deleteFact(any()) }
+        coVerify(exactly = 0) { preferenceDao.deletePreference(any()) }
     }
 
     @Test
-    fun `remove fact deletes by key`() = runTest {
+    fun `forget memory with key removes the structured twins too`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.forgetMemory(1L, keyName = "user.name")
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { memoryDao.deleteMemoryById(1L) }
+        coVerify(exactly = 1) { factDao.deleteFact("user.name") }
+        coVerify(exactly = 1) { preferenceDao.deletePreference("user.name") }
+    }
+
+    @Test
+    fun `remove fact deletes its memory twin by key`() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
@@ -200,5 +219,7 @@ class PrivacyPolicyViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { factDao.deleteFact("user.name") }
+        coVerify(exactly = 1) { memoryDao.deleteMemoryByKey("user.name") }
+        coVerify(exactly = 1) { preferenceDao.deletePreference("user.name") }
     }
 }

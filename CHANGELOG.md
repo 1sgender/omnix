@@ -8,7 +8,19 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
-## [Unreleased]
+### Fixed
+
+### Fixed
+
+- Forgetting now removes the whole knowledge unit, not half of it.
+  remember() writes a memory AND its structured twin (a fact or
+  preference keyed by the same name); the memory twin is what recall()
+  and the prompt context actually read. Deleting only the fact row — or
+  only the memory row — left the other half silently feeding answers
+  (or cluttering the browser). The memory browser's per-entry forget now
+  cleans both twins by key (same semantics as the voice "forget"), and
+  the voice full wipe ("забудь всё") now clears the facts and preferences
+  tables too instead of leaving them behind.
 
 ### Added
 
