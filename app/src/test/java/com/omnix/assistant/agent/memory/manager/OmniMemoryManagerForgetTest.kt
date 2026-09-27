@@ -9,6 +9,7 @@ import com.omnix.assistant.agent.memory.entity.PreferenceEntity
 import com.omnix.assistant.agent.memory.extractor.AutonomousMemoryExtractor
 import com.omnix.assistant.agent.memory.semantic.SemanticTextMatcher
 import com.omnix.assistant.agent.memory.WorkingMemory
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -47,13 +48,13 @@ class OmniMemoryManagerForgetTest {
         val memoryDao = mockk<MemoryDao>(relaxed = true)
         val factDao = mockk<FactDao>(relaxed = true)
         val preferenceDao = mockk<PreferenceDao>(relaxed = true)
-        every { memoryDao.getAllMemoriesForVectorSearch() } returns listOf(
+        coEvery { memoryDao.getAllMemoriesForVectorSearch() } returns listOf(
             MemoryEntity(id = 1L, type = "FACT", content = "Пользователя зовут Александр", keyName = "user.name")
         )
-        every { factDao.getAllFacts() } returns listOf(
+        coEvery { factDao.getAllFacts() } returns listOf(
             FactEntity(factKey = "user.name", factValue = "Александр")
         )
-        every { preferenceDao.getAllPreferences() } returns listOf(
+        coEvery { preferenceDao.getAllPreferences() } returns listOf(
             PreferenceEntity(prefKey = "sleep.time", prefValue = "23:00")
         )
 
@@ -71,7 +72,7 @@ class OmniMemoryManagerForgetTest {
         val memoryDao = mockk<MemoryDao>(relaxed = true)
         val factDao = mockk<FactDao>(relaxed = true)
         val preferenceDao = mockk<PreferenceDao>(relaxed = true)
-        every { memoryDao.getAllMemoriesForVectorSearch() } returns listOf(
+        coEvery { memoryDao.getAllMemoriesForVectorSearch() } returns listOf(
             MemoryEntity(id = 1L, type = "FACT", content = "Пользователя зовут Александр", keyName = "user.name"),
             MemoryEntity(id = 2L, type = "EPISODIC", content = "Встреча в четверг")
         )
