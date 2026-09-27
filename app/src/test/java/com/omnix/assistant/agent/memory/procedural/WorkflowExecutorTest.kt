@@ -31,6 +31,8 @@ class WorkflowExecutorTest {
 
         override fun getAllProceduresStream(): Flow<List<ProcedureEntity>> = flowOf(storage.values.toList())
 
+        override suspend fun getAllProcedures(): List<ProcedureEntity> = storage.values.toList()
+
         override suspend fun getProcedureByTrigger(trigger: String): ProcedureEntity? = storage[trigger]
 
         override suspend fun insertProcedure(proc: ProcedureEntity): Long {

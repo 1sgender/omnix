@@ -64,7 +64,7 @@ class OmniMemoryManagerForgetTest {
             PreferenceEntity(prefKey = "sleep.time", prefValue = "23:00")
         )
         coEvery { procedureDao.getAllProcedures() } returns listOf(
-            ProcedureEntity(triggerPhrase = "сон")
+            ProcedureEntity(triggerPhrase = "сон", actionsJson = "[]")
         )
 
         val result = manager(memoryDao, factDao, preferenceDao, procedureDao).forgetMemory("всё")

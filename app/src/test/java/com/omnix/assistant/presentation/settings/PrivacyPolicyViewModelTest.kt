@@ -92,7 +92,7 @@ class PrivacyPolicyViewModelTest {
         preferenceDao = mockk(relaxed = true)
         procedureDao = mockk(relaxed = true)
         every { procedureDao.getAllProceduresStream() } returns flowOf(
-            listOf(ProcedureEntity(triggerPhrase = "сон", executionCount = 2))
+            listOf(ProcedureEntity(triggerPhrase = "сон", executionCount = 2, actionsJson = "[]"))
         )
         every { factDao.getAllFactsStream() } returns flowOf(
             listOf(
