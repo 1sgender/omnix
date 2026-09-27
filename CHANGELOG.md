@@ -13,6 +13,9 @@ must be added only when the repository owner creates an actual release.
 ### Fixed
 
 - Forgetting now removes the whole knowledge unit, not half of it.
+- Full memory wipe also clears learned procedures (recorded routines the
+  pipeline executes on a trigger); procedures are now visible and removable
+  in the memory browser.
   remember() writes a memory AND its structured twin (a fact or
   preference keyed by the same name); the memory twin is what recall()
   and the prompt context actually read. Deleting only the fact row — or
