@@ -14,6 +14,17 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+- Dev metrics section in Diagnostics (frontend rebuild plan 2026-09-26,
+  final block): local vs cloud execution percentages with request counts
+  and escalation numbers from ExecutionRouterMetrics, plus AI latency
+  P50/P95/P99 on-device vs cloud from VoiceLatencyMetrics — the same
+  @Singleton instances the decision engine writes into, so the numbers
+  are live, not zeros. The section is hidden by default and revealed for
+  the current session only by a long-press on the version row in About;
+  nothing dev-facing ships in the consumer UI. Values are built in code
+  (no %d-in-XML, PluralsCandidate-safe), labels localized ×3.
+### Added
+
 - "On this phone" capability snapshot on the Devices screen (frontend
   rebuild plan 2026-09-26): what OMNIX can actually do on this device,
   from the same DeviceCapabilityRegistry the agent consults when

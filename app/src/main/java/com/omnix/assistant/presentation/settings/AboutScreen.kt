@@ -1,7 +1,9 @@
 package com.omnix.assistant.presentation.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import com.omnix.assistant.R
 
@@ -24,7 +26,8 @@ fun AboutScreen(
     deviceCode: String?,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    onManageAccount: (() -> Unit)? = null
+    onManageAccount: (() -> Unit)? = null,
+    onVersionLongPress: () -> Unit = {}
 ) {
     SectionScaffold(stringResource(R.string.omnix_about_title), modifier, onBack) {
         OmnixSettingsGroup {
@@ -53,10 +56,17 @@ fun AboutScreen(
             )
             OmnixGroupDivider()
 
+            // Long-press по версии — единственный вход в dev-секцию метрик
+            // Diagnostics (план пересборки фронта 2026-09-26): потребительский
+            // интерфейс остаётся без dev-данных, жест не объявляется и не
+            // дублируется кнопкой.
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_about_version),
                 value = versionName,
-                inset = true
+                inset = true,
+                modifier = Modifier.pointerInput(onVersionLongPress) {
+                    detectTapGestures(onLongPress = { onVersionLongPress() })
+                }
             )
 
             deviceCode?.let { code ->

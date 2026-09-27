@@ -28,8 +28,53 @@ import javax.inject.Inject
 @HiltViewModel
 class DiagnosticsViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
-    private val engine: DiagnosticsEngine
+    private val engine: DiagnosticsEngine,
+    // Те же @Singleton-инстансы, которыми пользуется ExecutionDecisionEngine:
+    // Dagger игнорирует Kotlin-дефолты конструктора движка иinject'ит эти
+    // синглтоны — значит здесь видны ЖИВЫЕ счётчики, а не нули.
+    private val routerMetrics: com.omnix.assistant.agent.metrics.ExecutionRouterMetrics,
+    private val latencyMetrics: com.omnix.assistant.agent.metrics.VoiceLatencyMetrics,
+    private val developerMetricsAccess: DeveloperMetricsAccess
 ) : ViewModel() {
+
+    /** AI-латентности local vs cloud (блок 8 плана пересборки фронта). */
+    data class AiLatencyUi(
+        val local: com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.Percentiles?,
+        val cloud: com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.Percentiles?
+    )
+
+    /** Dev-секция метрик: видна только после long-press версии (About). */
+    val devMetricsVisible: StateFlow<Boolean> = developerMetricsAccess.revealed
+
+    private val _routerSnapshot = MutableStateFlow<com.omnix.assistant.agent.metrics.ExecutionRouterMetrics.Snapshot?>(
+        null
+    )
+    val routerSnapshot: StateFlow<com.omnix.assistant.agent.metrics.ExecutionRouterMetrics.Snapshot?> =
+        _routerSnapshot.asStateFlow()
+
+    private val _aiLatency = MutableStateFlow(AiLatencyUi(null, null))
+    val aiLatency: StateFlow<AiLatencyUi> = _aiLatency.asStateFlow()
+
+    /** Перечитать синглтоны метрик (на открытии секции и на возврате). */
+    fun refreshDevMetrics() {
+        _routerSnapshot.value = routerMetrics.snapshot()
+        val series = latencyMetrics.snapshot()
+        _aiLatency.value = AiLatencyUi(
+            local = series[
+                com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.SeriesKey(
+                    com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.VoiceStage.AI,
+                    com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.VoiceLane.LOCAL
+                )
+            ],
+            cloud = series[
+                com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.SeriesKey(
+                    com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.VoiceStage.AI,
+                    com.omnix.assistant.agent.metrics.VoiceLatencyMetrics.VoiceLane.CLOUD
+                )
+            ]
+        )
+    }
+
 
     private val _rows = MutableStateFlow(
         DiagnosticCheckId.entries.map { DiagnosticResult(it, DiagnosticStatus.PENDING) }

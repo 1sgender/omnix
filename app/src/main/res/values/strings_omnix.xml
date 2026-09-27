@@ -470,4 +470,12 @@
     <string name="omnix_capability_status_user_action">Turn on in system settings</string>
     <string name="omnix_capability_status_unsupported">Not available</string>
     <string name="omnix_capability_grant_hint">Tap to grant the permission</string>
+    <string name="omnix_diagnostics_dev_metrics">Metrics (dev)</string>
+    <string name="omnix_metrics_local_execution">Local execution</string>
+    <string name="omnix_metrics_cloud_execution">Cloud execution</string>
+    <string name="omnix_metrics_escalations">of which escalated after the local pass:</string>
+    <string name="omnix_metrics_ai_local">AI on device</string>
+    <string name="omnix_metrics_ai_cloud">AI in cloud</string>
+    <string name="omnix_metrics_percentiles">P50 / P95 / P99, ms</string>
+    <string name="omnix_metrics_no_data">no data yet</string>
 </resources>

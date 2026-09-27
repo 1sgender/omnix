@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -28,6 +29,9 @@ import com.omnix.assistant.presentation.diagnostics.DiagnosticCheckId
 import com.omnix.assistant.presentation.diagnostics.DiagnosticResult
 import com.omnix.assistant.presentation.diagnostics.DiagnosticStatus
 import com.omnix.assistant.presentation.diagnostics.DiagnosticsViewModel
+import com.omnix.assistant.agent.metrics.VoiceLatencyMetrics
+import com.omnix.assistant.presentation.diagnostics.formatPercentiles
+import com.omnix.assistant.presentation.diagnostics.formatPercentCount
 
 /**
  * OMNIX DIAGNOSTICS (§21 ТЗ): экран самопроверки.
@@ -56,6 +60,57 @@ fun DiagnosticsScreen(
                     OmnixGroupDivider()
                 }
                 DiagnosticRow(result = result)
+            }
+        }
+
+        // Dev-секция метрик (блок 8 плана пересборки фронта 2026-09-26):
+        // скрыта по умолчанию, открывается long-press'ом строки версии в
+        // About и живёт до перезапуска приложения. Потребительский интерфейс
+        // dev-цифр не видит.
+        val devMetricsVisible by viewModel.devMetricsVisible.collectAsState()
+        LaunchedEffect(devMetricsVisible) {
+            if (devMetricsVisible) viewModel.refreshDevMetrics()
+        }
+        if (devMetricsVisible) {
+            val router by viewModel.routerSnapshot.collectAsState()
+            val latency by viewModel.aiLatency.collectAsState()
+            Spacer(Modifier.height(spacing.md))
+            OmnixSettingsSectionHeader(
+                text = stringResource(R.string.omnix_diagnostics_dev_metrics)
+            )
+            OmnixSettingsGroup {
+                router?.let { snap ->
+                    OmnixSettingRow(
+                        title = stringResource(R.string.omnix_metrics_local_execution),
+                        value = formatPercentCount(snap.localExecutionPercent, snap.localExecuted),
+                        inset = true
+                    )
+                    OmnixGroupDivider()
+                    OmnixSettingRow(
+                        title = stringResource(R.string.omnix_metrics_cloud_execution),
+                        value = formatPercentCount(snap.cloudExecutionPercent, snap.cloudRequests),
+                        // Счётчик конкатенируется в коде: «%d + слово» в XML
+                        // ловит lint PluralsCandidate (dev-секции точность
+                        // формулировки не критична).
+                        subtitle = stringResource(R.string.omnix_metrics_escalations) +
+                            " " + snap.cloudEscalations,
+                        inset = true
+                    )
+                    OmnixGroupDivider()
+                }
+                OmnixSettingRow(
+                    title = stringResource(R.string.omnix_metrics_ai_local),
+                    value = latencyValue(latency.local),
+                    subtitle = stringResource(R.string.omnix_metrics_percentiles),
+                    inset = true
+                )
+                OmnixGroupDivider()
+                OmnixSettingRow(
+                    title = stringResource(R.string.omnix_metrics_ai_cloud),
+                    value = latencyValue(latency.cloud),
+                    subtitle = stringResource(R.string.omnix_metrics_percentiles),
+                    inset = true
+                )
             }
         }
 
@@ -157,4 +212,13 @@ private fun titleFor(id: DiagnosticCheckId): Int =
         DiagnosticCheckId.LICENSE -> R.string.omnix_diag_license
         DiagnosticCheckId.NETWORK -> R.string.omnix_diag_network
         DiagnosticCheckId.BATTERY -> R.string.omnix_diag_battery
+    }
+
+/** Перцентили или «нет данных» для пустой серии. */
+@Composable
+private fun latencyValue(p: VoiceLatencyMetrics.Percentiles?): String =
+    if (p == null) {
+        stringResource(R.string.omnix_metrics_no_data)
+    } else {
+        formatPercentiles(p)
     }
