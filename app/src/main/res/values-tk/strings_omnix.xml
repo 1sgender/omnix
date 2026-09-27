@@ -444,6 +444,8 @@
     <string name="omnix_privacy_forget_confirm_body">OMNIX muny indi ýatda saklamaýar: %1$s</string>
     <string name="omnix_privacy_facts_hint">Düzgünli faktlar: ad, şäher we ş.m.</string>
     <string name="omnix_privacy_facts_empty">Faktlar saklanmady</string>
+    <string name="omnix_privacy_procedures_hint">Öwrenilen işler, görkezijä görä ýerine ýetirilýär (meselem «ýatmak»)</string>
+    <string name="omnix_privacy_procedures_empty">Işler saklanmady</string>
     <string name="omnix_memory_type_fact">Fakt</string>
     <string name="omnix_memory_type_preference">Halaýyş</string>
     <string name="omnix_memory_type_episodic">Waka</string>

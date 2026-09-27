@@ -13,6 +13,9 @@ interface ProcedureDao {
     @Query("SELECT * FROM procedures ORDER BY execution_count DESC")
     fun getAllProceduresStream(): Flow<List<ProcedureEntity>>
 
+    @Query("SELECT * FROM procedures ORDER BY execution_count DESC")
+    suspend fun getAllProcedures(): List<ProcedureEntity>
+
     @Query("SELECT * FROM procedures WHERE trigger_phrase = :trigger LIMIT 1")
     suspend fun getProcedureByTrigger(trigger: String): ProcedureEntity?
 

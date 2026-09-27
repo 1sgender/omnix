@@ -445,6 +445,8 @@
     <string name="omnix_privacy_forget_confirm_body">OMNIX больше не будет это помнить: %1$s</string>
     <string name="omnix_privacy_facts_hint">Структурированные факты: имя, город и т.п.</string>
     <string name="omnix_privacy_facts_empty">Факты не сохранены</string>
+    <string name="omnix_privacy_procedures_hint">Записанные сценарии, запускаемые по триггеру (например «сон»)</string>
+    <string name="omnix_privacy_procedures_empty">Процедуры не сохранены</string>
     <string name="omnix_memory_type_fact">Факт</string>
     <string name="omnix_memory_type_preference">Предпочтение</string>
     <string name="omnix_memory_type_episodic">Событие</string>

@@ -75,7 +75,8 @@ fun PrivacyScreen(
     onAllowPackage: (String) -> Unit = {},
     onRevokePackageAllowance: (String) -> Unit = {},
     onForgetMemory: (Long, String?) -> Unit = { _, _ -> },
-    onRemoveFact: (String) -> Unit = {}
+    onRemoveFact: (String) -> Unit = {},
+    onRemoveProcedure: (String) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
@@ -84,6 +85,7 @@ fun PrivacyScreen(
     // истории: одно нажатие теряет данные безвозвратно).
     var forgetArmedMemory by remember { mutableStateOf<MemoryEntryUi?>(null) }
     var removeArmedFact by remember { mutableStateOf<FactEntryUi?>(null) }
+    var removeArmedProcedure by remember { mutableStateOf<ProcedureEntryUi?>(null) }
 
     SectionScaffold(
         stringResource(R.string.omnix_privacy_title),
@@ -318,6 +320,21 @@ fun PrivacyScreen(
                 rowValue = { it.value }
             )
         }
+        Spacer(Modifier.height(spacing.sm))
+        OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_procedures_hint),
+                inset = true
+            )
+            EntryListGroup(
+                entries = policyState.procedures,
+                emptyText = stringResource(R.string.omnix_privacy_procedures_empty),
+                removeLabel = stringResource(R.string.omnix_privacy_remove),
+                onRemove = { removeArmedProcedure = it },
+                rowTitle = { it.trigger },
+                rowValue = { it.executions.toString() }
+            )
+        }
 
         if (onDeleteHistory != null) {
             Spacer(Modifier.height(spacing.xl))
@@ -378,6 +395,22 @@ fun PrivacyScreen(
                 removeArmedFact = null
             },
             onCancel = { removeArmedFact = null }
+        )
+    }
+    removeArmedProcedure?.let { proc ->
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
+                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, proc.trigger),
+                confirmLabel = stringResource(R.string.omnix_privacy_remove),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = {
+                onRemoveProcedure(proc.trigger)
+                removeArmedProcedure = null
+            },
+            onCancel = { removeArmedProcedure = null }
         )
     }
 }

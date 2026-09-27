@@ -446,6 +446,8 @@
     <string name="omnix_privacy_forget_confirm_body">OMNIX will no longer remember this: %1$s</string>
     <string name="omnix_privacy_facts_hint">Structured facts, like your name or city</string>
     <string name="omnix_privacy_facts_empty">No facts are stored</string>
+    <string name="omnix_privacy_procedures_hint">Learned routines that run on a trigger (e.g. bedtime)</string>
+    <string name="omnix_privacy_procedures_empty">No routines are stored</string>
     <string name="omnix_memory_type_fact">Fact</string>
     <string name="omnix_memory_type_preference">Preference</string>
     <string name="omnix_memory_type_episodic">Event</string>

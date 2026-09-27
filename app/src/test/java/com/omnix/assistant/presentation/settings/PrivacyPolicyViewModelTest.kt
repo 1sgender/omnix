@@ -3,8 +3,10 @@ package com.omnix.assistant.presentation.settings
 import com.omnix.assistant.agent.memory.dao.FactDao
 import com.omnix.assistant.agent.memory.dao.MemoryDao
 import com.omnix.assistant.agent.memory.dao.PreferenceDao
+import com.omnix.assistant.agent.memory.dao.ProcedureDao
 import com.omnix.assistant.agent.memory.entity.FactEntity
 import com.omnix.assistant.agent.memory.entity.MemoryEntity
+import com.omnix.assistant.agent.memory.entity.ProcedureEntity
 import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
 import com.omnix.assistant.agent.policy.ActionPolicySettings
 import com.omnix.assistant.agent.policy.ActionPolicySettingsProvider
@@ -60,6 +62,7 @@ class PrivacyPolicyViewModelTest {
     private lateinit var memoryDao: MemoryDao
     private lateinit var factDao: FactDao
     private lateinit var preferenceDao: PreferenceDao
+    private lateinit var procedureDao: ProcedureDao
 
     @Before
     fun setUp() {
@@ -87,6 +90,10 @@ class PrivacyPolicyViewModelTest {
 
         factDao = mockk(relaxed = true)
         preferenceDao = mockk(relaxed = true)
+        procedureDao = mockk(relaxed = true)
+        every { procedureDao.getAllProceduresStream() } returns flowOf(
+            listOf(ProcedureEntity(triggerPhrase = "сон", executionCount = 2, actionsJson = "[]"))
+        )
         every { factDao.getAllFactsStream() } returns flowOf(
             listOf(
                 FactEntity(factKey = "user.city", factValue = "Франкфурт"),
@@ -105,7 +112,8 @@ class PrivacyPolicyViewModelTest {
         accessibilityStore = accessibilityStore,
         memoryDao = memoryDao,
         factDao = factDao,
-        preferenceDao = preferenceDao
+        preferenceDao = preferenceDao,
+        procedureDao = procedureDao
     )
 
     @Test
@@ -143,6 +151,21 @@ class PrivacyPolicyViewModelTest {
         val facts = vm.uiState.value.facts
         assertEquals(listOf("user.city", "user.name"), facts.map { it.key })
         assertEquals("Александр", facts[1].value)
+    }
+
+    @Test
+    fun `procedures stream maps trigger with execution count and remove deletes by trigger`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        val procedures = vm.uiState.value.procedures
+        assertEquals(1, procedures.size)
+        assertEquals("сон", procedures[0].trigger)
+        assertEquals(2, procedures[0].executions)
+
+        vm.removeProcedure("сон")
+        advanceUntilIdle()
+        coVerify(exactly = 1) { procedureDao.deleteProcedure("сон") }
     }
 
     @Test

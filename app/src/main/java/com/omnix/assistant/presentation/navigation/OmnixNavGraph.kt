@@ -215,7 +215,8 @@ fun OmnixNavGraph(
                     onAllowPackage = policyViewModel::allowPackage,
                     onRevokePackageAllowance = policyViewModel::revokePackageAllowance,
                     onForgetMemory = { id, key -> policyViewModel.forgetMemory(id, key) },
-                    onRemoveFact = policyViewModel::removeFact
+                    onRemoveFact = policyViewModel::removeFact,
+                    onRemoveProcedure = policyViewModel::removeProcedure
                 )
             }
 
