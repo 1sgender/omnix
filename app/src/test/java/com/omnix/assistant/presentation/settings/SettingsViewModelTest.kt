@@ -172,9 +172,11 @@ class SettingsViewModelTest {
             every { localModelConsentFlow } returns flowOf("unasked")
             every { localModelDownloadIdFlow } returns flowOf(-1L)
             every { nearMissCaptureFlow } returns flowOf(false)
+            every { wakeWordEnabledFlow } returns flowOf(true)
             coEvery { setLocalModelConsent(any()) } returns Unit
             coEvery { setLocalModelDownloadId(any()) } returns Unit
             coEvery { setNearMissCapture(any()) } returns Unit
+            coEvery { setWakeWordEnabled(any()) } returns Unit
         },
         mockk<Context>()
     )

@@ -12,7 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +36,7 @@ import com.omnix.assistant.presentation.chat.OmnixChatScreen
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
+import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
 import com.omnix.assistant.presentation.history.HistoryScreen
 import com.omnix.assistant.presentation.home.HomeScreen
 import com.omnix.assistant.presentation.settings.MeScreen
@@ -138,11 +145,36 @@ fun OmnixNavGraph(
             }
 
             composable(OmnixDestination.Devices.route) {
+                // «На этом телефоне» (план пересборки фронта 2026-09-26):
+                // тот же DeviceCapabilityRegistry, которым планирует агент.
+                // Снимок пересчитывается на ON_RESUME — вернувшись из
+                // системного диалога разрешений, пользователь видит новые
+                // статусы без перезапуска экрана.
+                val capabilitiesViewModel: DevicesCapabilitiesViewModel = hiltViewModel()
+                val capabilities by capabilitiesViewModel.snapshot
+                    .collectAsStateWithLifecycle()
+                val lifecycleOwner = LocalLifecycleOwner.current
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            capabilitiesViewModel.refresh()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                }
+                val permissionLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestMultiplePermissions()
+                ) { _ -> capabilitiesViewModel.refresh() }
                 DevicesScreen(
                     clip = uiState.clip,
                     isOnline = uiState.isOnline,
+                    capabilities = capabilities,
                     onBack = navController::popBackStack,
-                    onConnect = { omnixViewModel.setSearching(true) }
+                    onConnect = { omnixViewModel.setSearching(true) },
+                    onRequestPermissions = { permissions ->
+                        permissionLauncher.launch(permissions.toTypedArray())
+                    }
                 )
             }
 

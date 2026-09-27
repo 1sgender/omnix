@@ -28,6 +28,8 @@ import com.omnix.assistant.presentation.components.clipDotColor
 import com.omnix.assistant.presentation.components.clipLabel
 import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.presentation.design.OmnixTheme
+import com.omnix.assistant.presentation.settings.OmnixSettingRow
+import com.omnix.assistant.agent.capability.CapabilityStatus
 import com.omnix.assistant.presentation.state.ClipCapability
 import com.omnix.assistant.presentation.state.ClipState
 import java.text.DateFormat
@@ -46,9 +48,11 @@ fun DevicesScreen(
     clip: ClipState,
     isOnline: Boolean,
     modifier: Modifier = Modifier,
+    capabilities: List<CapabilityGroupUi> = emptyList(),
     onBack: (() -> Unit)? = null,
     onConnect: () -> Unit = {},
-    onOpenSystemBluetooth: () -> Unit = {}
+    onOpenSystemBluetooth: () -> Unit = {},
+    onRequestPermissions: (List<String>) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
 
@@ -114,6 +118,30 @@ fun DevicesScreen(
                 if (clip is ClipState.Disconnected && clip.lastSeenMillis != null) {
                     Spacer(Modifier.height(spacing.lg))
                     LastSeenRow(clip.lastSeenMillis)
+                }
+
+                // «На этом телефоне» — вторым блоком после Clip (план
+                // пересборки фронта 2026-09-26): та же карта возможностей,
+                // по которой агент планирует действия. Доступно — зелёная
+                // точка; можно включить — жёлтая (тап по PERMISSION_REQUIRED
+                // открывает системный диалог); нельзя — серая.
+                if (capabilities.isNotEmpty()) {
+                    Spacer(Modifier.height(spacing.xl))
+                    Text(
+                        text = stringResource(R.string.omnix_devices_on_this_phone),
+                        style = OmnixTheme.typography.overline,
+                        color = OmnixTheme.colors.textTertiary
+                    )
+                    Spacer(Modifier.height(spacing.xs))
+                    OmnixPanel {
+                        capabilities.forEachIndexed { index, group ->
+                            if (index > 0) OmnixDivider()
+                            CapabilityGroupRow(
+                                group = group,
+                                onRequestPermissions = onRequestPermissions
+                            )
+                        }
+                    }
                 }
 
                 Spacer(Modifier.height(spacing.xl))
@@ -214,4 +242,66 @@ private fun LastSeenRow(lastSeenMillis: Long) {
         style = OmnixTheme.typography.caption,
         color = OmnixTheme.colors.textTertiary
     )
+}
+
+/**
+ * Одна группа возможностей: точка-статус, локализованное имя и подпись
+ * статуса. Только PERMISSION_REQUIRED нажимаемо — тап открывает системный
+ * диалог разрешений (план владельца); жёлтая точка без давления.
+ */
+@Composable
+private fun CapabilityGroupRow(
+    group: CapabilityGroupUi,
+    onRequestPermissions: (List<String>) -> Unit
+) {
+    val colors = OmnixTheme.colors
+    val status = group.status
+    val labelToken = capabilityStatusLabel(status)
+    val subtitle: String? = when (status) {
+        is CapabilityStatus.PermissionRequired ->
+            stringResource(R.string.omnix_capability_grant_hint)
+        is CapabilityStatus.UserActionRequired -> status.reason
+        is CapabilityStatus.Unsupported -> status.reason
+        is CapabilityStatus.Available -> null
+    }
+    OmnixSettingRow(
+        title = capabilityGroupTitle(group.capability.id),
+        subtitle = subtitle,
+        value = capabilityStatusText(labelToken),
+        inset = true,
+        onClick = if (status is CapabilityStatus.PermissionRequired) {
+            { onRequestPermissions(status.permissions) }
+        } else {
+            null
+        }
+    ) {
+        OmnixStatusDot(color = when (capabilityDot(status)) {
+            CapabilityDotToken.OK -> colors.stateSuccess
+            CapabilityDotToken.ATTENTION -> colors.stateWarning
+            CapabilityDotToken.OFF -> colors.textDisabled
+        })
+    }
+}
+
+@Composable
+private fun capabilityGroupTitle(id: String): String = when (capabilityGroupToken(id)) {
+    CapabilityGroupToken.BLUETOOTH -> stringResource(R.string.omnix_capability_bluetooth)
+    CapabilityGroupToken.WIFI -> stringResource(R.string.omnix_capability_wifi)
+    CapabilityGroupToken.BRIGHTNESS -> stringResource(R.string.omnix_capability_brightness)
+    CapabilityGroupToken.SCREENSHOT -> stringResource(R.string.omnix_capability_screenshot)
+    CapabilityGroupToken.APPS -> stringResource(R.string.omnix_capability_apps)
+    CapabilityGroupToken.SMS -> stringResource(R.string.omnix_capability_sms)
+    CapabilityGroupToken.CALL -> stringResource(R.string.omnix_capability_call)
+    CapabilityGroupToken.MEDIA -> stringResource(R.string.omnix_capability_media)
+    CapabilityGroupToken.ACCESSIBILITY -> stringResource(R.string.omnix_capability_accessibility)
+    CapabilityGroupToken.LOCATION -> stringResource(R.string.omnix_capability_location)
+    CapabilityGroupToken.OTHER -> stringResource(R.string.omnix_capability_other)
+}
+
+@Composable
+private fun capabilityStatusText(token: CapabilityStatusLabel): String = when (token) {
+    CapabilityStatusLabel.AVAILABLE -> stringResource(R.string.omnix_capability_status_available)
+    CapabilityStatusLabel.PERMISSION_REQUIRED -> stringResource(R.string.omnix_capability_status_permission)
+    CapabilityStatusLabel.USER_ACTION_REQUIRED -> stringResource(R.string.omnix_capability_status_user_action)
+    CapabilityStatusLabel.UNSUPPORTED -> stringResource(R.string.omnix_capability_status_unsupported)
 }

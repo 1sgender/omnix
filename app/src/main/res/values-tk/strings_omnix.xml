@@ -449,4 +449,23 @@
     <string name="omnix_memory_type_episodic">Waka</string>
     <string name="omnix_memory_type_procedural">Senariýa</string>
     <string name="omnix_memory_type_other">Ýat</string>
+    <string name="omnix_voice_wake_word">«Omni» sözü</string>
+    <string name="omnix_voice_wake_word_body">«Omni» sözüne jogap berýär — diňlemek gerek bolmasa öçüriň</string>
+    <string name="omnix_devices_on_this_phone">Bu telefonda</string>
+    <string name="omnix_capability_bluetooth">Bluetooth</string>
+    <string name="omnix_capability_wifi">Wi-Fi</string>
+    <string name="omnix_capability_brightness">Gyzgynlyk</string>
+    <string name="omnix_capability_screenshot">Skrinşot</string>
+    <string name="omnix_capability_apps">Programmalar</string>
+    <string name="omnix_capability_sms">SMS</string>
+    <string name="omnix_capability_call">Jaňlar</string>
+    <string name="omnix_capability_media">Media</string>
+    <string name="omnix_capability_accessibility">Aýratyn mümkinçilikler</string>
+    <string name="omnix_capability_location">Ýerleşik</string>
+    <string name="omnix_capability_other">Beýleki</string>
+    <string name="omnix_capability_status_available">Elýeterli</string>
+    <string name="omnix_capability_status_permission">Rugsat gerek</string>
+    <string name="omnix_capability_status_user_action">Sazlamalarda açyň</string>
+    <string name="omnix_capability_status_unsupported">Elýeterli däl</string>
+    <string name="omnix_capability_grant_hint">Rugsat bermek üçin basyň</string>
 </resources>

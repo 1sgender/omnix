@@ -42,6 +42,8 @@ data class SettingsUiState(
     val wakeWordSensitivity: Float = 0.65f,
     /** Near-miss захват (данные v0.2): доступен только в dev/staging. */
     val nearMissCapture: Boolean = false,
+    /** Мастер-выключатель wake-word «Omni» (план пересборки фронта, блок 7). */
+    val wakeWordEnabled: Boolean = true,
     val automations: List<AutomationEntity> = emptyList(),
     val licenseInfo: LicenseInfo? = null,
     val isSavedSuccess: Boolean = false
@@ -73,6 +75,7 @@ class SettingsViewModel @Inject constructor(
         loadAutomations()
         observeLicense()
         observeNearMissCapture()
+        observeWakeWordEnabled()
     }
 
     private fun loadSettings() {
@@ -107,6 +110,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsDataStore.nearMissCaptureFlow.collectLatest { enabled ->
                 _uiState.update { it.copy(nearMissCapture = enabled) }
+            }
+        }
+    }
+
+    private fun observeWakeWordEnabled() {
+        viewModelScope.launch {
+            settingsDataStore.wakeWordEnabledFlow.collectLatest { enabled ->
+                _uiState.update { it.copy(wakeWordEnabled = enabled) }
             }
         }
     }
@@ -195,6 +206,18 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(nearMissCapture = enabled) }
         viewModelScope.launch {
             settingsDataStore.setNearMissCapture(enabled)
+        }
+    }
+
+    /**
+     * Мастер-выключатель wake-word: immediate-write в тот же DataStore-ключ,
+     * который NeuralWakeWordEngine читает на старте прослушивания. Dev-ручки
+     * (patience/cooldown/debug) в UI не выводятся — план владельца.
+     */
+    fun onWakeWordEnabledChanged(enabled: Boolean) {
+        _uiState.update { it.copy(wakeWordEnabled = enabled) }
+        viewModelScope.launch {
+            settingsDataStore.setWakeWordEnabled(enabled)
         }
     }
 
