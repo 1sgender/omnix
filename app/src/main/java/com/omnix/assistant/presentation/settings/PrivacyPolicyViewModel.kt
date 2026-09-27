@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.memory.dao.FactDao
 import com.omnix.assistant.agent.memory.dao.MemoryDao
+import com.omnix.assistant.agent.memory.dao.PreferenceDao
 import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
 import com.omnix.assistant.agent.memory.model.memoryTypeLabel
 import com.omnix.assistant.agent.policy.ActionPolicySettingsProvider
@@ -19,11 +20,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Одна строка браузера памяти: содержимое + тип для подписи. */
+/** Одна строка браузера памяти: содержимое, тип для подписи и ключ близнеца. */
 data class MemoryEntryUi(
     val id: Long,
     val content: String,
-    val typeLabel: MemoryTypeLabel
+    val typeLabel: MemoryTypeLabel,
+    /** keyName записи: связывает воспоминание с его структурированным близнецом. */
+    val keyName: String? = null
 )
 
 /** Структурированный факт (user.name → Александр). */
@@ -64,7 +67,8 @@ class PrivacyPolicyViewModel @Inject constructor(
     private val policyProvider: ActionPolicySettingsProvider,
     private val accessibilityStore: AccessibilityPrivacyStore,
     private val memoryDao: MemoryDao,
-    private val factDao: FactDao
+    private val factDao: FactDao,
+    private val preferenceDao: PreferenceDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrivacyPolicyUiState())
@@ -95,7 +99,8 @@ class PrivacyPolicyViewModel @Inject constructor(
                                 MemoryEntryUi(
                                     id = memory.id,
                                     content = memory.content,
-                                    typeLabel = memoryTypeLabel(memory.type)
+                                    typeLabel = memoryTypeLabel(memory.type),
+                                    keyName = memory.keyName
                                 )
                             }
                     )
@@ -175,17 +180,27 @@ class PrivacyPolicyViewModel @Inject constructor(
     /**
      * Точное удаление одного воспоминания по id (браузер памяти):
      * без семантического матчинга — строка, которую видит пользователь,
-     * и есть строка, которая удаляется.
+     * и есть строка, которая удаляется. Если у записи есть ключ, уходят и
+     * структурированные близнецы (факт/предпочтение) — та же семантика,
+     * что у голосового «забудь»: юнит знания удаляется целиком, а не
+     * наполовину (иначе ответы продолжали бы идти через копию в memories).
      */
-    fun forgetMemory(memoryId: Long) {
+    fun forgetMemory(memoryId: Long, keyName: String?) {
         viewModelScope.launch {
             memoryDao.deleteMemoryById(memoryId)
+            if (keyName != null) {
+                factDao.deleteFact(keyName)
+                preferenceDao.deletePreference(keyName)
+            }
         }
     }
 
+    /** Удаление факта — вместе с его близнецом-воспоминанием по ключу. */
     fun removeFact(factKey: String) {
         viewModelScope.launch {
             factDao.deleteFact(factKey)
+            memoryDao.deleteMemoryByKey(factKey)
+            preferenceDao.deletePreference(factKey)
         }
     }
 

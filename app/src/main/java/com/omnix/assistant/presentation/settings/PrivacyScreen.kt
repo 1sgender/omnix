@@ -74,7 +74,7 @@ fun PrivacyScreen(
     onUnblockPackage: (String) -> Unit = {},
     onAllowPackage: (String) -> Unit = {},
     onRevokePackageAllowance: (String) -> Unit = {},
-    onForgetMemory: (Long) -> Unit = {},
+    onForgetMemory: (Long, String?) -> Unit = { _, _ -> },
     onRemoveFact: (String) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
@@ -358,7 +358,7 @@ fun PrivacyScreen(
                 voiceEnabled = false
             ),
             onConfirm = {
-                onForgetMemory(memory.id)
+                onForgetMemory(memory.id, memory.keyName)
                 forgetArmedMemory = null
             },
             onCancel = { forgetArmedMemory = null }
