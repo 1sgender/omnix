@@ -233,6 +233,18 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
+    /**
+     * Мастер-выключатель wake-word для UI (план пересборки фронта 2026-09-26,
+     * блок «wake-word тумблер»). Дефолт true — как в WakeWordConfig движка.
+     */
+    val wakeWordEnabledFlow: Flow<Boolean> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_ENABLED] ?: true
+        }
+
     suspend fun setWakeWordEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.WAKEWORD_ENABLED] = enabled

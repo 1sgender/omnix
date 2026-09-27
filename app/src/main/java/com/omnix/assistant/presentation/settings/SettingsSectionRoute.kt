@@ -55,6 +55,7 @@ fun SettingsSectionRoute(
             speechRate = state.speechRate,
             speechPitch = state.speechPitch,
             wakeSensitivity = state.wakeWordSensitivity,
+            wakeWordEnabled = state.wakeWordEnabled,
             headsetOnly = state.isHeadsetOnlyMode,
             // Listening is owned by the foreground service, not by settings
             // state; until that is surfaced, the toggle mirrors headset mode
@@ -65,6 +66,7 @@ fun SettingsSectionRoute(
             onSpeechRateChange = viewModel::onSpeechRateChanged,
             onSpeechPitchChange = viewModel::onSpeechPitchChanged,
             onWakeSensitivityChange = viewModel::onWakeWordSensitivityChanged,
+            onWakeWordEnabledChange = viewModel::onWakeWordEnabledChanged,
             onHeadsetOnlyChange = viewModel::onHeadsetOnlyModeChanged,
             onVoiceFeedbackChange = appearanceViewModel::setVoiceFeedback,
             onCommitChanges = viewModel::saveAllSettings,

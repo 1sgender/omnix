@@ -451,4 +451,23 @@
     <string name="omnix_memory_type_episodic">Event</string>
     <string name="omnix_memory_type_procedural">Scenario</string>
     <string name="omnix_memory_type_other">Memory</string>
+    <string name="omnix_voice_wake_word">Wake word «Omni»</string>
+    <string name="omnix_voice_wake_word_body">Respond to the word «Omni» — turn this off if you do not want it listening</string>
+    <string name="omnix_devices_on_this_phone">On this phone</string>
+    <string name="omnix_capability_bluetooth">Bluetooth</string>
+    <string name="omnix_capability_wifi">Wi-Fi</string>
+    <string name="omnix_capability_brightness">Brightness</string>
+    <string name="omnix_capability_screenshot">Screenshot</string>
+    <string name="omnix_capability_apps">Apps</string>
+    <string name="omnix_capability_sms">SMS</string>
+    <string name="omnix_capability_call">Calls</string>
+    <string name="omnix_capability_media">Media</string>
+    <string name="omnix_capability_accessibility">Accessibility</string>
+    <string name="omnix_capability_location">Location</string>
+    <string name="omnix_capability_other">Other</string>
+    <string name="omnix_capability_status_available">Available</string>
+    <string name="omnix_capability_status_permission">Needs permission</string>
+    <string name="omnix_capability_status_user_action">Turn on in system settings</string>
+    <string name="omnix_capability_status_unsupported">Not available</string>
+    <string name="omnix_capability_grant_hint">Tap to grant the permission</string>
 </resources>

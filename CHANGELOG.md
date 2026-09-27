@@ -14,6 +14,21 @@ must be added only when the repository owner creates an actual release.
 
 ### Added
 
+- "On this phone" capability snapshot on the Devices screen (frontend
+  rebuild plan 2026-09-26): what OMNIX can actually do on this device,
+  from the same DeviceCapabilityRegistry the agent consults when
+  planning. Ten groups with a green / amber / grey status dot; only
+  PERMISSION_REQUIRED rows are tappable — a tap opens the system
+  permission dialog, and the snapshot re-reads on resume so returning
+  from that dialog shows the new status. Reasons from the domain (what
+  exactly to enable) ride as subtitles; presentation tokens are pure
+  Kotlin with JVM tests.
+- Wake-word master switch in Voice settings: the first toggle of the
+  listening group writes immediately to the same `wakeword.enabled` key
+  the engine reads when listening starts. Dev knobs (patience,
+  cooldown, debug logging) stay out of the UI, per the owner's plan.
+### Added
+
 - Memory browser on the Privacy screen ("What OMNIX remembers", frontend
   rebuild plan 2026-09-26): memories and structured facts are listed from
   the same live Room streams the memory engine reads, with a type caption

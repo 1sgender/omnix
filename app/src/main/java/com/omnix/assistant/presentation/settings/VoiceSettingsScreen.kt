@@ -25,6 +25,7 @@ fun VoiceSettingsScreen(
     speechRate: Float,
     speechPitch: Float,
     wakeSensitivity: Float,
+    wakeWordEnabled: Boolean = true,
     headsetOnly: Boolean,
     listeningActive: Boolean,
     voiceFeedback: Boolean,
@@ -34,6 +35,7 @@ fun VoiceSettingsScreen(
     onSpeechRateChange: (Float) -> Unit = {},
     onSpeechPitchChange: (Float) -> Unit = {},
     onWakeSensitivityChange: (Float) -> Unit = {},
+    onWakeWordEnabledChange: (Boolean) -> Unit = {},
     onHeadsetOnlyChange: (Boolean) -> Unit = {},
     onListeningChange: (Boolean) -> Unit = {},
     onVoiceFeedbackChange: (Boolean) -> Unit = {},
@@ -49,6 +51,18 @@ fun VoiceSettingsScreen(
                 subtitle = stringResource(R.string.omnix_voice_listening_body),
                 checked = listeningActive,
                 onCheckedChange = onListeningChange,
+                inset = true
+            )
+            OmnixGroupDivider()
+            // Мастер-выключатель wake-word (план пересборки фронта 2026-09-26):
+            // пишет immediate в wakeword.enabled — тот же ключ, который движок
+            // читает на старте прослушивания. Чувствительность без него не имеет
+            // смысла, поэтому тумблер стоит первым в группе.
+            OmnixToggleRow(
+                title = stringResource(R.string.omnix_voice_wake_word),
+                subtitle = stringResource(R.string.omnix_voice_wake_word_body),
+                checked = wakeWordEnabled,
+                onCheckedChange = onWakeWordEnabledChange,
                 inset = true
             )
             OmnixGroupDivider()

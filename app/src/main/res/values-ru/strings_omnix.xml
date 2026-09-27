@@ -450,4 +450,23 @@
     <string name="omnix_memory_type_episodic">Событие</string>
     <string name="omnix_memory_type_procedural">Сценарий</string>
     <string name="omnix_memory_type_other">Воспоминание</string>
+    <string name="omnix_voice_wake_word">Ключевое слово «Omni»</string>
+    <string name="omnix_voice_wake_word_body">Откликаться на слово «Omni» — выключите, если прослушивание не нужно</string>
+    <string name="omnix_devices_on_this_phone">На этом телефоне</string>
+    <string name="omnix_capability_bluetooth">Bluetooth</string>
+    <string name="omnix_capability_wifi">Wi-Fi</string>
+    <string name="omnix_capability_brightness">Яркость</string>
+    <string name="omnix_capability_screenshot">Скриншот</string>
+    <string name="omnix_capability_apps">Приложения</string>
+    <string name="omnix_capability_sms">SMS</string>
+    <string name="omnix_capability_call">Звонки</string>
+    <string name="omnix_capability_media">Медиа</string>
+    <string name="omnix_capability_accessibility">Специальные возможности</string>
+    <string name="omnix_capability_location">Геолокация</string>
+    <string name="omnix_capability_other">Прочее</string>
+    <string name="omnix_capability_status_available">Доступно</string>
+    <string name="omnix_capability_status_permission">Нужно разрешение</string>
+    <string name="omnix_capability_status_user_action">Включите в системных настройках</string>
+    <string name="omnix_capability_status_unsupported">Недоступно</string>
+    <string name="omnix_capability_grant_hint">Нажмите, чтобы дать разрешение</string>
 </resources>
