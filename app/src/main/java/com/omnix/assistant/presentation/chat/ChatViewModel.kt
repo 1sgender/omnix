@@ -513,10 +513,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun speakMessage(text: String) {
-        textToSpeechManager.speak(text, speechRate, speechPitch)
-    }
-
     fun clearAllHistory() {
         viewModelScope.launch {
             clearChatHistoryUseCase()

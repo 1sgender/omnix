@@ -2,7 +2,6 @@ package com.omnix.assistant.agent.apps
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import com.omnix.assistant.agent.memory.semantic.SemanticTextMatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -47,11 +46,5 @@ class AppResolver @Inject constructor(
         } catch (_: RuntimeException) {
             emptyList()
         }
-    }
-
-    fun isInstalled(packageName: String): Boolean = try {
-        context.packageManager.getApplicationInfo(packageName, 0).let { true }
-    } catch (_: PackageManager.NameNotFoundException) {
-        false
     }
 }

@@ -634,6 +634,15 @@ must be added only when the repository owner creates an actual release.
 ### Changed
 - **Near-miss запись (данные v0.2) — вкл по умолчанию в dev/staging-сборках: старт сбора датасета.** Решение владельца (2026-09-26): чтобы бета-сбор не требовал от участников знания developer-настроек, дефолт записи теперь привязан к flavor: нетронутый ключ `wakeword.near_miss_capture` в dev/staging = запись идёт, явный выключ respected и персистится; в prod запись не существует ни при каком состоянии (flavor-гейт без изменений — защита в глубину). Гейт `resolveNearMissCapture` (чистая функция, JVM-тест) переведён на семантику `null → flavor-дефолт`; UI-подпись обновлена — честно говорит «в этой сборке включено по умолчанию» и указывает выход («Удалить записи»). Для участников протокола `training/COLLECTING.md` §5 добавлен пересылаемый брифинг (что записывается, где хранится, как выйти из сбора).
 
+### Changed
+
+- Удалён мёртвый код: 26 неиспользуемых функций без вызовов в приложении, тестах
+  и сервере (лишние запросы Room DAO в AutomationDao, MemoryDao, FactDao и
+  PreferenceDao; неиспользуемые методы WorkingMemory, ToolRegistry, AppResolver,
+  TextToSpeechManager, хранилища приватности accessibility; устаревший пустой
+  метод SettingsViewModel). Схема Room не менялась, миграция не нужна, поведение
+  приложения прежнее.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

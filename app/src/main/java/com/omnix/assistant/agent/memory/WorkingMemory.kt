@@ -65,9 +65,6 @@ class WorkingMemory @Inject constructor(
     }
 
     @Synchronized
-    fun getLastEntity(): String? = context.lastPerson ?: context.lastTopic
-
-    @Synchronized
     fun setLastApp(app: String) {
         context = context.with(ContextSlot.APP, app)
         contextStore["last_app"] = TimedEntry(app, System.currentTimeMillis())
@@ -75,15 +72,6 @@ class WorkingMemory @Inject constructor(
 
     @Synchronized
     fun getLastApp(): String? = context.lastApp
-
-    @Synchronized
-    fun setLastPerson(person: String) {
-        context = context.with(ContextSlot.PERSON, person)
-        contextStore["last_person"] = TimedEntry(person, System.currentTimeMillis())
-    }
-
-    @Synchronized
-    fun getLastPerson(): String? = context.lastPerson
 
     @Synchronized
     fun setLastContact(contact: String) {
@@ -99,9 +87,6 @@ class WorkingMemory @Inject constructor(
         context = context.with(ContextSlot.LOCATION, location)
         contextStore["last_location"] = TimedEntry(location, System.currentTimeMillis())
     }
-
-    @Synchronized
-    fun getLastLocation(): String? = context.lastLocation
 
     @Synchronized
     fun setLastAction(action: String) {
@@ -133,11 +118,6 @@ class WorkingMemory @Inject constructor(
 
     @Synchronized
     fun getLastConversation(): String? = context.lastConversation
-
-    @Synchronized
-    fun setActiveTask(task: String?) {
-        context = context.copy(activeTask = task)
-    }
 
     // ------------------------------------------------------- contextStore (LRU + TTL)
 

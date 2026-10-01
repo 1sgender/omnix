@@ -45,10 +45,6 @@ object BatteryOptimizationHelper {
         }
     }
 
-    fun getDeviceManufacturerName(): String {
-        return Build.MANUFACTURER.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-    }
-
     /**
      * Открывает специализированный системный экран автозапуска и управления питанием для конкретного производителя
      * (Samsung OneUI, Xiaomi MIUI/HyperOS, Huawei EMUI, Oppo/Realme ColorOS, Vivo FuntouchOS)
