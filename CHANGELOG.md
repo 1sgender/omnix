@@ -643,6 +643,11 @@ must be added only when the repository owner creates an actual release.
   метод SettingsViewModel). Схема Room не менялась, миграция не нужна, поведение
   приложения прежнее.
 
+### Fixed
+
+- Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
+  из-за которых блокирующий скан Trivy в job production-image-security падал.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with
