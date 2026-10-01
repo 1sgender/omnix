@@ -71,16 +71,6 @@ data class ConversationContext(
     val lastConversation: String? = null,
     val lastMessage: String? = null
 ) {
-    fun valueFor(slot: ContextSlot): String? = when (slot) {
-        ContextSlot.APP -> lastApp
-        ContextSlot.CONTACT -> lastContact
-        ContextSlot.PERSON -> lastPerson
-        ContextSlot.FILE -> lastFile
-        ContextSlot.LOCATION -> lastLocation
-        ContextSlot.TOPIC -> lastTopic
-        ContextSlot.CONVERSATION -> lastConversation
-    }
-
     fun with(slot: ContextSlot, value: String): ConversationContext {
         val clean = value.trim()
         if (clean.isEmpty()) return this

@@ -5,16 +5,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.omnix.assistant.agent.memory.entity.PreferenceEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PreferenceDao {
-
-    @Query("SELECT * FROM preferences ORDER BY updated_at DESC")
-    fun getAllPreferencesStream(): Flow<List<PreferenceEntity>>
-
-    @Query("SELECT * FROM preferences WHERE pref_key = :key LIMIT 1")
-    suspend fun getPreferenceByKey(key: String): PreferenceEntity?
 
     @Query("SELECT * FROM preferences ORDER BY updated_at DESC")
     suspend fun getAllPreferences(): List<PreferenceEntity>

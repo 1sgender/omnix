@@ -44,9 +44,6 @@ class AccessibilityPrivacyStore @Inject constructor(
 
     fun blockedPackages(): Set<String> = readSet(KEY_BLOCKED)
 
-    fun blockedSensitiveHints(): List<String> =
-        AccessibilityPrivacyPolicy.SENSITIVE_PACKAGE_HINTS
-
     /** Разрешённые пользователем пакеты (перекрывают sensitive-эвристику). */
     fun allowedPackages(): Set<String> = readSet(KEY_ALLOWED)
 
