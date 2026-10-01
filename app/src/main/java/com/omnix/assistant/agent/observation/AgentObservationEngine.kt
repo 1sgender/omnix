@@ -4,7 +4,6 @@ import com.omnix.assistant.agent.memory.WorkingMemory
 import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.agent.planner.PlanCondition
 import com.omnix.assistant.agent.planner.PlanStep
-import com.omnix.assistant.agent.planner.StepObservation
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
@@ -71,18 +70,6 @@ class AgentObservationEngine @Inject constructor(
         val observation = Observation.from(step.toolCall.toolId, result)
         recordState(step, result, observation)
         return observation
-    }
-
-    /**
-     * Совместимый со схемой плана вид наблюдения.
-     */
-    fun observeStepResult(step: PlanStep, result: ToolExecutionResult): StepObservation {
-        val observation = observe(step, result)
-        return if (observation.success) {
-            StepObservation.StepCompleted(step, result)
-        } else {
-            StepObservation.StepFailed(step, observation.error ?: observation.summary)
-        }
     }
 
     /**

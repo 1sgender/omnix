@@ -22,14 +22,8 @@ interface AutomationDao {
     @Query("SELECT * FROM automations WHERE rule_id = :ruleId LIMIT 1")
     suspend fun getAutomationByRuleId(ruleId: String): AutomationEntity?
     
-    @Query("SELECT * FROM automations WHERE id = :id LIMIT 1")
-    suspend fun getAutomationById(id: Long): AutomationEntity?
-    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAutomation(automation: AutomationEntity): Long
-    
-    @Update
-    suspend fun updateAutomation(automation: AutomationEntity)
     
     @Delete
     suspend fun deleteAutomation(automation: AutomationEntity)
@@ -40,9 +34,6 @@ interface AutomationDao {
     @Query("DELETE FROM automations WHERE rule_id = :ruleId")
     suspend fun deleteAutomationByRuleId(ruleId: String)
     
-    @Query("DELETE FROM automations WHERE id = :id")
-    suspend fun deleteAutomationById(id: Long)
-    
     @Query("UPDATE automations SET is_enabled = :enabled WHERE rule_id = :ruleId")
     suspend fun toggleEnabled(ruleId: String, enabled: Boolean)
 
@@ -52,9 +43,4 @@ interface AutomationDao {
     @Query("UPDATE automations SET last_triggered_at = :timestamp, trigger_count = trigger_count + 1 WHERE id = :id")
     suspend fun recordTrigger(id: Long, timestamp: Long = System.currentTimeMillis())
     
-    @Query("SELECT COUNT(*) FROM automations")
-    suspend fun getAutomationsCount(): Int
-    
-    @Query("DELETE FROM automations")
-    suspend fun deleteAllAutomations()
 }

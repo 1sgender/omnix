@@ -13,9 +13,6 @@ interface FactDao {
     @Query("SELECT * FROM facts ORDER BY updated_at DESC")
     fun getAllFactsStream(): Flow<List<FactEntity>>
 
-    @Query("SELECT * FROM facts WHERE fact_key = :key LIMIT 1")
-    suspend fun getFactByKey(key: String): FactEntity?
-
     @Query("SELECT * FROM facts ORDER BY updated_at DESC")
     suspend fun getAllFacts(): List<FactEntity>
 

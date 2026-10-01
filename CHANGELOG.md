@@ -642,6 +642,13 @@ must be added only when the repository owner creates an actual release.
   omnix_launcher_art.png удалены (minSdk 29, адаптивные иконки поддерживаются
   всегда). Знак внутри приложения (OmnixRingMark) перерисован.
 
+- Удалён мёртвый код: 26 неиспользуемых функций без вызовов в приложении, тестах
+  и сервере (лишние запросы Room DAO в AutomationDao, MemoryDao, FactDao и
+  PreferenceDao; неиспользуемые методы WorkingMemory, ToolRegistry, AppResolver,
+  TextToSpeechManager, хранилища приватности accessibility; устаревший пустой
+  метод SettingsViewModel). Схема Room не менялась, миграция не нужна, поведение
+  приложения прежнее.
+
 ### Fixed
 
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),

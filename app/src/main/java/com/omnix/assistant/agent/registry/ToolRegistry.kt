@@ -1,9 +1,7 @@
 package com.omnix.assistant.agent.registry
 
 import com.omnix.assistant.agent.core.OmniTool
-import com.omnix.assistant.agent.core.ToolCategory
 import com.omnix.assistant.agent.discovery.ToolDiscoveryEngine
-import com.omnix.assistant.agent.model.ToolDefinition
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,12 +31,6 @@ class ToolRegistry @Inject constructor(
     }
 
     fun getAllTools(): List<OmniTool> = toolsById.values.toList()
-
-    fun getToolsByCategory(category: ToolCategory): List<OmniTool> {
-        return toolsById.values.filter { it.category == category }
-    }
-
-    fun getToolDefinitions(): List<ToolDefinition> = toolsById.values.map { it.toDefinition() }
 
     /**
      * Tool Discovery 2.0: Динамически отбирает 3-4 инструмента под конкретный запрос

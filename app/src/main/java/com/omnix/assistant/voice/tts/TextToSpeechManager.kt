@@ -438,11 +438,4 @@ class TextToSpeechManager @Inject constructor(
         return result != TextToSpeech.LANG_MISSING_DATA && 
                result != TextToSpeech.LANG_NOT_SUPPORTED
     }
-
-    /**
-     * Возвращает список доступных голосов
-     */
-    fun getAvailableVoices(): List<android.speech.tts.Voice> {
-        return tts?.voices?.toList() ?: emptyList()
-    }
 }
