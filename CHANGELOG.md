@@ -642,6 +642,11 @@ must be added only when the repository owner creates an actual release.
   omnix_launcher_art.png удалены (minSdk 29, адаптивные иконки поддерживаются
   всегда). Знак внутри приложения (OmnixRingMark) перерисован.
 
+### Fixed
+
+- Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
+  из-за которых блокирующий скан Trivy в job production-image-security падал.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with
