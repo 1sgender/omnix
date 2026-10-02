@@ -636,6 +636,12 @@ must be added only when the repository owner creates an actual release.
 
 ### Changed
 
+- Новый логотип: буква «O», разрезанная на две половины-чаши (образ двух наушников),
+  вместо «кольца с орбитой», похожего на чужой бренд. Иконка приложения теперь
+  векторная (adaptive icon); 10 неиспользуемых растровых иконок mipmap-*dpi и
+  omnix_launcher_art.png удалены (minSdk 29, адаптивные иконки поддерживаются
+  всегда). Знак внутри приложения (OmnixRingMark) перерисован.
+
 - Удалён мёртвый код: 26 неиспользуемых функций без вызовов в приложении, тестах
   и сервере (лишние запросы Room DAO в AutomationDao, MemoryDao, FactDao и
   PreferenceDao; неиспользуемые методы WorkingMemory, ToolRegistry, AppResolver,

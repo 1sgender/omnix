@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -16,17 +16,17 @@ import com.omnix.assistant.R
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
- * Маленький знак логотипа (мок подключения Clip, 2026-09-24): кольцо-эллипс
- * и наклонная орбита, без надписи. SVG мока: viewBox 34×26, эллипс
- * (17,13 r=11) stroke 3 + эллипс (17,14 rx=16 ry=4.6) stroke 1.4,
- * повёрнутый на −20°. Знак доступен скринридеру как «OMNIX» — как в моке
- * (role="img" aria-label="OMNIX").
+ * Маленький знак логотипа без надписи: кольцо «O», разрезанное на две
+ * половины-чаши (левая сдвинута вверх, правая вниз) — образ двух наушников.
+ * Геометрия задана в сетке 34×26: центр (17,13), радиус 8, толщина 3.4,
+ * левая половина смещена на (−1.1, −1.6), правая на (+1.1, +1.6).
+ * Знак доступен скринридеру как «OMNIX» (role="img", aria-label="OMNIX").
  */
 @Composable
 internal fun OmnixRingMark(
     modifier: Modifier = Modifier,
     color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary,
-    // Моки задают разные размеры знака: клип-флоу 28×22, активация 26×20.
+    // Разные экраны задают разные размеры знака: клип-флоу 28×22, активация 26×20.
     width: Dp = MARK_WIDTH,
     height: Dp = MARK_HEIGHT
 ) {
@@ -36,31 +36,50 @@ internal fun OmnixRingMark(
             .size(width = width, height = height)
             .semantics { contentDescription = markLabel }
     ) {
-        val ink = color
-        // Кольцо: центр (17,13), r=11 из 34×26.
-        val ringCenter = Offset(x = size.width * (17f / 34f), y = size.height * (13f / 26f))
-        val ringRadius = size.width * (11f / 34f)
-        drawCircle(
-            color = ink,
-            radius = ringRadius,
-            center = ringCenter,
-            style = Stroke(width = size.width * (3f / 34f))
+        val unit = size.width / GRID_WIDTH
+        val radius = RING_RADIUS * unit
+        val cupSize = Size(width = radius * 2f, height = radius * 2f)
+        val stroke = Stroke(width = RING_STROKE * unit)
+        val centerX = size.width * 0.5f
+        val centerY = size.height * 0.5f
+
+        // Левая чаша: от низа через левый край к верху, смещена вверх-влево.
+        drawArc(
+            color = color,
+            startAngle = LEFT_CUP_START,
+            sweepAngle = HALF_TURN,
+            useCenter = false,
+            topLeft = Offset(
+                x = centerX - radius - CUP_SHIFT_X * unit,
+                y = centerY - radius - CUP_SHIFT_Y * unit
+            ),
+            size = cupSize,
+            style = stroke
         )
-        // Орбита: эллипс (17,14 rx=16 ry=4.6), поворот −20°.
-        val orbitCenter = Offset(x = size.width * (17f / 34f), y = size.height * (14f / 26f))
-        rotate(degrees = -20f, pivot = orbitCenter) {
-            drawOval(
-                color = ink,
-                topLeft = Offset(orbitCenter.x - size.width * (16f / 34f), orbitCenter.y - size.height * (4.6f / 26f)),
-                size = androidx.compose.ui.geometry.Size(
-                    width = size.width * (32f / 34f),
-                    height = size.height * (9.2f / 26f)
-                ),
-                style = Stroke(width = size.width * (1.4f / 34f))
-            )
-        }
+        // Правая чаша: от верха через правый край к низу, смещена вниз-вправо.
+        drawArc(
+            color = color,
+            startAngle = RIGHT_CUP_START,
+            sweepAngle = HALF_TURN,
+            useCenter = false,
+            topLeft = Offset(
+                x = centerX - radius + CUP_SHIFT_X * unit,
+                y = centerY - radius + CUP_SHIFT_Y * unit
+            ),
+            size = cupSize,
+            style = stroke
+        )
     }
 }
 
 private val MARK_WIDTH = 28.dp
 private val MARK_HEIGHT = 22.dp
+
+private const val GRID_WIDTH = 34f
+private const val RING_RADIUS = 8f
+private const val RING_STROKE = 3.4f
+private const val CUP_SHIFT_X = 1.1f
+private const val CUP_SHIFT_Y = 1.6f
+private const val HALF_TURN = 180f
+private const val LEFT_CUP_START = 90f
+private const val RIGHT_CUP_START = -90f
