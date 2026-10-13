@@ -654,6 +654,13 @@ must be added only when the repository owner creates an actual release.
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
   из-за которых блокирующий скан Trivy в job production-image-security падал.
 
+### Changed
+
+- Дизайн v2, шаг 1 (основа): тёплая графитовая палитра с фирменным лаймовым
+  акцентом (#C8FF4D) в тёмной и ночной схемах вместо холодного сине-серого;
+  нижнее меню из 4 вкладок Главная · Чат · Наушники · Я (новая иконка
+  наушников, подписи на en/ru/tk). История переехала в раздел «Я».
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

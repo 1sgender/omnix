@@ -7,13 +7,12 @@ import androidx.compose.ui.graphics.Color
  * OMNIX colour tokens — the single source of colour for the whole frontend.
  *
  * Specification §3–§5, §54. Rules enforced here:
- *  - the background is never pure `#000000`; it is a felt material;
- *  - text is never pure white, it uses four opacity steps;
- *  - the Core's states are MONOCHROME: white/graphite only, told apart by
- *    brightness, halo intensity and motion tempo — never by hue. Colour is
- *    reserved for the single critical exception, ERROR, which stays an
- *    unmistakable alarm red so "something is wrong" reads instantly against
- *    the monochrome field (design decision, 2026-09-23);
+ *  - the background is never pure `#000000`; it is a warm graphite material;
+ *  - text is never pure white, it is warm "paper" ink in four steps;
+ *  - one brand colour, signal lime (design v2, 2026-10-13): the Core's
+ *    working states share it and are told apart by halo intensity and motion
+ *    tempo — never by a hue per state. ERROR stays an unmistakable alarm red
+ *    so "something is wrong" reads instantly (design decision, 2026-09-23);
  *  - screens must never declare `Color(0x...)` locally.
  */
 @Immutable
@@ -96,21 +95,31 @@ data class OmnixColorScheme(
     val isNight: Boolean
 )
 
-private val TextPrimaryToken = Color(0xF0FFFFFF)      // 0.94
-private val TextSecondaryToken = Color(0x9EFFFFFF)    // 0.62
-private val TextTertiaryToken = Color(0x61FFFFFF)     // 0.38
-private val TextDisabledToken = Color(0x38FFFFFF)     // 0.22
+// Design v2 (2026-10-13): warm "paper" ink on a warm graphite ground. A cold
+// blue-grey reads as a generic AI app; the warm pair reads as a device.
+private val TextPrimaryToken = Color(0xFFF2EEE6)
+private val TextSecondaryToken = Color(0xFF9C968C)
+private val TextTertiaryToken = Color(0xFF857F76)
+private val TextDisabledToken = Color(0x47F2EEE6)     // 0.28
+
+/**
+ * The OMNIX signal lime (design v2, 2026-10-13). It is the single brand
+ * colour and is used sparingly: the Core while it works, the primary action,
+ * links, switches that are on and the active tab — never as decoration.
+ */
+private val SignalLime = Color(0xFFC8FF4D)
+private val SignalLimeSoft = Color(0xFFE3FFA6)
+private val WarmGraphite = Color(0xFF0F0E0C)
 
 /** Default dark scheme — the primary OMNIX appearance (§3). */
 val OmnixDarkColors = OmnixColorScheme(
-    // Sampled from the approved reference: the ground is a very dark blue,
-    // not a neutral grey. The blue cast is what makes the coloured Core states
-    // read as emitted light instead of as painted strokes.
-    background = Color(0xFF01090F),
-    surface = Color(0xFF0A1015),
-    surfaceElevated = Color(0xFF121A20),
-    surfaceFilled = Color(0xFF2C2C2E),
-    border = Color(0x14FFFFFF),                        // rgba(255,255,255,0.08)
+    // Warm graphite, never pure black: the ground is a material, and its warm
+    // cast is what separates OMNIX from cold blue-grey assistant apps.
+    background = WarmGraphite,
+    surface = Color(0xFF1A1815),
+    surfaceElevated = Color(0xFF25221E),
+    surfaceFilled = Color(0xFF2E2B26),
+    border = Color(0x0DFFFFFF),                        // rgba(255,255,255,0.05)
     scrim = Color(0xB3000000),
 
     textPrimary = TextPrimaryToken,
@@ -118,43 +127,39 @@ val OmnixDarkColors = OmnixColorScheme(
     textTertiary = TextTertiaryToken,
     textDisabled = TextDisabledToken,
 
-    // Monochrome state ladder: idle is a dim graphite presence, every working
-    // state glows the same bright white. The states are told apart by halo
-    // intensity and the tempo of their motion (see CoreMotion), not by hue.
-    // The former cyan/green/yellow/blue/purple per-state hues are gone by
-    // design; ERROR keeps the alarm red as the only coloured state.
-    stateIdle = Color(0xFF8F989F),
-    stateListening = Color(0xFFEDF1F4),
-    stateRecognizing = Color(0xFFEDF1F4),
-    stateThinking = Color(0xFFEDF1F4),
-    stateExecuting = Color(0xFFEDF1F4),
-    stateSpeaking = Color(0xFFEDF1F4),
-    stateSuccess = Color(0xFFEDF1F4),
+    // Idle is a dim warm-grey presence; every working state lights the same
+    // signal lime. The states stay told apart by halo intensity and the tempo
+    // of their motion (see CoreMotion), not by a hue per state. ERROR keeps
+    // the alarm red, the only other colour in the field.
+    stateIdle = TextSecondaryToken,
+    stateListening = SignalLime,
+    stateRecognizing = SignalLime,
+    stateThinking = SignalLime,
+    stateExecuting = SignalLime,
+    stateSpeaking = SignalLime,
+    stateSuccess = SignalLime,
     stateError = Color(0xFFFF5A3C),
     stateWarning = Color(0xFFF5C451),
 
-    // Muted steel blue (mock 2026-09-25): the ring must not carry the logo's
-    // saturated brand blue — it is chrome, not a brand moment.
-    accentRing = Color(0xFF3E6C9F),
+    accentRing = SignalLime,
 
-    // Bubbles sampled from the approved mock (2026-09-26).
-    bubbleUser = Color(0xFFF5F5F7),
-    onBubbleUser = Color(0xFF0A1118),
-    bubbleAi = Color(0xFF1C1C1E),
+    // The user's bubble is paper on graphite, OMNIX's a raised surface.
+    bubbleUser = TextPrimaryToken,
+    onBubbleUser = WarmGraphite,
+    bubbleAi = Color(0xFF1A1815),
     onBubbleAi = TextPrimaryToken,
-    errorBubble = Color(0xFF241412),
+    errorBubble = Color(0xFF2A1612),
 
-    actionPrimary = TextPrimaryToken,
-    onActionPrimary = Color(0xFF01090F),
+    // The primary action is lime with graphite ink: the one place the brand
+    // colour is a fill rather than a line.
+    actionPrimary = SignalLime,
+    onActionPrimary = WarmGraphite,
     actionSecondaryBorder = Color(0x2EFFFFFF),          // 0.18
 
-    actionLink = Color(0xFF0A84FF),
+    actionLink = SignalLime,
 
-    // Синий в тон логотипа (мок онбординга 2026-09-24, калибровка по
-    // повторному рендеру): единственный цветной момент вне монохрома
-    // ядра и красного ERROR.
-    accentBrand = Color(0xFF3D7ECB),
-    accentBrandSoft = Color(0xFF8FB8E6),
+    accentBrand = SignalLime,
+    accentBrandSoft = SignalLimeSoft,
 
     isNight = false
 )
@@ -164,37 +169,41 @@ val OmnixDarkColors = OmnixColorScheme(
  * Same tokens, dimmer values — never a second design language.
  */
 val OmnixNightColors = OmnixDarkColors.copy(
-    background = Color(0xFF000508),
-    surface = Color(0xFF060B10),
-    surfaceElevated = Color(0xFF0C1318),
-    surfaceFilled = Color(0xFF1C1C1E),
-    border = Color(0x0FFFFFFF),
+    background = Color(0xFF0A0908),
+    surface = Color(0xFF13110F),
+    surfaceElevated = Color(0xFF1C1A17),
+    surfaceFilled = Color(0xFF24211D),
+    border = Color(0x0AFFFFFF),
 
-    textPrimary = Color(0xD6FFFFFF),
-    textSecondary = Color(0x80FFFFFF),
-    textTertiary = Color(0x4DFFFFFF),
-    textDisabled = Color(0x2BFFFFFF),
+    textPrimary = Color(0xD6F2EEE6),
+    textSecondary = Color(0xFF857F76),
+    textTertiary = Color(0xFF6E6961),
+    textDisabled = Color(0x33F2EEE6),
 
-    stateIdle = Color(0xFF6E767C),
-    stateListening = Color(0xFFB7BEC3),
-    stateRecognizing = Color(0xFFB7BEC3),
-    stateThinking = Color(0xFFB7BEC3),
-    stateExecuting = Color(0xFFB7BEC3),
-    stateSpeaking = Color(0xFFB7BEC3),
-    stateSuccess = Color(0xFFB7BEC3),
+    // The same lime, dimmed so it does not glare in the dark.
+    stateIdle = Color(0xFF6E6961),
+    stateListening = Color(0xFF9FCC3D),
+    stateRecognizing = Color(0xFF9FCC3D),
+    stateThinking = Color(0xFF9FCC3D),
+    stateExecuting = Color(0xFF9FCC3D),
+    stateSpeaking = Color(0xFF9FCC3D),
+    stateSuccess = Color(0xFF9FCC3D),
     stateError = Color(0xFFD1615B),
     stateWarning = Color(0xFFD1A94E),
 
-    accentRing = Color(0xFF2C4C72),
+    accentRing = Color(0xFF9FCC3D),
 
     // Same mock, dimmed for the night ground.
-    bubbleUser = Color(0xFFC9C9CE),
-    onBubbleUser = Color(0xFF0A1118),
-    bubbleAi = Color(0xFF141B21),
-    onBubbleAi = Color(0xD6FFFFFF),
+    bubbleUser = Color(0xFFCFCBC3),
+    onBubbleUser = Color(0xFF0A0908),
+    bubbleAi = Color(0xFF13110F),
+    onBubbleAi = Color(0xD6F2EEE6),
     errorBubble = Color(0xFF1D100E),
 
-    actionPrimary = Color(0xD6FFFFFF),
+    actionPrimary = Color(0xFF9FCC3D),
+    onActionPrimary = Color(0xFF0A0908),
+    actionLink = Color(0xFF9FCC3D),
+    accentBrand = Color(0xFF9FCC3D),
     isNight = true
 )
 

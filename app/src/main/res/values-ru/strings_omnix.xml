@@ -144,6 +144,8 @@
     <string name="omnix_nav_history">История</string>
     <string name="omnix_nav_home">Главная</string>
     <string name="omnix_nav_me">Профиль</string>
+    <string name="omnix_nav_chat">Чат</string>
+    <string name="omnix_nav_headphones">Наушники</string>
     <string name="omnix_nav_back">Назад</string>
 
     <!-- ===== История ===== -->

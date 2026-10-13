@@ -59,8 +59,12 @@ sealed class OmnixDestination(val route: String) {
     data object FirstRun : OmnixDestination("omnix/first-run")
 
     companion object {
-        /** The three destinations that appear in the navigation bar. */
-        val primary = listOf(History, Home, Me)
+        /**
+         * The four destinations that appear in the navigation bar (design
+         * v2, 2026-10-13): Home · Chat · Headphones · Me. The headphones are
+         * the product, so their screen is a tab, not a settings row.
+         */
+        val primary = listOf(Home, Chat, Devices, Me)
     }
 }
 
@@ -68,18 +72,18 @@ sealed class OmnixDestination(val route: String) {
  * The primary tab a route belongs to (mock 2026-09-25: the active tab is
  * white + bold, the rest dimmed — "where am I" in one glance).
  *
- * Secondary screens keep their PARENT tab lit, the iOS reading: OMNIX's
- * modes — Chat, Translator — keep the centre OMNIX tab lit; everything
- * reached from Me (devices, privacy, settings sections) keeps Me lit. A
- * route that belongs to no tab (first run, none) lights nothing.
+ * Secondary screens keep their PARENT tab lit, the iOS reading: the
+ * Translator mode keeps Home lit; everything reached from Me (history,
+ * privacy, settings sections) keeps Me lit. A route that belongs to no tab
+ * (first run, none) lights nothing.
  */
 fun tabForRoute(route: String?): OmnixDestination? = when (route) {
-    OmnixDestination.History.route -> OmnixDestination.History
     OmnixDestination.Home.route,
-    OmnixDestination.Chat.route,
     OmnixDestination.Translator.route -> OmnixDestination.Home
+    OmnixDestination.Chat.route -> OmnixDestination.Chat
+    OmnixDestination.Devices.route -> OmnixDestination.Devices
     OmnixDestination.Me.route,
-    OmnixDestination.Devices.route,
+    OmnixDestination.History.route,
     OmnixDestination.Privacy.route,
     OmnixDestination.Automations.route -> OmnixDestination.Me
     else -> route

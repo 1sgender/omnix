@@ -146,6 +146,8 @@
     <string name="omnix_nav_history">History</string>
     <string name="omnix_nav_home">Home</string>
     <string name="omnix_nav_me">Me</string>
+    <string name="omnix_nav_chat">Chat</string>
+    <string name="omnix_nav_headphones">Headphones</string>
     <string name="omnix_nav_back">Back</string>
 
     <!-- ===== History (§22, §39) ===== -->

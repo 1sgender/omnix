@@ -29,14 +29,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAtomIcon
+import com.omnix.assistant.presentation.components.OmnixChatLinesIcon
 import com.omnix.assistant.presentation.components.OmnixHairline
-import com.omnix.assistant.presentation.components.OmnixHistoryIcon
+import com.omnix.assistant.presentation.components.OmnixHeadphonesIcon
 import com.omnix.assistant.presentation.components.OmnixIcons
 import com.omnix.assistant.presentation.components.OmnixMeIcon
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
- * The OMNIX navigation bar: `History | OMNIX | Me` (§20, §44, §45).
+ * The OMNIX navigation bar: `Home | Chat | Headphones | Me` (§20, §44, §45;
+ * design v2, 2026-10-13 — History moved under Me, the headphones got a tab).
  *
  * The centre is deliberately a Home tab, not a second Core. The large Core on
  * Home is the single live state indicator; duplicating it in navigation made
@@ -79,18 +81,27 @@ fun OmnixNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            NavigationItem(
-                label = stringResource(R.string.omnix_nav_history),
-                selected = currentTab == OmnixDestination.History,
-                onClick = { onNavigate(OmnixDestination.History) },
-                modifier = Modifier.weight(1f),
-                icon = { tint -> OmnixHistoryIcon(color = tint) }
-            )
-
             HomeNavigationItem(
                 selected = currentTab == OmnixDestination.Home,
                 onClick = { onNavigate(OmnixDestination.Home) },
                 modifier = Modifier.weight(1f)
+            )
+
+            NavigationItem(
+                label = stringResource(R.string.omnix_nav_chat),
+                contentDescription = stringResource(R.string.omnix_a11y_open_chat),
+                selected = currentTab == OmnixDestination.Chat,
+                onClick = { onNavigate(OmnixDestination.Chat) },
+                modifier = Modifier.weight(1f),
+                icon = { tint -> OmnixChatLinesIcon(color = tint, size = OmnixIcons.NavSize) }
+            )
+
+            NavigationItem(
+                label = stringResource(R.string.omnix_nav_headphones),
+                selected = currentTab == OmnixDestination.Devices,
+                onClick = { onNavigate(OmnixDestination.Devices) },
+                modifier = Modifier.weight(1f),
+                icon = { tint -> OmnixHeadphonesIcon(color = tint) }
             )
 
             NavigationItem(

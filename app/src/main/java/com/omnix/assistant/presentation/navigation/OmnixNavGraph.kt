@@ -248,7 +248,7 @@ fun OmnixNavGraph(
         }
 
         // Navigation stays outside the NavHost so it remains a stable way to
-        // reach Home, History and Profile while the live Core itself keeps a
+        // reach Home, Chat, Headphones and Me while the live Core itself keeps a
         // single, unambiguous home on the Home screen. Secondary routes keep
         // their parent tab lit (mock 2026-09-25).
         OmnixNavigationBar(
