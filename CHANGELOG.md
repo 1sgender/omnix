@@ -654,6 +654,14 @@ must be added only when the repository owner creates an actual release.
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
   из-за которых блокирующий скан Trivy в job production-image-security падал.
 
+### Changed
+
+- Коды активации: новые коды теперь 10 символов (32^10 = 2^50 вариантов вместо 2^30) — перебор
+  становится практически невозможным (аудит OMX-001). Ранее выпущенные 6-символьные и длинные
+  OMX-/JRV- коды продолжают погашаться. В приложении поле ввода — 10 ячеек двумя группами по 5,
+  кнопка активна и для старого 6-символьного кода. Напечатанные карточки нового образца должны
+  содержать 10 символов.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

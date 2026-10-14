@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
@@ -32,14 +33,24 @@ import androidx.compose.ui.unit.sp
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
- * Ячейки кода активации (мок «OMNIX — активация», 2026-09-25): шесть коротких
- * полей с подчёркиванием вместо рамки — длина кода видна сразу, курсор сам
+ * Ячейки кода активации (мок «OMNIX — активация», 2026-09-25): короткие
+ * поля с подчёркиванием вместо рамки — длина кода видна сразу, курсор сам
  * прыгает к следующему символу. Код — буквы и цифры неом ambiguity-алфавита
  * карточки (0/O/1/I на ней не печатаются), поэтому клавиатура текстовая с
  * автоверхним регистром (отклонение от inputMode=numeric демо-мока; письмо
  * дизайнера: «цифр или букв»).
  */
-internal const val CODE_CELL_COUNT = 6
+internal const val CODE_CELL_COUNT = 10
+
+/**
+ * Длина кодов, выпущенных до перехода на десять символов (аудит OMX-001). Они
+ * остаются погашаемыми, поэтому кнопка активна и при шести символах.
+ */
+internal const val LEGACY_CODE_LENGTH = 6
+
+/** Код введён целиком: новый (десять символов) или прежний шестисимвольный. */
+internal fun isActivationCodeComplete(code: String): Boolean =
+    code.length == CODE_CELL_COUNT || code.length == LEGACY_CODE_LENGTH
 
 /**
  * Чистая санитайзка ввода: буквы и цифры, верхний регистр, не длиннее кода.
@@ -115,9 +126,11 @@ internal fun ActivationCodeCells(
         horizontalArrangement = Arrangement.spacedBy(CELL_GAP)
     ) {
         for (index in 0 until CODE_CELL_COUNT) {
+            // Две группы по пять символов: код читается и вводится легче.
+            if (index == CODE_CELL_COUNT / 2) Spacer(Modifier.width(GROUP_GAP))
             val char = if (index < code.length) code[index].toString() else ""
             val isFocused = index == focusedIndex
-            val isComplete = code.length == CODE_CELL_COUNT
+            val isComplete = isActivationCodeComplete(code)
             val lineColorTarget = when {
                 isError -> colors.stateError
                 isFocused -> colors.textPrimary
@@ -179,7 +192,8 @@ internal fun ActivationCodeCells(
 }
 
 // Мок: .otp input — 38×48, gap 8, подчёркивание 2px.
-private val CELL_WIDTH = 38.dp
+private val CELL_WIDTH = 24.dp
 private val CELL_HEIGHT = 48.dp
-private val CELL_GAP = 8.dp
+private val CELL_GAP = 4.dp
+private val GROUP_GAP = 8.dp
 private val UNDERLINE_WIDTH = 2.dp

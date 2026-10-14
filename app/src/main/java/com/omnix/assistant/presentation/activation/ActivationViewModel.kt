@@ -52,9 +52,8 @@ class ActivationViewModel @Inject constructor(
     }
 
     fun onCodeChanged(newCode: String) {
-        // Мок 2026-09-25: код — шесть цифр в ячейках; всё остальное ввод
-        // отсеивает (цифровая клавиатура уже ограничивает, здесь — защита
-        // от вставки).
+        // Код — десять символов в ячейках (шесть у ранее выпущенных кодов); всё
+        // остальное ввод отсеивает, здесь — защита от вставки.
         _uiState.update { it.copy(inputCode = sanitizeActivationInput(newCode), errorMessage = null) }
     }
 
