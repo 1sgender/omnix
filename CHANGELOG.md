@@ -682,6 +682,13 @@ must be added only when the repository owner creates an actual release.
   записи своя серверная идентичность (миграция V010, колонка record_id), повторная доставка той
   же записи по-прежнему идемпотентна (аудит OMX-004).
 
+### Fixed
+
+- Дневные лимиты запросов, токенов и стоимости (UsageLimitConfig: 2000 / 1 млн / $5) теперь
+  действительно срабатывают: AiRouter передаёт расход в AsyncUsageTracker.accountFor после
+  успешного ответа. Раньше этот метод вызывался только в тестах, счётчики оставались нулевыми,
+  и лимиты, защищающие расходы на провайдеров, не работали (аудит OMX-003).
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

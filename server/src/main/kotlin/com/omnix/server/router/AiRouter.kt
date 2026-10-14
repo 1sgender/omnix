@@ -27,6 +27,9 @@ import com.omnix.server.usage.UsageLimitResult
 import com.omnix.server.usage.UsageRepository
 import java.time.Instant
 
+/** Rough characters-per-token ratio used only when a provider reports no token usage. */
+private const val APPROX_CHARS_PER_TOKEN = 4
+
 /** Результат работы роутера — уже нормализован для отдачи клиенту. */
 sealed class RouterResult {
     data class Success(val text: String, val requestId: String) : RouterResult()
@@ -247,6 +250,19 @@ class AiRouter(
         return when (outcome) {
             is ManagerOutcome.Success -> {
                 metrics.recordSuccess(outcome.totalTokens)
+                // Feed the in-memory daily caps (requests / tokens / cost) that preflight()
+                // reads at the top of execute(). Without this call the counters stay at zero
+                // and those caps can never trigger (audit finding OMX-003). Token counts the
+                // provider did not report are approximated from the text sizes.
+                usageTracker?.accountFor(
+                    clientId = client.clientId,
+                    inputTokens = outcome.inputTokens
+                        ?: com.omnix.server.cost.RequestCostEstimator.approximateInputTokens(
+                            request.text.length, historyChars, request.systemContext?.length ?: 0
+                        ),
+                    outputTokens = outcome.outputTokens ?: (outcome.text.length / APPROX_CHARS_PER_TOKEN).toLong(),
+                    providerCostPer1k = null
+                )
                 recordUsage(
                     requestId = requestId,
                     client = client,
