@@ -654,6 +654,12 @@ must be added only when the repository owner creates an actual release.
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
   из-за которых блокирующий скан Trivy в job production-image-security падал.
 
+### Fixed
+
+- Защита от перебора: лимиты активации кода и входа в админку теперь считают IPv6-адреса
+  по подсети /64 (раньше каждый новый адрес из одной подсети получал новый бюджет попыток).
+  Часть исправления аудита OMX-001; длина кода активации не менялась.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

@@ -39,6 +39,7 @@ import com.omnix.server.license.ValidationFailure
 import com.omnix.server.observability.StructuredLogger
 import com.omnix.server.ratelimit.RateLimitDecision
 import com.omnix.server.ratelimit.RateLimiter
+import com.omnix.server.ratelimit.SourceKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import java.nio.charset.StandardCharsets
@@ -191,7 +192,7 @@ class LicenseBillingHttpHandler(
     }
 
     private fun redeem(request: HttpRequestContext, fallbackRequestId: String): HttpResponseContext {
-        val rateKey = "redeem:${request.remoteAddress ?: "unknown"}"
+        val rateKey = "redeem:${SourceKey.of(request.remoteAddress)}"
         rateLimit(redeemRateLimiter, rateKey, fallbackRequestId)?.let { return it }
         val parsed = decode(request.body, LicenseRedeemRequest.serializer())
             ?: return error(ApiErrorCode.INVALID_REQUEST, fallbackRequestId)
