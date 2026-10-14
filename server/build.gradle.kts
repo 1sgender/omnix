@@ -12,6 +12,19 @@ kotlin {
 
 application {
     mainClass.set("com.omnix.server.MainKt")
+    // Runtime defaults baked into the start script (override with JAVA_OPTS).
+    // maxReqTime / maxRspTime make the JDK HttpServer close a connection that takes
+    // too long to send its request or to finish its response (default: no limit).
+    // The server request deadline is 28 s, so 60 s for the response leaves room.
+    // MaxRAMPercentage sizes the heap from the container limit, and an out-of-memory
+    // error ends the process so the restart policy replaces it instead of leaving a
+    // half-working JVM behind.
+    applicationDefaultJvmArgs = listOf(
+        "-Dsun.net.httpserver.maxReqTime=30",
+        "-Dsun.net.httpserver.maxRspTime=60",
+        "-XX:MaxRAMPercentage=70.0",
+        "-XX:+ExitOnOutOfMemoryError"
+    )
 }
 
 dependencies {
