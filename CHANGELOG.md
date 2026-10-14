@@ -654,6 +654,13 @@ must be added only when the repository owner creates an actual release.
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
   из-за которых блокирующий скан Trivy в job production-image-security падал.
 
+### Fixed
+
+- Квоты тарифа: запись usage больше не дедуплицируется по клиентскому requestId. Раньше клиент,
+  повторяющий один requestId, записывался один раз и дневная квота не росла. Теперь у каждой
+  записи своя серверная идентичность (миграция V010, колонка record_id), повторная доставка той
+  же записи по-прежнему идемпотентна (аудит OMX-004).
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

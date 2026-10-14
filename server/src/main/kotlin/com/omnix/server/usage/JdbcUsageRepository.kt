@@ -13,7 +13,8 @@ import javax.sql.DataSource
 /**
  * PostgreSQL-backed, multi-instance-safe AI usage ledger.
  *
- * `(client_id, request_id)` makes retries/idempotent duplicate records harmless.
+ * `record_id` (server-generated, V010) makes a redelivered record harmless. `request_id` is
+ * client-supplied and may repeat, so it is NOT a uniqueness key: each request counts.
  * Retention cleanup is eventual and atomic with each insert transaction. A store
  * outage propagates to the request handler instead of silently losing accounting.
  */
@@ -33,9 +34,9 @@ class JdbcUsageRepository(
                 INSERT INTO ai_usage_records(
                     request_id, client_id, provider, model, latency_ms,
                     input_tokens, output_tokens, total_tokens, success, error_code,
-                    prompt_chars, response_chars, occurred_at, feature
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT (client_id, request_id) DO NOTHING
+                    prompt_chars, response_chars, occurred_at, feature, record_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (record_id) DO NOTHING
                 """.trimIndent()
             ).use { statement ->
                 statement.setString(1, usage.requestId)
@@ -52,6 +53,7 @@ class JdbcUsageRepository(
                 statement.setInt(12, usage.responseChars)
                 statement.setInstant(13, usage.timestamp)
                 statement.setString(14, usage.feature)
+                statement.setObject(15, usage.recordId)
                 statement.executeUpdate()
             }
             connection.prepareStatement(
@@ -148,6 +150,7 @@ class JdbcUsageRepository(
         promptChars = getInt("prompt_chars"),
         responseChars = getInt("response_chars"),
         timestamp = requireNotNull(getInstant("occurred_at")),
-        feature = getString("feature")
+        feature = getString("feature"),
+        recordId = getObject("record_id", java.util.UUID::class.java)
     )
 }
