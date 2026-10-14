@@ -382,7 +382,18 @@ class LicenseBillingHttpHandler(
                     BillingWebhookResponse(result = applied.name)
                 )
             )
-            BillingEventApplyResult.INVALID_STATE -> error(ApiErrorCode.LICENSE_INVALID_STATE, "-")
+            BillingEventApplyResult.INVALID_STATE -> {
+                // A verified event that could not be applied may be a charged but
+                // unfulfilled order; it is stored as FAILED and the order is flagged
+                // for reconciliation, so make it loud in the logs as well.
+                logger.error(
+                    "verified billing event could not be applied",
+                    "provider" to result.event.provider.name,
+                    "eventType" to result.event.eventType,
+                    "kind" to result.event.kind.name
+                )
+                error(ApiErrorCode.LICENSE_INVALID_STATE, "-")
+            }
         }
     }
 

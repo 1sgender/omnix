@@ -233,6 +233,44 @@ class BillingPersistenceIntegrationTest : PostgresTestSupport() {
     }
 
     @Test
+    fun `paid event that cannot be applied is recorded as failed and flags reconciliation`() = runBlocking {
+        setupServices()
+        val checkout = billingService.createCheckout(
+            accountId, plan.id, BillingProviderId.PADDLE, "idem-revoked-paid"
+        ) as CreateCheckoutOutcome.Success
+        assertTrue(
+            licenseService.revoke(
+                checkout.order.licenseId!!, "revoked before payment", "admin", "revoke-request", "127.0.0.1"
+            )
+        )
+        val paid = event(checkout.order.providerOrderId!!, "evt-paid-after-revoke", BillingEventKind.PAID)
+
+        assertEquals(BillingEventApplyResult.INVALID_STATE, billingService.applyVerifiedEvent(paid))
+
+        // The charged order must not look finished: it is handed to reconciliation.
+        assertEquals(
+            BillingOrderStatus.RECONCILIATION_REQUIRED,
+            billingRepository.findOrder(checkout.order.id)?.status
+        )
+        // The event row tells the truth instead of claiming PROCESSED.
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                "SELECT processing_status, failure_code FROM billing_events WHERE provider_event_id = ?"
+            ).use { statement ->
+                statement.setString(1, "evt-paid-after-revoke")
+                statement.executeQuery().use { rows ->
+                    assertTrue(rows.next())
+                    assertEquals("FAILED", rows.getString("processing_status"))
+                    assertEquals("EVENT_NOT_APPLICABLE", rows.getString("failure_code"))
+                }
+            }
+        }
+        // A provider retry is still answered as a duplicate, and nothing was granted.
+        assertEquals(BillingEventApplyResult.DUPLICATE, billingService.applyVerifiedEvent(paid))
+        assertTrue(licenseService.validate(accountId, "device-abcdefgh") is LicenseValidationOutcome.Invalid)
+    }
+
+    @Test
     fun `expired account can authenticate purchase and reactivate through paid renewal`() = runBlocking {
         setupServices()
         val future = now.plusSeconds(31L * 86_400)
