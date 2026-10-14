@@ -131,7 +131,7 @@ fun ActivationScreen(
         OmnixPrimaryButton(
             text = stringResource(R.string.omnix_activation_cta),
             onClick = viewModel::activate,
-            enabled = uiState.inputCode.length == CODE_CELL_COUNT &&
+            enabled = isActivationCodeComplete(uiState.inputCode) &&
                 !uiState.isLoading &&
                 uiState.errorMessage == null,
             // Мок: выключенная кнопка — заливка fill-уровня, приглушённый текст.
