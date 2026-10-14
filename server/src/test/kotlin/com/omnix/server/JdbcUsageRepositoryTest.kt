@@ -50,7 +50,7 @@ class JdbcUsageRepositoryTest : PostgresTestSupport() {
     }
 
     @Test
-    fun `concurrent updates are complete and duplicate request is idempotent`() = runBlocking {
+    fun `concurrent updates are complete and a redelivered record is idempotent`() = runBlocking {
         val first = JdbcUsageRepository(dataSource)
         val second = JdbcUsageRepository(dataSource)
         val pool = Executors.newFixedThreadPool(16)
@@ -66,11 +66,13 @@ class JdbcUsageRepositoryTest : PostgresTestSupport() {
             ).forEach { it.get() }
             assertEquals(100, first.all().size)
 
+            // The SAME record redelivered (retry after an ambiguous failure) is idempotent.
+            val redelivered = record("same-request")
             pool.invokeAll(
                 List(20) { index ->
                     Callable {
                         runBlocking {
-                            (if (index % 2 == 0) first else second).record(record("same-request"))
+                            (if (index % 2 == 0) first else second).record(redelivered)
                         }
                     }
                 }
@@ -80,6 +82,19 @@ class JdbcUsageRepositoryTest : PostgresTestSupport() {
         } finally {
             pool.shutdownNow()
         }
+    }
+
+    @Test
+    fun `a client that reuses one request id is still counted on every request`() = runBlocking {
+        // Audit OMX-004: request_id is client-chosen. Deduplicating the ledger by it let a
+        // modified client reuse one id and never advance its daily plan quota.
+        val repository = JdbcUsageRepository(dataSource)
+        val since = Instant.now().minus(Duration.ofHours(1))
+
+        repeat(5) { repository.record(record("reused-id")) }
+
+        assertEquals(5, repository.all().count { it.requestId == "reused-id" })
+        assertEquals(5L, repository.countSince("client-a", since, "base_ai"))
     }
 
     @Test

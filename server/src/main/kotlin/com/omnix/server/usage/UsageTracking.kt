@@ -29,7 +29,13 @@ data class AiUsageRecord(
      * Корзина квоты: voice_ai / base_ai (см. PlanFeature.key).
      * null = записи до V009, гейт засчитывает их консервативно.
      */
-    val feature: String? = null
+    val feature: String? = null,
+    /**
+     * Server-generated identity of THIS record. [requestId] is chosen by the
+     * client and may repeat, so it cannot deduplicate the ledger: only a
+     * redelivery of the same record (same [recordId]) is idempotent.
+     */
+    val recordId: java.util.UUID = java.util.UUID.randomUUID()
 )
 
 /**
