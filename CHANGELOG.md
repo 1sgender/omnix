@@ -654,6 +654,15 @@ must be added only when the repository owner creates an actual release.
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
   из-за которых блокирующий скан Trivy в job production-image-security падал.
 
+### Fixed
+
+- Устойчивость к «медленным» клиентам: Caddy закрывает соединения с медленными заголовками и телом
+  (read_header 10s, read_body 20s, write 60s, idle 2m); JVM сервера получает sun.net.httpserver.maxReqTime=30,
+  maxRspTime=60, MaxRAMPercentage=70 и ExitOnOutOfMemoryError. Раньше чтение тела не прерывалось по
+  таймауту, и несколько медленных соединений занимали все слоты обработки (аудит OMX-006).
+- Админ-панель (/admin): строгая политика безопасности CSP и X-Frame-Options DENY на уровне Caddy
+  (аудит OMX-018).
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with
