@@ -63,8 +63,13 @@ sealed class OmnixDestination(val route: String) {
          * The four destinations that appear in the navigation bar (design
          * v2, 2026-10-13): Home · Chat · Headphones · Me. The headphones are
          * the product, so their screen is a tab, not a settings row.
+         *
+         * A getter, not a stored value: the objects are subclasses of this
+         * sealed class, so a list built during class initialisation can pick
+         * up a still-null object when one of them is the first to be touched.
          */
-        val primary = listOf(Home, Chat, Devices, Me)
+        val primary: List<OmnixDestination>
+            get() = listOf(Home, Chat, Devices, Me)
     }
 }
 
