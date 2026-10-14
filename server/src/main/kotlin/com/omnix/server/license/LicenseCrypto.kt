@@ -25,8 +25,14 @@ class LicenseCrypto(
         // и на карточке). Единая точка смены длины: здесь и CODE_CELL_COUNT в
         // приложении. Легаси-кодек OMX-/JRV- остаётся принимаемым — как когда-то
         // остался JRV- после ребрендинга.
-        const val BOX_CODE_LENGTH = 6
-        private val BOX_CODE_REGEX = Regex("^[A-Z2-9]{$BOX_CODE_LENGTH}$")
+        //
+        // 2026-10-13 (audit OMX-001): новые коды — 10 символов (32^10 = 2^50 вариантов
+        // вместо 2^30). Шестисимвольные коды, уже выпущенные и напечатанные, остаются
+        // погашаемыми: [LEGACY_BOX_CODE_LENGTH]. Выпускаются только [BOX_CODE_LENGTH].
+        const val BOX_CODE_LENGTH = 10
+        const val LEGACY_BOX_CODE_LENGTH = 6
+        private val BOX_CODE_REGEX =
+            Regex("^[A-Z2-9]{$LEGACY_BOX_CODE_LENGTH}$|^[A-Z2-9]{$BOX_CODE_LENGTH}$")
     }
 
     private val key = pepper.toByteArray(StandardCharsets.UTF_8).also {

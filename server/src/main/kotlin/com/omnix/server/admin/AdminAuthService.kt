@@ -4,6 +4,7 @@ import com.omnix.server.auth.AuthResult
 import com.omnix.server.auth.Authenticator
 import com.omnix.server.auth.ClientTier
 import com.omnix.server.ratelimit.PostgresRateLimiter
+import com.omnix.server.ratelimit.SourceKey
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -66,7 +67,7 @@ class AdminAuthService(
 
     fun login(username: String, password: String, remoteAddress: String?): AdminLoginResult {
         val now = clock.instant()
-        val lockKey = "admin-login|$username|${remoteAddress ?: "unknown"}"
+        val lockKey = "admin-login|$username|${SourceKey.of(remoteAddress)}"
         if (username.isBlank() || username.length > 64 || password.isBlank()) {
             return AdminLoginResult.InvalidCredentials
         }

@@ -4,6 +4,15 @@
 	email {$ACME_EMAIL}
 	servers {
 		protocols h1 h2 h3
+		# Slow-header and slow-body clients are closed at the edge. The application reads the
+		# request body with a blocking call that its own deadline cannot interrupt, so a
+		# client trickling bytes would otherwise hold one of its few in-flight slots.
+		timeouts {
+			read_header 10s
+			read_body 20s
+			write 60s
+			idle 2m
+		}
 	}
 }
 
@@ -23,6 +32,13 @@ https://{$PUBLIC_DOMAIN} {
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
 		-Server
+	}
+
+	# Control Plane SPA: only its own scripts, an inline style element and data: images.
+	@admin path /admin /admin/*
+	header @admin {
+		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+		X-Frame-Options "DENY"
 	}
 
 	# Keep method/URI/status/client IP, but drop the entire request-header map so

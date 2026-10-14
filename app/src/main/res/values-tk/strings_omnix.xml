@@ -145,6 +145,8 @@
     <string name="omnix_nav_history">Taryh</string>
     <string name="omnix_nav_home">Baş sahypa</string>
     <string name="omnix_nav_me">Men</string>
+    <string name="omnix_nav_chat">Söhbet</string>
+    <string name="omnix_nav_headphones">Gulakçynlar</string>
     <string name="omnix_nav_back">Yza</string>
 
     <!-- ===== Taryh (§22, §39) ===== -->

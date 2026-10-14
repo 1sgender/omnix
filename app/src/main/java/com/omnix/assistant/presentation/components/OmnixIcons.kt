@@ -101,6 +101,50 @@ fun OmnixMeIcon(
     }
 }
 
+/** Over-ear headphones: the Headphones destination (design v2, 2026-10-13). */
+@Composable
+fun OmnixHeadphonesIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = OmnixIcons.NavSize
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val s = this.size.minDimension
+        val w = s * 0.085f
+        val cx = this.size.width / 2f
+
+        // Headband: the upper half of a circle, ending where the cups start.
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(cx - s * 0.36f, s * 0.14f),
+            size = Size(s * 0.72f, s * 0.72f),
+            style = Stroke(width = w, cap = StrokeCap.Round)
+        )
+
+        // Two earcups below the band ends.
+        val cupSize = Size(s * 0.20f, s * 0.32f)
+        val cupTop = s * 0.52f
+        val corner = CornerRadius(s * 0.07f, s * 0.07f)
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(cx - s * 0.40f, cupTop),
+            size = cupSize,
+            cornerRadius = corner,
+            style = Stroke(width = w)
+        )
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(cx + s * 0.20f, cupTop),
+            size = cupSize,
+            cornerRadius = corner,
+            style = Stroke(width = w)
+        )
+    }
+}
+
 /** A microphone: used by the permission step and the Chat dictation control. */
 @Composable
 fun OmnixMicIcon(

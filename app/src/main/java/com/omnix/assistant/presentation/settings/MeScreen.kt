@@ -15,7 +15,8 @@ import androidx.compose.ui.res.stringResource
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAtomIcon
 import com.omnix.assistant.presentation.components.OmnixBellIcon
-import com.omnix.assistant.presentation.components.OmnixChatLinesIcon
+import com.omnix.assistant.presentation.components.OmnixHistoryIcon
+import com.omnix.assistant.presentation.components.OmnixIcons
 import com.omnix.assistant.presentation.components.OmnixCodeIcon
 import com.omnix.assistant.presentation.components.OmnixGlobeIcon
 import com.omnix.assistant.presentation.components.OmnixInfoIcon
@@ -123,17 +124,18 @@ fun MeScreen(
                 onClick = { onOpenSection(OmnixDestination.Translator) }
             )
             OmnixGroupDivider()
+            // Chat became a tab (design v2, 2026-10-13); its old row here now
+            // opens the conversation history, which left the navigation bar.
             OmnixSettingRow(
-                title = stringResource(R.string.omnix_chat_title),
-                contentDescription = stringResource(R.string.omnix_a11y_open_chat),
+                title = stringResource(R.string.omnix_nav_history),
                 inset = true,
                 chevron = true,
                 leading = {
                     OmnixSettingIconTile {
-                        OmnixChatLinesIcon(color = colors.textPrimary)
+                        OmnixHistoryIcon(color = colors.textPrimary, size = OmnixIcons.SettingSize)
                     }
                 },
-                onClick = { onOpenSection(OmnixDestination.Chat) }
+                onClick = { onOpenSection(OmnixDestination.History) }
             )
         }
 

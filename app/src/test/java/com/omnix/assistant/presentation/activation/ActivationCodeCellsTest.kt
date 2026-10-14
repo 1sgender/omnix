@@ -10,10 +10,11 @@ import org.junit.Test
 class ActivationCodeCellsTest {
 
     @Test
-    fun `sanitizer keeps letters and digits, uppercases, caps at six cells`() {
+    fun `sanitizer keeps letters and digits, uppercases, caps at ten cells`() {
         assertEquals("ABCDEF", sanitizeActivationInput(" ab_cd!ef "))
         assertEquals("123456", sanitizeActivationInput("123456"))
-        assertEquals("123456", sanitizeActivationInput("1234567890"))
+        assertEquals("1234567890", sanitizeActivationInput("1234567890"))
+        assertEquals("1234567890", sanitizeActivationInput("12345678901234"))
         assertEquals("4X2", sanitizeActivationInput("4x2"))
         assertEquals("A7B2C3", sanitizeActivationInput("a7b2c3"))
     }
@@ -35,9 +36,25 @@ class ActivationCodeCellsTest {
 
     @Test
     fun `pasting the whole code fills every cell`() {
+        val (code, focus) = cellInputResult(code = "", index = 0, raw = "A7B2C3D4E5")
+        assertEquals("A7B2C3D4E5", code)
+        assertEquals(9, focus)
+    }
+
+    @Test
+    fun `pasting a legacy six character code keeps it and moves focus to the next cell`() {
         val (code, focus) = cellInputResult(code = "", index = 0, raw = "472915")
         assertEquals("472915", code)
-        assertEquals(5, focus)
+        assertEquals(6, focus)
+    }
+
+    @Test
+    fun `a code is complete at ten characters or for a legacy six character code`() {
+        assertEquals(true, isActivationCodeComplete("A7B2C3D4E5"))
+        assertEquals(true, isActivationCodeComplete("A7B2C3"))
+        assertEquals(false, isActivationCodeComplete("A7B2"))
+        assertEquals(false, isActivationCodeComplete("A7B2C3D4"))
+        assertEquals(false, isActivationCodeComplete(""))
     }
 
     @Test

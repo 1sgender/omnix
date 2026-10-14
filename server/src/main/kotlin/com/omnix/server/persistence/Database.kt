@@ -62,7 +62,8 @@ class DatabaseMigrator(private val dataSource: DataSource) {
         Migration(6, "control plane", "/db/migration/V006__control_plane.sql"),
         Migration(7, "token device binding", "/db/migration/V007__token_device_binding.sql"),
         Migration(8, "clip device identity", "/db/migration/V008__clip_device_identity.sql"),
-        Migration(9, "AI usage feature bucket", "/db/migration/V009__usage_feature.sql")
+        Migration(9, "AI usage feature bucket", "/db/migration/V009__usage_feature.sql"),
+        Migration(10, "usage record identity", "/db/migration/V010__usage_record_identity.sql")
     )
 
     fun migrate() {

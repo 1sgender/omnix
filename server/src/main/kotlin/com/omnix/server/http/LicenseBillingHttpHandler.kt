@@ -39,6 +39,7 @@ import com.omnix.server.license.ValidationFailure
 import com.omnix.server.observability.StructuredLogger
 import com.omnix.server.ratelimit.RateLimitDecision
 import com.omnix.server.ratelimit.RateLimiter
+import com.omnix.server.ratelimit.SourceKey
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import java.nio.charset.StandardCharsets
@@ -191,13 +192,13 @@ class LicenseBillingHttpHandler(
     }
 
     private fun redeem(request: HttpRequestContext, fallbackRequestId: String): HttpResponseContext {
-        val rateKey = "redeem:${request.remoteAddress ?: "unknown"}"
+        val rateKey = "redeem:${SourceKey.of(request.remoteAddress)}"
         rateLimit(redeemRateLimiter, rateKey, fallbackRequestId)?.let { return it }
         val parsed = decode(request.body, LicenseRedeemRequest.serializer())
             ?: return error(ApiErrorCode.INVALID_REQUEST, fallbackRequestId)
         val requestId = validRequestId(parsed.requestId) ?: fallbackRequestId
-        // Короче BOX_CODE_LENGTH кодов не бывает; верхняя граница отсекает мусор.
-        if (parsed.code.length !in LicenseCrypto.BOX_CODE_LENGTH..64 || parsed.deviceId.length !in 8..128) {
+        // Короче LEGACY_BOX_CODE_LENGTH кодов не бывает; верхняя граница отсекает мусор.
+        if (parsed.code.length !in LicenseCrypto.LEGACY_BOX_CODE_LENGTH..64 || parsed.deviceId.length !in 8..128) {
             return error(ApiErrorCode.INVALID_REQUEST, requestId)
         }
         // Наблюдаемость redeem: раньше попытки активации не оставляли никакого
@@ -382,7 +383,18 @@ class LicenseBillingHttpHandler(
                     BillingWebhookResponse(result = applied.name)
                 )
             )
-            BillingEventApplyResult.INVALID_STATE -> error(ApiErrorCode.LICENSE_INVALID_STATE, "-")
+            BillingEventApplyResult.INVALID_STATE -> {
+                // A verified event that could not be applied may be a charged but
+                // unfulfilled order; it is stored as FAILED and the order is flagged
+                // for reconciliation, so make it loud in the logs as well.
+                logger.error(
+                    "verified billing event could not be applied",
+                    "provider" to result.event.provider.name,
+                    "eventType" to result.event.eventType,
+                    "kind" to result.event.kind.name
+                )
+                error(ApiErrorCode.LICENSE_INVALID_STATE, "-")
+            }
         }
     }
 

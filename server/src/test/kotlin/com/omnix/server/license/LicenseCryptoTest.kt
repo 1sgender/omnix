@@ -66,6 +66,21 @@ class LicenseCryptoTest {
     }
 
     @Test
+    fun `new box codes are ten characters and legacy six-character codes still normalize`() {
+        assertEquals(10, LicenseCrypto.BOX_CODE_LENGTH)
+        assertEquals(6, LicenseCrypto.LEGACY_BOX_CODE_LENGTH)
+        assertEquals("A7B2C3D4E5", crypto.normalizeLicenseCode("a7b2c-3d4e5"))
+        assertEquals("A7B2C3", crypto.normalizeLicenseCode("A7B2C3"))
+    }
+
+    @Test
+    fun `eight nine and eleven character codes are not box codes`() {
+        assertNull(crypto.normalizeLicenseCode("A7B2C3D4"))
+        assertNull(crypto.normalizeLicenseCode("A7B2C3D4E"))
+        assertNull(crypto.normalizeLicenseCode("A7B2C3D4E5F"))
+    }
+
+    @Test
     fun `box codes never contain ambiguous characters`() {
         repeat(200) {
             val code = crypto.generateBoxCode()
@@ -95,6 +110,7 @@ class LicenseCryptoTest {
     @Test
     fun `code hint exposes less of a short code than of a long one`() {
         assertEquals("2C3", crypto.codeHint("A7B2C3"))
+        assertEquals("4E5", crypto.codeHint("A7B2C3D4E5"))
         assertEquals("5LYXS", crypto.codeHint("OMX-J6P2F-RGTJ6-A63JK-5LYXS"))
     }
 
