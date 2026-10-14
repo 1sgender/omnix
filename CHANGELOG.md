@@ -654,6 +654,13 @@ must be added only when the repository owner creates an actual release.
 - Серверный Docker-образ: точечно обновляются libssl3 и openssl (CVE-2026-84782, HIGH),
   из-за которых блокирующий скан Trivy в job production-image-security падал.
 
+### Fixed
+
+- Дневные лимиты запросов, токенов и стоимости (UsageLimitConfig: 2000 / 1 млн / $5) теперь
+  действительно срабатывают: AiRouter передаёт расход в AsyncUsageTracker.accountFor после
+  успешного ответа. Раньше этот метод вызывался только в тестах, счётчики оставались нулевыми,
+  и лимиты, защищающие расходы на провайдеров, не работали (аудит OMX-003).
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with
