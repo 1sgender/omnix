@@ -661,6 +661,14 @@ must be added only when the repository owner creates an actual release.
   нижнее меню из 4 вкладок Главная · Чат · Наушники · Я (новая иконка
   наушников, подписи на en/ru/tk). История переехала в раздел «Я».
 
+### Fixed
+
+- Платежи: проверенное событие об оплате, которое нельзя применить (лицензия отозвана,
+  тариф выключен), больше не записывается как обработанное. Событие сохраняется как FAILED
+  с кодом EVENT_NOT_APPLICABLE, заказ переводится в RECONCILIATION_REQUIRED, в лог пишется
+  ошибка. Раньше повтор вебхука отвечал 200, и оплаченный, но не выполненный заказ
+  оставался незамеченным (аудит OMX-002).
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

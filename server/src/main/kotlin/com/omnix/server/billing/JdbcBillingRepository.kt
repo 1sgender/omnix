@@ -201,6 +201,23 @@ class JdbcBillingRepository(private val dataSource: DataSource) {
             BillingEventKind.REFUNDED -> applyRefund(connection, order, now)
             BillingEventKind.IGNORED -> BillingEventApplyResult.PROCESSED
         }
+        if (result == BillingEventApplyResult.INVALID_STATE) {
+            // The event was verified but could not be applied (revoked or missing
+            // licence, inactive plan). Recording it as PROCESSED would hide a
+            // charged-but-unfulfilled order: the provider's retry would then hit
+            // the unique event id and be answered with 200. Record the truth and
+            // hand a paid order to reconciliation so an operator sees it.
+            if (event.kind == BillingEventKind.PAID &&
+                order.status !in setOf(BillingOrderStatus.PAID, BillingOrderStatus.REFUNDED)
+            ) {
+                updateOrderStatus(connection, order.id, "RECONCILIATION_REQUIRED", now)
+            }
+            completeEvent(
+                connection, eventId, "FAILED", order.id, order.accountId,
+                "EVENT_NOT_APPLICABLE", now
+            )
+            return@transaction result
+        }
         completeEvent(
             connection, eventId,
             if (event.kind == BillingEventKind.IGNORED) "IGNORED" else "PROCESSED",
