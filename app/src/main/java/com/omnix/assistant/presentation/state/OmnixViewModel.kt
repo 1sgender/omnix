@@ -315,6 +315,11 @@ class OmnixViewModel @Inject constructor(
         if (active) clipRepository.refresh()
     }
 
+    /** Tap on the Core (design v2): start or stop listening. */
+    fun onCoreTap() {
+        orchestrator.toggleListeningFromUi()
+    }
+
     fun confirmPendingAction() {
         viewModelScope.launch { orchestrator.confirmPendingToolCallFromUi() }
     }

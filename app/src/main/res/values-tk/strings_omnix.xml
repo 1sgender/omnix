@@ -9,7 +9,6 @@
 <resources>
 
     <!-- ===== Brend ===== -->
-    <string name="omnix_wake_word_quoted">«Omni»</string>
 
     <!-- ===== Clip ýagdaýy (başlyk) ===== -->
     <string name="omnix_status_clip_connected">Clip birikdirildi</string>
@@ -20,18 +19,29 @@
     <string name="omnix_status_offline">Oflaýn</string>
 
     <!-- ===== Ses ýagdaýlary (§15) ===== -->
-    <string name="omnix_state_ready">Diňlemäge taýýar</string>
-    <string name="omnix_state_listening">Diňleýärin…</string>
+    <string name="omnix_state_ready">Taýýar</string>
+    <string name="omnix_state_listening">Diňleýärin</string>
     <string name="omnix_state_thinking">Düşünýärin…</string>
     <string name="omnix_state_speaking">Aýdýar</string>
     <string name="omnix_state_working">Işleýärin…</string>
 
     <!-- ===== Baş sahypa görkezmeleri (§9, §24–§26) ===== -->
-    <string name="omnix_home_hint_say_omni_wake">%1$s diýiň</string>
     <string name="omnix_home_example_time">«Omni, sagat näçe?»</string>
-    <string name="omnix_home_example_weather">«Omni, howa nähili?»</string>
-    <string name="omnix_home_example_music">«Omni, saz goý.»</string>
-    <string name="omnix_home_offline_partial">Käbir mümkinçilikler entäk elýeterli.</string>
+    <string name="omnix_home_hint_idle">«Omni» diýiň ýa-da ýadra basyň</string>
+    <string name="omnix_home_hint_listening">Gürläň — men gulaklyklaryňyzda</string>
+    <string name="omnix_home_offline_pill">OFLAÝN · ENJAMDA</string>
+    <string name="omnix_home_core_start">Diňläp başla</string>
+    <string name="omnix_home_core_stop">Diňlemegi bes et</string>
+    <string name="omnix_home_clip_battery">%1$d%%</string>
+    <string name="omnix_home_clip_a11y_battery">Gulaklyklar birikdirildi, zarýad %1$d%%</string>
+    <string name="omnix_home_card_translator">Terjimeçi</string>
+    <string name="omnix_home_card_translator_sub">Gulaklyga, göni</string>
+    <string name="omnix_home_card_memory">Ýat</string>
+    <string name="omnix_home_card_memory_sub">Siz hakda näme ýadymda</string>
+    <string name="omnix_home_card_reminders">Ýatlatmalar</string>
+    <string name="omnix_home_card_reminders_sub">Oýardyjylar we işler</string>
+    <string name="omnix_home_card_automations">Awtomatizasiýalar</string>
+    <string name="omnix_home_card_automations_sub">Söz boýunça ssenariler</string>
 
     <!-- ===== Hereketleriň aýdylyşy (§16, §19) ===== -->
     <string name="omnix_action_calling">Jaň edýärin: %1$s…</string>
@@ -312,7 +322,6 @@
     <string name="omnix_cancel">Ýatyr</string>
 
     <!-- ===== Elýeterlilik (§55) ===== -->
-    <string name="omnix_a11y_core_state">OMNIX: %1$s</string>
     <string name="omnix_a11y_clip_status">Clip ýagdaýy: %1$s</string>
     <string name="omnix_a11y_open_settings">Sazlamalary aç</string>
     <string name="omnix_a11y_open_chat">Söhbedi aç</string>

@@ -99,6 +99,11 @@ fun OmnixNavGraph(
                 HomeScreen(
                     state = uiState,
                     onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) },
+                    onCoreTap = omnixViewModel::onCoreTap,
+                    onTranslatorTap = { navController.navigateSingleTop(OmnixDestination.Translator) },
+                    onMemoryTap = { navController.navigateSingleTop(OmnixDestination.Privacy) },
+                    onRemindersTap = { navController.navigateSingleTop(OmnixDestination.Chat) },
+                    onAutomationsTap = { navController.navigateSingleTop(OmnixDestination.Automations) },
                     onSystemStateAction = { omnixViewModel.refreshPermissions() }
                 )
             }

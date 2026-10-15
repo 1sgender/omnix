@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 /**
  * The OMNIX icon set (§8).
  *
- * Deliberately tiny: History and Me, drawn as thin outlines matching the
+ * Deliberately tiny: drawn as thin outlines matching the
  * reference poster. They are geometry rather than a font or a drawable set,
  * so they inherit the Core's line weight exactly and cannot drift from it.
  *
@@ -65,82 +65,6 @@ fun OmnixHistoryIcon(
             end = Offset(c.x + r * 0.40f, c.y),
             strokeWidth = w,
             cap = StrokeCap.Round
-        )
-    }
-}
-
-/** A person: the Me destination. */
-@Composable
-fun OmnixMeIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-    size: Dp = OmnixIcons.NavSize
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val s = this.size.minDimension
-        val w = s * 0.085f
-        val cx = this.size.width / 2f
-
-        drawCircle(
-            color = color,
-            radius = s * 0.19f,
-            center = Offset(cx, s * 0.30f),
-            style = Stroke(width = w)
-        )
-
-        // Shoulders: a half-round, open at the bottom.
-        drawArc(
-            color = color,
-            startAngle = 180f,
-            sweepAngle = 180f,
-            useCenter = false,
-            topLeft = Offset(cx - s * 0.32f, s * 0.56f),
-            size = Size(s * 0.64f, s * 0.56f),
-            style = Stroke(width = w, cap = StrokeCap.Round)
-        )
-    }
-}
-
-/** Over-ear headphones: the Headphones destination (design v2, 2026-10-13). */
-@Composable
-fun OmnixHeadphonesIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-    size: Dp = OmnixIcons.NavSize
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val s = this.size.minDimension
-        val w = s * 0.085f
-        val cx = this.size.width / 2f
-
-        // Headband: the upper half of a circle, ending where the cups start.
-        drawArc(
-            color = color,
-            startAngle = 180f,
-            sweepAngle = 180f,
-            useCenter = false,
-            topLeft = Offset(cx - s * 0.36f, s * 0.14f),
-            size = Size(s * 0.72f, s * 0.72f),
-            style = Stroke(width = w, cap = StrokeCap.Round)
-        )
-
-        // Two earcups below the band ends.
-        val cupSize = Size(s * 0.20f, s * 0.32f)
-        val cupTop = s * 0.52f
-        val corner = CornerRadius(s * 0.07f, s * 0.07f)
-        drawRoundRect(
-            color = color,
-            topLeft = Offset(cx - s * 0.40f, cupTop),
-            size = cupSize,
-            cornerRadius = corner,
-            style = Stroke(width = w)
-        )
-        drawRoundRect(
-            color = color,
-            topLeft = Offset(cx + s * 0.20f, cupTop),
-            size = cupSize,
-            cornerRadius = corner,
-            style = Stroke(width = w)
         )
     }
 }
@@ -426,22 +350,6 @@ fun OmnixTranslateIcon(
         fun p(v: Float) = v * u
         drawLine(color, Offset(p(5f), p(8f)), Offset(p(19f), p(16f)), w, StrokeCap.Round)
         drawLine(color, Offset(p(19f), p(8f)), Offset(p(5f), p(16f)), w, StrokeCap.Round)
-    }
-}
-
-@Composable
-fun OmnixChatLinesIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-    size: Dp = OmnixIcons.SettingSize
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val u = this.size.minDimension / 24f
-        val w = this.size.minDimension * 0.12f
-        fun p(v: Float) = v * u
-        drawLine(color, Offset(p(4f), p(6f)), Offset(p(15f), p(6f)), w, StrokeCap.Round)
-        drawLine(color, Offset(p(4f), p(12f)), Offset(p(20f), p(12f)), w, StrokeCap.Round)
-        drawLine(color, Offset(p(4f), p(18f)), Offset(p(12f), p(18f)), w, StrokeCap.Round)
     }
 }
 

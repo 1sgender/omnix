@@ -10,7 +10,6 @@
 
     <!-- ===== Brand ===== -->
     <string name="omnix_wordmark" translatable="false">OMNIX</string>
-    <string name="omnix_wake_word_quoted">“Omni”</string>
 
     <!-- ===== Clip status (header) ===== -->
     <string name="omnix_status_clip_connected">Clip Connected</string>
@@ -21,18 +20,29 @@
     <string name="omnix_status_offline">Offline</string>
 
     <!-- ===== Voice states (§15) ===== -->
-    <string name="omnix_state_ready">Ready to listen</string>
-    <string name="omnix_state_listening">Listening…</string>
+    <string name="omnix_state_ready">Ready</string>
+    <string name="omnix_state_listening">Listening</string>
     <string name="omnix_state_thinking">Understanding…</string>
     <string name="omnix_state_speaking">Speaking</string>
     <string name="omnix_state_working">Working…</string>
 
     <!-- ===== Home guidance (§9, §24–§26) ===== -->
-    <string name="omnix_home_hint_say_omni_wake">Say %1$s</string>
     <string name="omnix_home_example_time">“Omni, what time is it?”</string>
-    <string name="omnix_home_example_weather">“Omni, what’s the weather?”</string>
-    <string name="omnix_home_example_music">“Omni, play some music.”</string>
-    <string name="omnix_home_offline_partial">Some features are still available.</string>
+    <string name="omnix_home_hint_idle">Say “Omni” or tap the core</string>
+    <string name="omnix_home_hint_listening">Go ahead — I’m in your headphones</string>
+    <string name="omnix_home_offline_pill">OFFLINE · ON DEVICE</string>
+    <string name="omnix_home_core_start">Start listening</string>
+    <string name="omnix_home_core_stop">Stop listening</string>
+    <string name="omnix_home_clip_battery">%1$d%%</string>
+    <string name="omnix_home_clip_a11y_battery">Headphones connected, battery %1$d%%</string>
+    <string name="omnix_home_card_translator">Translator</string>
+    <string name="omnix_home_card_translator_sub">Live, into your headphones</string>
+    <string name="omnix_home_card_memory">Memory</string>
+    <string name="omnix_home_card_memory_sub">What I remember about you</string>
+    <string name="omnix_home_card_reminders">Reminders</string>
+    <string name="omnix_home_card_reminders_sub">Alarms and to-dos</string>
+    <string name="omnix_home_card_automations">Automations</string>
+    <string name="omnix_home_card_automations_sub">Routines by phrase</string>
 
     <!-- ===== Action phrasing (§16, §19) ===== -->
     <string name="omnix_action_calling">Calling %1$s…</string>
@@ -314,7 +324,6 @@
     <string name="omnix_percent" translatable="false">%1$d%%</string>
 
     <!-- ===== Accessibility (§55) ===== -->
-    <string name="omnix_a11y_core_state">OMNIX is %1$s</string>
     <string name="omnix_a11y_clip_status">Clip status: %1$s</string>
     <string name="omnix_a11y_open_settings">Open settings</string>
     <string name="omnix_a11y_open_chat">Open chat</string>

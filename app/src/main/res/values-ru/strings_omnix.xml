@@ -9,7 +9,6 @@
 <resources>
 
     <!-- ===== Бренд ===== -->
-    <string name="omnix_wake_word_quoted">«Омни»</string>
 
     <!-- ===== Статус Clip ===== -->
     <string name="omnix_status_clip_connected">Clip подключён</string>
@@ -20,18 +19,29 @@
     <string name="omnix_status_offline">Офлайн</string>
 
     <!-- ===== Голосовые состояния ===== -->
-    <string name="omnix_state_ready">Готов слушать</string>
-    <string name="omnix_state_listening">Слушаю…</string>
+    <string name="omnix_state_ready">Готов</string>
+    <string name="omnix_state_listening">Слушаю</string>
     <string name="omnix_state_thinking">Понимаю…</string>
     <string name="omnix_state_speaking">Отвечаю</string>
     <string name="omnix_state_working">Выполняю…</string>
 
     <!-- ===== Подсказки на Home ===== -->
-    <string name="omnix_home_hint_say_omni_wake">Скажите %1$s</string>
     <string name="omnix_home_example_time">«Омни, который час?»</string>
-    <string name="omnix_home_example_weather">«Омни, какая погода?»</string>
-    <string name="omnix_home_example_music">«Омни, включи музыку»</string>
-    <string name="omnix_home_offline_partial">Часть возможностей доступна.</string>
+    <string name="omnix_home_hint_idle">Скажите «Omni» или нажмите на ядро</string>
+    <string name="omnix_home_hint_listening">Говорите — я в ваших наушниках</string>
+    <string name="omnix_home_offline_pill">ОФЛАЙН · НА УСТРОЙСТВЕ</string>
+    <string name="omnix_home_core_start">Начать прослушивание</string>
+    <string name="omnix_home_core_stop">Остановить прослушивание</string>
+    <string name="omnix_home_clip_battery">%1$d%%</string>
+    <string name="omnix_home_clip_a11y_battery">Наушники подключены, заряд %1$d%%</string>
+    <string name="omnix_home_card_translator">Переводчик</string>
+    <string name="omnix_home_card_translator_sub">В наушники, вживую</string>
+    <string name="omnix_home_card_memory">Память</string>
+    <string name="omnix_home_card_memory_sub">Что я о вас помню</string>
+    <string name="omnix_home_card_reminders">Напоминания</string>
+    <string name="omnix_home_card_reminders_sub">Будильники и дела</string>
+    <string name="omnix_home_card_automations">Автоматизации</string>
+    <string name="omnix_home_card_automations_sub">Сценарии по фразе</string>
 
     <!-- ===== Действия ===== -->
     <string name="omnix_action_calling">Звоню %1$s…</string>
@@ -143,7 +153,7 @@
     <!-- ===== Навигация ===== -->
     <string name="omnix_nav_history">История</string>
     <string name="omnix_nav_home">Главная</string>
-    <string name="omnix_nav_me">Профиль</string>
+    <string name="omnix_nav_me">Я</string>
     <string name="omnix_nav_chat">Чат</string>
     <string name="omnix_nav_headphones">Наушники</string>
     <string name="omnix_nav_back">Назад</string>
@@ -311,7 +321,6 @@
     <string name="omnix_cancel">Отмена</string>
 
     <!-- ===== Доступность ===== -->
-    <string name="omnix_a11y_core_state">OMNIX: %1$s</string>
     <string name="omnix_a11y_clip_status">Состояние Clip: %1$s</string>
     <string name="omnix_a11y_open_settings">Открыть настройки</string>
     <string name="omnix_a11y_open_chat">Открыть чат</string>
