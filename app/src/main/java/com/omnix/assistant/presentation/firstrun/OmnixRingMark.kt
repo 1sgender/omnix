@@ -28,7 +28,9 @@ internal fun OmnixRingMark(
     color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary,
     // Разные экраны задают разные размеры знака: клип-флоу 28×22, активация 26×20.
     width: Dp = MARK_WIDTH,
-    height: Dp = MARK_HEIGHT
+    height: Dp = MARK_HEIGHT,
+    // Толщина в единицах сетки 34×26: крупный знак в ядре Home рисуется тоньше (2.6).
+    strokeUnits: Float = RING_STROKE
 ) {
     val markLabel = stringResource(R.string.omnix_wordmark)
     Canvas(
@@ -39,7 +41,7 @@ internal fun OmnixRingMark(
         val unit = size.width / GRID_WIDTH
         val radius = RING_RADIUS * unit
         val cupSize = Size(width = radius * 2f, height = radius * 2f)
-        val stroke = Stroke(width = RING_STROKE * unit)
+        val stroke = Stroke(width = strokeUnits * unit)
         val centerX = size.width * 0.5f
         val centerY = size.height * 0.5f
 

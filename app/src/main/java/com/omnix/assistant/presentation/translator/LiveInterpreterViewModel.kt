@@ -1,8 +1,10 @@
 package com.omnix.assistant.presentation.translator
 
+import android.media.AudioManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.translator.InterpreterMode
+import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.agent.translator.InterpreterPreset
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 import com.omnix.assistant.agent.translator.SupportedLanguage
@@ -42,7 +44,9 @@ data class LiveInterpreterUiState(
     val detectedSourceLanguage: SupportedLanguage? = null,
     val history: List<TranslationItem> = emptyList(),
     val partialRecognizedText: String = "",
-    val isTranslating: Boolean = false
+    val isTranslating: Boolean = false,
+    /** Перевод звучит вслух на телефоне, а не в наушниках (design v2). */
+    val outputToPhone: Boolean = false
 )
 
 /**
@@ -59,7 +63,8 @@ class LiveInterpreterViewModel @Inject constructor(
     private val textToSpeechManager: TextToSpeechManager,
     private val bluetoothAudioRouter: BluetoothAudioRouter,
     private val wakeWordEngine: WakeWordEngine,
-    private val orchestrator: VoiceInteractionOrchestrator
+    private val orchestrator: VoiceInteractionOrchestrator,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     /**
@@ -80,6 +85,16 @@ class LiveInterpreterViewModel @Inject constructor(
     init {
         observeSpeechRecognizer()
         observeOrchestratorMode()
+        observeOutputChoice()
+    }
+
+    /** Куда звучит перевод — общая настройка с экраном «Наушники». */
+    private fun observeOutputChoice() {
+        viewModelScope.launch {
+            settingsDataStore.translatorToHeadphonesFlow.collect { toHeadphones ->
+                _uiState.update { it.copy(outputToPhone = !toHeadphones) }
+            }
+        }
     }
 
     /**
@@ -197,9 +212,15 @@ class LiveInterpreterViewModel @Inject constructor(
                 ) 
             }
 
-            // Мгновенное неблокирующее воспроизведение перевода прямо в ухо (Bluetooth SCO)
-            bluetoothAudioRouter.routeAudioToEarbud()
-            textToSpeechManager.speakQueued(translation)
+            if (_uiState.value.outputToPhone) {
+                // Вслух на телефоне: коммуникационный поток в динамик телефона.
+                bluetoothAudioRouter.routeAudioToPhoneSpeaker()
+                textToSpeechManager.speakQueued(translation, stream = AudioManager.STREAM_VOICE_CALL)
+            } else {
+                // Мгновенное неблокирующее воспроизведение перевода прямо в ухо (Bluetooth SCO)
+                bluetoothAudioRouter.routeAudioToEarbud()
+                textToSpeechManager.speakQueued(translation)
+            }
         }
     }
 
@@ -300,6 +321,20 @@ class LiveInterpreterViewModel @Inject constructor(
     /** Язык STT: "auto" в режиме AUTO, иначе локаль выбранного языка. */
     private fun listeningLanguageTag(): String =
         if (_uiState.value.preset == InterpreterPreset.AUTO) "auto" else _uiState.value.sourceLanguage.localeTag
+
+    /** Куда звучит перевод: в наушники или вслух на телефоне. */
+    fun setOutputToPhone(toPhone: Boolean) {
+        _uiState.update { it.copy(outputToPhone = toPhone) }
+        if (!toPhone) bluetoothAudioRouter.restoreDefaultRouting()
+        viewModelScope.launch { settingsDataStore.setTranslatorToHeadphones(!toPhone) }
+    }
+
+    /** «Завершить разговор»: остановить прослушивание и очистить расшифровку. */
+    fun endConversation() {
+        if (_uiState.value.isListening) toggleListening()
+        textToSpeechManager.stop()
+        clearHistory()
+    }
 
     fun clearHistory() {
         _uiState.update { it.copy(history = emptyList()) }

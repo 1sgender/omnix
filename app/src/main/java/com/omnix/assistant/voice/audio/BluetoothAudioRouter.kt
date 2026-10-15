@@ -312,6 +312,7 @@ class BluetoothAudioRouter @Inject constructor(
                     return
                 }
                 am.mode = AudioManager.MODE_IN_COMMUNICATION
+                am.isSpeakerphoneOn = false
                 am.startBluetoothSco()
                 am.isBluetoothScoOn = true
                 Log.d(TAG, "Bluetooth SCO started")
@@ -349,6 +350,36 @@ class BluetoothAudioRouter @Inject constructor(
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to route to speaker: ${e.localizedMessage}")
+        }
+    }
+
+    /**
+     * Переводчик «вслух на телефоне» (design v2): речь идёт в динамик телефона,
+     * даже когда наушники подключены. Работает в паре с TTS на STREAM_VOICE_CALL:
+     * коммуникационный поток следует за выбранным здесь устройством.
+     */
+    @Suppress("DEPRECATION") // SCO и speakerphone — единственный путь до API 31
+    fun routeAudioToPhoneSpeaker() {
+        if (disposed.get()) return
+        try {
+            audioManager?.let { am ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val speaker = am.availableCommunicationDevices.firstOrNull {
+                        it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                    } ?: return
+                    am.mode = AudioManager.MODE_IN_COMMUNICATION
+                    am.setCommunicationDevice(speaker)
+                    return
+                }
+                if (am.isBluetoothScoOn) {
+                    am.isBluetoothScoOn = false
+                    am.stopBluetoothSco()
+                }
+                am.mode = AudioManager.MODE_IN_COMMUNICATION
+                am.isSpeakerphoneOn = true
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to route to phone speaker: ${e.localizedMessage}")
         }
     }
 

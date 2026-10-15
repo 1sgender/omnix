@@ -8,34 +8,33 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Read-model «этот ответ ассистента обработан на устройстве» для UI.
+ * Read-model «этот ответ ассистента пришёл из облака» для подписи
+ * «Ответ из облака» под ним в чате (design v2).
  *
  * Промежуточное решение без смены Room-схемы: история чата ([Message][com.omnix.assistant.domain.models.Message])
- * не хранит источник выполнения, а миграция v5→v6 (колонка + экспорт схемы +
- * MigrationTestHelper) зарезервирована под отдельный PR. Пока — ин-мемори
- * множество id сообщений, помеченных при сохранении: [SendPromptUseCase][com.omnix.assistant.domain.usecases.SendPromptUseCase]
+ * не хранит источник выполнения. Пока — ин-мемори множество id сообщений,
+ * помеченных при сохранении: [SendPromptUseCase][com.omnix.assistant.domain.usecases.SendPromptUseCase]
  * знает и id (результат insert), и [ExecutionType][com.omnix.assistant.agent.decision.ExecutionType].
  *
  * Ограничения (осознанные): метки живут в рамках процесса — после перезапуска
- * бейдж пропадает у старых сообщений (cloud-ответы бейджа и не имеют по
- * дизайну: облако = «норма»). Пометка НЕ деградирует: ровно один writer
- * (use case) и один читатель (чат-стрим) при сериализованных отправках.
+ * подпись пропадает у старых сообщений; без пометки подписи нет, так что
+ * ответ никогда не назван облачным по ошибке.
  */
 @Singleton
 class ChatAnswerOriginStore @Inject constructor() {
 
-    private val _onDeviceMessageIds = MutableStateFlow<Set<Long>>(emptySet())
+    private val _cloudMessageIds = MutableStateFlow<Set<Long>>(emptySet())
 
-    /** id сообщений ассистента, обработанных локально (DEVICE_TOOL / LOCAL_AI). */
-    val onDeviceMessageIds: StateFlow<Set<Long>> = _onDeviceMessageIds.asStateFlow()
+    /** id сообщений ассистента, полученных из облачной модели (CLOUD_AI). */
+    val cloudMessageIds: StateFlow<Set<Long>> = _cloudMessageIds.asStateFlow()
 
     /**
-     * Пометить сообщение как обработанное на устройстве. Невалидные id
-     * (0 = insert не вернул строку) игнорируются — молча, это телеметрия
-     * отображения, а не источник правды.
+     * Пометить сообщение как облачный ответ. Невалидные id (0 = insert не
+     * вернул строку) игнорируются — молча, это телеметрия отображения, а не
+     * источник правды.
      */
-    fun markOnDevice(messageId: Long) {
+    fun markCloud(messageId: Long) {
         if (messageId <= 0L) return
-        _onDeviceMessageIds.update { ids -> ids + messageId }
+        _cloudMessageIds.update { ids -> ids + messageId }
     }
 }

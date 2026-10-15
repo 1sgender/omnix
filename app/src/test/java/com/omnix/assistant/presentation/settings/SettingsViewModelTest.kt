@@ -173,6 +173,7 @@ class SettingsViewModelTest {
             every { localModelDownloadIdFlow } returns flowOf(-1L)
             every { nearMissCaptureFlow } returns flowOf(false)
             every { wakeWordEnabledFlow } returns flowOf(true)
+            every { translatorToHeadphonesFlow } returns flowOf(true)
             coEvery { setLocalModelConsent(any()) } returns Unit
             coEvery { setLocalModelDownloadId(any()) } returns Unit
             coEvery { setNearMissCapture(any()) } returns Unit

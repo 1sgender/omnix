@@ -44,6 +44,8 @@ data class SettingsUiState(
     val nearMissCapture: Boolean = false,
     /** Мастер-выключатель wake-word «Omni» (план пересборки фронта, блок 7). */
     val wakeWordEnabled: Boolean = true,
+    /** Перевод звучит в наушниках (design v2, экран «Наушники»). */
+    val translatorToHeadphones: Boolean = true,
     val automations: List<AutomationEntity> = emptyList(),
     val licenseInfo: LicenseInfo? = null,
     val isSavedSuccess: Boolean = false
@@ -118,6 +120,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsDataStore.wakeWordEnabledFlow.collectLatest { enabled ->
                 _uiState.update { it.copy(wakeWordEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            settingsDataStore.translatorToHeadphonesFlow.collectLatest { enabled ->
+                _uiState.update { it.copy(translatorToHeadphones = enabled) }
             }
         }
     }
@@ -207,6 +214,14 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(wakeWordEnabled = enabled) }
         viewModelScope.launch {
             settingsDataStore.setWakeWordEnabled(enabled)
+        }
+    }
+
+    /** «Перевод в наушники»: тот же ключ читает переводчик. */
+    fun onTranslatorToHeadphonesChanged(enabled: Boolean) {
+        _uiState.update { it.copy(translatorToHeadphones = enabled) }
+        viewModelScope.launch {
+            settingsDataStore.setTranslatorToHeadphones(enabled)
         }
     }
 

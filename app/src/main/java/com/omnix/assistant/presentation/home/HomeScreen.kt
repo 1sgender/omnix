@@ -1,13 +1,13 @@
 package com.omnix.assistant.presentation.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,229 +16,422 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceAtLeast
+import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.ClipStatusBar
-import com.omnix.assistant.presentation.components.OmnixHairline
-import com.omnix.assistant.presentation.components.OmnixSpokenExample
+import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
+import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
+import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
+import com.omnix.assistant.presentation.components.OmnixOnDeviceLineIcon
+import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.components.SystemStateView
-import com.omnix.assistant.presentation.core.CoreBadge
-import com.omnix.assistant.presentation.core.CoreState
-import com.omnix.assistant.presentation.core.OmnixAudioBars
-import com.omnix.assistant.presentation.core.OmnixCore
+import com.omnix.assistant.presentation.components.clipDotColor
+import com.omnix.assistant.presentation.components.clipLabel
+import com.omnix.assistant.presentation.components.omnixPressScale
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import com.omnix.assistant.presentation.design.OmnixWordmarkStyle
+import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 import com.omnix.assistant.presentation.state.ActionPhrase
-import com.omnix.assistant.presentation.state.GuidanceLevel
+import com.omnix.assistant.presentation.state.ClipCapability
+import com.omnix.assistant.presentation.state.ClipState
 import com.omnix.assistant.presentation.state.OmnixPhase
 import com.omnix.assistant.presentation.state.OmnixUiState
-import kotlinx.coroutines.delay
 
 /**
- * Home — presence and orientation, not a dashboard (§9, §21, §22).
+ * Home — design v2 canvas, artboard Main.
  *
- * The screen answers exactly four questions:
- *  1. Is OMNIX here?          → the wordmark and the Core
- *  2. Is my Clip connected?   → [ClipStatusBar]
- *  3. What is it doing?       → the state line under the Core
- *  4. What can I say?         → guidance, which fades as the user learns
+ * Top to bottom, exactly as the canvas draws it: the mark with the wordmark
+ * and the headphones pill; the Core between the L and R labels; the state
+ * title, the hint and the on-device pill; the 2×2 quick actions.
  *
- * The Core, its state and guidance are optically centred in the space beneath
- * the device status. This makes idle feel intentional instead of leaving a
- * large accidental void above or below the main interaction.
- *
- * There is no CPU load, no provider name, no latency, no token count and no
- * command counter anywhere on this screen (§9, §31, §84).
+ * Every value comes from real state: the pill shows the battery the
+ * headphones report (or their honest status), the title is the phase, the
+ * on-device pill appears only while OMNIX is actually offline, and a tap on
+ * the Core starts or stops listening through the same path as the wake word.
  */
 @Composable
 fun HomeScreen(
     state: OmnixUiState,
     modifier: Modifier = Modifier,
     onClipTap: () -> Unit = {},
+    onCoreTap: () -> Unit = {},
+    onTranslatorTap: () -> Unit = {},
+    onMemoryTap: () -> Unit = {},
+    onRemindersTap: () -> Unit = {},
+    onAutomationsTap: () -> Unit = {},
     onSystemStateAction: () -> Unit = {}
 ) {
-    val spacing = OmnixTheme.spacing
-    val colors = OmnixTheme.colors
+    Column(modifier = modifier.fillMaxSize()) {
+        HomeHeader(clip = state.clip, onClipTap = onClipTap)
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(spacing.xxl))
-
-        Text(
-            text = stringResource(R.string.omnix_wordmark),
-            style = OmnixWordmarkStyle,
-            color = colors.textSecondary
-        )
-
-        // A restrained ice-cyan brand accent gives the otherwise quiet header
-        // a point of recognition without turning it into a control.
-        Spacer(Modifier.height(spacing.xs))
-        Box(
-            modifier = Modifier
-                .width(spacing.xxl)
-                .height(OmnixHairline)
-                .background(colors.stateIdle.copy(alpha = 0.72f))
-        )
-        Spacer(Modifier.height(spacing.xs))
-
-        ClipStatusBar(
-            clip = state.clip,
-            isOnline = state.isOnline,
-            onClick = onClipTap
-        )
-
-        // The available area, rather than a fixed spacer, owns the main
-        // composition. The Core bundle remains balanced on different display
-        // heights and when the navigation bar consumes system insets.
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
+                .weight(1f)
+                .padding(horizontal = SCREEN_PADDING)
         ) {
+            // The canvas is drawn for a 390×844 phone. On a shorter screen
+            // the Core gives up height first, so the quick actions always
+            // keep their place at the bottom.
+            val deficit = (CANVAS_MAIN_HEIGHT - maxHeight).coerceAtLeast(0.dp)
+            val coreSize = (CORE_SIZE - deficit).coerceAtLeast(CORE_MIN_SIZE)
+            val coreTop = (CORE_TOP - (deficit - (CORE_SIZE - coreSize)))
+                .coerceIn(SCREEN_PADDING, CORE_TOP)
+
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // The Core, flanked by the audio bars while it is hearing or
-                // speaking. The slots are always reserved so it never shifts.
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(spacing.xs)
-                ) {
-                    AudioBarsSlot(state = state, mirrored = true)
+                Spacer(Modifier.height(coreTop))
 
-                    OmnixCore(
-                        state = state.coreState,
-                        size = OmnixTheme.coreSizes.home,
-                        audioLevel = state.audioLevel,
-                        // Дуга OTA (матрица): показывается только в IDLE — во
-                        // время диалога/прослушивания кольцо само занято
-                        // главным сигналом. Прогресс — реальный ход загрузки
-                        // из DownloadManager, не синтетика.
-                        progress = state.otaDownloadProgress,
-                        // Matrix: badges are orthogonal to layers and never
-                        // change the Core's shape. CLOUD wins over WIFI_OFF
-                        // (a request in flight implies the network is back).
-                        // CLOUD docks only on the «busy» states — during
-                        // LISTENING/SPEAKING the ring itself is the signal.
-                        badge = when {
-                            state.isCloudProcessing && state.coreState in CLOUD_BADGE_STATES ->
-                                CoreBadge.CLOUD
+                CoreRow(state = state, coreSize = coreSize, onCoreTap = onCoreTap)
 
-                            // The offline badge docks onto the IDLE core so
-                            // "why is nothing answering" reads before the
-                            // first word is spoken.
-                            state.coreState == CoreState.IDLE && !state.isOnline ->
-                                CoreBadge.WIFI_OFF
+                Spacer(Modifier.height(32.dp))
 
-                            else -> null
-                        },
-                        contentDescription = stringResource(
-                            R.string.omnix_a11y_core_state,
-                            stateLabel(state)
-                        )
-                    )
-
-                    AudioBarsSlot(state = state, mirrored = false)
-                }
-
-                Spacer(Modifier.height(spacing.xxl))
-
-                StateLine(state = state)
-
-                Spacer(Modifier.height(spacing.md))
-
-                // Guidance is progressive: it is driven by real stored
-                // signals, not by a timer or a hardcoded new-user flag.
-                Guidance(state = state)
+                StatusBlock(state = state)
 
                 state.systemState?.let { systemState ->
-                    Spacer(Modifier.height(spacing.xl))
-                    SystemStateView(
-                        type = systemState,
-                        onAction = onSystemStateAction
-                    )
+                    Spacer(Modifier.height(OmnixTheme.spacing.md))
+                    SystemStateView(type = systemState, onAction = onSystemStateAction)
                 }
+
+                Spacer(Modifier.weight(1f))
+
+                QuickActions(
+                    onTranslatorTap = onTranslatorTap,
+                    onMemoryTap = onMemoryTap,
+                    onRemindersTap = onRemindersTap,
+                    onAutomationsTap = onAutomationsTap
+                )
+
+                Spacer(Modifier.height(SCREEN_PADDING))
             }
         }
     }
 }
 
-/**
- * Матрица: бейдж CLOUD стыкуется только на «занятых» состояниях, когда ответ
- * действительно считается. В LISTENING/SPEAKING кольцо само по себе сигнал,
- * а в IDLE/SUCCESS/ERROR облако уже ни о чём не говорит.
- */
-private val CLOUD_BADGE_STATES = setOf(
-    CoreState.RECOGNIZING,
-    CoreState.THINKING,
-    CoreState.EXECUTING
-)
+/** The mark, the wordmark and the headphones pill. */
+@Composable
+private fun HomeHeader(clip: ClipState, onClipTap: () -> Unit) {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = SCREEN_PADDING, top = SCREEN_PADDING, end = SCREEN_PADDING),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OmnixRingMark(
+                color = colors.textPrimary,
+                width = 26.dp,
+                height = 22.dp,
+                modifier = Modifier.clearAndSetSemantics {}
+            )
+            Text(
+                text = stringResource(R.string.omnix_wordmark),
+                style = TextStyle(
+                    fontFamily = OmnixSans,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    letterSpacing = 0.12.em
+                ),
+                color = colors.textPrimary
+            )
+        }
+
+        ClipPill(clip = clip, onClick = onClipTap)
+    }
+}
 
 /**
- * A fixed-width slot for the audio bars.
- *
- * The slot is always present so the Core never shifts horizontally when
- * listening starts; only the bars inside it appear (§46).
+ * The headphones pill. The canvas shows "L 82 · R 79"; the headset reports
+ * one battery value, so the pill shows that one value — never an invented
+ * second number.
  */
 @Composable
-private fun AudioBarsSlot(state: OmnixUiState, mirrored: Boolean) {
-    val visible = state.coreState.isAudioReactive
-    Box(modifier = Modifier.size(width = 34.dp, height = 34.dp)) {
-        if (visible) {
-            OmnixAudioBars(
-                level = state.audioLevel,
-                color = OmnixTheme.colors.let { colors ->
-                    when (state.coreState) {
-                        CoreState.SPEAKING -> colors.stateSpeaking
-                        else -> colors.stateListening
-                    }
+private fun ClipPill(clip: ClipState, onClick: () -> Unit) {
+    val colors = OmnixTheme.colors
+    val battery = when (clip) {
+        is ClipState.Connected -> (clip.battery as? ClipCapability.Available)?.value
+        is ClipState.BatteryLow -> clip.percent
+        else -> null
+    }
+    val text = battery?.let { stringResource(R.string.omnix_home_clip_battery, it) } ?: clipLabel(clip)
+    val description = battery?.let { stringResource(R.string.omnix_home_clip_a11y_battery, it) }
+        ?: clipLabel(clip)
+    val dot = if (clip is ClipState.Connected) colors.accentBrand else clipDotColor(clip)
+
+    Row(
+        modifier = Modifier
+            .height(36.dp)
+            .clip(PillShape)
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), PillShape)
+            .clickable(onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = description
+                role = Role.Button
+            }
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            Modifier
+                .size(8.dp)
+                .background(dot, CircleShape)
+        )
+        Text(text = text, style = OmnixMonoLabelStyle, color = colors.textPrimary, maxLines = 1)
+    }
+}
+
+/** The Core between the L and R labels. */
+@Composable
+private fun CoreRow(state: OmnixUiState, coreSize: Dp, onCoreTap: () -> Unit) {
+    val colors = OmnixTheme.colors
+    val listening = state.phase is OmnixPhase.Listening || state.phase is OmnixPhase.Recognizing
+    val active = state.phase !is OmnixPhase.Idle && state.phase !is OmnixPhase.Error
+    val ring = if (active) colors.accentBrand else colors.textPrimary.copy(alpha = 0.10f)
+    val mark = if (active) colors.accentBrand else colors.textPrimary
+    val coreLabel = stringResource(
+        if (listening) R.string.omnix_home_core_stop else R.string.omnix_home_core_start
+    )
+    val interaction = remember { MutableInteractionSource() }
+    val scale = coreSize / CORE_SIZE
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SideLabel("L")
+        Box(
+            modifier = Modifier
+                .size(coreSize)
+                .omnixPressScale(interaction)
+                .clip(CircleShape)
+                // #141310 on the canvas: halfway between the ground and a card.
+                .background(lerp(colors.background, colors.surface, 0.5f))
+                .border(BorderStroke(1.5.dp, ring), CircleShape)
+                .clickable(interactionSource = interaction, indication = null, onClick = onCoreTap)
+                .clearAndSetSemantics {
+                    contentDescription = coreLabel
+                    role = Role.Button
                 },
-                mirrored = mirrored
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(188.dp * scale)
+                    .border(BorderStroke(1.dp, colors.textPrimary.copy(alpha = 0.06f)), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                // The canvas draws the big mark with a 2.6 stroke on the 34-unit grid.
+                OmnixRingMark(color = mark, width = 104.dp * scale, height = 80.dp * scale, strokeUnits = 2.6f)
+            }
+        }
+        SideLabel("R")
+    }
+}
+
+@Composable
+private fun SideLabel(text: String) {
+    Text(
+        text = text,
+        style = OmnixMonoLabelStyle.copy(fontSize = 13.sp, letterSpacing = 0.04.em),
+        color = OmnixTheme.colors.textTertiary,
+        modifier = Modifier.clearAndSetSemantics {}
+    )
+}
+
+/** Title, hint and the on-device pill. */
+@Composable
+private fun StatusBlock(state: OmnixUiState) {
+    val colors = OmnixTheme.colors
+    val hint = when (state.phase) {
+        is OmnixPhase.Listening, is OmnixPhase.Recognizing -> stringResource(R.string.omnix_home_hint_listening)
+        is OmnixPhase.Idle, is OmnixPhase.Error -> stringResource(R.string.omnix_home_hint_idle)
+        else -> null
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = stateLabel(state),
+            style = TextStyle(
+                fontFamily = OmnixSans,
+                fontWeight = FontWeight.Medium,
+                fontSize = 28.sp,
+                lineHeight = 32.sp
+            ),
+            color = colors.textPrimary,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+        hint?.let {
+            Text(
+                text = it,
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp),
+                color = colors.textSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(max = 280.dp)
+            )
+        }
+        if (!state.isOnline) {
+            OnDevicePill(modifier = Modifier.padding(top = 6.dp))
+        }
+    }
+}
+
+@Composable
+private fun OnDevicePill(modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = modifier
+            .height(28.dp)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(14.dp))
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(
+            imageVector = OmnixOnDeviceLineIcon,
+            contentDescription = null,
+            tint = colors.textSecondary,
+            modifier = Modifier.size(14.dp)
+        )
+        Text(
+            text = stringResource(R.string.omnix_home_offline_pill),
+            style = OmnixMonoLabelStyle.copy(fontSize = 11.sp, letterSpacing = 0.04.em),
+            color = colors.textSecondary
+        )
+    }
+}
+
+/** The 2×2 quick actions. */
+@Composable
+private fun QuickActions(
+    onTranslatorTap: () -> Unit,
+    onMemoryTap: () -> Unit,
+    onRemindersTap: () -> Unit,
+    onAutomationsTap: () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickActionCard(
+                icon = OmnixTranslatorLineIcon,
+                iconTint = colors.accentBrand,
+                title = stringResource(R.string.omnix_home_card_translator),
+                subtitle = stringResource(R.string.omnix_home_card_translator_sub),
+                onClick = onTranslatorTap,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                icon = OmnixMemoryLineIcon,
+                iconTint = colors.textPrimary,
+                title = stringResource(R.string.omnix_home_card_memory),
+                subtitle = stringResource(R.string.omnix_home_card_memory_sub),
+                onClick = onMemoryTap,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickActionCard(
+                icon = OmnixAlarmLineIcon,
+                iconTint = colors.textPrimary,
+                title = stringResource(R.string.omnix_home_card_reminders),
+                subtitle = stringResource(R.string.omnix_home_card_reminders_sub),
+                onClick = onRemindersTap,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                icon = OmnixBoltLineIcon,
+                iconTint = colors.textPrimary,
+                title = stringResource(R.string.omnix_home_card_automations),
+                subtitle = stringResource(R.string.omnix_home_card_automations_sub),
+                onClick = onAutomationsTap,
+                modifier = Modifier.weight(1f)
             )
         }
     }
 }
 
-/**
- * The single line of text under the Core. It always says what OMNIX is doing
- * in the user's language — "Calling Alex…", never "EXECUTING" (§15, §19).
- */
 @Composable
-private fun StateLine(state: OmnixUiState, modifier: Modifier = Modifier) {
-    Box(
+private fun QuickActionCard(
+    icon: ImageVector,
+    iconTint: Color,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    val interaction = remember { MutableInteractionSource() }
+    Column(
         modifier = modifier
-            .fillMaxWidth()
-            // Reserved height keeps the Core from shifting as the label
-            // changes length between states (§46).
-            .height(56.dp),
-        contentAlignment = Alignment.TopCenter
+            .omnixPressScale(interaction)
+            .clip(CardShape)
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), CardShape)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Button,
+                onClick = onClick
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
-            text = stateLabel(state),
-            style = OmnixTheme.typography.title2,
-            color = OmnixTheme.colors.textPrimary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 320.dp)
-        )
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+                color = colors.textPrimary,
+                maxLines = 1
+            )
+            Text(
+                text = subtitle,
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                color = colors.textSecondary,
+                maxLines = 1
+            )
+        }
     }
 }
 
@@ -263,82 +456,13 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
     is OmnixPhase.Error -> stringResource(R.string.omnix_state_ready)
 }
 
-/**
- * Progressive disclosure (§10, §24–§26, §82).
- *
- * New user  → wake word plus a rotating set of concrete examples
- * Familiar  → wake word only
- * Minimal   → nothing; presence is enough
- */
-@Composable
-private fun Guidance(state: OmnixUiState, modifier: Modifier = Modifier) {
-    val spacing = OmnixTheme.spacing
-    val visible = state.phase is OmnixPhase.Idle && state.guidance != GuidanceLevel.Minimal
+private val SCREEN_PADDING = 20.dp
+private val CORE_SIZE = 248.dp
+private val CORE_MIN_SIZE = 168.dp
+private val CORE_TOP = 56.dp
 
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(OmnixTheme.motion.screenEnterMs)),
-        exit = fadeOut(tween(OmnixTheme.motion.screenExitMs)),
-        modifier = modifier
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.xs)
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.omnix_home_hint_say_omni_wake,
-                    stringResource(R.string.omnix_wake_word_quoted)
-                ),
-                style = OmnixTheme.typography.subheadline,
-                color = OmnixTheme.colors.textSecondary,
-                textAlign = TextAlign.Center
-            )
-            if (state.guidance == GuidanceLevel.New) {
-                RotatingSpokenExample()
-            }
-            if (!state.isOnline) {
-                Text(
-                    text = stringResource(R.string.omnix_home_offline_partial),
-                    style = OmnixTheme.typography.caption,
-                    color = OmnixTheme.colors.textTertiary,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
+/** Height of the canvas' main area: 844 minus the header and the tab bar. */
+private val CANVAS_MAIN_HEIGHT = 708.dp
 
-/**
- * Cycles through compact, real commands without claiming that OMNIX supports
- * a feature it does not. Animation is stopped when reduced motion is enabled.
- */
-@Composable
-private fun RotatingSpokenExample(modifier: Modifier = Modifier) {
-    val examples = listOf(
-        stringResource(R.string.omnix_home_example_time),
-        stringResource(R.string.omnix_home_example_weather),
-        stringResource(R.string.omnix_home_example_music)
-    )
-    val reducedMotion = OmnixTheme.reducedMotion
-    var exampleIndex by rememberSaveable { mutableStateOf(0) }
-
-    LaunchedEffect(reducedMotion) {
-        if (!reducedMotion) {
-            while (true) {
-                delay(EXAMPLE_ROTATION_MS)
-                exampleIndex = (exampleIndex + 1) % examples.size
-            }
-        }
-    }
-
-    Crossfade(
-        targetState = examples[exampleIndex],
-        animationSpec = tween(OmnixTheme.motion.contentFadeMs),
-        label = "home_command_example"
-    ) { example ->
-        OmnixSpokenExample(text = example, modifier = modifier)
-    }
-}
-
-private const val EXAMPLE_ROTATION_MS = 5_500L
+private val PillShape = RoundedCornerShape(18.dp)
+private val CardShape = RoundedCornerShape(18.dp)

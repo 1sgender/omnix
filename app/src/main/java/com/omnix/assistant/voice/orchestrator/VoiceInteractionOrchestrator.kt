@@ -414,6 +414,24 @@ class VoiceInteractionOrchestrator @Inject constructor(
         speechRecognizerManager.startListening()
     }
 
+    /**
+     * Tap on the Core (design v2). From standby it takes the same path as a
+     * confirmed wake word; while OMNIX is listening for a query it goes back
+     * to standby. Any other mode is left alone, so a tap never interrupts an
+     * answer, a pending confirmation or the live interpreter.
+     */
+    fun toggleListeningFromUi() {
+        if (!isServiceActive) return
+        when (_currentMode.value) {
+            OrchestratorMode.STANDBY_WAKE_WORD -> {
+                playWakeChime()
+                switchToSpeechRecognition()
+            }
+            OrchestratorMode.LISTENING_USER_QUERY -> startStandbyMode()
+            else -> Unit
+        }
+    }
+
     private fun switchToSpeechRecognition() {
         wakeWordEngine.stop()
         wakeDetectedAtMs = latencyMetrics.nowMs()

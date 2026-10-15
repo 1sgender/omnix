@@ -18,7 +18,6 @@ import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.agent.decision.ExecutionType
 import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
-import com.omnix.assistant.domain.models.handledOnDevice
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -231,10 +230,9 @@ class SendPromptUseCase @Inject constructor(
     }
 
     /**
-     * Сохраняет ответ ассистента и, если он получен локальным путём
-     * (DEVICE_TOOL / LOCAL_AI), помечает id строки для on-device бейджа
-     * в чате (audit 2026-09-26). Облачные ответы бейджа не получают —
-     * облако = «норма».
+     * Сохраняет ответ ассистента и, если он получен из облачной модели
+     * (CLOUD_AI), помечает id строки для подписи «Ответ из облака» в чате
+     * (design v2).
      */
     private suspend fun saveAssistantMessage(text: String, executionType: ExecutionType?) {
         val messageId = messageRepository.insertMessage(
@@ -244,8 +242,8 @@ class SendPromptUseCase @Inject constructor(
                 timestamp = System.currentTimeMillis()
             )
         )
-        if (executionType.handledOnDevice) {
-            answerOriginStore.markOnDevice(messageId)
+        if (executionType == ExecutionType.CLOUD_AI) {
+            answerOriginStore.markCloud(messageId)
         }
     }
 

@@ -1,333 +1,479 @@
 package com.omnix.assistant.presentation.translator
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixBackIcon
-import com.omnix.assistant.presentation.components.OmnixIconButton
-import com.omnix.assistant.presentation.components.OmnixPrimaryButton
-import com.omnix.assistant.presentation.components.OmnixSecondaryButton
-import com.omnix.assistant.presentation.components.OmnixSwapIcon
+import com.omnix.assistant.agent.translator.SupportedLanguage
+import com.omnix.assistant.presentation.components.OmnixBackLineIcon
+import com.omnix.assistant.presentation.components.OmnixCloseLineIcon
+import com.omnix.assistant.presentation.components.OmnixMicLineIcon
+import com.omnix.assistant.presentation.components.OmnixPauseLineIcon
+import com.omnix.assistant.presentation.components.OmnixSwapLineIcon
 import com.omnix.assistant.presentation.components.omnixPressScale
-import com.omnix.assistant.presentation.core.AmplitudeRing
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import kotlinx.coroutines.delay
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
- * Translation — a mode of OMNIX, not a separate app (§24, §43).
+ * Translator — design v2 canvas, artboard Translator.
  *
- * The state model stays the Core's: the route feeds the real listening flag
- * and the live microphone level, and the transcript/translation pair flows
- * in exactly as before. The mock of 2026-09-25 changes the MARK, not the
- * model — the halo'd Core is replaced by the calm translation ring
- * (muted-blue outline, white waveform) the owner's mock asks for: closer to
- * a system icon, no cyan glow, no halo. Listening reads as the live
- * waveform; thinking reads as the settled result text.
+ * Top to bottom, as the canvas draws it: back, title and the network pill;
+ * "I speak" / "The other person" with the swap button between them; the live
+ * transcript (each phrase: a mono meta line, the original, the translation;
+ * the phrase still being heard at the bottom in lime); where the translation
+ * sounds; pause, speak and end.
  *
- * Composition (mock): a compact back chevron at the edge and the title
- * centred across the width (title2 — the app-wide title weight), the
- * language pair as one interactive pill (the Apple Translate reading), the
- * ring, the prompt — or the live transcript with the title2 translation —
- * and the full-width action. Two weight slots centre the block, so the
- * screen stops having a "hole" in the middle.
+ * The pill tells the truth about the network: translation runs through the
+ * online engine, so it reads ONLINE with the lime dot, or OFFLINE with a dim
+ * one when there is no network.
  */
 @Composable
 fun TranslatorScreen(
-    active: Boolean,
-    audioLevel: Float,
-    sourceLanguage: String,
-    targetLanguage: String,
-    transcript: String,
-    translation: String,
+    state: LiveInterpreterUiState,
+    isOnline: Boolean,
+    languages: List<SupportedLanguage>,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    onStart: () -> Unit = {},
-    onStop: () -> Unit = {},
-    onSwap: () -> Unit = {}
+    onSwap: () -> Unit = {},
+    onMyLanguage: (SupportedLanguage) -> Unit = {},
+    onPartnerLanguage: (SupportedLanguage) -> Unit = {},
+    onOutputToPhone: (Boolean) -> Unit = {},
+    onPause: () -> Unit = {},
+    onSpeak: () -> Unit = {},
+    onEnd: () -> Unit = {}
 ) {
-    val spacing = OmnixTheme.spacing
+    Column(modifier = modifier.fillMaxSize()) {
+        Header(isOnline = isOnline, onBack = onBack)
+
+        // The translation lands in "my" language: the target. The other
+        // person speaks the source (or what the detector heard in AUTO).
+        LanguageRow(
+            myLanguage = state.targetLanguage,
+            partnerLanguage = state.detectedSourceLanguage ?: state.sourceLanguage,
+            languages = languages,
+            onSwap = onSwap,
+            onMyLanguage = onMyLanguage,
+            onPartnerLanguage = onPartnerLanguage
+        )
+
+        Transcript(
+            history = state.history,
+            partial = state.partialRecognizedText.takeIf { state.isListening },
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 20.dp, top = 20.dp, end = 20.dp)
+        )
+
+        OutputRow(
+            toPhone = state.outputToPhone,
+            onOutputToPhone = onOutputToPhone,
+            modifier = Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp)
+        )
+
+        Controls(onPause = onPause, onSpeak = onSpeak, onEnd = onEnd)
+    }
+}
+
+@Composable
+private fun Header(isOnline: Boolean, onBack: () -> Unit) {
     val colors = OmnixTheme.colors
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 8.dp, top = 16.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Spacer(Modifier.height(spacing.md))
-
-        // iOS reading (mock 2026-09-25): the title is centred across the
-        // full width, the compact back chevron stays at the edge.
+        val backLabel = stringResource(R.string.omnix_nav_back)
         Box(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .clickable(role = Role.Button, onClick = onBack)
+                .clearAndSetSemantics {
+                    contentDescription = backLabel
+                    role = Role.Button
+                },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = stringResource(R.string.omnix_translator_title),
-                style = OmnixTheme.typography.title2,
-                color = colors.textPrimary
-            )
-            OmnixIconButton(
-                onClick = onBack,
-                contentDescription = stringResource(R.string.omnix_nav_back),
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                OmnixBackIcon(color = colors.textSecondary)
-            }
+            Icon(OmnixBackLineIcon, contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(22.dp))
         }
-
-        Spacer(Modifier.height(spacing.sm))
-
-        LanguagePairPill(
-            sourceLanguage = sourceLanguage,
-            targetLanguage = targetLanguage,
-            onSwap = onSwap
+        Text(
+            text = stringResource(R.string.omnix_translator_title),
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 20.sp),
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f)
         )
-
-        Spacer(Modifier.weight(1f))
-
-        TranslateRing(active = active, audioLevel = audioLevel)
-
-        Spacer(Modifier.height(spacing.xl))
-
-        // Live transcript above, translation below. The translation is the
-        // primary text because it is the thing the user is waiting for.
-        if (transcript.isNotBlank() || translation.isNotBlank()) {
-            Text(
-                text = transcript,
-                style = OmnixTheme.typography.subheadline,
-                color = colors.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .height(28.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(14.dp))
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Box(
+                Modifier
+                    .size(6.dp)
+                    .background(if (isOnline) colors.accentBrand else colors.textDisabled, CircleShape)
             )
-            Spacer(Modifier.height(spacing.xs))
             Text(
-                text = translation,
-                style = OmnixTheme.typography.title2,
-                color = colors.textPrimary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.omnix_translator_empty_body),
-                style = OmnixTheme.typography.subheadline,
-                color = colors.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                text = stringResource(
+                    if (isOnline) R.string.omnix_translator_status_online else R.string.omnix_translator_status_offline
+                ),
+                style = MonoMeta,
+                color = colors.textSecondary
             )
         }
-
-        Spacer(Modifier.weight(1f))
-
-        if (active) {
-            OmnixSecondaryButton(
-                text = stringResource(R.string.omnix_translator_stop),
-                onClick = onStop,
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            OmnixPrimaryButton(
-                text = stringResource(R.string.omnix_translator_start),
-                onClick = onStart,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Spacer(Modifier.height(spacing.xl))
     }
 }
 
-/**
- * The language pair as ONE interactive pill (mock 2026-09-25, the Apple
- * Translate reading): "Русский → English" with the swap glyph inside a
- * single control, instead of a loose caption plus a separate text button.
- * Its one action is swapping, so the whole pill is the button — and says
- * exactly that to the screen reader.
- */
 @Composable
-private fun LanguagePairPill(
-    sourceLanguage: String,
-    targetLanguage: String,
+private fun LanguageRow(
+    myLanguage: SupportedLanguage,
+    partnerLanguage: SupportedLanguage,
+    languages: List<SupportedLanguage>,
     onSwap: () -> Unit,
+    onMyLanguage: (SupportedLanguage) -> Unit,
+    onPartnerLanguage: (SupportedLanguage) -> Unit
+) {
+    val colors = OmnixTheme.colors
+    val swapLabel = stringResource(R.string.omnix_translator_swap)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, top = 20.dp, end = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        LanguageButton(
+            label = stringResource(R.string.omnix_translator_i_speak),
+            language = myLanguage,
+            languages = languages,
+            onPick = onMyLanguage,
+            modifier = Modifier.weight(1f)
+        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .border(BorderStroke(1.dp, colors.textPrimary.copy(alpha = 0.12f)), CircleShape)
+                .clickable(onClick = onSwap)
+                .clearAndSetSemantics {
+                    contentDescription = swapLabel
+                    role = Role.Button
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(OmnixSwapLineIcon, contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(18.dp))
+        }
+        LanguageButton(
+            label = stringResource(R.string.omnix_translator_partner),
+            language = partnerLanguage,
+            languages = languages,
+            onPick = onPartnerLanguage,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/** One side of the pair; a tap opens the list of supported languages. */
+@Composable
+private fun LanguageButton(
+    label: String,
+    language: SupportedLanguage,
+    languages: List<SupportedLanguage>,
+    onPick: (SupportedLanguage) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
-    val interaction = remember { MutableInteractionSource() }
-    val swapLabel = stringResource(R.string.omnix_translator_swap)
-
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(OmnixTheme.radius.pill))
-            .background(colors.surfaceElevated)
-            .omnixPressScale(interaction)
-            .clickable(
-                interactionSource = interaction,
-                indication = null,
-                onClick = onSwap
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(LanguageShape)
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.border), LanguageShape)
+                .clickable(role = Role.Button) { expanded = true }
+                .padding(horizontal = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)
+        ) {
+            Text(text = label, style = TextStyle(fontFamily = OmnixSans, fontSize = 11.sp), color = colors.textSecondary)
+            Text(
+                text = language.displayName,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
+                color = colors.textPrimary,
+                maxLines = 1
             )
-            // clickable() already carries the button semantics for TalkBack;
-            // the label states the one action the pill has.
-            .clearAndSetSemantics {
-                this.contentDescription = swapLabel
-            }
-            .padding(horizontal = spacing.lg, vertical = spacing.sm),
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(
-                R.string.omnix_translator_direction,
-                sourceLanguage,
-                targetLanguage
-            ),
-            style = OmnixTheme.typography.headline,
-            color = colors.textPrimary
-        )
-        OmnixSwapIcon(color = colors.textSecondary)
-    }
-}
-
-/**
- * The translation ring (mock 2026-09-25): a muted-blue outline with a white
- * waveform inside — no halo, no glow; the calm system-icon reading the mock
- * asks for. At rest it is the mock's static glyph. While the microphone is
- * live the six bars follow the REAL level through the same [AmplitudeRing]
- * the Core's amplitude ticks use (§33 — never a timer), the newest sample on
- * the right; when listening ends they cross-fade back to the rest glyph.
- * Under reduced motion the rest glyph is always kept.
- *
- * Decorative for screen readers: the button and the prompt below carry the
- * state.
- */
-@Composable
-private fun TranslateRing(
-    active: Boolean,
-    audioLevel: Float,
-    modifier: Modifier = Modifier,
-    size: Dp = OmnixTheme.coreSizes.focus
-) {
-    val colors = OmnixTheme.colors
-    val motion = OmnixTheme.motion
-    val reduced = OmnixTheme.reducedMotion
-    val live = active && !reduced
-
-    val currentLevel by rememberUpdatedState(audioLevel)
-    val history = remember { AmplitudeRing(capacity = WAVEFORM_BAR_COUNT) }
-    LaunchedEffect(live) {
-        if (live) {
-            while (true) {
-                history.push(currentLevel)
-                delay(motion.amplitudeSampleMs.coerceAtLeast(10).toLong())
-            }
-        } else {
-            history.reset()
         }
-    }
-
-    // 1 while the microphone is live, 0 at rest: how far the level bars
-    // replace the rest glyph. Animated so state changes morph, not swap.
-    val liveness by animateFloatAsState(
-        targetValue = if (live) 1f else 0f,
-        animationSpec = tween(motion.stateTransitionMs, easing = motion.standard),
-        label = "translate_ring_liveness"
-    )
-
-    Canvas(
-        modifier = modifier.size(size),
-        onDraw = {
-            val dim = this.size.minDimension
-            val u = dim / WAVEFORM_BOX
-            val center = Offset(dim / 2f, dim / 2f)
-
-            // The muted outline: thin, continuous, unbroken.
-            val ringStroke = dim * RING_STROKE_RATIO
-            drawCircle(
-                color = colors.accentRing,
-                radius = (dim - ringStroke) / 2f,
-                center = center,
-                style = Stroke(width = ringStroke)
-            )
-
-            val barWidth = WAVEFORM_BAR_WIDTH_U * u
-            for (i in 0 until WAVEFORM_BAR_COUNT) {
-                val level = history.newestFirst(WAVEFORM_BAR_COUNT - 1 - i)
-                val barHeight = waveformBarHeight(WAVEFORM_REST_U[i], level, liveness) * u
-                val x = (WAVEFORM_BAR_FIRST_X_U + i * WAVEFORM_BAR_STEP_U) * u
-                drawLine(
-                    color = colors.textPrimary,
-                    start = Offset(x, center.y - barHeight / 2f),
-                    end = Offset(x, center.y + barHeight / 2f),
-                    strokeWidth = barWidth,
-                    cap = StrokeCap.Round
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(colors.surfaceElevated)
+        ) {
+            languages.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = option.displayName,
+                            style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
+                            color = if (option == language) colors.accentBrand else colors.textPrimary
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onPick(option)
+                    }
                 )
             }
         }
-    )
+    }
 }
 
 /**
- * One waveform bar's height in 24-box units: the rest glyph blended toward
- * the live level by [liveness]. Silence while listening holds the bar at 20
- * % of its rest height — the microphone is open, the user is quiet; nothing
- * is invented. Pure, JVM-tested.
+ * The live transcript, newest at the bottom. The phrase still being heard
+ * sits under the finished ones with the lime "speaking" meta line.
  */
-internal fun waveformBarHeight(restU: Float, level: Float, liveness: Float): Float {
-    val liveU = restU * (0.20f + 0.80f * level.coerceIn(0f, 1f))
-    val t = liveness.coerceIn(0f, 1f)
-    return restU + (liveU - restU) * t
+@Composable
+private fun Transcript(history: List<TranslationItem>, partial: String?, modifier: Modifier = Modifier) {
+    val zone = remember { ZoneId.systemDefault() }
+    val showPartial = !partial.isNullOrBlank()
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        reverseLayout = true,
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        if (showPartial) {
+            item(key = "partial") { PartialEntry(text = partial.orEmpty()) }
+        }
+        // No item keys: ids are wall-clock millis and two phrases can share one.
+        itemsIndexed(history) { index, item ->
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                FinishedEntry(item = item, time = TimeFormat.format(Instant.ofEpochMilli(item.id).atZone(zone)))
+                // A hairline between this phrase and the newer one below it.
+                if (index > 0 || showPartial) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(OmnixTheme.colors.textPrimary.copy(alpha = 0.06f))
+                    )
+                }
+            }
+        }
+    }
 }
 
-/** 24-unit design box for the waveform (the icon-set convention). */
-private const val WAVEFORM_BOX = 24f
+@Composable
+private fun FinishedEntry(item: TranslationItem, time: String) {
+    val colors = OmnixTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = stringResource(R.string.omnix_translator_meta_partner, time),
+            style = MonoMeta,
+            color = colors.textTertiary
+        )
+        Text(text = item.originalText, style = OriginalStyle, color = colors.textSecondary)
+        Text(
+            text = item.translatedText,
+            style = TranslationStyle,
+            // A failed translation carries the reason, not a translation.
+            color = if (item.isTranslated) colors.textPrimary else colors.textSecondary
+        )
+    }
+}
 
-/** The outline's share of the diameter: a thin, calm stroke. */
-private const val RING_STROKE_RATIO = 0.01f
+@Composable
+private fun PartialEntry(text: String) {
+    val colors = OmnixTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = stringResource(R.string.omnix_translator_meta_speaking),
+            style = MonoMeta,
+            color = colors.accentBrand
+        )
+        Text(text = text, style = TranslationStyle, color = colors.textPrimary)
+    }
+}
 
-/** The mock's waveform: six bars. */
-private const val WAVEFORM_BAR_COUNT = 6
+/** "To headphones" / "Aloud on the phone": where the translation sounds. */
+@Composable
+private fun OutputRow(toPhone: Boolean, onOutputToPhone: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutputButton(
+            text = stringResource(R.string.omnix_translator_to_ears),
+            selected = !toPhone,
+            onClick = { onOutputToPhone(false) },
+            modifier = Modifier.weight(1f)
+        )
+        OutputButton(
+            text = stringResource(R.string.omnix_translator_to_phone),
+            selected = toPhone,
+            onClick = { onOutputToPhone(true) },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
 
-/** Bar width, in box units. */
-private const val WAVEFORM_BAR_WIDTH_U = 0.8f
+@Composable
+private fun OutputButton(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
+    val background = if (selected) colors.textPrimary else Color.Transparent
+    val foreground = if (selected) colors.background else colors.textPrimary
+    val border = if (selected) colors.textPrimary else colors.textPrimary.copy(alpha = 0.12f)
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .clip(OutputShape)
+            .background(background)
+            .border(BorderStroke(1.dp, border), OutputShape)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+            color = foreground,
+            maxLines = 1
+        )
+    }
+}
 
-/** Centre-to-centre spacing, in box units. */
-private const val WAVEFORM_BAR_STEP_U = 2.2f
+@Composable
+private fun Controls(onPause: () -> Unit, onSpeak: () -> Unit, onEnd: () -> Unit) {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 32.dp),
+        horizontalArrangement = Arrangement.spacedBy(28.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RoundButton(
+            icon = OmnixPauseLineIcon,
+            label = stringResource(R.string.omnix_translator_pause),
+            size = 52.dp,
+            iconSize = 18.dp,
+            background = colors.surface,
+            iconTint = colors.textPrimary,
+            border = colors.border,
+            onClick = onPause
+        )
+        RoundButton(
+            icon = OmnixMicLineIcon,
+            label = stringResource(R.string.omnix_translator_speak),
+            size = 84.dp,
+            iconSize = 30.dp,
+            background = colors.accentBrand,
+            iconTint = colors.background,
+            border = null,
+            onClick = onSpeak
+        )
+        RoundButton(
+            icon = OmnixCloseLineIcon,
+            label = stringResource(R.string.omnix_translator_end),
+            size = 52.dp,
+            iconSize = 18.dp,
+            background = colors.surface,
+            iconTint = colors.textPrimary,
+            border = colors.border,
+            onClick = onEnd
+        )
+    }
+}
 
-/** The first bar's centre x, in box units (the row is centred on 12). */
-private const val WAVEFORM_BAR_FIRST_X_U = 6.5f
+@Composable
+private fun RoundButton(
+    icon: ImageVector,
+    label: String,
+    size: Dp,
+    iconSize: Dp,
+    background: Color,
+    iconTint: Color,
+    border: Color?,
+    onClick: () -> Unit
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .size(size)
+            .omnixPressScale(interaction)
+            .clip(CircleShape)
+            .background(background)
+            .then(if (border != null) Modifier.border(BorderStroke(1.dp, border), CircleShape) else Modifier)
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = label
+                role = Role.Button
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(iconSize))
+    }
+}
 
-/** The rest glyph: the mock's bar heights, in box units. */
-private val WAVEFORM_REST_U = floatArrayOf(4.0f, 6.5f, 8.8f, 8.8f, 6.5f, 4.0f)
+private val MonoMeta = OmnixMonoLabelStyle.copy(fontSize = 11.sp, letterSpacing = 0.04.em)
+private val OriginalStyle = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp)
+private val TranslationStyle = TextStyle(
+    fontFamily = OmnixSans,
+    fontWeight = FontWeight.Medium,
+    fontSize = 20.sp,
+    lineHeight = 27.sp
+)
+private val LanguageShape = RoundedCornerShape(16.dp)
+private val OutputShape = RoundedCornerShape(14.dp)
+private val TimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

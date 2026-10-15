@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -113,7 +114,8 @@ class TextToSpeechManager @Inject constructor(
         val text: String,
         val speechRate: Float,
         val pitch: Float,
-        val queueMode: Int
+        val queueMode: Int,
+        val stream: Int? = null
     )
 
     init {
@@ -177,7 +179,8 @@ class TextToSpeechManager @Inject constructor(
             text = pending.text,
             speechRate = pending.speechRate,
             pitch = pending.pitch,
-            queueMode = pending.queueMode
+            queueMode = pending.queueMode,
+            stream = pending.stream
         )
     }
 
@@ -245,7 +248,10 @@ class TextToSpeechManager @Inject constructor(
         text: String,
         speechRate: Float = 1.0f,
         pitch: Float = 1.0f,
-        queueMode: Int = TextToSpeech.QUEUE_FLUSH
+        queueMode: Int = TextToSpeech.QUEUE_FLUSH,
+        // Аудиопоток вывода; null — поток движка по умолчанию. STREAM_VOICE_CALL
+        // ведёт речь за коммуникационным устройством (переводчик «вслух на телефоне»).
+        stream: Int? = null
     ) {
         if (disposed.get()) return
         if (text.isBlank()) {
@@ -257,7 +263,7 @@ class TextToSpeechManager @Inject constructor(
             speakMutex.withLock {
                 val engine = tts
                 if (engine != null && _isInitialized.value && _ttsState.value !is TtsState.Initializing) {
-                    speakInternal(text, speechRate, pitch, queueMode)
+                    speakInternal(text, speechRate, pitch, queueMode, stream)
                     return@withLock
                 }
                 // Движок не готов — сохраняем текст (последний вызов «выигрывает»),
@@ -267,7 +273,8 @@ class TextToSpeechManager @Inject constructor(
                     text = text,
                     speechRate = speechRate.coerceIn(0.5f, 2.0f),
                     pitch = pitch.coerceIn(0.5f, 2.0f),
-                    queueMode = queueMode
+                    queueMode = queueMode,
+                    stream = stream
                 )
                 if (_ttsState.value == TtsState.Error || _ttsState.value == TtsState.Idle || tts == null) {
                     initializeTts()
@@ -281,7 +288,8 @@ class TextToSpeechManager @Inject constructor(
         text: String,
         speechRate: Float,
         pitch: Float,
-        queueMode: Int
+        queueMode: Int,
+        stream: Int?
     ) {
         val engine = tts
         if (engine == null) {
@@ -296,7 +304,8 @@ class TextToSpeechManager @Inject constructor(
         // приглушается на время речи, а не играет поверх перевода/ответа.
         acquireFocusIfNeeded()
         val utteranceId = "${UTTERANCE_ID_PREFIX}${++utteranceCounter}"
-        val result = engine.speak(text, queueMode, null, utteranceId)
+        val params = stream?.let { Bundle().apply { putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, it) } }
+        val result = engine.speak(text, queueMode, params, utteranceId)
         if (result == TextToSpeech.ERROR) {
             Log.e(TAG, "TTS speak() returned error")
             _ttsState.value = TtsState.Error
@@ -364,8 +373,8 @@ class TextToSpeechManager @Inject constructor(
     /**
      * Добавляет текст в очередь озвучивания (не прерывает текущее)
      */
-    fun speakQueued(text: String, speechRate: Float = 1.0f, pitch: Float = 1.0f) {
-        speak(text, speechRate, pitch, TextToSpeech.QUEUE_ADD)
+    fun speakQueued(text: String, speechRate: Float = 1.0f, pitch: Float = 1.0f, stream: Int? = null) {
+        speak(text, speechRate, pitch, TextToSpeech.QUEUE_ADD, stream)
     }
 
     /**

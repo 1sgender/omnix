@@ -2,28 +2,25 @@ package com.omnix.assistant.presentation.chat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,7 +28,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +39,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,14 +53,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.decision.PrivacyLevel
@@ -69,48 +73,49 @@ import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.components.OmnixAlertIcon
-import com.omnix.assistant.presentation.components.OmnixArrowUpIcon
-import com.omnix.assistant.presentation.components.OmnixBackIcon
+import com.omnix.assistant.presentation.components.OmnixCloudLineIcon
 import com.omnix.assistant.presentation.components.OmnixEmptyState
 import com.omnix.assistant.presentation.components.OmnixHairline
-import com.omnix.assistant.presentation.components.OmnixIconButton
 import com.omnix.assistant.presentation.components.OmnixLockIcon
-import com.omnix.assistant.presentation.components.OmnixMicIcon
+import com.omnix.assistant.presentation.components.OmnixMicLineIcon
+import com.omnix.assistant.presentation.components.OmnixMoreIcon
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
-import com.omnix.assistant.presentation.components.OmnixTextButton
+import com.omnix.assistant.presentation.components.OmnixSendLineIcon
 import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.LocalReducedMotion
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.state.ConfirmationRequest
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Chat — the quiet alternative to speaking (§21, §24).
+ * Chat — design v2 canvas, artboard Chat.
  *
- * Stage 2 of the Apple HIG rebuild, bubbles pass (mock 2026-09-26): both
- * sides of the dialogue now speak in bubbles — the user's words in a light
- * bubble on the right, OMNIX's answers in a dark grey bubble on the left,
- * each with its sender label directly above as one block. A failed round
- * trip is its own message kind ([MessageRole.ERROR]): a dim red-tinted
- * bubble with a warning mark, so an error is never mistaken for an answer.
- * Regular font weight everywhere except the screen title; the composer is a
- * one-line capsule with compact round mic and send buttons beside it. No
- * avatars, no model picker, no regenerate button.
+ * The header names OMNIX and says where it answers; "More" holds clearing.
+ * The thread is grouped by day under a mono day label: the user's words in a
+ * paper bubble on the right, OMNIX's answers in a card bubble on the left, an
+ * answer that came from the cloud signed "Answer from the cloud" under it.
+ * The composer is one field and one lime button: the microphone while the
+ * field is empty, send once there is text.
  *
- * The screen wires three capabilities the ViewModel already exposes but the
- * old view never rendered: the dictation control (partial results land in the
- * input field), the debounced privacy classification (CR-17: a badge warns
- * while the text is still editable, before anything is sent) and the cloud
- * consent question (C-02: allow or keep on device, the same decision the
- * voice path asks out loud).
+ * States the canvas does not draw keep working in the same language: the
+ * thinking dots, a failed round trip (a red-tinted bubble), the cloud consent
+ * question (C-02), the privacy badge while typing (CR-17) and the shared
+ * confirmation sheet.
  */
 @Composable
 fun OmnixChatScreen(
     state: ChatUiState,
+    isOnline: Boolean,
     modifier: Modifier = Modifier,
-    onBack: () -> Unit,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
     onConfirm: () -> Unit,
@@ -120,24 +125,18 @@ fun OmnixChatScreen(
     onKeepLocal: () -> Unit,
     onToggleDictation: () -> Unit
 ) {
-    val spacing = OmnixTheme.spacing
     val listState = rememberLazyListState()
-
-    // One-shot entry animation per message id: rows scrolled back into view
-    // are recognised and do not animate again.
-    val animatedIds = remember { mutableSetOf<Long>() }
 
     // The thinking row closes the list while a round trip is in flight; the
     // confirmation paths replace it with their own surfaces.
     val showThinking = state.isSending &&
         state.pendingConfirmation == null &&
         state.pendingCloudConsent == null
-    val conversationSize = state.messages.size + if (showThinking) 1 else 0
+    val rows = remember(state.messages) { chatRows(state.messages) }
+    val rowCount = rows.size + if (showThinking) 1 else 0
 
-    LaunchedEffect(conversationSize) {
-        if (conversationSize > 0) {
-            listState.animateScrollToItem(conversationSize - 1)
-        }
+    LaunchedEffect(rowCount) {
+        if (rowCount > 0) listState.animateScrollToItem(rowCount - 1)
     }
 
     // Clearing is destructive and irreversible: the shared confirmation sheet
@@ -149,43 +148,19 @@ fun OmnixChatScreen(
             .fillMaxSize()
             .imePadding()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.screenHorizontal)
-                .padding(top = spacing.md, bottom = spacing.xs),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OmnixIconButton(
-                onClick = onBack,
-                contentDescription = stringResource(R.string.omnix_nav_back)
-            ) {
-                OmnixBackIcon(color = OmnixTheme.colors.textSecondary)
-            }
-            Spacer(Modifier.width(spacing.xs))
-            // Mock 2026-09-26: the title is the single bold element on the
-            // screen (20 sp, semibold) — everything inside the thread stays
-            // regular weight.
-            Text(
-                text = stringResource(R.string.omnix_chat_title),
-                style = OmnixTheme.typography.heading,
-                color = OmnixTheme.colors.textPrimary
-            )
-            Spacer(Modifier.weight(1f))
-            if (state.messages.isNotEmpty()) {
-                OmnixTextButton(
-                    text = stringResource(R.string.omnix_chat_clear),
-                    onClick = { clearArmed = true }
-                )
-            }
-        }
+        ChatHeader(
+            isOnline = isOnline,
+            canClear = state.messages.isNotEmpty(),
+            onClear = { clearArmed = true }
+        )
+        Hairline()
 
-        if (conversationSize == 0) {
+        if (rowCount == 0) {
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.screenHorizontal),
+                    .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 OmnixEmptyState(
@@ -194,104 +169,38 @@ fun OmnixChatScreen(
                 )
             }
         } else {
-            LazyColumn(
-                state = listState,
+            BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.screenHorizontal),
-                contentPadding = PaddingValues(vertical = spacing.sm),
-                verticalArrangement = Arrangement.spacedBy(spacing.lg)
             ) {
-                items(state.messages, key = { it.id }) { message ->
-                    val animateEntry = remember(message.id) { animatedIds.add(message.id) }
-                    ChatMessageRow(
-                        message = message,
-                        animateEntry = animateEntry,
-                        onDevice = message.id in state.onDeviceMessageIds
-                    )
-                }
-                if (showThinking) {
-                    item(key = "omnix-thinking") {
-                        ThinkingRow()
+                val threadWidth = maxWidth - 40.dp
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(rows, key = { it.key }) { row ->
+                        when (row) {
+                            is ChatRow.Day -> DayLabel(row.date)
+                            is ChatRow.Bubble -> MessageRow(
+                                message = row.message,
+                                fromCloud = row.message.id in state.cloudMessageIds,
+                                threadWidth = threadWidth
+                            )
+                        }
+                    }
+                    if (showThinking) {
+                        item(key = "omnix-thinking") { ThinkingRow() }
                     }
                 }
             }
         }
 
-        // Consent first, privacy badge under it: the badge is a warning about
-        // text that is still editable, the consent card is a decision that is
-        // already pending. They never appear at the same time — the input is
-        // empty while consent is pending.
-        val consent = state.pendingCloudConsent
-        var lastConsent by remember { mutableStateOf<PendingCloudConsentUi?>(null) }
-        LaunchedEffect(consent) {
-            if (consent != null) {
-                lastConsent = consent
-            }
-        }
-        val badgeLevel = state.privacyClassification.level
-        val showBadge = state.inputText.isNotBlank() &&
-            (badgeLevel == PrivacyLevel.PRIVATE || badgeLevel == PrivacyLevel.SENSITIVE)
+        ConsentAndBadge(state = state, onAllowCloud = onAllowCloud, onKeepLocal = onKeepLocal)
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.screenHorizontal)
-        ) {
-            AnimatedVisibility(
-                visible = consent != null,
-                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)) +
-                    expandVertically(
-                        spring(
-                            dampingRatio = Spring.DampingRatioNoBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        )
-                    ),
-                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) +
-                    shrinkVertically(
-                        spring(
-                            dampingRatio = Spring.DampingRatioNoBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        )
-                    )
-            ) {
-                lastConsent?.let { pending ->
-                    CloudConsentCard(
-                        promptMessage = pending.promptMessage,
-                        onAllow = onAllowCloud,
-                        onKeepLocal = onKeepLocal
-                    )
-                }
-            }
-            AnimatedVisibility(
-                visible = showBadge,
-                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)) +
-                    expandVertically(
-                        spring(
-                            dampingRatio = Spring.DampingRatioNoBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        )
-                    ),
-                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) +
-                    shrinkVertically(
-                        spring(
-                            dampingRatio = Spring.DampingRatioNoBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        )
-                    )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = spacing.xs),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    PrivacyBadge(level = badgeLevel)
-                }
-            }
-        }
-
+        Hairline()
         ChatComposer(
             text = state.inputText,
             isSending = state.isSending,
@@ -336,147 +245,210 @@ fun OmnixChatScreen(
     }
 }
 
+/** One row of the thread: a day label or a message. */
+internal sealed interface ChatRow {
+    val key: String
+
+    data class Day(val date: LocalDate) : ChatRow {
+        override val key: String = "day-$date"
+    }
+
+    data class Bubble(val message: Message) : ChatRow {
+        override val key: String = "msg-${message.id}"
+    }
+}
+
+/** The messages in order, a day label before the first message of each day. */
+internal fun chatRows(messages: List<Message>, zone: ZoneId = ZoneId.systemDefault()): List<ChatRow> {
+    val rows = ArrayList<ChatRow>(messages.size + 4)
+    var day: LocalDate? = null
+    for (message in messages) {
+        val date = Instant.ofEpochMilli(message.timestamp).atZone(zone).toLocalDate()
+        if (date != day) {
+            rows += ChatRow.Day(date)
+            day = date
+        }
+        rows += ChatRow.Bubble(message)
+    }
+    return rows
+}
+
+@Composable
+private fun ChatHeader(isOnline: Boolean, canClear: Boolean, onClear: () -> Unit) {
+    val colors = OmnixTheme.colors
+    var menuOpen by remember { mutableStateOf(false) }
+    val moreLabel = stringResource(R.string.omnix_chat_more)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, top = 16.dp, end = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.omnix_chat_title),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 18.sp),
+                color = colors.textPrimary
+            )
+            Text(
+                text = stringResource(
+                    if (isOnline) R.string.omnix_chat_subtitle_online else R.string.omnix_chat_subtitle_on_device
+                ),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                color = colors.textSecondary
+            )
+        }
+        Box {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .clickable { menuOpen = true }
+                    .clearAndSetSemantics {
+                        contentDescription = moreLabel
+                        role = Role.Button
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(OmnixMoreIcon, contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(20.dp))
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false },
+                modifier = Modifier.background(colors.surfaceElevated)
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(R.string.omnix_chat_clear),
+                            style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
+                            color = if (canClear) colors.textPrimary else colors.textDisabled
+                        )
+                    },
+                    enabled = canClear,
+                    onClick = {
+                        menuOpen = false
+                        onClear()
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun Hairline() {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(OmnixTheme.colors.textPrimary.copy(alpha = 0.06f))
+    )
+}
+
+/** "TODAY", "YESTERDAY" or the date, centred in mono. */
+@Composable
+private fun DayLabel(date: LocalDate) {
+    val today = remember { LocalDate.now() }
+    val text = when (date) {
+        today -> stringResource(R.string.omnix_chat_today)
+        today.minusDays(1) -> stringResource(R.string.omnix_chat_yesterday)
+        else -> remember(date) {
+            DateTimeFormatter.ofPattern("d MMMM", Locale.getDefault()).format(date).uppercase(Locale.getDefault())
+        }
+    }
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Text(
+            text = text,
+            style = OmnixMonoLabelStyle.copy(fontSize = 11.sp, letterSpacing = 0.04.em),
+            color = OmnixTheme.colors.textTertiary
+        )
+    }
+}
+
 /**
- * One message. Bubbles on both sides (mock 2026-09-26): the user's words in
- * a light bubble on the right, OMNIX's answers in a dark grey bubble on the
- * left, a failed round trip in a dim red-tinted bubble with a warning mark.
- * The sender label sits directly above its bubble — 4 dp apart, same side —
- * so label and bubble read as one block, and the whole message is one
- * accessibility node ("You: …" / "OMNIX: …"): alignment alone never
- * encodes meaning (§29).
+ * One message. The user's words: a paper bubble on the right, up to 78 % of
+ * the thread. OMNIX: a card bubble on the left, up to 82 %, signed when the
+ * answer came from the cloud. A failed round trip: a red-tinted bubble with a
+ * warning mark. Each message is one accessibility node ("You: …").
  */
 @Composable
-private fun ChatMessageRow(
-    message: Message,
-    animateEntry: Boolean,
-    modifier: Modifier = Modifier,
-    onDevice: Boolean = false
-) {
+private fun MessageRow(message: Message, fromCloud: Boolean, threadWidth: Dp) {
     val colors = OmnixTheme.colors
-    val spacing = OmnixTheme.spacing
-    val reduced = LocalReducedMotion.current
     val isUser = message.role == MessageRole.USER
     val isError = message.role == MessageRole.ERROR
+    val sender = stringResource(if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix)
+    val cloudCaption = stringResource(R.string.omnix_chat_from_cloud)
+    val description = if (fromCloud && !isUser) "$sender: ${message.text}. $cloudCaption" else "$sender: ${message.text}"
 
-    var settled by remember(message.id) { mutableStateOf(!animateEntry) }
-    LaunchedEffect(Unit) { settled = true }
-    val progress by animateFloatAsState(
-        targetValue = if (settled) 1f else 0f,
-        animationSpec = if (reduced) {
-            snap()
-        } else {
-            spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMediumLow
+    if (isUser) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clearAndSetSemantics { contentDescription = description },
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = message.text,
+                style = BubbleText,
+                color = colors.background,
+                modifier = Modifier
+                    .widthIn(max = threadWidth * 0.78f)
+                    .clip(UserBubbleShape)
+                    .background(colors.textPrimary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             )
-        },
-        label = "omnixChatMessageEnter"
-    )
-
-    val label = stringResource(if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix)
-    // On-device бейдж (audit 2026-09-26): подпись нужна и в a11y-описании —
-    // голосовой пользователь слышит «обработано на устройстве», не видя точку.
-    val onDeviceCaption = stringResource(R.string.omnix_chat_on_device)
-    val bubbleBackground = when {
-        isUser -> colors.bubbleUser
-        isError -> colors.errorBubble
-        else -> colors.bubbleAi
-    }
-    val ink = when {
-        isUser -> colors.onBubbleUser
-        isError -> colors.stateError
-        else -> colors.onBubbleAi
+        }
+        return
     }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .clearAndSetSemantics {
-                contentDescription = if (onDevice) {
-                    "$label: ${message.text}. $onDeviceCaption"
-                } else {
-                    "$label: ${message.text}"
-                }
-            }
-            .graphicsLayer {
-                alpha = progress
-                translationY = (1f - progress) * 12.dp.toPx()
-            },
-        horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
+            .clearAndSetSemantics { contentDescription = description },
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(
-            text = label,
-            style = OmnixTheme.typography.overline.copy(letterSpacing = 0.sp),
-            color = colors.textSecondary
-        )
-        Spacer(Modifier.height(spacing.xxs))
         Row(
             modifier = Modifier
-                .widthIn(max = 300.dp)
-                .clip(RoundedCornerShape(OmnixTheme.radius.medium))
-                .background(bubbleBackground)
-                .padding(horizontal = spacing.md, vertical = spacing.xs),
+                .widthIn(max = threadWidth * 0.82f)
+                .clip(AiBubbleShape)
+                .background(if (isError) colors.errorBubble else colors.surface)
+                .border(BorderStroke(1.dp, colors.border), AiBubbleShape)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (isError) {
-                OmnixAlertIcon(
-                    color = colors.stateError,
-                    size = 16.dp
-                )
-            }
+            if (isError) OmnixAlertIcon(color = colors.stateError, size = 16.dp)
             Text(
                 text = message.text,
-                style = OmnixTheme.typography.subheadline,
-                color = ink
+                style = BubbleText,
+                color = if (isError) colors.stateError else colors.textPrimary
             )
         }
-        if (onDevice) {
-            Spacer(Modifier.height(spacing.xxs))
-            OnDeviceBadge(caption = onDeviceCaption)
+        if (fromCloud) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(OmnixCloudLineIcon, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(12.dp))
+                Text(
+                    text = cloudCaption,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 11.sp),
+                    color = colors.textTertiary
+                )
+            }
         }
     }
 }
 
 /**
- * «Обработано на устройстве»: тихая точка + мелкая подпись под бабблом
- * (план владельца 2026-09-26: точка/иконка с подписью, НЕ плашка — облако
- * остаётся «нормой» и бейджа не получает). stateSuccess, а не accentBrand:
- * акцентный синий зарезервирован под лого-моменты (OmnixColors).
+ * The pause between send and answer: three dots breathe inside the card
+ * bubble OMNIX answers in. Static under reduced motion (§29).
  */
 @Composable
-private fun OnDeviceBadge(caption: String, modifier: Modifier = Modifier) {
+private fun ThinkingRow() {
     val colors = OmnixTheme.colors
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xxs)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(colors.stateSuccess)
-        )
-        Text(
-            text = caption,
-            style = OmnixTheme.typography.caption2,
-            color = colors.textSecondary
-        )
-    }
-}
-
-/**
- * The pause between send and answer. Three dots breathe inside the same
- * dark bubble OMNIX answers in (mock 2026-09-26) — it reads as "OMNIX is
- * typing", not as a separate status widget. Motion answers "what changed?"
- * (the request is working) and collapses to static dots under reduced motion
- * (§29).
- */
-@Composable
-private fun ThinkingRow(modifier: Modifier = Modifier) {
-    val colors = OmnixTheme.colors
-    val spacing = OmnixTheme.spacing
     val reduced = LocalReducedMotion.current
     val label = stringResource(R.string.omnix_chat_thinking)
 
@@ -490,34 +462,75 @@ private fun ThinkingRow(modifier: Modifier = Modifier) {
         label = "omnixThinkingPhase"
     )
 
-    Column(
-        modifier = modifier.clearAndSetSemantics { contentDescription = label }
+    Row(
+        modifier = Modifier
+            .clearAndSetSemantics { contentDescription = label }
+            .clip(AiBubbleShape)
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), AiBubbleShape)
+            .padding(horizontal = 16.dp, vertical = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = stringResource(R.string.omnix_chat_omnix),
-            style = OmnixTheme.typography.overline.copy(letterSpacing = 0.sp),
-            color = colors.textSecondary
-        )
-        Spacer(Modifier.height(spacing.xxs))
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(OmnixTheme.radius.medium))
-                .background(colors.bubbleAi)
-                .padding(horizontal = spacing.md, vertical = spacing.xs),
-            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        repeat(3) { index ->
+            val pulse = if (reduced) {
+                0.45f
+            } else {
+                0.25f + 0.75f * sin(((phase + index / 3f) % 1f) * PI).toFloat()
+            }
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(colors.accentBrand.copy(alpha = pulse))
+            )
+        }
+    }
+}
+
+/**
+ * Consent first, privacy badge under it: the badge is a warning about text
+ * that is still editable, the consent card is a decision that is already
+ * pending. They never appear at the same time — the input is empty while
+ * consent is pending.
+ */
+@Composable
+private fun ConsentAndBadge(state: ChatUiState, onAllowCloud: () -> Unit, onKeepLocal: () -> Unit) {
+    val consent = state.pendingCloudConsent
+    var lastConsent by remember { mutableStateOf<PendingCloudConsentUi?>(null) }
+    LaunchedEffect(consent) {
+        if (consent != null) lastConsent = consent
+    }
+    val badgeLevel = state.privacyClassification.level
+    val showBadge = state.inputText.isNotBlank() &&
+        (badgeLevel == PrivacyLevel.PRIVATE || badgeLevel == PrivacyLevel.SENSITIVE)
+    val fade = OmnixTheme.motion.contentFadeMs
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        AnimatedVisibility(
+            visible = consent != null,
+            enter = fadeIn(tween(fade)) + expandVertically(),
+            exit = fadeOut(tween(fade)) + shrinkVertically()
         ) {
-            repeat(3) { index ->
-                val pulse = if (reduced) {
-                    0.45f
-                } else {
-                    0.25f + 0.75f * sin(((phase + index / 3f) % 1f) * PI).toFloat()
-                }
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(colors.stateThinking.copy(alpha = pulse))
+            lastConsent?.let { pending ->
+                CloudConsentCard(
+                    promptMessage = pending.promptMessage,
+                    onAllow = onAllowCloud,
+                    onKeepLocal = onKeepLocal
                 )
+            }
+        }
+        AnimatedVisibility(
+            visible = showBadge,
+            enter = fadeIn(tween(fade)) + expandVertically(),
+            exit = fadeOut(tween(fade)) + shrinkVertically()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                PrivacyBadge(level = badgeLevel)
             }
         }
     }
@@ -532,36 +545,20 @@ private fun ThinkingRow(modifier: Modifier = Modifier) {
 private fun CloudConsentCard(
     promptMessage: String,
     onAllow: () -> Unit,
-    onKeepLocal: () -> Unit,
-    modifier: Modifier = Modifier
+    onKeepLocal: () -> Unit
 ) {
     val colors = OmnixTheme.colors
-    val spacing = OmnixTheme.spacing
-
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = spacing.xs)
-            .clip(RoundedCornerShape(OmnixTheme.radius.large))
+            .padding(vertical = 8.dp)
+            .clip(CardShape)
             .background(colors.surface)
-            .border(
-                width = OmnixHairline,
-                color = colors.border,
-                shape = RoundedCornerShape(OmnixTheme.radius.large)
-            )
-            .padding(spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(spacing.md)
+            .border(BorderStroke(OmnixHairline, colors.border), CardShape)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = stringResource(R.string.omnix_chat_omnix),
-            style = OmnixTheme.typography.overline,
-            color = colors.textTertiary
-        )
-        Text(
-            text = promptMessage,
-            style = OmnixTheme.typography.body,
-            color = colors.textPrimary
-        )
+        Text(text = promptMessage, style = BubbleText, color = colors.textPrimary)
         OmnixPrimaryButton(
             text = stringResource(R.string.omnix_chat_consent_allow),
             onClick = onAllow,
@@ -580,51 +577,36 @@ private fun CloudConsentCard(
  * edited. Quiet by design — it is information, not an alarm.
  */
 @Composable
-private fun PrivacyBadge(level: PrivacyLevel, modifier: Modifier = Modifier) {
+private fun PrivacyBadge(level: PrivacyLevel) {
     val colors = OmnixTheme.colors
-    val spacing = OmnixTheme.spacing
     val label = stringResource(
-        if (level == PrivacyLevel.SENSITIVE) {
-            R.string.omnix_privacy_badge_sensitive
-        } else {
-            R.string.omnix_privacy_badge_private
-        }
+        if (level == PrivacyLevel.SENSITIVE) R.string.omnix_privacy_badge_sensitive else R.string.omnix_privacy_badge_private
     )
     val hint = stringResource(R.string.omnix_privacy_badge_hint)
-
     Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(OmnixTheme.radius.pill))
-            .background(colors.surfaceElevated)
-            .border(
-                width = OmnixHairline,
-                color = colors.border,
-                shape = RoundedCornerShape(OmnixTheme.radius.pill)
-            )
-            .padding(horizontal = spacing.sm, vertical = spacing.xxs)
+        modifier = Modifier
+            .height(28.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(14.dp))
+            .padding(horizontal = 12.dp)
             .semantics(mergeDescendants = true) { contentDescription = "$label. $hint" },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        OmnixLockIcon(
-            color = colors.textTertiary,
-            size = 13.dp
-        )
+        OmnixLockIcon(color = colors.textSecondary, size = 13.dp)
         Text(
             text = label,
-            style = OmnixTheme.typography.caption,
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
             color = colors.textSecondary
         )
     }
 }
 
 /**
- * The composer (mock 2026-09-26): a one-line input capsule with the mic and
- * send as compact round buttons OUTSIDE it — 44 dp of touch target each
- * (§57), a 32 dp visible circle. The placeholder never wraps, so the bar
- * stays one line; the field only grows vertically while the user types. The
- * field stays editable while a request is in flight — the ViewModel guards
- * double sends.
+ * The composer: one field and one lime button — the microphone while the
+ * field is empty, send once there is text. The field grows while the user
+ * types and stays editable while a request is in flight; the ViewModel
+ * guards double sends.
  */
 @Composable
 private fun ChatComposer(
@@ -633,126 +615,92 @@ private fun ChatComposer(
     isDictating: Boolean,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
-    onToggleDictation: () -> Unit,
-    modifier: Modifier = Modifier
+    onToggleDictation: () -> Unit
 ) {
     val colors = OmnixTheme.colors
-    val spacing = OmnixTheme.spacing
-    val fieldShape = RoundedCornerShape(OmnixTheme.radius.pill)
-
-    val dictationLabel = stringResource(
-        if (isDictating) R.string.omnix_chat_dictation_stop
-        else R.string.omnix_chat_dictation_start
+    val hasText = text.isNotBlank()
+    val buttonLabel = stringResource(
+        when {
+            hasText -> R.string.omnix_chat_send
+            isDictating -> R.string.omnix_chat_dictation_stop
+            else -> R.string.omnix_chat_dictation_start
+        }
     )
-    val sendLabel = stringResource(R.string.omnix_chat_send)
-    val canSend = text.isNotBlank() && !isSending
+    val interaction = remember { MutableInteractionSource() }
 
-    val dictationInteraction = remember { MutableInteractionSource() }
-    val sendInteraction = remember { MutableInteractionSource() }
-
-    Column(
-        modifier = modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Hairline between the thread and the composer, as in the mock.
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(OmnixHairline)
-                .background(colors.border)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.screenHorizontal)
-                .padding(top = spacing.xs, bottom = spacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+                .weight(1f)
+                .heightIn(min = 48.dp)
+                .clip(FieldShape)
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.border), FieldShape)
+                .padding(horizontal = 18.dp, vertical = 13.dp),
+            contentAlignment = Alignment.CenterStart
         ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(fieldShape)
-                    .background(colors.surfaceElevated)
-                    .border(width = OmnixHairline, color = colors.border, shape = fieldShape)
-                    .padding(horizontal = spacing.md, vertical = spacing.xs)
-            ) {
-                if (text.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.omnix_chat_input_hint),
-                        style = OmnixTheme.typography.subheadline,
-                        color = colors.textTertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                BasicTextField(
-                    value = text,
-                    onValueChange = onTextChange,
-                    singleLine = false,
-                    maxLines = 6,
-                    textStyle = OmnixTheme.typography.subheadline.copy(color = colors.textPrimary),
-                    cursorBrush = SolidColor(colors.textPrimary),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { onSend() }),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 132.dp)
-                        .verticalScroll(rememberScrollState())
+            if (text.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.omnix_chat_input_hint),
+                    style = FieldText,
+                    color = colors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-
-            Spacer(Modifier.width(spacing.xs))
-
-            Box(
+            BasicTextField(
+                value = text,
+                onValueChange = onTextChange,
+                singleLine = false,
+                maxLines = 6,
+                textStyle = FieldText.copy(color = colors.textPrimary),
+                cursorBrush = SolidColor(colors.textPrimary),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { onSend() }),
                 modifier = Modifier
-                    .size(spacing.touchTarget)
-                    .omnixPressScale(dictationInteraction)
-                    .clip(CircleShape)
-                    .clickable(
-                        interactionSource = dictationInteraction,
-                        indication = null,
-                        onClickLabel = dictationLabel,
-                        onClick = onToggleDictation
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                OmnixMicIcon(
-                    color = if (isDictating) colors.stateListening else colors.textSecondary,
-                    size = 18.dp
+                    .fillMaxWidth()
+                    .heightIn(max = 132.dp)
+                    .verticalScroll(rememberScrollState())
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .omnixPressScale(interaction)
+                .clip(CircleShape)
+                .background(colors.accentBrand)
+                .clickable(
+                    interactionSource = interaction,
+                    indication = null,
+                    enabled = !hasText || !isSending,
+                    onClick = if (hasText) onSend else onToggleDictation
                 )
-            }
-
-            Spacer(Modifier.width(spacing.xs))
-
-            Box(
-                modifier = Modifier
-                    .size(spacing.touchTarget)
-                    .omnixPressScale(sendInteraction)
-                    .clickable(
-                        interactionSource = sendInteraction,
-                        indication = null,
-                        enabled = canSend,
-                        onClickLabel = sendLabel,
-                        onClick = onSend
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(spacing.xxl)
-                        .clip(CircleShape)
-                        .background(if (canSend) colors.actionPrimary else colors.surfaceElevated)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        OmnixArrowUpIcon(
-                            color = if (canSend) colors.onActionPrimary else colors.textDisabled,
-                            size = 16.dp
-                        )
-                    }
-                }
-            }
+                .clearAndSetSemantics {
+                    contentDescription = buttonLabel
+                    role = Role.Button
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (hasText) OmnixSendLineIcon else OmnixMicLineIcon,
+                contentDescription = null,
+                tint = colors.background,
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 }
+
+private val BubbleText = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp)
+private val FieldText = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp)
+private val UserBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 6.dp, bottomStart = 20.dp)
+private val AiBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 6.dp)
+private val FieldShape = RoundedCornerShape(24.dp)
+private val CardShape = RoundedCornerShape(18.dp)

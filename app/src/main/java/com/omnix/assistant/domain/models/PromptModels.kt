@@ -32,12 +32,3 @@ sealed interface PromptExecutionResult {
         val promptMessage: String
     ) : PromptExecutionResult
 }
-
-/**
- * Считать ли ответ «обработанным на устройстве» для бейджа в чате:
- * локальная команда инструмента и офлайн-слой (on-device модель +
- * процедурная память) — да; облако и агент — нет (облако = норма,
- * бейдж не рисуется). Null — путь неизвестен, тоже без бейджа.
- */
-val ExecutionType?.handledOnDevice: Boolean
-    get() = this == ExecutionType.DEVICE_TOOL || this == ExecutionType.LOCAL_AI

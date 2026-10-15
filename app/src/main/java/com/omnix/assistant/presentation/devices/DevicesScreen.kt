@@ -1,5 +1,9 @@
 package com.omnix.assistant.presentation.devices
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,240 +12,315 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.ClipStatusBar
+import com.omnix.assistant.agent.capability.CapabilityStatus
 import com.omnix.assistant.presentation.components.OmnixDivider
-import com.omnix.assistant.presentation.components.OmnixEmptyState
 import com.omnix.assistant.presentation.components.OmnixPanel
+import com.omnix.assistant.presentation.settings.OmnixSettingRow
 import com.omnix.assistant.presentation.components.OmnixStatusDot
 import com.omnix.assistant.presentation.components.clipDotColor
 import com.omnix.assistant.presentation.components.clipLabel
-import com.omnix.assistant.presentation.components.OmnixScreenHeader
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import com.omnix.assistant.presentation.settings.OmnixSettingRow
-import com.omnix.assistant.agent.capability.CapabilityStatus
+import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 import com.omnix.assistant.presentation.state.ClipCapability
 import com.omnix.assistant.presentation.state.ClipState
-import java.text.DateFormat
-import java.util.Date
 
 /**
- * Devices — Clip-centric, not a Bluetooth manager (§23, §40).
+ * Headphones — design v2 canvas, artboard Devices.
  *
- * The screen shows the Clip first and only mentions other audio devices when
- * they matter. Every row is a fact the system actually reports: when the
- * device does not expose its battery level, the row says so instead of
- * showing an invented percentage (§3, §33).
+ * The status card (mark, name, connection, battery), the headphone switches
+ * and the two actions. Every value is a fact the system reports: the battery
+ * tile appears only when the headset reports a level, and it is one tile
+ * because the headset reports one number.
+ *
+ * The canvas also draws a sound-mode selector (noise cancelling,
+ * transparency) and an ear-sensor switch. Both need the Omnix firmware; this
+ * build cannot drive them, so they are not shown as dead controls.
+ *
+ * Below the canvas content stays "On this phone" — the capability map the
+ * agent plans with — because it is the only place permissions for calls, SMS
+ * and the rest are granted.
  */
 @Composable
 fun DevicesScreen(
     clip: ClipState,
-    isOnline: Boolean,
     modifier: Modifier = Modifier,
+    wakeWordEnabled: Boolean = true,
+    translatorToHeadphones: Boolean = true,
     capabilities: List<CapabilityGroupUi> = emptyList(),
-    onBack: (() -> Unit)? = null,
-    onConnect: () -> Unit = {},
+    onWakeWordChange: (Boolean) -> Unit = {},
+    onTranslatorToHeadphonesChange: (Boolean) -> Unit = {},
+    onFind: () -> Unit = {},
     onOpenSystemBluetooth: () -> Unit = {},
     onRequestPermissions: (List<String>) -> Unit = {}
 ) {
-    val spacing = OmnixTheme.spacing
-
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = spacing.screenHorizontal)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
     ) {
-        Spacer(Modifier.height(spacing.lg))
-
-        OmnixScreenHeader(
-            title = stringResource(R.string.omnix_devices_title),
-            onBack = onBack
+        Text(
+            text = stringResource(R.string.omnix_devices_title),
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 20.sp),
+            color = OmnixTheme.colors.textPrimary,
+            modifier = Modifier.padding(top = 24.dp)
         )
 
-        // Whatever the Clip reports, it is the whole point of this screen —
-        // so it owns the space and sits at its optical centre instead of
-        // hanging under the header (§9).
-        Box(
+        StatusCard(clip = clip, modifier = Modifier.padding(top = 16.dp))
+
+        SwitchGroup(
+            wakeWordEnabled = wakeWordEnabled,
+            translatorToHeadphones = translatorToHeadphones,
+            onWakeWordChange = onWakeWordChange,
+            onTranslatorToHeadphonesChange = onTranslatorToHeadphonesChange,
+            modifier = Modifier.padding(top = 24.dp)
+        )
+
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(Modifier.height(spacing.lg))
+            OutlineButton(
+                text = stringResource(R.string.omnix_devices_find),
+                // With Bluetooth off there is nothing to search with: the
+                // system switch comes first.
+                onClick = if (clip == ClipState.BluetoothOff) onOpenSystemBluetooth else onFind,
+                modifier = Modifier.weight(1f)
+            )
+            // Android gives apps no way to drop a headset connection; the
+            // system Bluetooth page is where it is done.
+            OutlineButton(
+                text = stringResource(R.string.omnix_devices_disconnect),
+                onClick = onOpenSystemBluetooth,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-                when (clip) {
-                    is ClipState.Connected -> ConnectedClip(clip)
-
-                    is ClipState.BatteryLow -> ConnectedClip(
-                        ClipState.Connected(
-                            deviceName = clip.deviceName,
-                            battery = ClipCapability.Available(clip.percent)
-                        )
-                    )
-
-                    ClipState.BluetoothOff -> OmnixEmptyState(
-                        title = stringResource(R.string.omnix_error_bt_off_title),
-                        description = stringResource(R.string.omnix_error_bt_off_body),
-                        actionLabel = stringResource(R.string.omnix_error_bt_off_action),
-                        onAction = onOpenSystemBluetooth
-                    )
-
-                    is ClipState.Connecting, ClipState.Searching -> ClipStatusBar(
-                        clip = clip,
-                        isOnline = isOnline
-                    )
-
-                    else -> OmnixEmptyState(
-                        title = stringResource(R.string.omnix_devices_empty_title),
-                        description = stringResource(R.string.omnix_devices_empty_body),
-                        actionLabel = stringResource(R.string.omnix_devices_connect),
-                        onAction = onConnect
-                    )
+        if (capabilities.isNotEmpty()) {
+            Spacer(Modifier.height(32.dp))
+            Text(
+                text = stringResource(R.string.omnix_devices_on_this_phone),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+                color = OmnixTheme.colors.textSecondary
+            )
+            Spacer(Modifier.height(10.dp))
+            OmnixPanel {
+                capabilities.forEachIndexed { index, group ->
+                    if (index > 0) OmnixDivider()
+                    CapabilityGroupRow(group = group, onRequestPermissions = onRequestPermissions)
                 }
-
-                if (clip is ClipState.Disconnected && clip.lastSeenMillis != null) {
-                    Spacer(Modifier.height(spacing.lg))
-                    LastSeenRow(clip.lastSeenMillis)
-                }
-
-                // «На этом телефоне» — вторым блоком после Clip (план
-                // пересборки фронта 2026-09-26): та же карта возможностей,
-                // по которой агент планирует действия. Доступно — зелёная
-                // точка; можно включить — жёлтая (тап по PERMISSION_REQUIRED
-                // открывает системный диалог); нельзя — серая.
-                if (capabilities.isNotEmpty()) {
-                    Spacer(Modifier.height(spacing.xl))
-                    Text(
-                        text = stringResource(R.string.omnix_devices_on_this_phone),
-                        style = OmnixTheme.typography.overline,
-                        color = OmnixTheme.colors.textTertiary
-                    )
-                    Spacer(Modifier.height(spacing.xs))
-                    OmnixPanel {
-                        capabilities.forEachIndexed { index, group ->
-                            if (index > 0) OmnixDivider()
-                            CapabilityGroupRow(
-                                group = group,
-                                onRequestPermissions = onRequestPermissions
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(spacing.xl))
             }
         }
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun ConnectedClip(clip: ClipState.Connected) {
-    val spacing = OmnixTheme.spacing
+private fun StatusCard(clip: ClipState, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
+    val connected = clip is ClipState.Connected || clip is ClipState.BatteryLow
+    val name = when (clip) {
+        is ClipState.Connected -> clip.deviceName
+        is ClipState.BatteryLow -> clip.deviceName
+        is ClipState.Connecting -> clip.deviceName
+        is ClipState.Disconnected -> clip.lastDeviceName.orEmpty()
+        is ClipState.ConnectionFailed -> clip.deviceName.orEmpty()
+        else -> ""
+    }.ifBlank { stringResource(R.string.omnix_devices_clip_name) }
+    val battery = when (clip) {
+        is ClipState.Connected -> (clip.battery as? ClipCapability.Available)?.value
+        is ClipState.BatteryLow -> clip.percent
+        else -> null
+    }
 
-    OmnixPanel {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            OmnixStatusDot(color = clipDotColor(clip))
-            Spacer(Modifier.width(spacing.xs))
-            Column {
-                Text(
-                    text = clip.deviceName.ifBlank {
-                        stringResource(R.string.omnix_devices_clip_name)
-                    },
-                    style = OmnixTheme.typography.headline,
-                    color = OmnixTheme.colors.textPrimary
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(24.dp))
+            .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        OmnixRingMark(
+            color = if (connected) colors.textPrimary else colors.textTertiary,
+            width = 132.dp,
+            height = 100.dp,
+            strokeUnits = 2.4f
+        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = name,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 18.sp),
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    Modifier
+                        .size(8.dp)
+                        .background(if (clip is ClipState.Connected) colors.accentBrand else clipDotColor(clip), CircleShape)
                 )
                 Text(
                     text = clipLabel(clip),
-                    style = OmnixTheme.typography.caption,
-                    color = OmnixTheme.colors.textSecondary
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                    color = colors.textSecondary
                 )
             }
         }
+        battery?.let { BatteryTile(percent = it) }
+    }
+}
 
-        Spacer(Modifier.height(spacing.md))
-        OmnixDivider()
-        Spacer(Modifier.height(spacing.md))
-
-        // Battery: shown only when the device genuinely reports it.
-        DetailRow(
-            label = stringResource(R.string.omnix_devices_battery),
-            value = when (val battery = clip.battery) {
-                is ClipCapability.Available -> stringResource(
-                    R.string.omnix_percent, battery.value
-                )
-                ClipCapability.Unavailable -> stringResource(
-                    R.string.omnix_devices_battery_unavailable
-                )
-                ClipCapability.ComingSoon -> stringResource(R.string.omnix_coming_soon)
-                ClipCapability.NotConfigured -> stringResource(R.string.omnix_not_configured)
-            }
-        )
-
-        DetailRow(
-            label = stringResource(R.string.omnix_devices_connection),
-            value = stringResource(R.string.omnix_devices_connection_active)
-        )
-
-        Spacer(Modifier.height(spacing.md))
-
-        // "Find my Clip" is a real product feature that this build cannot
-        // perform, so it is stated as such rather than shown as a dead button.
+/** The battery the headset reports, on the screen ground inside the card. */
+@Composable
+private fun BatteryTile(percent: Int) {
+    val colors = OmnixTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(colors.background)
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         Text(
-            text = stringResource(R.string.omnix_clip_find_coming_soon),
-            style = OmnixTheme.typography.caption,
-            color = OmnixTheme.colors.textDisabled
+            text = stringResource(R.string.omnix_percent, percent),
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
+            color = colors.textPrimary
+        )
+        Text(
+            text = stringResource(R.string.omnix_devices_battery),
+            style = OmnixMonoLabelStyle.copy(letterSpacing = 0.04.em),
+            color = colors.textSecondary
         )
     }
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun SwitchGroup(
+    wakeWordEnabled: Boolean,
+    translatorToHeadphones: Boolean,
+    onWakeWordChange: (Boolean) -> Unit,
+    onTranslatorToHeadphonesChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+    ) {
+        SwitchRow(
+            title = stringResource(R.string.omnix_devices_wake_title),
+            subtitle = stringResource(R.string.omnix_devices_wake_sub),
+            checked = wakeWordEnabled,
+            onChange = onWakeWordChange
+        )
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(colors.textPrimary.copy(alpha = 0.06f))
+        )
+        SwitchRow(
+            title = stringResource(R.string.omnix_devices_translate_title),
+            subtitle = stringResource(R.string.omnix_devices_translate_sub),
+            checked = translatorToHeadphones,
+            onChange = onTranslatorToHeadphonesChange
+        )
+    }
+}
+
+@Composable
+private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val colors = OmnixTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = OmnixTheme.spacing.xxs),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .heightIn(min = 64.dp)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = label,
-            style = OmnixTheme.typography.body,
-            color = OmnixTheme.colors.textSecondary
-        )
-        Text(
-            text = value,
-            style = OmnixTheme.typography.body,
-            color = OmnixTheme.colors.textPrimary
-        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(text = title, style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp), color = colors.textPrimary)
+            Text(text = subtitle, style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp), color = colors.textSecondary)
+        }
+        // The canvas switch: 52×32 track, 26 knob; lime with a dark knob when on.
+        Box(
+            modifier = Modifier
+                .size(width = 52.dp, height = 32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(if (checked) colors.accentBrand else colors.textPrimary.copy(alpha = 0.16f))
+                .padding(3.dp),
+            contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+        ) {
+            Box(
+                Modifier
+                    .size(26.dp)
+                    .background(if (checked) colors.background else colors.textPrimary, CircleShape)
+            )
+        }
     }
 }
 
 @Composable
-private fun LastSeenRow(lastSeenMillis: Long) {
-    val formatted = remember(lastSeenMillis) {
-        DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
-            .format(Date(lastSeenMillis))
+private fun OutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
+    Box(
+        modifier = modifier
+            .height(52.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(BorderStroke(1.dp, colors.textPrimary.copy(alpha = 0.12f)), RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 14.sp),
+            color = colors.textPrimary,
+            maxLines = 1
+        )
     }
-    Text(
-        text = stringResource(R.string.omnix_clip_last_seen, formatted),
-        style = OmnixTheme.typography.caption,
-        color = OmnixTheme.colors.textTertiary
-    )
 }
 
 /**

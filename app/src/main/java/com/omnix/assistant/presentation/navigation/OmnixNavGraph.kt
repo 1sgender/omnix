@@ -37,9 +37,9 @@ import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
 import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
-import com.omnix.assistant.presentation.history.HistoryScreen
 import com.omnix.assistant.presentation.home.HomeScreen
-import com.omnix.assistant.presentation.settings.MeScreen
+import com.omnix.assistant.presentation.settings.SettingsViewModel
+import com.omnix.assistant.presentation.settings.MeRoute
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
 import com.omnix.assistant.presentation.settings.SECTION_ABOUT
@@ -99,24 +99,19 @@ fun OmnixNavGraph(
                 HomeScreen(
                     state = uiState,
                     onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) },
+                    onCoreTap = omnixViewModel::onCoreTap,
+                    onTranslatorTap = { navController.navigateSingleTop(OmnixDestination.Translator) },
+                    onMemoryTap = { navController.navigateSingleTop(OmnixDestination.Privacy) },
+                    onRemindersTap = { navController.navigateSingleTop(OmnixDestination.Chat) },
+                    onAutomationsTap = { navController.navigateSingleTop(OmnixDestination.Automations) },
                     onSystemStateAction = { omnixViewModel.refreshPermissions() }
                 )
             }
 
-            composable(OmnixDestination.History.route) {
-                val chatViewModel: ChatViewModel = hiltViewModel()
-                val chatState by chatViewModel.uiState.collectAsState()
-                HistoryScreen(
-                    messages = chatState.messages,
-                    onClear = chatViewModel::clearAllHistory
-                )
-            }
-
             composable(OmnixDestination.Me.route) {
-                MeScreen(
+                MeRoute(
                     clip = uiState.clip,
-                    isOnline = uiState.isOnline,
-                    onOpenSection = { navController.navigateSingleTop(it) }
+                    onOpen = { navController.navigateSingleTop(it) }
                 )
             }
 
@@ -125,7 +120,7 @@ fun OmnixNavGraph(
                 val chatState by chatViewModel.uiState.collectAsState()
                 OmnixChatScreen(
                     state = chatState,
-                    onBack = navController::popBackStack,
+                    isOnline = uiState.isOnline,
                     onInputChange = chatViewModel::onInputTextChanged,
                     onSend = { chatViewModel.sendTextMessage() },
                     onConfirm = chatViewModel::confirmPendingAction,
@@ -139,7 +134,7 @@ fun OmnixNavGraph(
 
             composable(OmnixDestination.Translator.route) {
                 TranslatorRoute(
-                    audioLevel = uiState.audioLevel,
+                    isOnline = uiState.isOnline,
                     onBack = navController::popBackStack
                 )
             }
@@ -166,12 +161,22 @@ fun OmnixNavGraph(
                 val permissionLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestMultiplePermissions()
                 ) { _ -> capabilitiesViewModel.refresh() }
+                val headphoneSettings: SettingsViewModel = hiltViewModel()
+                val headphoneState by headphoneSettings.uiState.collectAsStateWithLifecycle()
+                val devicesContext = LocalContext.current
                 DevicesScreen(
                     clip = uiState.clip,
-                    isOnline = uiState.isOnline,
+                    wakeWordEnabled = headphoneState.wakeWordEnabled,
+                    translatorToHeadphones = headphoneState.translatorToHeadphones,
                     capabilities = capabilities,
-                    onBack = navController::popBackStack,
-                    onConnect = { omnixViewModel.setSearching(true) },
+                    onWakeWordChange = headphoneSettings::onWakeWordEnabledChanged,
+                    onTranslatorToHeadphonesChange = headphoneSettings::onTranslatorToHeadphonesChanged,
+                    onFind = { omnixViewModel.setSearching(true) },
+                    onOpenSystemBluetooth = {
+                        devicesContext.startActivity(
+                            Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    },
                     onRequestPermissions = { permissions ->
                         permissionLauncher.launch(permissions.toTypedArray())
                     }
@@ -251,10 +256,14 @@ fun OmnixNavGraph(
         // reach Home, Chat, Headphones and Me while the live Core itself keeps a
         // single, unambiguous home on the Home screen. Secondary routes keep
         // their parent tab lit (mock 2026-09-25).
-        OmnixNavigationBar(
-            currentTab = tabForRoute(currentRoute),
-            onNavigate = { navController.navigateSingleTop(it) }
-        )
+        // Full-screen modes draw their own controls and have no tab bar
+        // (design v2 canvas: the Translator artboard).
+        if (currentRoute != OmnixDestination.Translator.route) {
+            OmnixNavigationBar(
+                currentTab = tabForRoute(currentRoute),
+                onNavigate = { navController.navigateSingleTop(it) }
+            )
+        }
     }
 
     // The confirmation sheet lives above every screen: a spoken command can

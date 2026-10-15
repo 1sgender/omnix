@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -285,26 +284,6 @@ fun OmnixSliderRow(
                 inactiveTrackColor = colors.border
             )
         )
-    }
-}
-
-/**
- * The grey tile behind a settings row glyph (mock 2026-09-25): a 26 dp
- * tile in the hairline tone with the ink glyph centred in it — the iOS
- * Settings reading, so a wall of text rows scans by icon first.
- */
-@Composable
-fun OmnixSettingIconTile(
-    modifier: Modifier = Modifier,
-    icon: @Composable () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .size(26.dp)
-            .background(OmnixTheme.colors.border, RoundedCornerShape(7.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        icon()
     }
 }
 

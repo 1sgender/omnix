@@ -3,24 +3,25 @@ package com.omnix.assistant.presentation.design
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 
 /**
- * OMNIX typography tokens — the Apple HIG type ladder on Inter (§6).
+ * OMNIX typography tokens — the Apple HIG type ladder on Onest (§6; design v2).
  *
  * "Typography should disappear into the product": one family, few weights,
  * a complete ladder from Large Title down to Caption 2. Sizes are declared in
  * `sp` so system font scaling keeps working (§30). Screens must not declare
  * `fontSize = 15.sp` locally.
  *
- * Inter is bundled under the SIL OFL 1.1 (see NOTICE) as the Android stand-in
- * for SF Pro. This deliberately overrides the old platform-sans choice: the
- * product's reference is the Apple ladder, and Inter renders it consistently
- * across OEM fonts. Dynamic Type still works — `sp` and `FontWeight` map onto
- * the user's font-scale setting.
+ * Design v2 (2026-10-13): Onest for all text and IBM Plex Mono for technical
+ * labels (battery, times, status chips), both bundled under the SIL OFL 1.1
+ * (see NOTICE) so OEM fonts cannot change the look. Dynamic Type still works —
+ * `sp` and `FontWeight` map onto the user's font-scale setting.
  */
 @Immutable
 data class OmnixTypographyTokens(
@@ -52,12 +53,38 @@ data class OmnixTypographyTokens(
     val overline: TextStyle
 )
 
-/** Inter, four weights, hinted statics from res/font (OFL 1.1, NOTICE). */
+/**
+ * Onest, one variable font (wght axis) from res/font (OFL 1.1, NOTICE); each
+ * weight selects its point on the axis.
+ */
+@OptIn(ExperimentalTextApi::class)
 val OmnixSans: FontFamily = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal),
-    Font(R.font.inter_medium, FontWeight.Medium),
-    Font(R.font.inter_semibold, FontWeight.SemiBold),
-    Font(R.font.inter_bold, FontWeight.Bold)
+    onestWeight(FontWeight.Normal),
+    onestWeight(FontWeight.Medium),
+    onestWeight(FontWeight.SemiBold),
+    onestWeight(FontWeight.Bold)
+)
+
+@OptIn(ExperimentalTextApi::class)
+private fun onestWeight(weight: FontWeight) = Font(
+    R.font.onest_variable,
+    weight,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight))
+)
+
+/** IBM Plex Mono for technical labels: battery, times, status chips (OFL 1.1). */
+val OmnixMono: FontFamily = FontFamily(
+    Font(R.font.ibm_plex_mono_regular, FontWeight.Normal),
+    Font(R.font.ibm_plex_mono_medium, FontWeight.Medium)
+)
+
+/** Mono label as drawn in the design v2 canvas: 12sp, slight tracking. */
+val OmnixMonoLabelStyle: TextStyle = TextStyle(
+    fontFamily = OmnixMono,
+    fontWeight = FontWeight.Normal,
+    fontSize = 12.sp,
+    lineHeight = 16.sp,
+    letterSpacing = 0.48.sp
 )
 
 val OmnixTypography = OmnixTypographyTokens(

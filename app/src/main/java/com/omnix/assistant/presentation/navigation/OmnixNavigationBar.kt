@@ -1,54 +1,47 @@
 package com.omnix.assistant.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Arrangement as LayoutArrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixAtomIcon
-import com.omnix.assistant.presentation.components.OmnixChatLinesIcon
-import com.omnix.assistant.presentation.components.OmnixHairline
-import com.omnix.assistant.presentation.components.OmnixHeadphonesIcon
-import com.omnix.assistant.presentation.components.OmnixIcons
-import com.omnix.assistant.presentation.components.OmnixMeIcon
+import com.omnix.assistant.presentation.components.OmnixChatBubbleLineIcon
+import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
+import com.omnix.assistant.presentation.components.OmnixPersonLineIcon
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
+import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 
 /**
- * The OMNIX navigation bar: `Home | Chat | Headphones | Me` (§20, §44, §45;
- * design v2, 2026-10-13 — History moved under Me, the headphones got a tab).
+ * The OMNIX tab bar: `Home | Chat | Headphones | Me` — design v2 canvas, the
+ * bar under every artboard.
  *
- * The centre is deliberately a Home tab, not a second Core. The large Core on
- * Home is the single live state indicator; duplicating it in navigation made
- * its purpose ambiguous (status or action). The quiet wordmark tab retains a
- * clear way home without competing with that indicator.
- *
- * The active tab is unmistakable (mock 2026-09-25): white and bold against
- * the dimmed, regular-weight rest — "where am I" in one glance. Secondary
- * screens keep their parent tab lit via [tabForRoute]: OMNIX's modes keep
- * the centre tab, everything reached from Me keeps Me.
+ * Full width on the screen ground with a hairline on top; four equal tabs,
+ * each an icon over a label. The active tab has the lime icon and the paper
+ * label, the rest are dimmed. Secondary screens keep their parent tab lit via
+ * [tabForRoute]: OMNIX's modes keep Home, everything reached from Me keeps Me.
  */
 @Composable
 fun OmnixNavigationBar(
@@ -57,63 +50,69 @@ fun OmnixNavigationBar(
     modifier: Modifier = Modifier
 ) {
     val colors = OmnixTheme.colors
-    val spacing = OmnixTheme.spacing
 
-    // A floating pill rather than a full-width bar: it keeps navigation
-    // detached from the screen edge and stops the chrome competing with Home.
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = spacing.md, vertical = spacing.xs)
+            .background(colors.background)
     ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(colors.textPrimary.copy(alpha = 0.06f))
+        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(OmnixTheme.radius.pill))
-                .background(colors.surface)
-                .border(
-                    width = OmnixHairline,
-                    color = colors.border,
-                    shape = RoundedCornerShape(OmnixTheme.radius.pill)
-                )
-                .padding(horizontal = spacing.sm, vertical = spacing.xs),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(start = 8.dp, top = 8.dp, end = 8.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 8.dp)
         ) {
-            HomeNavigationItem(
+            NavigationItem(
+                label = stringResource(R.string.omnix_nav_home),
                 selected = currentTab == OmnixDestination.Home,
                 onClick = { onNavigate(OmnixDestination.Home) },
                 modifier = Modifier.weight(1f)
-            )
+            ) { tint ->
+                OmnixRingMark(
+                    color = tint,
+                    width = 22.dp,
+                    height = 16.dp,
+                    strokeUnits = 3.6f,
+                    modifier = Modifier.clearAndSetSemantics {}
+                )
+            }
 
             NavigationItem(
                 label = stringResource(R.string.omnix_nav_chat),
                 contentDescription = stringResource(R.string.omnix_a11y_open_chat),
                 selected = currentTab == OmnixDestination.Chat,
                 onClick = { onNavigate(OmnixDestination.Chat) },
-                modifier = Modifier.weight(1f),
-                icon = { tint -> OmnixChatLinesIcon(color = tint, size = OmnixIcons.NavSize) }
-            )
+                modifier = Modifier.weight(1f)
+            ) { tint -> TabIcon(OmnixChatBubbleLineIcon, tint) }
 
             NavigationItem(
                 label = stringResource(R.string.omnix_nav_headphones),
                 selected = currentTab == OmnixDestination.Devices,
                 onClick = { onNavigate(OmnixDestination.Devices) },
-                modifier = Modifier.weight(1f),
-                icon = { tint -> OmnixHeadphonesIcon(color = tint) }
-            )
+                modifier = Modifier.weight(1f)
+            ) { tint -> TabIcon(OmnixHeadphonesLineIcon, tint) }
 
             NavigationItem(
                 label = stringResource(R.string.omnix_nav_me),
                 contentDescription = stringResource(R.string.omnix_a11y_open_settings),
                 selected = currentTab == OmnixDestination.Me,
                 onClick = { onNavigate(OmnixDestination.Me) },
-                modifier = Modifier.weight(1f),
-                icon = { tint -> OmnixMeIcon(color = tint) }
-            )
+                modifier = Modifier.weight(1f)
+            ) { tint -> TabIcon(OmnixPersonLineIcon, tint) }
         }
     }
+}
+
+@Composable
+private fun TabIcon(icon: ImageVector, tint: Color) {
+    Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
 }
 
 @Composable
@@ -125,73 +124,27 @@ private fun NavigationItem(
     contentDescription: String? = null,
     icon: @Composable (Color) -> Unit
 ) {
-    val tint = if (selected) OmnixTheme.colors.textPrimary else OmnixTheme.colors.textTertiary
+    val colors = OmnixTheme.colors
     Column(
         modifier = modifier
-            .height(OmnixTheme.spacing.touchTarget)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
             .semantics {
                 if (contentDescription != null) {
                     this.contentDescription = contentDescription
                 }
-            },
+            }
+            .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = LayoutArrangement.Center
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        icon(tint)
-        Spacer(Modifier.height(2.dp))
+        Box(modifier = Modifier.height(22.dp), contentAlignment = Alignment.Center) {
+            icon(if (selected) colors.accentBrand else colors.textSecondary)
+        }
         Text(
             text = label,
-            // The active tab is white and bold, the rest dimmed (mock
-            // 2026-09-25): position reads in one glance.
-            style = OmnixTheme.typography.overline.copy(
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-            ),
-            color = tint,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-/**
- * Centre of the bar: the OMNIX atom mark over the "Home" label (mock
- * 2026-09-26). The wordmark reading "OMNIX" used to duplicate the sender
- * labels on the chat screen; now the mark carries the brand and the label
- * the destination, in the same icon-plus-label shape as the two neighbour
- * tabs.
- */
-@Composable
-private fun HomeNavigationItem(
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colors = OmnixTheme.colors
-    val tint = if (selected) colors.textPrimary else colors.textTertiary
-    val description = stringResource(R.string.omnix_nav_home)
-
-    Column(
-        modifier = modifier
-            .height(OmnixTheme.spacing.touchTarget)
-            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
-            .semantics { contentDescription = description },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = LayoutArrangement.Center
-    ) {
-        OmnixAtomIcon(
-            color = tint,
-            size = OmnixIcons.NavSize
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = stringResource(R.string.omnix_nav_home),
-            // The active tab is white and bold, the rest dimmed (mock
-            // 2026-09-25): position reads in one glance.
-            style = OmnixTheme.typography.overline.copy(
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-            ),
-            color = tint,
-            textAlign = TextAlign.Center
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 16.sp),
+            color = if (selected) colors.textPrimary else colors.textSecondary,
+            maxLines = 1
         )
     }
 }

@@ -71,6 +71,7 @@ class SettingsDataStore @Inject constructor(
         val HEADSET_ONLY_MODE = booleanPreferencesKey("headset_only_mode")
         val WAKE_WORD_SENSITIVITY = floatPreferencesKey("wake_word_sensitivity")
         val WAKEWORD_ENABLED = booleanPreferencesKey("wakeword.enabled")
+        val TRANSLATOR_TO_HEADPHONES = booleanPreferencesKey("translator.to_headphones")
         val WAKEWORD_THRESHOLD = floatPreferencesKey("wakeword.threshold")
         val WAKEWORD_PATIENCE = intPreferencesKey("wakeword.patience_frames")
         val WAKEWORD_COOLDOWN_MS = longPreferencesKey("wakeword.cooldown_ms")
@@ -253,6 +254,24 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.WAKEWORD_ENABLED] ?: true
         }
 
+    /**
+     * Куда звучит перевод (design v2, «Перевод в наушники»): true — в наушники,
+     * false — вслух на телефоне. Общий для экрана «Наушники» и переводчика.
+     */
+    val translatorToHeadphonesFlow: Flow<Boolean> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[PreferencesKeys.TRANSLATOR_TO_HEADPHONES] ?: true
+        }
+
+    suspend fun setTranslatorToHeadphones(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.TRANSLATOR_TO_HEADPHONES] = enabled
+        }
+    }
+
     suspend fun setWakeWordEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.WAKEWORD_ENABLED] = enabled
@@ -330,6 +349,7 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.HEADSET_ONLY_MODE] = false
             preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY] = 0.65f
             preferences[PreferencesKeys.WAKEWORD_ENABLED] = true
+            preferences[PreferencesKeys.TRANSLATOR_TO_HEADPHONES] = true
             preferences[PreferencesKeys.WAKEWORD_THRESHOLD] = DEFAULT_WAKE_WORD_THRESHOLD
             preferences[PreferencesKeys.WAKEWORD_PATIENCE] = 2
             preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] = 2000L

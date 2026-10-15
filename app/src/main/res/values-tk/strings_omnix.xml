@@ -9,10 +9,9 @@
 <resources>
 
     <!-- ===== Brend ===== -->
-    <string name="omnix_wake_word_quoted">«Omni»</string>
 
     <!-- ===== Clip ýagdaýy (başlyk) ===== -->
-    <string name="omnix_status_clip_connected">Clip birikdirildi</string>
+    <string name="omnix_status_clip_connected">Birikdirildi</string>
     <string name="omnix_status_clip_disconnected">Clip aýryldy</string>
     <string name="omnix_status_clip_connecting">Birikdirilýär…</string>
     <string name="omnix_status_clip_searching">Cligi gözleýärin…</string>
@@ -20,18 +19,29 @@
     <string name="omnix_status_offline">Oflaýn</string>
 
     <!-- ===== Ses ýagdaýlary (§15) ===== -->
-    <string name="omnix_state_ready">Diňlemäge taýýar</string>
-    <string name="omnix_state_listening">Diňleýärin…</string>
+    <string name="omnix_state_ready">Taýýar</string>
+    <string name="omnix_state_listening">Diňleýärin</string>
     <string name="omnix_state_thinking">Düşünýärin…</string>
     <string name="omnix_state_speaking">Aýdýar</string>
     <string name="omnix_state_working">Işleýärin…</string>
 
     <!-- ===== Baş sahypa görkezmeleri (§9, §24–§26) ===== -->
-    <string name="omnix_home_hint_say_omni_wake">%1$s diýiň</string>
     <string name="omnix_home_example_time">«Omni, sagat näçe?»</string>
-    <string name="omnix_home_example_weather">«Omni, howa nähili?»</string>
-    <string name="omnix_home_example_music">«Omni, saz goý.»</string>
-    <string name="omnix_home_offline_partial">Käbir mümkinçilikler entäk elýeterli.</string>
+    <string name="omnix_home_hint_idle">«Omni» diýiň ýa-da ýadra basyň</string>
+    <string name="omnix_home_hint_listening">Gürläň — men gulaklyklaryňyzda</string>
+    <string name="omnix_home_offline_pill">OFLAÝN · ENJAMDA</string>
+    <string name="omnix_home_core_start">Diňläp başla</string>
+    <string name="omnix_home_core_stop">Diňlemegi bes et</string>
+    <string name="omnix_home_clip_battery">%1$d%%</string>
+    <string name="omnix_home_clip_a11y_battery">Gulaklyklar birikdirildi, zarýad %1$d%%</string>
+    <string name="omnix_home_card_translator">Terjimeçi</string>
+    <string name="omnix_home_card_translator_sub">Gulaklyga, göni</string>
+    <string name="omnix_home_card_memory">Ýat</string>
+    <string name="omnix_home_card_memory_sub">Siz hakda näme ýadymda</string>
+    <string name="omnix_home_card_reminders">Ýatlatmalar</string>
+    <string name="omnix_home_card_reminders_sub">Oýardyjylar we işler</string>
+    <string name="omnix_home_card_automations">Awtomatizasiýalar</string>
+    <string name="omnix_home_card_automations_sub">Söz boýunça ssenariler</string>
 
     <!-- ===== Hereketleriň aýdylyşy (§16, §19) ===== -->
     <string name="omnix_action_calling">Jaň edýärin: %1$s…</string>
@@ -142,7 +152,6 @@
     <string name="omnix_activation_cta">Aktiwle</string>
 
     <!-- ===== Navigasiýa (§27, §78) ===== -->
-    <string name="omnix_nav_history">Taryh</string>
     <string name="omnix_nav_home">Baş sahypa</string>
     <string name="omnix_nav_me">Men</string>
     <string name="omnix_nav_chat">Söhbet</string>
@@ -150,30 +159,29 @@
     <string name="omnix_nav_back">Yza</string>
 
     <!-- ===== Taryh (§22, §39) ===== -->
-    <string name="omnix_history_title">Taryh</string>
-    <string name="omnix_history_today">Şu gün</string>
-    <string name="omnix_history_yesterday">Düýn</string>
-    <string name="omnix_history_earlier">Ozalky</string>
-    <string name="omnix_history_empty_title">Entäk gatnaşyk ýok</string>
-    <string name="omnix_history_empty_body">Söhbetleriňiz we hereketleriňiz şu ýerde peýda bolar.</string>
-    <string name="omnix_history_clear">Taryhy arassala</string>
 
     <!-- ===== Enjamlar (§23, §40, §41) ===== -->
-    <string name="omnix_devices_title">Enjamlar</string>
-    <string name="omnix_devices_clip_name">OMNIX Clip</string>
-    <string name="omnix_devices_battery">Batareýa</string>
-    <string name="omnix_devices_battery_unavailable">Bu enjam habar bermeýär</string>
-    <string name="omnix_devices_connection">Baglanyşyk</string>
-    <string name="omnix_devices_connection_active">Işjeň</string>
-    <string name="omnix_devices_connect">Birikdir</string>
-    <string name="omnix_devices_empty_title">Birikdirilen OMNIX Clip ýok</string>
-    <string name="omnix_devices_empty_body">Eller erkin ses dolandyrmagy ulanmak üçin Cligiňizi birikdiriň.</string>
+    <string name="omnix_devices_title">Gulaklyklar</string>
+    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_battery">ZARÝAD</string>
+    <string name="omnix_devices_wake_title">«Omni» sözi</string>
+    <string name="omnix_devices_wake_sub">Elsiz çagyryş</string>
+    <string name="omnix_devices_translate_title">Gulaklyga terjime</string>
+    <string name="omnix_devices_translate_sub">Gürrüňdeş siziň diliňizde eşidilýär</string>
+    <string name="omnix_devices_find">Gulaklyklary tap</string>
+    <string name="omnix_devices_disconnect">Aýyr</string>
 
     <!-- ===== Söhbet (§21, §38) ===== -->
-    <string name="omnix_chat_title">Söhbet</string>
+    <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_subtitle_on_device">Enjamda jogap berýär</string>
+    <string name="omnix_chat_subtitle_online">Enjamda we bulutda jogap berýär</string>
+    <string name="omnix_chat_more">Ýene</string>
+    <string name="omnix_chat_today">ŞU GÜN</string>
+    <string name="omnix_chat_yesterday">DÜÝN</string>
+    <string name="omnix_chat_from_cloud">Bulutdan jogap</string>
     <string name="omnix_chat_you">Siz</string>
     <string name="omnix_chat_omnix">OMNIX</string>
-    <string name="omnix_chat_input_hint">Habar ýazyň…</string>
+    <string name="omnix_chat_input_hint">Hat</string>
     <string name="omnix_chat_send">Iber</string>
     <string name="omnix_chat_empty_title">Bu ýerde entäk hiç zat ýok</string>
     <string name="omnix_chat_empty_body">Sesli aýdyp bilmeýän wagtyňyzda söhbedi ulanyň.</string>
@@ -190,28 +198,40 @@
     <string name="omnix_chat_consent_keep_local">Enjamda galsyn</string>
 
     <!-- ===== Tercime (§24, §42) ===== -->
-    <string name="omnix_translator_title">Tercime</string>
-    <string name="omnix_translator_direction">%1$s → %2$s</string>
-    <string name="omnix_translator_start">Başla</string>
-    <string name="omnix_translator_stop">Bes et</string>
+    <string name="omnix_translator_title">Terjimeçi</string>
     <string name="omnix_translator_swap">Dilleri çalyş</string>
-    <string name="omnix_translator_empty_body">Aýdyň — OMNIX tercimäni göni gulagyňyza aýdýar.</string>
+    <string name="omnix_translator_i_speak">Men gürleýärin</string>
+    <string name="omnix_translator_partner">Gürrüňdeş</string>
+    <string name="omnix_translator_status_online">ONLAÝN</string>
+    <string name="omnix_translator_status_offline">OFLAÝN</string>
+    <string name="omnix_translator_meta_partner">R · GÜRRÜŇDEŞ · %1$s</string>
+    <string name="omnix_translator_meta_speaking">R · GÜRLEÝÄR…</string>
+    <string name="omnix_translator_to_ears">Gulaklyga</string>
+    <string name="omnix_translator_to_phone">Telefonda sesli</string>
+    <string name="omnix_translator_pause">Arakesme</string>
+    <string name="omnix_translator_speak">Gürle</string>
+    <string name="omnix_translator_end">Gürrüňi tamamla</string>
 
     <!-- ===== Sazlamalar (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Sazlamalar</string>
-    <string name="omnix_settings_section_modes">Rejimler</string>
-    <string name="omnix_settings_section_general">Esasy</string>
-    <string name="omnix_settings_section_support">Goldaw</string>
-    <string name="omnix_settings_section_developer">Işlediji üçin</string>
-    <string name="omnix_settings_voice">Dawuş</string>
-    <string name="omnix_settings_privacy">Hususylyk</string>
-    <string name="omnix_settings_devices">Enjamlar</string>
-    <string name="omnix_settings_ai">AI modeli</string>
-    <string name="omnix_settings_language">Dil</string>
-    <string name="omnix_settings_notifications">Bildirişler</string>
+    <string name="omnix_me_title">Men</string>
+    <string name="omnix_me_license_active">Ygtyýarnama işjeň</string>
+    <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
+    <string name="omnix_me_row_voice">Ses we «Omni» sözi</string>
+    <string name="omnix_me_row_model">Ýerli model</string>
+    <string name="omnix_me_row_memory">Ýat we gizlinlik</string>
+    <string name="omnix_me_glyph_headphones">Bd</string>
+    <string name="omnix_me_glyph_voice">Ss</string>
+    <string name="omnix_me_glyph_translator">Tr</string>
+    <string name="omnix_me_glyph_automations">Aw</string>
+    <string name="omnix_me_glyph_model">EA</string>
+    <string name="omnix_me_glyph_memory">Ýt</string>
+    <string name="omnix_me_glyph_appearance">Gö</string>
+    <string name="omnix_me_model_ready">Taýýar</string>
+    <string name="omnix_me_model_downloading">Ýüklenýär</string>
+    <string name="omnix_me_model_missing">Gurnalmadyk</string>
+    <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Görnüş</string>
-    <string name="omnix_settings_about">Barada</string>
-    <string name="omnix_settings_advanced">Giňişleýin</string>
 
     <string name="omnix_voice_title">Dawuş</string>
     <string name="omnix_voice_speaking_speed">Gepleşik tizligi</string>
@@ -312,25 +332,19 @@
     <string name="omnix_cancel">Ýatyr</string>
 
     <!-- ===== Elýeterlilik (§55) ===== -->
-    <string name="omnix_a11y_core_state">OMNIX: %1$s</string>
     <string name="omnix_a11y_clip_status">Clip ýagdaýy: %1$s</string>
     <string name="omnix_a11y_open_settings">Sazlamalary aç</string>
     <string name="omnix_a11y_open_chat">Söhbedi aç</string>
-    <string name="omnix_a11y_open_translator">Tercimäni aç</string>
-    <string name="omnix_a11y_open_devices">Enjamlary aç</string>
 
     <!-- ===== Clip akym ýagdaýlary (§40, §70, §71) ===== -->
     <string name="omnix_error_clip_failed_title">Birikdirip bolmady</string>
     <string name="omnix_clip_battery_low_title">Cligiň batareýasy pes</string>
-    <string name="omnix_clip_last_seen">Soňky birikdirilen: %1$s</string>
-    <string name="omnix_clip_find_coming_soon">Cligimi tap — ýakynda</string>
 
     <!-- Sesli jogap sözleri (§17) -->
     <string name="omnix_voice_yes">Hawa</string>
 
     <string name="omnix_skip_for_now">Şu wagt geç</string>
     <!-- Ynançly mümkinçilik ýagdaýlary (§3, §33) -->
-    <string name="omnix_coming_soon">Ýakynda</string>
     <string name="omnix_not_configured">Entäk düzülmedik</string>
     <string name="omnix_chat_clear">Arassala</string>
     <!-- Yzygiderli bahalaryň ady (§42) -->
@@ -340,7 +354,6 @@
     <string name="omnix_level_high">Çalt</string>
     <string name="omnix_level_highest">Iň çalt</string>
     <!-- OMNIX DIAGNOSTIKA (§21) -->
-    <string name="omnix_settings_diagnostics">Diagnostika</string>
     <string name="omnix_diagnostics_title">OMNIX DIAGNOSTIKASY</string>
     <string name="omnix_diagnostics_run">DOLU SYNAGY GEÇIR</string>
     <string name="omnix_diagnostics_running">GEÇIRILÝÄR %1$d/%2$d</string>
@@ -410,7 +423,6 @@
         <item quantity="one">Işledi: %1$d · iň soňky %1$s</item>
         <item quantity="other">Işledi: %1$d · iň soňky %1$s</item>
     </plurals>
-    <string name="omnix_chat_on_device">Enjide işlendi</string>
     <string name="omnix_privacy_section_confirmations">Hereketleri tassyklamak</string>
     <string name="omnix_privacy_calls">Jaňlar</string>
     <string name="omnix_privacy_calls_always">Hemiše sora</string>
