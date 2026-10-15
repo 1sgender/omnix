@@ -11,7 +11,7 @@
     <!-- ===== Brend ===== -->
 
     <!-- ===== Clip ýagdaýy (başlyk) ===== -->
-    <string name="omnix_status_clip_connected">Clip birikdirildi</string>
+    <string name="omnix_status_clip_connected">Birikdirildi</string>
     <string name="omnix_status_clip_disconnected">Clip aýryldy</string>
     <string name="omnix_status_clip_connecting">Birikdirilýär…</string>
     <string name="omnix_status_clip_searching">Cligi gözleýärin…</string>
@@ -169,15 +169,15 @@
     <string name="omnix_history_clear">Taryhy arassala</string>
 
     <!-- ===== Enjamlar (§23, §40, §41) ===== -->
-    <string name="omnix_devices_title">Enjamlar</string>
-    <string name="omnix_devices_clip_name">OMNIX Clip</string>
-    <string name="omnix_devices_battery">Batareýa</string>
-    <string name="omnix_devices_battery_unavailable">Bu enjam habar bermeýär</string>
-    <string name="omnix_devices_connection">Baglanyşyk</string>
-    <string name="omnix_devices_connection_active">Işjeň</string>
-    <string name="omnix_devices_connect">Birikdir</string>
-    <string name="omnix_devices_empty_title">Birikdirilen OMNIX Clip ýok</string>
-    <string name="omnix_devices_empty_body">Eller erkin ses dolandyrmagy ulanmak üçin Cligiňizi birikdiriň.</string>
+    <string name="omnix_devices_title">Gulaklyklar</string>
+    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_battery">ZARÝAD</string>
+    <string name="omnix_devices_wake_title">«Omni» sözi</string>
+    <string name="omnix_devices_wake_sub">Elsiz çagyryş</string>
+    <string name="omnix_devices_translate_title">Gulaklyga terjime</string>
+    <string name="omnix_devices_translate_sub">Gürrüňdeş siziň diliňizde eşidilýär</string>
+    <string name="omnix_devices_find">Gulaklyklary tap</string>
+    <string name="omnix_devices_disconnect">Aýyr</string>
 
     <!-- ===== Söhbet (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
@@ -344,8 +344,6 @@
     <!-- ===== Clip akym ýagdaýlary (§40, §70, §71) ===== -->
     <string name="omnix_error_clip_failed_title">Birikdirip bolmady</string>
     <string name="omnix_clip_battery_low_title">Cligiň batareýasy pes</string>
-    <string name="omnix_clip_last_seen">Soňky birikdirilen: %1$s</string>
-    <string name="omnix_clip_find_coming_soon">Cligimi tap — ýakynda</string>
 
     <!-- Sesli jogap sözleri (§17) -->
     <string name="omnix_voice_yes">Hawa</string>

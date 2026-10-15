@@ -11,7 +11,7 @@
     <!-- ===== Бренд ===== -->
 
     <!-- ===== Статус Clip ===== -->
-    <string name="omnix_status_clip_connected">Clip подключён</string>
+    <string name="omnix_status_clip_connected">Подключены</string>
     <string name="omnix_status_clip_disconnected">Clip отключён</string>
     <string name="omnix_status_clip_connecting">Подключаюсь…</string>
     <string name="omnix_status_clip_searching">Ищу ваш Clip…</string>
@@ -168,15 +168,15 @@
     <string name="omnix_history_clear">Очистить историю</string>
 
     <!-- ===== Устройства ===== -->
-    <string name="omnix_devices_title">Устройства</string>
-    <string name="omnix_devices_clip_name">OMNIX Clip</string>
-    <string name="omnix_devices_battery">Заряд</string>
-    <string name="omnix_devices_battery_unavailable">Устройство не сообщает</string>
-    <string name="omnix_devices_connection">Соединение</string>
-    <string name="omnix_devices_connection_active">Активно</string>
-    <string name="omnix_devices_connect">Подключить</string>
-    <string name="omnix_devices_empty_title">OMNIX Clip не подключён</string>
-    <string name="omnix_devices_empty_body">Подключите Clip, чтобы управлять голосом без рук.</string>
+    <string name="omnix_devices_title">Наушники</string>
+    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_battery">ЗАРЯД</string>
+    <string name="omnix_devices_wake_title">Слово «Omni»</string>
+    <string name="omnix_devices_wake_sub">Вызов без рук</string>
+    <string name="omnix_devices_translate_title">Перевод в наушники</string>
+    <string name="omnix_devices_translate_sub">Собеседник звучит на вашем языке</string>
+    <string name="omnix_devices_find">Найти наушники</string>
+    <string name="omnix_devices_disconnect">Отключить</string>
 
     <!-- ===== Чат ===== -->
     <string name="omnix_chat_title">Omnix</string>
@@ -343,8 +343,6 @@
     <!-- ===== Clip flow states (§40, §70, §71) ===== -->
     <string name="omnix_error_clip_failed_title">Не удалось подключиться</string>
     <string name="omnix_clip_battery_low_title">Низкий заряд Clip</string>
-    <string name="omnix_clip_last_seen">Последнее подключение: %1$s</string>
-    <string name="omnix_clip_find_coming_soon">Поиск Clip — скоро</string>
 
     <!-- Spoken decision words shown as hints (§17) -->
     <string name="omnix_voice_yes">Да</string>

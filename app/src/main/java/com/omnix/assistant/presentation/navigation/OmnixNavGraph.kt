@@ -39,6 +39,7 @@ import com.omnix.assistant.presentation.devices.DevicesScreen
 import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
 import com.omnix.assistant.presentation.history.HistoryScreen
 import com.omnix.assistant.presentation.home.HomeScreen
+import com.omnix.assistant.presentation.settings.SettingsViewModel
 import com.omnix.assistant.presentation.settings.MeScreen
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
@@ -171,12 +172,22 @@ fun OmnixNavGraph(
                 val permissionLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestMultiplePermissions()
                 ) { _ -> capabilitiesViewModel.refresh() }
+                val headphoneSettings: SettingsViewModel = hiltViewModel()
+                val headphoneState by headphoneSettings.uiState.collectAsStateWithLifecycle()
+                val devicesContext = LocalContext.current
                 DevicesScreen(
                     clip = uiState.clip,
-                    isOnline = uiState.isOnline,
+                    wakeWordEnabled = headphoneState.wakeWordEnabled,
+                    translatorToHeadphones = headphoneState.translatorToHeadphones,
                     capabilities = capabilities,
-                    onBack = navController::popBackStack,
-                    onConnect = { omnixViewModel.setSearching(true) },
+                    onWakeWordChange = headphoneSettings::onWakeWordEnabledChanged,
+                    onTranslatorToHeadphonesChange = headphoneSettings::onTranslatorToHeadphonesChanged,
+                    onFind = { omnixViewModel.setSearching(true) },
+                    onOpenSystemBluetooth = {
+                        devicesContext.startActivity(
+                            Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    },
                     onRequestPermissions = { permissions ->
                         permissionLauncher.launch(permissions.toTypedArray())
                     }

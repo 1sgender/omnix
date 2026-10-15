@@ -4,6 +4,7 @@ import android.media.AudioManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.translator.InterpreterMode
+import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.agent.translator.InterpreterPreset
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 import com.omnix.assistant.agent.translator.SupportedLanguage
@@ -62,7 +63,8 @@ class LiveInterpreterViewModel @Inject constructor(
     private val textToSpeechManager: TextToSpeechManager,
     private val bluetoothAudioRouter: BluetoothAudioRouter,
     private val wakeWordEngine: WakeWordEngine,
-    private val orchestrator: VoiceInteractionOrchestrator
+    private val orchestrator: VoiceInteractionOrchestrator,
+    private val settingsDataStore: SettingsDataStore
 ) : ViewModel() {
 
     /**
@@ -83,6 +85,16 @@ class LiveInterpreterViewModel @Inject constructor(
     init {
         observeSpeechRecognizer()
         observeOrchestratorMode()
+        observeOutputChoice()
+    }
+
+    /** Куда звучит перевод — общая настройка с экраном «Наушники». */
+    private fun observeOutputChoice() {
+        viewModelScope.launch {
+            settingsDataStore.translatorToHeadphonesFlow.collect { toHeadphones ->
+                _uiState.update { it.copy(outputToPhone = !toHeadphones) }
+            }
+        }
     }
 
     /**
@@ -314,6 +326,7 @@ class LiveInterpreterViewModel @Inject constructor(
     fun setOutputToPhone(toPhone: Boolean) {
         _uiState.update { it.copy(outputToPhone = toPhone) }
         if (!toPhone) bluetoothAudioRouter.restoreDefaultRouting()
+        viewModelScope.launch { settingsDataStore.setTranslatorToHeadphones(!toPhone) }
     }
 
     /** «Завершить разговор»: остановить прослушивание и очистить расшифровку. */

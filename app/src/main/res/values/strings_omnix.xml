@@ -12,7 +12,7 @@
     <string name="omnix_wordmark" translatable="false">OMNIX</string>
 
     <!-- ===== Clip status (header) ===== -->
-    <string name="omnix_status_clip_connected">Clip Connected</string>
+    <string name="omnix_status_clip_connected">Connected</string>
     <string name="omnix_status_clip_disconnected">Clip disconnected</string>
     <string name="omnix_status_clip_connecting">Connecting…</string>
     <string name="omnix_status_clip_searching">Looking for your Clip…</string>
@@ -170,15 +170,15 @@
     <string name="omnix_history_clear">Clear history</string>
 
     <!-- ===== Devices (§23, §40, §41) ===== -->
-    <string name="omnix_devices_title">Devices</string>
-    <string name="omnix_devices_clip_name">OMNIX Clip</string>
-    <string name="omnix_devices_battery">Battery</string>
-    <string name="omnix_devices_battery_unavailable">Not reported by this device</string>
-    <string name="omnix_devices_connection">Connection</string>
-    <string name="omnix_devices_connection_active">Active</string>
-    <string name="omnix_devices_connect">Connect</string>
-    <string name="omnix_devices_empty_title">No OMNIX Clip connected</string>
-    <string name="omnix_devices_empty_body">Connect your Clip to use hands-free voice control.</string>
+    <string name="omnix_devices_title">Headphones</string>
+    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_battery">BATTERY</string>
+    <string name="omnix_devices_wake_title">The word “Omni”</string>
+    <string name="omnix_devices_wake_sub">Hands-free call</string>
+    <string name="omnix_devices_translate_title">Translation to headphones</string>
+    <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
+    <string name="omnix_devices_find">Find headphones</string>
+    <string name="omnix_devices_disconnect">Disconnect</string>
 
     <!-- ===== Chat (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
@@ -346,8 +346,6 @@
     <!-- ===== Clip flow states (§40, §70, §71) ===== -->
     <string name="omnix_error_clip_failed_title">Couldn\'t connect</string>
     <string name="omnix_clip_battery_low_title">Clip battery is low</string>
-    <string name="omnix_clip_last_seen">Last connected %1$s</string>
-    <string name="omnix_clip_find_coming_soon">Find my Clip — coming soon</string>
 
     <!-- Spoken decision words shown as hints (§17) -->
     <string name="omnix_voice_yes">Yes</string>
