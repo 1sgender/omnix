@@ -201,12 +201,19 @@
     <string name="omnix_chat_consent_keep_local">Keep on device</string>
 
     <!-- ===== Translator (§24, §42) ===== -->
-    <string name="omnix_translator_title">Translation</string>
-    <string name="omnix_translator_direction">%1$s → %2$s</string>
-    <string name="omnix_translator_start">Start</string>
-    <string name="omnix_translator_stop">Stop</string>
+    <string name="omnix_translator_title">Translator</string>
     <string name="omnix_translator_swap">Swap languages</string>
-    <string name="omnix_translator_empty_body">Speak, and OMNIX translates straight into your ear.</string>
+    <string name="omnix_translator_i_speak">I speak</string>
+    <string name="omnix_translator_partner">The other person</string>
+    <string name="omnix_translator_status_online">ONLINE</string>
+    <string name="omnix_translator_status_offline">OFFLINE</string>
+    <string name="omnix_translator_meta_partner">R · OTHER PERSON · %1$s</string>
+    <string name="omnix_translator_meta_speaking">R · SPEAKING…</string>
+    <string name="omnix_translator_to_ears">To headphones</string>
+    <string name="omnix_translator_to_phone">Aloud on the phone</string>
+    <string name="omnix_translator_pause">Pause</string>
+    <string name="omnix_translator_speak">Speak</string>
+    <string name="omnix_translator_end">End conversation</string>
 
     <!-- ===== Settings (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Settings</string>

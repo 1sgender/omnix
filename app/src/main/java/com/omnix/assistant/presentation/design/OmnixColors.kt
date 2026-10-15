@@ -52,13 +52,6 @@ data class OmnixColorScheme(
      */
     val stateWarning: Color,
 
-    /**
-     * Muted brand blue of the translation ring (mock 2026-09-25): the calm
-     * outline the Перевод screen asks for — no halo, no glow, closer to a
-     * system icon than to the Core's emitted light. Quieter than
-     * `accentBrand`, which stays reserved for logo moments.
-     */
-    val accentRing: Color,
 
     /**
      * Chat bubble surfaces (mock 2026-09-26): both sides of the dialogue
@@ -141,7 +134,6 @@ val OmnixDarkColors = OmnixColorScheme(
     stateError = Color(0xFFFF5A3C),
     stateWarning = Color(0xFFF5C451),
 
-    accentRing = SignalLime,
 
     // The user's bubble is paper on graphite, OMNIX's a raised surface.
     bubbleUser = TextPrimaryToken,
@@ -191,7 +183,6 @@ val OmnixNightColors = OmnixDarkColors.copy(
     stateError = Color(0xFFD1615B),
     stateWarning = Color(0xFFD1A94E),
 
-    accentRing = Color(0xFF9FCC3D),
 
     // Same mock, dimmed for the night ground.
     bubbleUser = Color(0xFFCFCBC3),
@@ -239,7 +230,6 @@ val OmnixLightColors = OmnixColorScheme(
     stateError = Color(0xFFD70015),
     stateWarning = Color(0xFF8A6400),
 
-    accentRing = Color(0xFF33629A),
 
     // Light scheme: the user bubble is system blue, the mock's exact choice.
     bubbleUser = Color(0xFF0A84FF),

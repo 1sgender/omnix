@@ -200,12 +200,19 @@
     <string name="omnix_chat_consent_keep_local">Enjamda galsyn</string>
 
     <!-- ===== Tercime (§24, §42) ===== -->
-    <string name="omnix_translator_title">Tercime</string>
-    <string name="omnix_translator_direction">%1$s → %2$s</string>
-    <string name="omnix_translator_start">Başla</string>
-    <string name="omnix_translator_stop">Bes et</string>
+    <string name="omnix_translator_title">Terjimeçi</string>
     <string name="omnix_translator_swap">Dilleri çalyş</string>
-    <string name="omnix_translator_empty_body">Aýdyň — OMNIX tercimäni göni gulagyňyza aýdýar.</string>
+    <string name="omnix_translator_i_speak">Men gürleýärin</string>
+    <string name="omnix_translator_partner">Gürrüňdeş</string>
+    <string name="omnix_translator_status_online">ONLAÝN</string>
+    <string name="omnix_translator_status_offline">OFLAÝN</string>
+    <string name="omnix_translator_meta_partner">R · GÜRRÜŇDEŞ · %1$s</string>
+    <string name="omnix_translator_meta_speaking">R · GÜRLEÝÄR…</string>
+    <string name="omnix_translator_to_ears">Gulaklyga</string>
+    <string name="omnix_translator_to_phone">Telefonda sesli</string>
+    <string name="omnix_translator_pause">Arakesme</string>
+    <string name="omnix_translator_speak">Gürle</string>
+    <string name="omnix_translator_end">Gürrüňi tamamla</string>
 
     <!-- ===== Sazlamalar (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Sazlamalar</string>

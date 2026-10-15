@@ -199,12 +199,19 @@
     <string name="omnix_chat_consent_keep_local">Оставить на устройстве</string>
 
     <!-- ===== Переводчик ===== -->
-    <string name="omnix_translator_title">Перевод</string>
-    <string name="omnix_translator_direction">%1$s → %2$s</string>
-    <string name="omnix_translator_start">Начать</string>
-    <string name="omnix_translator_stop">Остановить</string>
-    <string name="omnix_translator_swap">Поменять языки</string>
-    <string name="omnix_translator_empty_body">Говорите — OMNIX переведёт прямо вам в ухо.</string>
+    <string name="omnix_translator_title">Переводчик</string>
+    <string name="omnix_translator_swap">Поменять языки местами</string>
+    <string name="omnix_translator_i_speak">Я говорю</string>
+    <string name="omnix_translator_partner">Собеседник</string>
+    <string name="omnix_translator_status_online">ОНЛАЙН</string>
+    <string name="omnix_translator_status_offline">ОФЛАЙН</string>
+    <string name="omnix_translator_meta_partner">R · СОБЕСЕДНИК · %1$s</string>
+    <string name="omnix_translator_meta_speaking">R · ГОВОРИТ…</string>
+    <string name="omnix_translator_to_ears">В наушники</string>
+    <string name="omnix_translator_to_phone">Вслух на телефоне</string>
+    <string name="omnix_translator_pause">Пауза</string>
+    <string name="omnix_translator_speak">Говорить</string>
+    <string name="omnix_translator_end">Завершить разговор</string>
 
     <!-- ===== Настройки ===== -->
     <string name="omnix_settings_title">Настройки</string>

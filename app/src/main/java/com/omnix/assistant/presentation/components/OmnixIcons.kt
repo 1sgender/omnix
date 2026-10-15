@@ -631,31 +631,6 @@ fun OmnixCodeIcon(
 }
 
 /**
- * Two opposing horizontal arrows: swapping the language pair inside the
- * translator's pill (mock 2026-09-25, the iOS "swap" reading).
- */
-@Composable
-fun OmnixSwapIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-    size: Dp = 16.dp
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val u = this.size.minDimension / 24f
-        val w = this.size.minDimension * 0.12f
-        fun p(v: Float) = v * u
-        // Top arrow, pointing right.
-        drawLine(color, Offset(p(4.5f), p(8.5f)), Offset(p(19.5f), p(8.5f)), w, StrokeCap.Round)
-        drawLine(color, Offset(p(15.5f), p(4.5f)), Offset(p(19.5f), p(8.5f)), w, StrokeCap.Round)
-        drawLine(color, Offset(p(15.5f), p(12.5f)), Offset(p(19.5f), p(8.5f)), w, StrokeCap.Round)
-        // Bottom arrow, pointing left.
-        drawLine(color, Offset(p(19.5f), p(15.5f)), Offset(p(4.5f), p(15.5f)), w, StrokeCap.Round)
-        drawLine(color, Offset(p(8.5f), p(11.5f)), Offset(p(4.5f), p(15.5f)), w, StrokeCap.Round)
-        drawLine(color, Offset(p(8.5f), p(19.5f)), Offset(p(4.5f), p(15.5f)), w, StrokeCap.Round)
-    }
-}
-
-/**
  * Warning glyph (mock 2026-09-26): the circle-and-exclamation mark that leads
  * an error bubble in the chat. 24-box units, standard icon stroke.
  */

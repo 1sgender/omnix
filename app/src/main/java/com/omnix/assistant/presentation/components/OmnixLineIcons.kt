@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
  * renders them. Circles and rounded rects are written as arcs.
  */
 private fun omnixLineIcon(name: String, vararg paths: String): ImageVector =
+    omnixLineIcon(name, 2f, *paths)
+
+private fun omnixLineIcon(name: String, strokeWidth: Float, vararg paths: String): ImageVector =
     ImageVector.Builder(
         name = name,
         defaultWidth = 24.dp,
@@ -26,7 +29,7 @@ private fun omnixLineIcon(name: String, vararg paths: String): ImageVector =
             addPath(
                 pathData = addPathNodes(data),
                 stroke = SolidColor(Color.Black),
-                strokeLineWidth = 2f,
+                strokeLineWidth = strokeWidth,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             )
@@ -88,3 +91,22 @@ val OmnixOnDeviceLineIcon: ImageVector = omnixLineIcon(
     "M8 6h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2z",
     "M10 11h4"
 )
+
+// ---- Translator ----
+
+val OmnixBackLineIcon: ImageVector = omnixLineIcon("Back", "M15 18l-6-6 6-6")
+
+val OmnixSwapLineIcon: ImageVector = omnixLineIcon("Swap", "M7 7h13l-4-4", "M17 17H4l4 4")
+
+val OmnixPauseLineIcon: ImageVector = omnixLineIcon("Pause", 2.2f, "M9 5v14", "M15 5v14")
+
+val OmnixMicLineIcon: ImageVector = omnixLineIcon(
+    "Mic",
+    2.2f,
+    // rect x=9 y=3 w=6 h=11 rx=3
+    "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z",
+    "M5 11a7 7 0 0 0 14 0",
+    "M12 18v3"
+)
+
+val OmnixCloseLineIcon: ImageVector = omnixLineIcon("Close", 2.2f, "M6 6l12 12", "M18 6L6 18")

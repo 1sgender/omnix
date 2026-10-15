@@ -144,7 +144,7 @@ fun OmnixNavGraph(
 
             composable(OmnixDestination.Translator.route) {
                 TranslatorRoute(
-                    audioLevel = uiState.audioLevel,
+                    isOnline = uiState.isOnline,
                     onBack = navController::popBackStack
                 )
             }
@@ -256,10 +256,14 @@ fun OmnixNavGraph(
         // reach Home, Chat, Headphones and Me while the live Core itself keeps a
         // single, unambiguous home on the Home screen. Secondary routes keep
         // their parent tab lit (mock 2026-09-25).
-        OmnixNavigationBar(
-            currentTab = tabForRoute(currentRoute),
-            onNavigate = { navController.navigateSingleTop(it) }
-        )
+        // Full-screen modes draw their own controls and have no tab bar
+        // (design v2 canvas: the Translator artboard).
+        if (currentRoute != OmnixDestination.Translator.route) {
+            OmnixNavigationBar(
+                currentTab = tabForRoute(currentRoute),
+                onNavigate = { navController.navigateSingleTop(it) }
+            )
+        }
     }
 
     // The confirmation sheet lives above every screen: a spoken command can
