@@ -135,3 +135,7 @@ val OmnixCloudLineIcon: ImageVector = omnixLineIcon(
 )
 
 val OmnixSendLineIcon: ImageVector = omnixLineIcon("Send", 2.2f, "M12 19V5", "M5 12l7-7 7 7")
+
+// ---- Me ----
+
+val OmnixChevronLineIcon: ImageVector = omnixLineIcon("Chevron", "M9 18l6-6-6-6")

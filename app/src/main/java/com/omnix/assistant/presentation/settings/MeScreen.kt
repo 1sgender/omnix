@@ -1,301 +1,246 @@
 package com.omnix.assistant.presentation.settings
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixAtomIcon
-import com.omnix.assistant.presentation.components.OmnixBellIcon
-import com.omnix.assistant.presentation.components.OmnixHistoryIcon
-import com.omnix.assistant.presentation.components.OmnixIcons
-import com.omnix.assistant.presentation.components.OmnixCodeIcon
-import com.omnix.assistant.presentation.components.OmnixGlobeIcon
-import com.omnix.assistant.presentation.components.OmnixInfoIcon
-import com.omnix.assistant.presentation.components.OmnixPrivacyIcon
-import com.omnix.assistant.presentation.components.OmnixPhoneIcon
-import com.omnix.assistant.presentation.components.OmnixStarIcon
-import com.omnix.assistant.presentation.components.OmnixStatusDot
-import com.omnix.assistant.presentation.components.OmnixSunIcon
-import com.omnix.assistant.presentation.components.OmnixTranslateIcon
-import com.omnix.assistant.presentation.components.OmnixVoiceWaveIcon
-import com.omnix.assistant.presentation.components.clipDotColor
-import com.omnix.assistant.presentation.components.clipLabel
+import com.omnix.assistant.presentation.components.OmnixChevronLineIcon
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.navigation.OmnixDestination
-import com.omnix.assistant.presentation.state.ClipState
+import java.util.Locale
+
+/** One row of the Me lists: a two-letter glyph tile, a label, a value. */
+data class MeRow(
+    val glyph: String,
+    val label: String,
+    val value: String,
+    val destination: OmnixDestination
+)
 
 /**
- * "Me" — the third primary destination (§20, §44).
+ * "Me" — design v2 canvas, artboard Me.
  *
- * It is an index of human concepts, not a preference dump. Each row opens a
- * focused page, and the page reads as four semantic groups (mock 2026-09-25):
- * Modes (things OMNIX does), General (things to configure), Support
- * (reference material) and Developers (service area, visually last). Every
- * row carries a small linear glyph in a grey tile, so the list scans by
- * icon before words.
- *
- * Stage 4: the flat divider list became iOS grouped cards (Stage 3), then
- * gained the icon grid, the four section labels, and the warning-tinted
- * clip status — "Bluetooth is off" is now readable in a glance, not decoded
- * from a dot. The screen title dropped to title2 to match the rest of the
- * product; the Clip's state still leads the page: it is the one piece of
- * live status worth surfacing here, the thing that determines whether OMNIX
- * can hear the user.
+ * The account card (initial, name, licence state, plan), two grouped lists
+ * and the version at the bottom. Values are real: the connected headset's
+ * name, the number of automations, the local model's state, the current
+ * appearance. The version opens "About", where support and the developer
+ * pages live.
  */
 @Composable
 fun MeScreen(
-    clip: ClipState,
-    isOnline: Boolean,
+    userName: String,
+    licenseActive: Boolean,
+    plan: String,
+    versionName: String,
+    groupA: List<MeRow>,
+    groupB: List<MeRow>,
     modifier: Modifier = Modifier,
-    onOpenSection: (OmnixDestination) -> Unit = {}
+    onOpen: (OmnixDestination) -> Unit = {},
+    onVersionTap: () -> Unit = {}
 ) {
-    val spacing = OmnixTheme.spacing
     val colors = OmnixTheme.colors
+    // The version sits at the bottom of the screen when the lists are short
+    // and after them when they scroll: a min-height column spread apart.
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.omnix_me_title),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 24.sp),
+                    color = colors.textPrimary,
+                    modifier = Modifier.padding(top = 24.dp)
+                )
+                AccountCard(
+                    userName = userName,
+                    licenseActive = licenseActive,
+                    plan = plan,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+                Column(
+                    modifier = Modifier.padding(top = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    RowGroup(rows = groupA, onOpen = onOpen)
+                    RowGroup(rows = groupB, onOpen = onOpen)
+                }
+            }
 
-    Column(
+            Text(
+                text = stringResource(R.string.omnix_me_version, versionName),
+                style = OmnixMonoLabelStyle.copy(letterSpacing = 0.04.em),
+                color = colors.textTertiary,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 24.dp, bottom = 12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(role = Role.Button, onClick = onVersionTap)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AccountCard(userName: String, licenseActive: Boolean, plan: String, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
+    Row(
         modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = spacing.screenHorizontal)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Spacer(Modifier.height(spacing.lg))
-
-        Text(
-            text = stringResource(R.string.omnix_settings_title),
-            style = OmnixTheme.typography.title2,
-            color = colors.textPrimary
-        )
-
-        Spacer(Modifier.height(spacing.md))
-
-        val clipStatus = clipLabel(clip)
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = clipStatus,
-                // The title itself carries the warning (mock 2026-09-25):
-                // a dot alone did not read as "something is off".
-                titleColor = if (clip is ClipState.BluetoothOff) {
-                    colors.stateWarning
-                } else {
-                    null
-                },
-                value = if (isOnline) {
-                    null
-                } else {
-                    stringResource(R.string.omnix_status_offline)
-                },
-                contentDescription = stringResource(
-                    R.string.omnix_a11y_clip_status,
-                    clipStatus
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .background(colors.surfaceElevated, CircleShape)
+                .clearAndSetSemantics {},
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = userName.trim().take(1).uppercase(Locale.getDefault()),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 18.sp),
+                color = colors.textPrimary
+            )
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = userName,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
+                color = colors.textPrimary,
+                maxLines = 1
+            )
+            Text(
+                text = stringResource(
+                    if (licenseActive) R.string.omnix_me_license_active else R.string.omnix_me_license_inactive
                 ),
-                leading = { OmnixStatusDot(color = clipDotColor(clip)) },
-                inset = true,
-                chevron = true,
-                onClick = { onOpenSection(OmnixDestination.Devices) }
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                color = colors.textSecondary
             )
         }
-
-        // Modes come before preferences: they are things OMNIX can do, not
-        // things to configure. Translation is a mode, not an app (§25), and
-        // typing is the quiet alternative to speaking (§24).
-        OmnixSettingsSectionHeader(
-            text = stringResource(R.string.omnix_settings_section_modes)
-        )
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_translator_title),
-                contentDescription = stringResource(R.string.omnix_a11y_open_translator),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixTranslateIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = { onOpenSection(OmnixDestination.Translator) }
-            )
-            OmnixGroupDivider()
-            // Chat became a tab (design v2, 2026-10-13); its old row here now
-            // opens the conversation history, which left the navigation bar.
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_nav_history),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixHistoryIcon(color = colors.textPrimary, size = OmnixIcons.SettingSize)
-                    }
-                },
-                onClick = { onOpenSection(OmnixDestination.History) }
-            )
+        if (plan.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .height(28.dp)
+                    .border(BorderStroke(1.dp, colors.accentBrand), RoundedCornerShape(14.dp))
+                    .padding(horizontal = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = plan,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                    color = colors.accentBrand
+                )
+            }
         }
+    }
+}
 
-        OmnixSettingsSectionHeader(
-            text = stringResource(R.string.omnix_settings_section_general)
-        )
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_voice),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixVoiceWaveIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_VOICE))
+@Composable
+private fun RowGroup(rows: List<MeRow>, onOpen: (OmnixDestination) -> Unit) {
+    val colors = OmnixTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+    ) {
+        rows.forEachIndexed { index, row ->
+            if (index > 0) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(colors.textPrimary.copy(alpha = 0.06f))
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .clickable(role = Role.Button) { onOpen(row.destination) }
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(colors.surfaceElevated, RoundedCornerShape(10.dp))
+                        .clearAndSetSemantics {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = row.glyph,
+                        style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                        color = colors.textPrimary
+                    )
                 }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_privacy),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixPrivacyIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = { onOpenSection(OmnixDestination.Privacy) }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_devices),
-                contentDescription = stringResource(R.string.omnix_a11y_open_devices),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixPhoneIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = { onOpenSection(OmnixDestination.Devices) }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_ai),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixAtomIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_AI))
+                Text(
+                    text = row.label,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
+                    color = colors.textPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+                if (row.value.isNotEmpty()) {
+                    Text(
+                        text = row.value,
+                        style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                        color = colors.textSecondary,
+                        maxLines = 1
+                    )
                 }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_language),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixGlobeIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_LANGUAGE))
-                }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_notifications),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixBellIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_NOTIFICATIONS))
-                }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_appearance),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixSunIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_APPEARANCE))
-                }
-            )
+                Icon(
+                    OmnixChevronLineIcon,
+                    contentDescription = null,
+                    tint = colors.textTertiary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
-
-        OmnixSettingsSectionHeader(
-            text = stringResource(R.string.omnix_settings_section_support)
-        )
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_about),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixInfoIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_ABOUT))
-                }
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_diagnostics),
-                inset = true,
-                chevron = true,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixStarIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_DIAGNOSTICS))
-                }
-            )
-        }
-
-        OmnixSettingsSectionHeader(
-            text = stringResource(R.string.omnix_settings_section_developer)
-        )
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_settings_advanced),
-                subtitle = stringResource(R.string.omnix_advanced_body),
-                inset = true,
-                chevron = true,
-                // Multi-line row: the chevron and the tile sit at the top
-                // edge instead of floating mid-block (mock 2026-09-25).
-                verticalAlignment = Alignment.Top,
-                leading = {
-                    OmnixSettingIconTile {
-                        OmnixCodeIcon(color = colors.textPrimary)
-                    }
-                },
-                onClick = {
-                    onOpenSection(OmnixDestination.SettingsSection(SECTION_ADVANCED))
-                }
-            )
-        }
-
-        Spacer(Modifier.height(spacing.xl))
     }
 }
 

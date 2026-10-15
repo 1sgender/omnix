@@ -3,22 +3,17 @@ package com.omnix.assistant.presentation.navigation
 /**
  * The OMNIX destination map (§20, §44, §66).
  *
- * Three primary destinations, with the OMNIX atom mark over the "Home"
- * label in the centre (mock 2026-09-26 — the wordmark used to duplicate
- * the chat's sender labels):
+ * Four primary tabs (design v2 canvas):
  *
  * ```
- * History  |  ◎ Home  |  Me
+ * Home  |  Chat  |  Headphones  |  Me
  * ```
  *
- * Everything else — Chat, Translator, Devices, Privacy, the first-run flow —
- * is reached from one of those three. Secondary sections never compete with
- * the Core for attention (§45).
+ * Everything else — Translator, Privacy, Automations, the settings pages,
+ * the first-run flow — is reached from one of those four. Secondary sections
+ * never compete with the Core for attention (§45).
  */
 sealed class OmnixDestination(val route: String) {
-
-    /** Primary: the past. Conversations and completed actions. */
-    data object History : OmnixDestination("omnix/history")
 
     /** Primary: the present. Home — presence and orientation. */
     data object Home : OmnixDestination("omnix/home")
@@ -88,7 +83,6 @@ fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Chat.route -> OmnixDestination.Chat
     OmnixDestination.Devices.route -> OmnixDestination.Devices
     OmnixDestination.Me.route,
-    OmnixDestination.History.route,
     OmnixDestination.Privacy.route,
     OmnixDestination.Automations.route -> OmnixDestination.Me
     else -> route

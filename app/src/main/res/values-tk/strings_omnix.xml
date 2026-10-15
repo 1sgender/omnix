@@ -152,7 +152,6 @@
     <string name="omnix_activation_cta">Aktiwle</string>
 
     <!-- ===== Navigasiýa (§27, §78) ===== -->
-    <string name="omnix_nav_history">Taryh</string>
     <string name="omnix_nav_home">Baş sahypa</string>
     <string name="omnix_nav_me">Men</string>
     <string name="omnix_nav_chat">Söhbet</string>
@@ -160,13 +159,6 @@
     <string name="omnix_nav_back">Yza</string>
 
     <!-- ===== Taryh (§22, §39) ===== -->
-    <string name="omnix_history_title">Taryh</string>
-    <string name="omnix_history_today">Şu gün</string>
-    <string name="omnix_history_yesterday">Düýn</string>
-    <string name="omnix_history_earlier">Ozalky</string>
-    <string name="omnix_history_empty_title">Entäk gatnaşyk ýok</string>
-    <string name="omnix_history_empty_body">Söhbetleriňiz we hereketleriňiz şu ýerde peýda bolar.</string>
-    <string name="omnix_history_clear">Taryhy arassala</string>
 
     <!-- ===== Enjamlar (§23, §40, §41) ===== -->
     <string name="omnix_devices_title">Gulaklyklar</string>
@@ -222,19 +214,24 @@
 
     <!-- ===== Sazlamalar (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Sazlamalar</string>
-    <string name="omnix_settings_section_modes">Rejimler</string>
-    <string name="omnix_settings_section_general">Esasy</string>
-    <string name="omnix_settings_section_support">Goldaw</string>
-    <string name="omnix_settings_section_developer">Işlediji üçin</string>
-    <string name="omnix_settings_voice">Dawuş</string>
-    <string name="omnix_settings_privacy">Hususylyk</string>
-    <string name="omnix_settings_devices">Enjamlar</string>
-    <string name="omnix_settings_ai">AI modeli</string>
-    <string name="omnix_settings_language">Dil</string>
-    <string name="omnix_settings_notifications">Bildirişler</string>
+    <string name="omnix_me_title">Men</string>
+    <string name="omnix_me_license_active">Ygtyýarnama işjeň</string>
+    <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
+    <string name="omnix_me_row_voice">Ses we «Omni» sözi</string>
+    <string name="omnix_me_row_model">Ýerli model</string>
+    <string name="omnix_me_row_memory">Ýat we gizlinlik</string>
+    <string name="omnix_me_glyph_headphones">Bd</string>
+    <string name="omnix_me_glyph_voice">Ss</string>
+    <string name="omnix_me_glyph_translator">Tr</string>
+    <string name="omnix_me_glyph_automations">Aw</string>
+    <string name="omnix_me_glyph_model">EA</string>
+    <string name="omnix_me_glyph_memory">Ýt</string>
+    <string name="omnix_me_glyph_appearance">Gö</string>
+    <string name="omnix_me_model_ready">Taýýar</string>
+    <string name="omnix_me_model_downloading">Ýüklenýär</string>
+    <string name="omnix_me_model_missing">Gurnalmadyk</string>
+    <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Görnüş</string>
-    <string name="omnix_settings_about">Barada</string>
-    <string name="omnix_settings_advanced">Giňişleýin</string>
 
     <string name="omnix_voice_title">Dawuş</string>
     <string name="omnix_voice_speaking_speed">Gepleşik tizligi</string>
@@ -338,8 +335,6 @@
     <string name="omnix_a11y_clip_status">Clip ýagdaýy: %1$s</string>
     <string name="omnix_a11y_open_settings">Sazlamalary aç</string>
     <string name="omnix_a11y_open_chat">Söhbedi aç</string>
-    <string name="omnix_a11y_open_translator">Tercimäni aç</string>
-    <string name="omnix_a11y_open_devices">Enjamlary aç</string>
 
     <!-- ===== Clip akym ýagdaýlary (§40, §70, §71) ===== -->
     <string name="omnix_error_clip_failed_title">Birikdirip bolmady</string>
@@ -350,7 +345,6 @@
 
     <string name="omnix_skip_for_now">Şu wagt geç</string>
     <!-- Ynançly mümkinçilik ýagdaýlary (§3, §33) -->
-    <string name="omnix_coming_soon">Ýakynda</string>
     <string name="omnix_not_configured">Entäk düzülmedik</string>
     <string name="omnix_chat_clear">Arassala</string>
     <!-- Yzygiderli bahalaryň ady (§42) -->
@@ -360,7 +354,6 @@
     <string name="omnix_level_high">Çalt</string>
     <string name="omnix_level_highest">Iň çalt</string>
     <!-- OMNIX DIAGNOSTIKA (§21) -->
-    <string name="omnix_settings_diagnostics">Diagnostika</string>
     <string name="omnix_diagnostics_title">OMNIX DIAGNOSTIKASY</string>
     <string name="omnix_diagnostics_run">DOLU SYNAGY GEÇIR</string>
     <string name="omnix_diagnostics_running">GEÇIRILÝÄR %1$d/%2$d</string>

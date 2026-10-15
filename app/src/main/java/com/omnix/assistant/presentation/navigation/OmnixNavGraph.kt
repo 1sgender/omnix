@@ -37,10 +37,9 @@ import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
 import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
-import com.omnix.assistant.presentation.history.HistoryScreen
 import com.omnix.assistant.presentation.home.HomeScreen
 import com.omnix.assistant.presentation.settings.SettingsViewModel
-import com.omnix.assistant.presentation.settings.MeScreen
+import com.omnix.assistant.presentation.settings.MeRoute
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
 import com.omnix.assistant.presentation.settings.SECTION_ABOUT
@@ -109,20 +108,10 @@ fun OmnixNavGraph(
                 )
             }
 
-            composable(OmnixDestination.History.route) {
-                val chatViewModel: ChatViewModel = hiltViewModel()
-                val chatState by chatViewModel.uiState.collectAsState()
-                HistoryScreen(
-                    messages = chatState.messages,
-                    onClear = chatViewModel::clearAllHistory
-                )
-            }
-
             composable(OmnixDestination.Me.route) {
-                MeScreen(
+                MeRoute(
                     clip = uiState.clip,
-                    isOnline = uiState.isOnline,
-                    onOpenSection = { navController.navigateSingleTop(it) }
+                    onOpen = { navController.navigateSingleTop(it) }
                 )
             }
 

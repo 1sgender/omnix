@@ -151,7 +151,6 @@
     <string name="omnix_activation_cta">Активировать</string>
 
     <!-- ===== Навигация ===== -->
-    <string name="omnix_nav_history">История</string>
     <string name="omnix_nav_home">Главная</string>
     <string name="omnix_nav_me">Я</string>
     <string name="omnix_nav_chat">Чат</string>
@@ -159,13 +158,6 @@
     <string name="omnix_nav_back">Назад</string>
 
     <!-- ===== История ===== -->
-    <string name="omnix_history_title">История</string>
-    <string name="omnix_history_today">Сегодня</string>
-    <string name="omnix_history_yesterday">Вчера</string>
-    <string name="omnix_history_earlier">Ранее</string>
-    <string name="omnix_history_empty_title">Пока ничего нет</string>
-    <string name="omnix_history_empty_body">Здесь появятся ваши запросы и действия.</string>
-    <string name="omnix_history_clear">Очистить историю</string>
 
     <!-- ===== Устройства ===== -->
     <string name="omnix_devices_title">Наушники</string>
@@ -221,19 +213,24 @@
 
     <!-- ===== Настройки ===== -->
     <string name="omnix_settings_title">Настройки</string>
-    <string name="omnix_settings_section_modes">Режимы</string>
-    <string name="omnix_settings_section_general">Основное</string>
-    <string name="omnix_settings_section_support">Поддержка</string>
-    <string name="omnix_settings_section_developer">Разработчикам</string>
-    <string name="omnix_settings_voice">Голос</string>
-    <string name="omnix_settings_privacy">Приватность</string>
-    <string name="omnix_settings_devices">Устройства</string>
-    <string name="omnix_settings_ai">AI-модель</string>
-    <string name="omnix_settings_language">Язык</string>
-    <string name="omnix_settings_notifications">Уведомления</string>
+    <string name="omnix_me_title">Я</string>
+    <string name="omnix_me_license_active">Лицензия активна</string>
+    <string name="omnix_me_license_inactive">Лицензия не активна</string>
+    <string name="omnix_me_row_voice">Голос и слово «Omni»</string>
+    <string name="omnix_me_row_model">Локальная модель</string>
+    <string name="omnix_me_row_memory">Память и приватность</string>
+    <string name="omnix_me_glyph_headphones">Bd</string>
+    <string name="omnix_me_glyph_voice">Гл</string>
+    <string name="omnix_me_glyph_translator">Пр</string>
+    <string name="omnix_me_glyph_automations">Ав</string>
+    <string name="omnix_me_glyph_model">ИИ</string>
+    <string name="omnix_me_glyph_memory">Пм</string>
+    <string name="omnix_me_glyph_appearance">Вд</string>
+    <string name="omnix_me_model_ready">Готова</string>
+    <string name="omnix_me_model_downloading">Загружается</string>
+    <string name="omnix_me_model_missing">Не установлена</string>
+    <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Оформление</string>
-    <string name="omnix_settings_about">О программе</string>
-    <string name="omnix_settings_advanced">Для разработчика</string>
 
     <string name="omnix_voice_title">Голос</string>
     <string name="omnix_voice_speaking_speed">Скорость речи</string>
@@ -337,8 +334,6 @@
     <string name="omnix_a11y_clip_status">Состояние Clip: %1$s</string>
     <string name="omnix_a11y_open_settings">Открыть настройки</string>
     <string name="omnix_a11y_open_chat">Открыть чат</string>
-    <string name="omnix_a11y_open_translator">Открыть перевод</string>
-    <string name="omnix_a11y_open_devices">Открыть устройства</string>
 
     <!-- ===== Clip flow states (§40, §70, §71) ===== -->
     <string name="omnix_error_clip_failed_title">Не удалось подключиться</string>
@@ -349,7 +344,6 @@
 
     <string name="omnix_skip_for_now">Пропустить</string>
     <!-- Honest capability states (§3, §33) -->
-    <string name="omnix_coming_soon">Скоро</string>
     <string name="omnix_not_configured">Ещё не настроено</string>
     <string name="omnix_chat_clear">Очистить</string>
     <!-- Human labels for continuous values (§42) -->
@@ -359,7 +353,6 @@
     <string name="omnix_level_high">Быстрее</string>
     <string name="omnix_level_highest">Самая быстрая</string>
     <!-- OMNIX DIAGNOSTICS (§21) -->
-    <string name="omnix_settings_diagnostics">Диагностика</string>
     <string name="omnix_diagnostics_title">OMNIX DIAGNOSTICS</string>
     <string name="omnix_diagnostics_run">ЗАПУСТИТЬ ВСЕ ТЕСТЫ</string>
     <string name="omnix_diagnostics_running">ТЕСТ %1$d/%2$d</string>
