@@ -179,10 +179,16 @@
     <string name="omnix_devices_empty_body">Подключите Clip, чтобы управлять голосом без рук.</string>
 
     <!-- ===== Чат ===== -->
-    <string name="omnix_chat_title">Диалог</string>
+    <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_subtitle_on_device">Отвечает на устройстве</string>
+    <string name="omnix_chat_subtitle_online">Отвечает на устройстве и в облаке</string>
+    <string name="omnix_chat_more">Ещё</string>
+    <string name="omnix_chat_today">СЕГОДНЯ</string>
+    <string name="omnix_chat_yesterday">ВЧЕРА</string>
+    <string name="omnix_chat_from_cloud">Ответ из облака</string>
     <string name="omnix_chat_you">Вы</string>
     <string name="omnix_chat_omnix">OMNIX</string>
-    <string name="omnix_chat_input_hint">Напишите сообщение…</string>
+    <string name="omnix_chat_input_hint">Сообщение</string>
     <string name="omnix_chat_send">Отправить</string>
     <string name="omnix_chat_empty_title">Здесь пока пусто</string>
     <string name="omnix_chat_empty_body">Чат пригодится, когда говорить вслух неудобно.</string>
@@ -427,7 +433,6 @@
         <item quantity="many">Сработало %1$d раз · последний %1$s</item>
         <item quantity="other">Сработало %1$d раз · последний %1$s</item>
     </plurals>
-    <string name="omnix_chat_on_device">Обработано на устройстве</string>
     <string name="omnix_privacy_section_confirmations">Подтверждения действий</string>
     <string name="omnix_privacy_calls">Звонки</string>
     <string name="omnix_privacy_calls_always">Всегда спрашивать</string>

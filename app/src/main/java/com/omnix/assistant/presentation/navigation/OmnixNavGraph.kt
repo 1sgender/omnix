@@ -130,7 +130,7 @@ fun OmnixNavGraph(
                 val chatState by chatViewModel.uiState.collectAsState()
                 OmnixChatScreen(
                     state = chatState,
-                    onBack = navController::popBackStack,
+                    isOnline = uiState.isOnline,
                     onInputChange = chatViewModel::onInputTextChanged,
                     onSend = { chatViewModel.sendTextMessage() },
                     onConfirm = chatViewModel::confirmPendingAction,

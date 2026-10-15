@@ -181,10 +181,16 @@
     <string name="omnix_devices_empty_body">Connect your Clip to use hands-free voice control.</string>
 
     <!-- ===== Chat (§21, §38) ===== -->
-    <string name="omnix_chat_title">Conversation</string>
+    <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_subtitle_on_device">Answers on the device</string>
+    <string name="omnix_chat_subtitle_online">Answers on the device and in the cloud</string>
+    <string name="omnix_chat_more">More</string>
+    <string name="omnix_chat_today">TODAY</string>
+    <string name="omnix_chat_yesterday">YESTERDAY</string>
+    <string name="omnix_chat_from_cloud">Answer from the cloud</string>
     <string name="omnix_chat_you">You</string>
     <string name="omnix_chat_omnix">OMNIX</string>
-    <string name="omnix_chat_input_hint">Type a message…</string>
+    <string name="omnix_chat_input_hint">Message</string>
     <string name="omnix_chat_send">Send</string>
     <string name="omnix_chat_empty_title">Nothing here yet</string>
     <string name="omnix_chat_empty_body">Use chat when you can’t speak out loud.</string>
@@ -428,7 +434,6 @@
         <item quantity="one">Fired once · last %1$s</item>
         <item quantity="other">Fired %1$d times · last %1$s</item>
     </plurals>
-    <string name="omnix_chat_on_device">Processed on device</string>
     <string name="omnix_privacy_section_confirmations">Action confirmations</string>
     <string name="omnix_privacy_calls">Calls</string>
     <string name="omnix_privacy_calls_always">Always ask</string>

@@ -110,3 +110,28 @@ val OmnixMicLineIcon: ImageVector = omnixLineIcon(
 )
 
 val OmnixCloseLineIcon: ImageVector = omnixLineIcon("Close", 2.2f, "M6 6l12 12", "M18 6L6 18")
+
+// ---- Chat ----
+
+/** "More": three filled dots (r = 1.8), the one filled glyph of the canvas. */
+val OmnixMoreIcon: ImageVector = ImageVector.Builder(
+    name = "More",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f
+).apply {
+    listOf(5f, 12f, 19f).forEach { cx ->
+        addPath(
+            pathData = addPathNodes("M${cx - 1.8f} 12a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0z"),
+            fill = SolidColor(Color.Black)
+        )
+    }
+}.build()
+
+val OmnixCloudLineIcon: ImageVector = omnixLineIcon(
+    "Cloud",
+    "M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4 12a4 4 0 0 0 1 7.9z"
+)
+
+val OmnixSendLineIcon: ImageVector = omnixLineIcon("Send", 2.2f, "M12 19V5", "M5 12l7-7 7 7")

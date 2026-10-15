@@ -180,10 +180,16 @@
     <string name="omnix_devices_empty_body">Eller erkin ses dolandyrmagy ulanmak üçin Cligiňizi birikdiriň.</string>
 
     <!-- ===== Söhbet (§21, §38) ===== -->
-    <string name="omnix_chat_title">Söhbet</string>
+    <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_subtitle_on_device">Enjamda jogap berýär</string>
+    <string name="omnix_chat_subtitle_online">Enjamda we bulutda jogap berýär</string>
+    <string name="omnix_chat_more">Ýene</string>
+    <string name="omnix_chat_today">ŞU GÜN</string>
+    <string name="omnix_chat_yesterday">DÜÝN</string>
+    <string name="omnix_chat_from_cloud">Bulutdan jogap</string>
     <string name="omnix_chat_you">Siz</string>
     <string name="omnix_chat_omnix">OMNIX</string>
-    <string name="omnix_chat_input_hint">Habar ýazyň…</string>
+    <string name="omnix_chat_input_hint">Hat</string>
     <string name="omnix_chat_send">Iber</string>
     <string name="omnix_chat_empty_title">Bu ýerde entäk hiç zat ýok</string>
     <string name="omnix_chat_empty_body">Sesli aýdyp bilmeýän wagtyňyzda söhbedi ulanyň.</string>
@@ -426,7 +432,6 @@
         <item quantity="one">Işledi: %1$d · iň soňky %1$s</item>
         <item quantity="other">Işledi: %1$d · iň soňky %1$s</item>
     </plurals>
-    <string name="omnix_chat_on_device">Enjide işlendi</string>
     <string name="omnix_privacy_section_confirmations">Hereketleri tassyklamak</string>
     <string name="omnix_privacy_calls">Jaňlar</string>
     <string name="omnix_privacy_calls_always">Hemiše sora</string>

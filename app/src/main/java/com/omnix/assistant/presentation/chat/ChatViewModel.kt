@@ -74,11 +74,8 @@ data class ChatUiState(
     val pendingConfirmation: PendingConfirmationUi? = null,
     /** C-02: запрос на отправку приватных данных в облако, ожидающий ответа пользователя. */
     val pendingCloudConsent: PendingCloudConsentUi? = null,
-    /**
-     * Audit 2026-09-26, on-device бейдж: id ответов ассистента, обработанных
-     * локально (DEVICE_TOOL / LOCAL_AI). Облако — «норма», без бейджа.
-     */
-    val onDeviceMessageIds: Set<Long> = emptySet()
+    /** id ответов ассистента из облачной модели: под ними «Ответ из облака». */
+    val cloudMessageIds: Set<Long> = emptySet()
 )
 
 @HiltViewModel
@@ -162,11 +159,11 @@ class ChatViewModel @Inject constructor(
                 _uiState.update { it.copy(messages = messageList) }
             }
         }
-        // On-device бейдж: метки проставляет SendPromptUseCase при сохранении
+        // «Ответ из облака»: метки проставляет SendPromptUseCase при сохранении
         // ответа — стрим мерджится в состояние независимо от истории.
         viewModelScope.launch {
-            answerOriginStore.onDeviceMessageIds.collectLatest { ids ->
-                _uiState.update { it.copy(onDeviceMessageIds = ids) }
+            answerOriginStore.cloudMessageIds.collectLatest { ids ->
+                _uiState.update { it.copy(cloudMessageIds = ids) }
             }
         }
     }

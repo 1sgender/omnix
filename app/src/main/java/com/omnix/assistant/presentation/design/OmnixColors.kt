@@ -53,16 +53,6 @@ data class OmnixColorScheme(
     val stateWarning: Color,
 
 
-    /**
-     * Chat bubble surfaces (mock 2026-09-26): both sides of the dialogue
-     * speak in bubbles — the user's in a light bubble on the right, OMNIX's
-     * in a dark grey bubble on the left. The light scheme flips the user
-     * bubble to system blue, exactly as the mock does.
-     */
-    val bubbleUser: Color,
-    val onBubbleUser: Color,
-    val bubbleAi: Color,
-    val onBubbleAi: Color,
 
     /**
      * Failed round trips (mock 2026-09-26): a dim red-tinted bubble ground.
@@ -136,10 +126,6 @@ val OmnixDarkColors = OmnixColorScheme(
 
 
     // The user's bubble is paper on graphite, OMNIX's a raised surface.
-    bubbleUser = TextPrimaryToken,
-    onBubbleUser = WarmGraphite,
-    bubbleAi = Color(0xFF1A1815),
-    onBubbleAi = TextPrimaryToken,
     errorBubble = Color(0xFF2A1612),
 
     // The primary action is lime with graphite ink: the one place the brand
@@ -185,10 +171,6 @@ val OmnixNightColors = OmnixDarkColors.copy(
 
 
     // Same mock, dimmed for the night ground.
-    bubbleUser = Color(0xFFCFCBC3),
-    onBubbleUser = Color(0xFF0A0908),
-    bubbleAi = Color(0xFF13110F),
-    onBubbleAi = Color(0xD6F2EEE6),
     errorBubble = Color(0xFF1D100E),
 
     actionPrimary = Color(0xFF9FCC3D),
@@ -232,10 +214,6 @@ val OmnixLightColors = OmnixColorScheme(
 
 
     // Light scheme: the user bubble is system blue, the mock's exact choice.
-    bubbleUser = Color(0xFF0A84FF),
-    onBubbleUser = Color(0xFFFFFFFF),
-    bubbleAi = Color(0xFFE9E9EB),
-    onBubbleAi = Color(0xF00C0D10),
     errorBubble = Color(0xFFFDECEA),
 
     actionPrimary = Color(0xFF0C0D10),

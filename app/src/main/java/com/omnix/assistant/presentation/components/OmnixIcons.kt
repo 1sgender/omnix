@@ -69,43 +69,6 @@ fun OmnixHistoryIcon(
     }
 }
 
-/** A microphone: used by the permission step and the Chat dictation control. */
-@Composable
-fun OmnixMicIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-    size: Dp = OmnixIcons.NavSize
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val s = this.size.minDimension
-        val w = s * 0.085f
-        val cx = this.size.width / 2f
-        val capsuleW = s * 0.30f
-        val capsuleTop = s * 0.14f
-        val capsuleH = s * 0.44f
-
-        drawRoundRectOutline(color, cx, capsuleTop, capsuleW, capsuleH, w)
-
-        // The cradle arc plus the stem.
-        drawArc(
-            color = color,
-            startAngle = 0f,
-            sweepAngle = 180f,
-            useCenter = false,
-            topLeft = Offset(cx - s * 0.26f, s * 0.40f),
-            size = Size(s * 0.52f, s * 0.40f),
-            style = Stroke(width = w, cap = StrokeCap.Round)
-        )
-        drawLine(
-            color = color,
-            start = Offset(cx, s * 0.60f + s * 0.20f),
-            end = Offset(cx, s * 0.88f),
-            strokeWidth = w,
-            cap = StrokeCap.Round
-        )
-    }
-}
-
 private fun DrawScope.drawRoundRectOutline(
     color: Color,
     centerX: Float,
@@ -176,48 +139,6 @@ fun OmnixBackIcon(
             color = color,
             start = Offset(cx - dx, cy),
             end = Offset(cx + dx, cy + dy),
-            strokeWidth = w,
-            cap = StrokeCap.Round
-        )
-    }
-}
-
-/**
- * An upward arrow: the send affordance in the Chat composer. Drawn as a plain
- * stem with a chevron so it reads at 16 dp inside the filled circle.
- */
-@Composable
-fun OmnixArrowUpIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-    size: Dp = 16.dp
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val s = this.size.minDimension
-        val w = s * 0.11f
-        val cx = this.size.width / 2f
-        val cy = this.size.height / 2f
-        val stem = s * 0.30f
-        val head = s * 0.17f
-
-        drawLine(
-            color = color,
-            start = Offset(cx, cy + stem),
-            end = Offset(cx, cy - stem),
-            strokeWidth = w,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(cx - head, cy - stem + head),
-            end = Offset(cx, cy - stem),
-            strokeWidth = w,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(cx, cy - stem),
-            end = Offset(cx + head, cy - stem + head),
             strokeWidth = w,
             cap = StrokeCap.Round
         )
