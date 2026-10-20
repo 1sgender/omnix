@@ -48,12 +48,12 @@ object DiagnosticsReport {
                 )
             }
             appendLine()
-            // Java-краши, пойманные in-app (нативные SIGSEGV не ловятся —
-            // их след виден только по стражу загрузки модели).
+            // Java-краши, пойманные in-app, и записи Android о причине смерти
+            // прошлых процессов (нативные SIGSEGV и OOM видны только там).
             if (crashes.isEmpty()) {
                 appendLine("recent crashes: none captured")
             } else {
-                appendLine("recent crashes (captured in-app):")
+                appendLine("recent crashes (captured in-app) and process exits (reported by Android):")
                 appendLine()
                 for (c in crashes) {
                     appendLine(c)

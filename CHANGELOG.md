@@ -741,6 +741,13 @@ must be added only when the repository owner creates an actual release.
 - Добавлен инструментальный тест ввода в чате (пустой чат, история за несколько дней, плашка
   приватности) — по сообщению о вылете приложения при наборе текста.
 
+### Added
+
+- Отчёт «Диагностики» теперь содержит записи Android о причине завершения прошлых процессов
+  (ApplicationExitInfo, Android 11+): нативный вылет (SIGSEGV), убийство из-за нехватки памяти, ANR.
+  Раньше такие вылеты не оставляли следа — отчёт писал «none captured», хотя приложение закрывалось
+  (например, при сбое нативного движка локальной модели). Спокойные закрытия помечаются как normal.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

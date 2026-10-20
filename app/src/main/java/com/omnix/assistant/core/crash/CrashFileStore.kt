@@ -125,6 +125,29 @@ object CrashCapture {
         }
     }
 
+    /**
+     * Как Android сам объясняет смерть прошлых процессов приложения (API 30+).
+     * Единственный след нативного вылета и убийства из-за памяти: Java-обработчик
+     * выше их не видит. На API 29 записей нет — пустой список.
+     */
+    fun processExitReports(appContext: Context, limit: Int = 5): List<String> {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R) return emptyList()
+        return runCatching {
+            val am = appContext.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val exits = am.getHistoricalProcessExitReasons(null, 0, limit * 2).map {
+                ProcessExit(
+                    timestampMs = it.timestamp,
+                    reason = it.reason,
+                    status = it.status,
+                    importance = it.importance,
+                    rssKb = it.rss,
+                    description = it.description.orEmpty()
+                )
+            }
+            ProcessExitReport.format(exits, limit)
+        }.getOrDefault(emptyList())
+    }
+
     /** Последние краш-отчёты для OMNIX DIAGNOSTICS. */
     fun latestReports(appContext: Context, limit: Int = 3): List<String> =
         (store ?: CrashFileStore(File(appContext.filesDir, DIR))).latestReports(limit)
