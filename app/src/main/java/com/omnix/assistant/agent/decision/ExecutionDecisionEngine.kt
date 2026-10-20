@@ -61,7 +61,11 @@ class ExecutionDecisionEngine @Inject constructor(
     private val metrics: ExecutionRouterMetrics = ExecutionRouterMetrics(),
     // Voice Latency: сегменты пайплайна (Router→AI→Tool) с разрезом
     // LOCAL/CLOUD; P50/P95/P99 — в snapshot(). Дефолт — только для тестов.
-    private val latency: VoiceLatencyMetrics = VoiceLatencyMetrics()
+    private val latency: VoiceLatencyMetrics = VoiceLatencyMetrics(),
+    // Выбор ИИ-модели пользователем (Я → ИИ-модель). Читается на каждый
+    // запрос, поэтому смена выбора действует сразу и для чата, и для голоса.
+    // Дефолт «Авто» — прежнее поведение (тесты, сборка без DI).
+    private val modelChoice: AiModelChoiceSource = AiModelChoiceSource.fixed()
 ) {
 
     private fun recordLaneStage(lane: VoiceLatencyMetrics.VoiceLane, stage: VoiceLatencyMetrics.VoiceStage, fromMs: Long) {
@@ -83,6 +87,12 @@ class ExecutionDecisionEngine @Inject constructor(
             "Запрос содержит приватные данные или не прошёл проверку приватности. Во внешний сервис он не отправлен."
 
         private const val GENERIC_ERROR_MESSAGE = "Не удалось выполнить запрос, сэр."
+
+        private const val ON_DEVICE_DECLINED_MESSAGE =
+            "Модель на телефоне не может ответить на этот запрос. Выберите «Авто» или «Облако» в разделе «Я» → «ИИ-модель»."
+
+        private const val ON_DEVICE_UNAVAILABLE_MESSAGE =
+            "Модель на телефоне сейчас недоступна"
         private const val EMPTY_REQUEST_MESSAGE = "Запрос не может быть пустым."
     }
 
@@ -192,9 +202,21 @@ class ExecutionDecisionEngine @Inject constructor(
         }
 
         // ------------------------------------------------ PRIORITY 2: LOCAL AI
+        // Выбор пользователя: «Облако» — локальный слой пропускаем;
+        // «На телефоне» — локальный слой отвечает без ухода в облако.
+        val choice = modelChoice.current()
+        if (choice == AiModelChoice.CLOUD) {
+            recordLaneStage(VoiceLatencyMetrics.VoiceLane.CLOUD, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
+            return runCloud(request, routing, trace)
+        }
+        val onDeviceOnly = choice == AiModelChoice.ON_DEVICE
         recordLaneStage(VoiceLatencyMetrics.VoiceLane.LOCAL, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
         val localAiStartedAt = latency.nowMs()
-        val localOutcome = tryLocalAi(request, routing, trace)
+        val localOutcome = tryLocalAi(
+            if (onDeviceOnly) request.copy(localOnly = true) else request,
+            routing,
+            trace
+        )
         // AI-фаза локальной полосы (модель не установлена → попытка мгновенна
         // и попадает в перцентили как «local почти нулевой» — честно).
         latency.record(
@@ -229,13 +251,26 @@ class ExecutionDecisionEngine @Inject constructor(
             }
 
             is LocalAiOutcome.Fallback -> {
+                if (onDeviceOnly) {
+                    // Пользователь запретил облако: честная ошибка вместо подмены.
+                    metrics.noteLocalFailed()
+                    return ExecutionResult.Error(
+                        message = "$ON_DEVICE_UNAVAILABLE_MESSAGE: ${localOutcome.reason}",
+                        reason = DecisionReason.LOCAL_AI_UNCERTAIN
+                    )
+                }
                 // Не приговор запросу: уходим в облако по обычному privacy-гейту.
                 Log.w(TAG, "route=LOCAL_AI outcome=FALLBACK (${localOutcome.reason}) — облачный fallback")
                 metrics.noteLocalFailed()
                 localFallbackReason = localOutcome.reason
             }
 
-            LocalAiOutcome.Uncertain -> Unit // идём дальше
+            LocalAiOutcome.Uncertain -> if (onDeviceOnly) {
+                return ExecutionResult.Error(
+                    message = ON_DEVICE_DECLINED_MESSAGE,
+                    reason = DecisionReason.LOCAL_AI_UNCERTAIN
+                )
+            } // в «Авто» идём дальше
         }
 
         // ------------------------------------------------ PRIORITY 3: CLOUD AI

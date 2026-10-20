@@ -91,6 +91,12 @@ data class ExecutionRequest(
      */
     val originTimestampMs: Long? = null,
     /**
+     * Пользователь выбрал «только на телефоне» ([AiModelChoice.ON_DEVICE]):
+     * локальная модель отвечает и на запросы, которые в «Авто» отдала бы облаку
+     * ради качества. Гейты безопасности (web, команды устройства, длина) остаются.
+     */
+    val localOnly: Boolean = false,
+    /**
      * Privacy classification result that accompanies this request.
      *
      * H-02 / Refactor #3: this is the SINGLE source of truth for privacy

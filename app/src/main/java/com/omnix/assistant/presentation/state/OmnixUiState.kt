@@ -36,8 +36,14 @@ data class OmnixUiState(
      */
     val isCloudProcessing: Boolean = false,
 
-    /** Whether the voice pipeline is actually running in the foreground service. */
-    val isListeningServiceActive: Boolean = false,
+    /**
+     * Включён ли ассистент (служба и голосовой пайплайн), с переходными
+     * состояниями, пока система поднимает или останавливает службу.
+     */
+    val assistantPower: AssistantPower = AssistantPower.OFF,
+
+    /** Почему последнее включение не удалось; null — ошибки нет. */
+    val assistantPowerError: AssistantPowerError? = null,
 
     /** Normalised live microphone amplitude 0..1 from the real audio source. */
     val audioLevel: Float = 0f,
@@ -153,3 +159,34 @@ data class LastInteraction(
     val response: String,
     val timestampMillis: Long
 )
+
+/**
+ * Питание ассистента для переключателя на главном экране (нажатие на логотип).
+ * ON и OFF — фактическое состояние службы, STARTING и STOPPING — пока система
+ * выполняет запрос; повторные нажатия в это время игнорируются.
+ */
+enum class AssistantPower { OFF, STARTING, ON, STOPPING }
+
+/** Причина, по которой ассистент не включился. */
+enum class AssistantPowerError {
+    /** Нет разрешения на микрофон: без него служба не поднимается. */
+    MICROPHONE_PERMISSION,
+
+    /** Android отказал в запуске службы (ограничения фонового старта и т.п.). */
+    START_REJECTED,
+
+    /** Служба не подтвердила запуск за отведённое время. */
+    START_TIMEOUT
+}
+
+/**
+ * Что показать на переключателе: пока идёт переход — сам переход, иначе
+ * фактическое состояние службы. Переход, который уже совпал с фактом
+ * (служба поднялась раньше подтверждения), не держит экран в STARTING.
+ */
+fun resolveAssistantPower(serviceActive: Boolean, transition: AssistantPower?): AssistantPower = when {
+    transition == AssistantPower.STARTING && !serviceActive -> AssistantPower.STARTING
+    transition == AssistantPower.STOPPING && serviceActive -> AssistantPower.STOPPING
+    serviceActive -> AssistantPower.ON
+    else -> AssistantPower.OFF
+}

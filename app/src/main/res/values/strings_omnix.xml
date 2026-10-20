@@ -28,6 +28,23 @@
 
     <!-- ===== Home guidance (§9, §24–§26) ===== -->
     <string name="omnix_home_example_time">“Omni, what time is it?”</string>
+    <string name="omnix_home_off_title">OMNIX is off</string>
+    <string name="omnix_home_off_hint">Tap the logo to turn it on</string>
+    <string name="omnix_home_starting">Turning on…</string>
+    <string name="omnix_home_stopping">Turning off…</string>
+    <string name="omnix_home_on_hint">Say “Omni” or tap Speak</string>
+    <string name="omnix_home_talk">Speak</string>
+    <string name="omnix_home_talk_stop">Stop</string>
+    <string name="omnix_home_power_a11y">OMNIX assistant</string>
+    <string name="omnix_home_power_on_state">On</string>
+    <string name="omnix_home_power_off_state">Off</string>
+    <string name="omnix_home_error_mic">OMNIX needs the microphone to hear you.</string>
+    <string name="omnix_home_error_mic_action">Allow</string>
+    <string name="omnix_home_error_mic_settings">Open settings</string>
+    <string name="omnix_home_error_rejected">Android did not let OMNIX start. Try again.</string>
+    <string name="omnix_home_error_timeout">OMNIX did not turn on. Try again.</string>
+    <string name="omnix_home_error_retry">Try again</string>
+    <string name="omnix_home_error_dismiss">Close</string>
     <string name="omnix_home_hint_idle">Say “Omni” or tap the core</string>
     <string name="omnix_home_hint_listening">Go ahead — I’m in your headphones</string>
     <string name="omnix_home_offline_pill">OFFLINE · ON DEVICE</string>
@@ -262,7 +279,23 @@
     <string name="omnix_privacy_permissions_manage">Manage</string>
     <string name="omnix_privacy_delete_history">Delete voice history</string>
 
-    <string name="omnix_ai_title">AI</string>
+    <string name="omnix_ai_title">AI model</string>
+    <string name="omnix_ai_model_auto">Auto</string>
+    <string name="omnix_ai_model_auto_body">Short simple answers on the phone, the rest in the OMNIX cloud.</string>
+    <string name="omnix_ai_model_on_device">On the phone</string>
+    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Works offline, requests never leave the phone. Simpler answers than the cloud.</string>
+    <string name="omnix_ai_model_cloud">OMNIX cloud</string>
+    <string name="omnix_ai_model_cloud_body">The model on the OMNIX server: fuller answers. Needs the internet.</string>
+    <string name="omnix_ai_model_checking">Checking…</string>
+    <string name="omnix_ai_model_downloading">Downloading: %1$d%%</string>
+    <string name="omnix_ai_model_not_downloaded">Not downloaded — the button is below</string>
+    <string name="omnix_ai_model_low_memory">Not enough phone memory</string>
+    <string name="omnix_ai_model_broken">Does not load</string>
+    <string name="omnix_ai_model_error_not_installed">The model is not on the phone yet. Download it below, then choose it again. The previous choice stays.</string>
+    <string name="omnix_ai_model_error_downloading">The model is still downloading. Choose it when the download ends.</string>
+    <string name="omnix_ai_model_error_memory">The phone does not have enough memory for this model. The previous choice stays.</string>
+    <string name="omnix_ai_model_error_load">The model did not load (%1$s). The previous choice stays.</string>
+    <string name="omnix_ai_model_error_server">The OMNIX server does not answer. The previous choice stays.</string>
     <string name="omnix_ai_personality">How OMNIX answers</string>
     <string name="omnix_ai_personality_body">Set the tone and instructions OMNIX follows.</string>
 

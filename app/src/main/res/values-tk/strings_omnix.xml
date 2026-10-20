@@ -27,6 +27,23 @@
 
     <!-- ===== Baş sahypa görkezmeleri (§9, §24–§26) ===== -->
     <string name="omnix_home_example_time">«Omni, sagat näçe?»</string>
+    <string name="omnix_home_off_title">OMNIX öçük</string>
+    <string name="omnix_home_off_hint">Açmak üçin logotipe basyň</string>
+    <string name="omnix_home_starting">Açylýar…</string>
+    <string name="omnix_home_stopping">Öçürilýär…</string>
+    <string name="omnix_home_on_hint">«Omni» diýiň ýa-da «Gürle» basyň</string>
+    <string name="omnix_home_talk">Gürle</string>
+    <string name="omnix_home_talk_stop">Bes et</string>
+    <string name="omnix_home_power_a11y">OMNIX kömekçisi</string>
+    <string name="omnix_home_power_on_state">Açyk</string>
+    <string name="omnix_home_power_off_state">Öçük</string>
+    <string name="omnix_home_error_mic">OMNIX sizi eşitmek üçin mikrofona rugsat gerek.</string>
+    <string name="omnix_home_error_mic_action">Rugsat ber</string>
+    <string name="omnix_home_error_mic_settings">Sazlamalary aç</string>
+    <string name="omnix_home_error_rejected">Android OMNIX-i açmaga ýol bermedi. Täzeden synanyşyň.</string>
+    <string name="omnix_home_error_timeout">OMNIX açylmady. Täzeden synanyşyň.</string>
+    <string name="omnix_home_error_retry">Gaýtala</string>
+    <string name="omnix_home_error_dismiss">Ýap</string>
     <string name="omnix_home_hint_idle">«Omni» diýiň ýa-da ýadra basyň</string>
     <string name="omnix_home_hint_listening">Gürläň — men gulaklyklaryňyzda</string>
     <string name="omnix_home_offline_pill">OFLAÝN · ENJAMDA</string>
@@ -261,7 +278,23 @@
     <string name="omnix_privacy_permissions_manage">Dolandyr</string>
     <string name="omnix_privacy_delete_history">Dawuş taryhyny poz</string>
 
-    <string name="omnix_ai_title">AI</string>
+    <string name="omnix_ai_title">EA modeli</string>
+    <string name="omnix_ai_model_auto">Awto</string>
+    <string name="omnix_ai_model_auto_body">Gysga ýönekeý jogaplar — telefonda, galanlary — OMNIX bulutynda.</string>
+    <string name="omnix_ai_model_on_device">Telefonda</string>
+    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Internetsiz işleýär, soraglar telefondan çykmaýar. Bulutdan ýönekeý jogap berýär.</string>
+    <string name="omnix_ai_model_cloud">OMNIX buluty</string>
+    <string name="omnix_ai_model_cloud_body">OMNIX serwerindäki model: has doly jogap berýär. Internet gerek.</string>
+    <string name="omnix_ai_model_checking">Barlaýaryn…</string>
+    <string name="omnix_ai_model_downloading">Ýüklenýär: %1$d%%</string>
+    <string name="omnix_ai_model_not_downloaded">Ýüklenmedik — düwme aşakda</string>
+    <string name="omnix_ai_model_low_memory">Telefonyň ýady ýetmeýär</string>
+    <string name="omnix_ai_model_broken">Ýüklenmeýär</string>
+    <string name="omnix_ai_model_error_not_installed">Model entäk telefonda ýok. Aşakda ýükläň we täzeden saýlaň. Öňki saýlaw galýar.</string>
+    <string name="omnix_ai_model_error_downloading">Model entäk ýüklenýär. Ýükleme gutaranda saýlaň.</string>
+    <string name="omnix_ai_model_error_memory">Telefonyň bu model üçin ýady ýetmeýär. Öňki saýlaw galýar.</string>
+    <string name="omnix_ai_model_error_load">Model ýüklenmedi (%1$s). Öňki saýlaw galýar.</string>
+    <string name="omnix_ai_model_error_server">OMNIX serweri jogap bermeýär. Öňki saýlaw galýar.</string>
     <string name="omnix_ai_personality">OMNIX nähili jogap berýär</string>
     <string name="omnix_ai_personality_body">OMNIX-iň beräýýän tony we görkezmelerini düzüň.</string>
 

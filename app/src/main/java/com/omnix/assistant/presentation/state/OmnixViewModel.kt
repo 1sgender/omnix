@@ -16,18 +16,21 @@ import com.omnix.assistant.update.otaArcFraction
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.orchestrator.OrchestratorMode
 import com.omnix.assistant.voice.orchestrator.VoiceInteractionOrchestrator
+import com.omnix.assistant.voice.service.OmnixVoiceService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 /**
@@ -152,6 +155,9 @@ class OmnixViewModel @Inject constructor(
     companion object {
         /** Slack so the recompute strictly lands after the latch window. */
         private const val SUCCESS_TICK_SLACK_MS = 100L
+
+        /** Сколько ждём, пока служба подтвердит включение или выключение. */
+        private const val POWER_CONFIRM_TIMEOUT_MS = 6_000L
     }
 
     /** Stored experience signals that drive progressive disclosure (§10, §82). */
@@ -204,12 +210,35 @@ class OmnixViewModel @Inject constructor(
         )
     )
 
+    /**
+     * Переход питания, который сейчас выполняет служба (STARTING / STOPPING);
+     * null — переходов нет и на экране фактическое состояние службы.
+     */
+    private val powerTransition = MutableStateFlow<AssistantPower?>(null)
+    private val powerError = MutableStateFlow<AssistantPowerError?>(null)
+    private var powerJob: Job? = null
+
+    private data class PowerSignals(val power: AssistantPower, val error: AssistantPowerError?)
+
+    private val powerSignals: StateFlow<PowerSignals> = combine(
+        orchestrator.serviceActive,
+        powerTransition,
+        powerError
+    ) { active, transition, error ->
+        PowerSignals(resolveAssistantPower(active, transition), error)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        PowerSignals(resolveAssistantPower(orchestrator.serviceActive.value, null), null)
+    )
+
     /** The one state the whole frontend renders. */
     val uiState: StateFlow<OmnixUiState> = combine(
         voiceSignals,
         environmentSignals,
-        cloudActive
-    ) { voice, env, cloudProcessing ->
+        cloudActive,
+        powerSignals
+    ) { voice, env, cloudProcessing, powerState ->
         val systemState = OmnixStateMapper.systemStateOf(
             clip = env.clip,
             isOnline = env.isOnline,
@@ -224,7 +253,8 @@ class OmnixViewModel @Inject constructor(
             clip = env.clip,
             isOnline = env.isOnline,
             isCloudProcessing = cloudProcessing,
-            isListeningServiceActive = orchestrator.currentMode.value != OrchestratorMode.PAUSED_CALL_OR_SLEEP,
+            assistantPower = powerState.power,
+            assistantPowerError = powerState.error,
             audioLevel = voice.audioLevel,
             action = voice.action,
             confirmation = confirmationOf(voice),
@@ -315,8 +345,60 @@ class OmnixViewModel @Inject constructor(
         if (active) clipRepository.refresh()
     }
 
-    /** Tap on the Core (design v2): start or stop listening. */
-    fun onCoreTap() {
+    /**
+     * Нажатие на логотип: включить или выключить ассистента. Запуск и остановка
+     * идут через [OmnixVoiceService] — тот же путь, что у системы и уведомления.
+     * Пока служба не подтвердила переход, повторные нажатия игнорируются: два
+     * экземпляра ассистента не поднимутся.
+     */
+    fun onLogoTap() {
+        if (powerTransition.value != null) return
+        if (orchestrator.serviceActive.value) stopAssistant() else startAssistant()
+    }
+
+    private fun startAssistant() {
+        powerError.value = null
+        refreshPermissions()
+        if (!hasMicrophonePermission()) {
+            powerError.value = AssistantPowerError.MICROPHONE_PERMISSION
+            return
+        }
+        powerTransition.value = AssistantPower.STARTING
+        if (!OmnixVoiceService.start(context)) {
+            powerTransition.value = null
+            powerError.value = AssistantPowerError.START_REJECTED
+            return
+        }
+        powerJob?.cancel()
+        powerJob = viewModelScope.launch {
+            val started = withTimeoutOrNull(POWER_CONFIRM_TIMEOUT_MS) {
+                orchestrator.serviceActive.first { it }
+            } != null
+            if (!started) powerError.value = AssistantPowerError.START_TIMEOUT
+            powerTransition.value = null
+        }
+    }
+
+    private fun stopAssistant() {
+        powerError.value = null
+        powerTransition.value = AssistantPower.STOPPING
+        OmnixVoiceService.stop(context)
+        powerJob?.cancel()
+        powerJob = viewModelScope.launch {
+            withTimeoutOrNull(POWER_CONFIRM_TIMEOUT_MS) {
+                orchestrator.serviceActive.first { !it }
+            }
+            powerTransition.value = null
+        }
+    }
+
+    /** Пользователь закрыл сообщение об ошибке включения. */
+    fun dismissPowerError() {
+        powerError.value = null
+    }
+
+    /** Кнопка «Говорить» при включённом ассистенте: начать или прервать запрос без слова «Omni». */
+    fun onTalkTap() {
         orchestrator.toggleListeningFromUi()
     }
 

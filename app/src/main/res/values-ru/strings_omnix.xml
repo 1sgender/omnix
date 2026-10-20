@@ -27,6 +27,23 @@
 
     <!-- ===== Подсказки на Home ===== -->
     <string name="omnix_home_example_time">«Омни, который час?»</string>
+    <string name="omnix_home_off_title">OMNIX выключен</string>
+    <string name="omnix_home_off_hint">Нажмите на логотип, чтобы включить</string>
+    <string name="omnix_home_starting">Включаю…</string>
+    <string name="omnix_home_stopping">Выключаю…</string>
+    <string name="omnix_home_on_hint">Скажите «Omni» или нажмите «Говорить»</string>
+    <string name="omnix_home_talk">Говорить</string>
+    <string name="omnix_home_talk_stop">Стоп</string>
+    <string name="omnix_home_power_a11y">Ассистент OMNIX</string>
+    <string name="omnix_home_power_on_state">Включён</string>
+    <string name="omnix_home_power_off_state">Выключен</string>
+    <string name="omnix_home_error_mic">Чтобы OMNIX вас слышал, нужен доступ к микрофону.</string>
+    <string name="omnix_home_error_mic_action">Разрешить</string>
+    <string name="omnix_home_error_mic_settings">Открыть настройки</string>
+    <string name="omnix_home_error_rejected">Android не дал запустить OMNIX. Попробуйте ещё раз.</string>
+    <string name="omnix_home_error_timeout">OMNIX не включился. Попробуйте ещё раз.</string>
+    <string name="omnix_home_error_retry">Повторить</string>
+    <string name="omnix_home_error_dismiss">Закрыть</string>
     <string name="omnix_home_hint_idle">Скажите «Omni» или нажмите на ядро</string>
     <string name="omnix_home_hint_listening">Говорите — я в ваших наушниках</string>
     <string name="omnix_home_offline_pill">ОФЛАЙН · НА УСТРОЙСТВЕ</string>
@@ -260,7 +277,23 @@
     <string name="omnix_privacy_permissions_manage">Управлять</string>
     <string name="omnix_privacy_delete_history">Удалить историю запросов</string>
 
-    <string name="omnix_ai_title">AI</string>
+    <string name="omnix_ai_title">ИИ-модель</string>
+    <string name="omnix_ai_model_auto">Авто</string>
+    <string name="omnix_ai_model_auto_body">Короткие простые ответы — на телефоне, остальное — в облаке OMNIX.</string>
+    <string name="omnix_ai_model_on_device">На телефоне</string>
+    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
+    <string name="omnix_ai_model_cloud">Облако OMNIX</string>
+    <string name="omnix_ai_model_cloud_body">Модель на сервере OMNIX: отвечает подробнее. Нужен интернет.</string>
+    <string name="omnix_ai_model_checking">Проверяю…</string>
+    <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
+    <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>
+    <string name="omnix_ai_model_low_memory">Не хватает памяти телефона</string>
+    <string name="omnix_ai_model_broken">Не загружается</string>
+    <string name="omnix_ai_model_error_not_installed">Модели ещё нет на телефоне. Скачайте её ниже и выберите снова. Остаётся прежний выбор.</string>
+    <string name="omnix_ai_model_error_downloading">Модель ещё скачивается. Выберите её, когда загрузка закончится.</string>
+    <string name="omnix_ai_model_error_memory">Телефону не хватает памяти для этой модели. Остаётся прежний выбор.</string>
+    <string name="omnix_ai_model_error_load">Модель не загрузилась (%1$s). Остаётся прежний выбор.</string>
+    <string name="omnix_ai_model_error_server">Сервер OMNIX не отвечает. Остаётся прежний выбор.</string>
     <string name="omnix_ai_personality">Как OMNIX отвечает</string>
     <string name="omnix_ai_personality_body">Задайте тон и указания, которым следует OMNIX.</string>
 

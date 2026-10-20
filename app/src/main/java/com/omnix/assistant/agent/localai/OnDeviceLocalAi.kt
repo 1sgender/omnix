@@ -79,8 +79,11 @@ class OnDeviceLocalAi @Inject constructor(
         // 1B-модель подходит для коротких общих вопросов, но не для длинного
         // юридического/финансового анализа, кода и подробной документации.
         // PRIVATE/SENSITIVE оставляем локально: качество не важнее приватности.
+        // Пользователь, выбравший «только на телефоне», отказался от облака сам —
+        // для него этот гейт качества не действует.
         val normalized = request.text.lowercase()
-        if (request.effectivePrivacyLevel == com.omnix.assistant.agent.decision.PrivacyLevel.NORMAL &&
+        if (!request.localOnly &&
+            request.effectivePrivacyLevel == com.omnix.assistant.agent.decision.PrivacyLevel.NORMAL &&
             request.text.length >= MIN_COMPLEX_INPUT_CHARS &&
             COMPLEXITY_MARKERS.any(normalized::contains)
         ) {
