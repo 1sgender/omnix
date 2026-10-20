@@ -99,11 +99,12 @@ fun FirstRunScreen(
             Spacer(Modifier.height(24.dp))
             step.progressIndex?.let { OnboardingProgressDots(total = step.progressTotal, active = it) }
 
+            // transitionSpec runs outside composition: read the theme here.
+            val enterMs = OmnixTheme.motion.screenEnterMs
+            val exitMs = OmnixTheme.motion.screenExitMs
             AnimatedContent(
                 targetState = step,
-                transitionSpec = {
-                    fadeIn(tween(OmnixTheme.motion.screenEnterMs)) togetherWith fadeOut(tween(OmnixTheme.motion.screenExitMs))
-                },
+                transitionSpec = { fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs)) },
                 modifier = Modifier.weight(1f),
                 label = "first_run_step"
             ) { shown ->

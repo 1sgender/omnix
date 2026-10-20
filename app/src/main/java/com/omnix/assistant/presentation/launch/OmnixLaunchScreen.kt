@@ -108,11 +108,11 @@ fun OmnixLaunchScreen(
         Spacer(Modifier.height(32.dp))
         StaggeredWordmark()
         Spacer(Modifier.height(16.dp))
+        // transitionSpec runs outside composition: read the theme here.
+        val fadeMs = OmnixTheme.motion.contentFadeMs
         AnimatedContent(
             targetState = status,
-            transitionSpec = {
-                fadeIn(tween(OmnixTheme.motion.contentFadeMs)) togetherWith fadeOut(tween(OmnixTheme.motion.contentFadeMs))
-            },
+            transitionSpec = { fadeIn(tween(fadeMs)) togetherWith fadeOut(tween(fadeMs)) },
             label = "launch_status"
         ) { shown ->
             when (shown) {

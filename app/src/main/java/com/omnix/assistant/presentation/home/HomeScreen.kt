@@ -320,11 +320,11 @@ private fun StatusText(state: OmnixUiState) {
         }
     }
 
+    // transitionSpec runs outside composition: read the theme here.
+    val fadeMs = OmnixTheme.motion.contentFadeMs
     AnimatedContent(
         targetState = title to hint,
-        transitionSpec = {
-            fadeIn(tween(OmnixTheme.motion.contentFadeMs)) togetherWith fadeOut(tween(OmnixTheme.motion.contentFadeMs))
-        },
+        transitionSpec = { fadeIn(tween(fadeMs)) togetherWith fadeOut(tween(fadeMs)) },
         label = "home_status"
     ) { (shownTitle, shownHint) ->
         Column(
