@@ -734,6 +734,13 @@ must be added only when the repository owner creates an actual release.
 - Шрифты: Inter заменён на Onest (вариативный) и IBM Plex Mono для служебных меток (OFL 1.1, NOTICE
   обновлён).
 
+### Fixed
+
+- Экран «Диагностика» снова доступен: долгое нажатие на версию внизу экрана «Я». После перехода на
+  макет design v2 строки «Диагностика» в «Я» не стало, и экспортировать краш-отчёт было неоткуда.
+- Добавлен инструментальный тест ввода в чате (пустой чат, история за несколько дней, плашка
+  приватности) — по сообщению о вылете приложения при наборе текста.
+
 ## Release history
 
 **[OWNER ACTION REQUIRED]** Add entries here only for real tags/releases, with

@@ -104,6 +104,7 @@ fun MeRoute(
         ),
         modifier = modifier,
         onOpen = onOpen,
-        onVersionTap = { onOpen(OmnixDestination.SettingsSection(SECTION_ABOUT)) }
+        onVersionTap = { onOpen(OmnixDestination.SettingsSection(SECTION_ABOUT)) },
+        onVersionLongPress = { onOpen(OmnixDestination.SettingsSection(SECTION_DIAGNOSTICS)) }
     )
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,9 +26,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,8 +59,8 @@ data class MeRow(
  * The account card (initial, name, licence state, plan), two grouped lists
  * and the version at the bottom. Values are real: the connected headset's
  * name, the number of automations, the local model's state, the current
- * appearance. The version opens "About", where support and the developer
- * pages live.
+ * appearance. The version opens "About"; a long press on it opens
+ * Diagnostics, where crash reports are exported.
  */
 @Composable
 fun MeScreen(
@@ -68,7 +72,8 @@ fun MeScreen(
     groupB: List<MeRow>,
     modifier: Modifier = Modifier,
     onOpen: (OmnixDestination) -> Unit = {},
-    onVersionTap: () -> Unit = {}
+    onVersionTap: () -> Unit = {},
+    onVersionLongPress: () -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
     // The version sits at the bottom of the screen when the lists are short
@@ -112,7 +117,15 @@ fun MeScreen(
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 24.dp, bottom = 12.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable(role = Role.Button, onClick = onVersionTap)
+                    // Tap: About. Long press: Diagnostics, where crash reports
+                    // are exported (no visible row, as on the canvas).
+                    .pointerInput(onVersionTap, onVersionLongPress) {
+                        detectTapGestures(
+                            onTap = { onVersionTap() },
+                            onLongPress = { onVersionLongPress() }
+                        )
+                    }
+                    .semantics { role = Role.Button }
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
