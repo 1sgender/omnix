@@ -4,11 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelState
@@ -17,15 +15,15 @@ import com.omnix.assistant.core.license.LicenseManager
 import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.localmodel.LocalModelConsentDialog
-import com.omnix.assistant.presentation.localmodel.LocalModelLoadingScreen
+import com.omnix.assistant.presentation.launch.LaunchStatus
+import com.omnix.assistant.presentation.launch.OmnixLaunchScreen
+import com.omnix.assistant.core.license.LicenseRefreshResult
 import com.omnix.assistant.presentation.navigation.OmnixNavGraph
 import com.omnix.assistant.update.AppUpdatePrompt
 import com.omnix.assistant.update.OtaDownloadMonitor
 import androidx.lifecycle.lifecycleScope
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
-import com.omnix.assistant.presentation.core.CoreState
 import com.omnix.assistant.presentation.firstrun.FirstRunRoute
-import com.omnix.assistant.presentation.core.OmnixCore
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.settings.AppearanceViewModel
@@ -96,14 +94,22 @@ class MainActivity : ComponentActivity() {
                         initial = licenseManager.getLicenseInfo()
                     )
                     var serverCheckComplete by remember { mutableStateOf(false) }
+                    // Сервер не ответил, а свежей успешной проверки на телефоне нет:
+                    // показываем это прямо (повторить / ввести код), а не молча
+                    // отправляем человека с действующей лицензией на активацию.
+                    var serverUnreachable by remember { mutableStateOf(false) }
+                    var licenceRetry by remember { mutableIntStateOf(0) }
 
-                    LaunchedEffect(showFirstRun) {
+                    LaunchedEffect(showFirstRun, licenceRetry) {
                         if (!showFirstRun) {
+                            serverUnreachable = false
                             // Кэш не открывает продукт сам: при любой связи решает
                             // сервер; без связи LicenseManager применяет офлайн-льготу
                             // по непросроченному кэшу последней успешной проверки.
-                            licenseManager.refreshFromServer()
-                            serverCheckComplete = true
+                            val result = licenseManager.refreshFromServer()
+                            serverUnreachable = result is LicenseRefreshResult.ServiceUnavailable ||
+                                result is LicenseRefreshResult.RateLimited
+                            serverCheckComplete = !serverUnreachable
                         }
                     }
 
@@ -118,12 +124,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        serverUnreachable -> {
+                            OmnixLaunchScreen(
+                                status = LaunchStatus.ServerUnreachable,
+                                onRetry = { licenceRetry += 1 },
+                                onEnterCode = {
+                                    serverUnreachable = false
+                                    serverCheckComplete = true
+                                }
+                            )
+                        }
                         !serverCheckComplete -> {
-                            // No spinner anywhere in OMNIX (§29): the Core
-                            // itself is the only "working" indicator.
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                OmnixCore(state = CoreState.THINKING)
-                            }
+                            OmnixLaunchScreen(status = LaunchStatus.CheckingLicence)
                         }
                         !licenseInfo.isActivated || licenseInfo.isExpired -> {
                             ActivationScreen(onActivationSuccess = { serverCheckComplete = true })
@@ -147,7 +159,7 @@ class MainActivity : ComponentActivity() {
                                 // Downloading намеренно НЕ блокирует: у
                                 // пользователя должен остаться путь в настройки,
                                 // где загрузку можно отменить.
-                                LocalModelLoadingScreen()
+                                OmnixLaunchScreen(status = LaunchStatus.LoadingModel)
                             } else {
                                 OmnixNavGraph()
                                 if (modelState is LocalModelState.NotInstalled &&

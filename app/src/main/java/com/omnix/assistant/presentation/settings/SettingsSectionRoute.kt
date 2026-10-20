@@ -77,9 +77,22 @@ fun SettingsSectionRoute(
             val modelState by viewModel.localModelState.collectAsState(
                 initial = com.omnix.assistant.agent.localai.LocalModelState.NotInitialized
             )
+            val aiModelViewModel: AiModelViewModel = hiltViewModel()
+            val aiChoice by aiModelViewModel.choice.collectAsState()
+            val aiApplying by aiModelViewModel.applying.collectAsState()
+            val aiFailure by aiModelViewModel.failure.collectAsState()
             AiSettingsScreen(
                 modifier = modifier,
                 onBack = onBack,
+                modelChoice = {
+                    AiModelSection(
+                        choice = aiChoice,
+                        applying = aiApplying,
+                        failure = aiFailure,
+                        localModelState = modelState,
+                        onSelect = aiModelViewModel::select
+                    )
+                },
                 systemPrompt = state.systemPrompt,
                 onSystemPromptChange = viewModel::onSystemPromptChanged,
                 onSave = viewModel::saveAllSettings,
@@ -244,6 +257,7 @@ private fun NotificationsSettingsScreen(
 
 @Composable
 private fun AiSettingsScreen(
+    modelChoice: @Composable () -> Unit,
     systemPrompt: String,
     onSystemPromptChange: (String) -> Unit,
     onSave: () -> Unit,
@@ -258,8 +272,13 @@ private fun AiSettingsScreen(
 ) {
     SectionScaffold(stringResource(R.string.omnix_ai_title), modifier, onBack) {
         val spacing = OmnixTheme.spacing
-        // Deliberately no model picker, no provider name, no temperature:
-        // model selection is server-managed and is not a user concept (§4).
+        // The user picks what answers (Auto / on the phone / OMNIX cloud).
+        // The cloud provider stays server-managed: no provider names, no
+        // temperature, no keys on the device.
+        modelChoice()
+
+        Spacer(Modifier.height(spacing.lg))
+
         OmnixTextFieldRow(
             title = stringResource(R.string.omnix_ai_personality),
             subtitle = stringResource(R.string.omnix_ai_personality_body),

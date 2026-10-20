@@ -72,6 +72,7 @@ class SettingsDataStore @Inject constructor(
         val WAKE_WORD_SENSITIVITY = floatPreferencesKey("wake_word_sensitivity")
         val WAKEWORD_ENABLED = booleanPreferencesKey("wakeword.enabled")
         val TRANSLATOR_TO_HEADPHONES = booleanPreferencesKey("translator.to_headphones")
+        val AI_MODEL_CHOICE = stringPreferencesKey("ai.model_choice")
         val WAKEWORD_THRESHOLD = floatPreferencesKey("wakeword.threshold")
         val WAKEWORD_PATIENCE = intPreferencesKey("wakeword.patience_frames")
         val WAKEWORD_COOLDOWN_MS = longPreferencesKey("wakeword.cooldown_ms")
@@ -265,6 +266,22 @@ class SettingsDataStore @Inject constructor(
         .map { preferences ->
             preferences[PreferencesKeys.TRANSLATOR_TO_HEADPHONES] ?: true
         }
+
+    /**
+     * Выбранная пользователем ИИ-модель (ключ [com.omnix.assistant.agent.decision.AiModelChoice]).
+     * Пусто — выбор не делался, это «Авто».
+     */
+    val aiModelChoiceFlow: Flow<String> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences -> preferences[PreferencesKeys.AI_MODEL_CHOICE].orEmpty() }
+
+    suspend fun setAiModelChoice(storageKey: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AI_MODEL_CHOICE] = storageKey
+        }
+    }
 
     suspend fun setTranslatorToHeadphones(enabled: Boolean) {
         context.dataStore.edit { preferences ->

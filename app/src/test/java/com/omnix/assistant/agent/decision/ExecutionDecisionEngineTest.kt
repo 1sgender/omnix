@@ -121,7 +121,8 @@ class ExecutionDecisionEngineTest {
         cloudAi: CloudAiExecutor = FakeCloudAi(),
         agent: AgentExecutor = FakeAgent(),
         metrics: ExecutionRouterMetrics = ExecutionRouterMetrics(),
-        latency: VoiceLatencyMetrics = VoiceLatencyMetrics()
+        latency: VoiceLatencyMetrics = VoiceLatencyMetrics(),
+        choice: AiModelChoice = AiModelChoice.AUTO
     ): ExecutionDecisionEngine {
         val registry = ToolRegistry(tools, ToolDiscoveryEngine(SemanticTextMatcher()))
         val toolExecutor = ToolExecutor(registry, ToolPermissionManager(FakeCapabilityRegistry.create()))
@@ -136,7 +137,8 @@ class ExecutionDecisionEngineTest {
             workingMemory = workingMemory,
             config = ExecutionDecisionConfig(),
             metrics = metrics,
-            latency = latency
+            latency = latency,
+            modelChoice = AiModelChoiceSource.fixed(choice)
         )
     }
 
@@ -878,4 +880,90 @@ class ExecutionDecisionEngineTest {
         )
     }
 
+    // ------------------------------------------------- выбор ИИ-модели (Я → ИИ-модель)
+
+    private class RecordingLocalAi(private val outcome: LocalAiOutcome) : LocalAiExecutor {
+        override val hasWebCapability: Boolean = false
+        var lastRequest: ExecutionRequest? = null
+            private set
+
+        override suspend fun tryHandle(request: ExecutionRequest): LocalAiOutcome {
+            lastRequest = request
+            return outcome
+        }
+    }
+
+    @Test
+    fun `cloud choice skips the local model and answers from the cloud`() = runBlocking {
+        val local = FakeLocalAi(LocalAiOutcome.Handled("локальный ответ"))
+        val cloud = FakeCloudAi()
+        val engine = buildEngine(localAi = local, cloudAi = cloud, choice = AiModelChoice.CLOUD)
+
+        val result = engine.execute(request("что такое фотосинтез"))
+
+        assertTrue("result=$result", result is ExecutionResult.Success)
+        assertEquals(ExecutionType.CLOUD_AI, (result as ExecutionResult.Success).executionType)
+        assertEquals(0, local.calls)
+        assertEquals(1, cloud.calls)
+    }
+
+    @Test
+    fun `on device choice answers locally and marks the request local only`() = runBlocking {
+        val local = RecordingLocalAi(LocalAiOutcome.Handled("локальный ответ"))
+        val cloud = FakeCloudAi()
+        val engine = buildEngine(localAi = local, cloudAi = cloud, choice = AiModelChoice.ON_DEVICE)
+
+        val result = engine.execute(request("что такое фотосинтез"))
+
+        assertTrue("result=$result", result is ExecutionResult.Success)
+        assertEquals(ExecutionType.LOCAL_AI, (result as ExecutionResult.Success).executionType)
+        assertTrue(local.lastRequest?.localOnly == true)
+        assertEquals(0, cloud.calls)
+    }
+
+    @Test
+    fun `on device choice never falls back to the cloud`() = runBlocking {
+        val cloud = FakeCloudAi()
+        for (outcome in listOf(LocalAiOutcome.Uncertain, LocalAiOutcome.Fallback("init failed"))) {
+            val engine = buildEngine(localAi = FakeLocalAi(outcome), cloudAi = cloud, choice = AiModelChoice.ON_DEVICE)
+
+            val result = engine.execute(request("что такое фотосинтез"))
+
+            assertTrue("outcome=$outcome result=$result", result is ExecutionResult.Error)
+        }
+        assertEquals(0, cloud.calls)
+    }
+
+    @Test
+    fun `auto choice keeps the local then cloud order`() = runBlocking {
+        val local = RecordingLocalAi(LocalAiOutcome.Uncertain)
+        val cloud = FakeCloudAi()
+        val engine = buildEngine(localAi = local, cloudAi = cloud, choice = AiModelChoice.AUTO)
+
+        val result = engine.execute(request("что такое фотосинтез"))
+
+        assertTrue("result=$result", result is ExecutionResult.Success)
+        assertEquals(ExecutionType.CLOUD_AI, (result as ExecutionResult.Success).executionType)
+        assertTrue(local.lastRequest?.localOnly == false)
+        assertEquals(1, cloud.calls)
+    }
+
+    @Test
+    fun `phone commands run on the device whatever the model choice`() = runBlocking {
+        for (choice in AiModelChoice.entries) {
+            val torch = ScriptedTool("device.flashlight")
+            val engine = buildEngine(tools = setOf(torch), choice = choice)
+
+            engine.execute(request("включи фонарик"))
+
+            assertEquals("choice=$choice", 1, torch.calls)
+        }
+    }
+
+    @Test
+    fun `unknown stored choice reads as auto`() {
+        assertEquals(AiModelChoice.AUTO, AiModelChoice.fromStorageKey("gpt-9"))
+        assertEquals(AiModelChoice.AUTO, AiModelChoice.fromStorageKey(null))
+        assertEquals(AiModelChoice.CLOUD, AiModelChoice.fromStorageKey("cloud"))
+    }
 }

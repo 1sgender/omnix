@@ -12,10 +12,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,17 +20,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.design.OmnixTheme
-import com.omnix.assistant.presentation.state.ClipState
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.presentation.state.SystemStateType
+import kotlinx.coroutines.delay
 
 /**
  * Drives the first-run sequence with real state (§34, §67).
  *
- * The steps are advanced by genuine events — a permission actually granted, a
- * Clip actually connected, a command actually completed — never by a timer.
+ * The steps move on genuine events — a permission actually granted, the
+ * assistant actually running, a request actually answered — never by a
+ * timer. Completion is persisted by the caller, so the flow is shown once.
  */
 @Composable
 fun FirstRunRoute(
@@ -46,42 +46,22 @@ fun FirstRunRoute(
     val state by viewModel.uiState.collectAsState()
     var step by remember { mutableStateOf(FirstRunStep.Welcome) }
 
-    // Ссылка «Ввести код активации» (мок подключения Clip) открывает настоящий
-    // ввод кода — онбординг идёт ДО гейта лицензии, так что код из комплекта
-    // Clip активирует лицензию прямо здесь, не покидая поток.
+    // "I have an activation code" opens the real code entry: onboarding runs
+    // before the licence gate, so the code from the box activates right here.
     var showActivation by remember { mutableStateOf(false) }
-
-    // Мок: поиск не крутится вечно — без результата за CLIP_SEARCH_TIMEOUT_MS
-    // экран честно переходит к «Clip не найден» (LOST). Сама фоновая проверка
-    // продолжается: подключившийся Clip сразу покажет FOUND. «Искать снова»
-    // открывает новое окно поиска (счётчик перезапускает таймер).
-    var searchAttempt by remember { mutableStateOf(0) }
-    var searchTimedOut by remember { mutableStateOf(false) }
-    LaunchedEffect(step, searchAttempt) {
-        searchTimedOut = false
-        if (step == FirstRunStep.DeviceDetection || step == FirstRunStep.ClipPairing) {
-            delay(CLIP_SEARCH_TIMEOUT_MS)
-            searchTimedOut = true
-        }
-    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
-        // Whatever the user chose, re-read the real permission state rather
-        // than trusting the callback's map.
+        // Re-read the real permission state rather than trusting the map.
         viewModel.refreshPermissions()
     }
 
     val microphoneGranted = state.systemState != SystemStateType.MICROPHONE_DENIED
-
-    // Persisted the moment the system prompt is shown, so "ask" and "denied"
-    // stay distinct across process deaths (mock 2026-09-24).
     val microphonePrompted by viewModel.microphonePrompted.collectAsState()
 
-    // Re-read the real permission state whenever the screen comes back to
-    // the foreground: the user may have granted the microphone in the system
-    // settings, and "denied" must turn into "granted" without an extra tap.
+    // The user may grant the microphone in the system settings: re-read on
+    // every return to the foreground so "denied" turns into "granted".
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -89,22 +69,25 @@ fun FirstRunRoute(
         }
     }
 
-    // Searching only runs while the detection step is on screen, so the radio
-    // is never scanning in the background for a screen nobody is looking at.
+    // A grant made on the Access step moves on by itself, after a beat so
+    // the "granted" state is seen; arriving already granted does not bounce.
+    var grantedOnEntry by remember { mutableStateOf(false) }
     LaunchedEffect(step) {
-        viewModel.setSearching(step == FirstRunStep.DeviceDetection)
+        if (step == FirstRunStep.Access) grantedOnEntry = microphoneGranted
     }
-
-    // A Clip that connects on its own advances the flow: the user should not
-    // have to press Continue for something that already happened.
-    LaunchedEffect(state.clip, step) {
-        if (step == FirstRunStep.DeviceDetection && state.clip is ClipState.Connected) {
-            step = FirstRunStep.ClipPairing
+    LaunchedEffect(step, microphoneGranted) {
+        if (step == FirstRunStep.Access && microphoneShouldAutoAdvance(microphoneGranted, grantedOnEntry)) {
+            delay(ACCESS_ADVANCE_DELAY_MS)
+            step = FirstRunStep.TurnOn
         }
     }
 
     LaunchedEffect(step) {
         if (step == FirstRunStep.Complete) onFinished()
+    }
+
+    BackHandler(enabled = !showActivation && step.previous() != null) {
+        step.previous()?.let { step = it }
     }
 
     Crossfade(
@@ -113,15 +96,11 @@ fun FirstRunRoute(
         label = "first-run-activation"
     ) { showingActivation ->
         if (showingActivation) {
-            // Назад — жестом назад, к живому поиску: Bluetooth-поиск не
-            // останавливается, пока открыт ввод кода (эффекты живут в
-            // маршруте). Успешная активация ведёт на тот же шаг, что и
-            // «Пропустить» (микрофон), но заработанный реальным действием.
             BackHandler { showActivation = false }
             ActivationScreen(
                 onActivationSuccess = {
                     showActivation = false
-                    step = FirstRunStep.Microphone
+                    step = FirstRunStep.Access
                 }
             )
         } else {
@@ -131,10 +110,7 @@ fun FirstRunRoute(
                 microphoneGranted = microphoneGranted,
                 microphonePrompted = microphonePrompted,
                 modifier = modifier,
-                onAdvance = {
-                    step = step.next(clipFound = state.clip is ClipState.Connected)
-                },
-                onSkipDevice = { step = FirstRunStep.Microphone },
+                onAdvance = { step = step.next() },
                 onRequestMicrophone = {
                     viewModel.markMicrophonePrompted()
                     val permissions = mutableListOf(Manifest.permission.RECORD_AUDIO)
@@ -154,13 +130,17 @@ fun FirstRunRoute(
                         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                 },
-                clipSearchTimedOut = searchTimedOut,
                 onEnterActivationCode = { showActivation = true },
-                onSearchAgain = {
-                    searchAttempt++
-                    viewModel.setSearching(true)
+                onLogoTap = viewModel::onLogoTap,
+                onOpenBluetooth = {
+                    context.startActivity(
+                        Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
                 }
             )
         }
     }
 }
+
+/** Long enough to read "Microphone is on" before the next step slides in. */
+private const val ACCESS_ADVANCE_DELAY_MS = 1_200L

@@ -354,6 +354,11 @@ abstract class ExecutionDecisionModule {
     @Singleton
     abstract fun bindCloudAiExecutor(impl: RepositoryCloudAiExecutor): CloudAiExecutor
 
+    /** Выбор ИИ-модели пользователем (Я → ИИ-модель), читается движком решений. */
+    @Binds
+    @Singleton
+    abstract fun bindAiModelChoiceSource(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiModelChoiceSource
+
     @Binds
     @Singleton
     abstract fun bindAgentExecutor(impl: CognitiveAgentExecutor): AgentExecutor

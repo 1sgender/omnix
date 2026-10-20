@@ -37,7 +37,7 @@ import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
 import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
-import com.omnix.assistant.presentation.home.HomeScreen
+import com.omnix.assistant.presentation.home.HomeRoute
 import com.omnix.assistant.presentation.settings.SettingsViewModel
 import com.omnix.assistant.presentation.settings.MeRoute
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
@@ -96,23 +96,15 @@ fun OmnixNavGraph(
             popExitTransition = { fadeOut(tween(exitMs)) }
         ) {
             composable(OmnixDestination.Home.route) {
-                HomeScreen(
+                HomeRoute(
                     state = uiState,
-                    onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) },
-                    onCoreTap = omnixViewModel::onCoreTap,
-                    onTranslatorTap = { navController.navigateSingleTop(OmnixDestination.Translator) },
-                    onMemoryTap = { navController.navigateSingleTop(OmnixDestination.Privacy) },
-                    onRemindersTap = { navController.navigateSingleTop(OmnixDestination.Chat) },
-                    onAutomationsTap = { navController.navigateSingleTop(OmnixDestination.Automations) },
-                    onSystemStateAction = { omnixViewModel.refreshPermissions() }
+                    viewModel = omnixViewModel,
+                    onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) }
                 )
             }
 
             composable(OmnixDestination.Me.route) {
-                MeRoute(
-                    clip = uiState.clip,
-                    onOpen = { navController.navigateSingleTop(it) }
-                )
+                MeRoute(onOpen = { navController.navigateSingleTop(it) })
             }
 
             composable(OmnixDestination.Chat.route) {

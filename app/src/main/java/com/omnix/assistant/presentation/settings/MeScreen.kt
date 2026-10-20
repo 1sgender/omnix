@@ -45,6 +45,12 @@ import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.navigation.OmnixDestination
 import java.util.Locale
 
+/** A titled group of rows on the Me screen. */
+data class MeGroup(
+    val title: String,
+    val rows: List<MeRow>
+)
+
 /** One row of the Me lists: a two-letter glyph tile, a label, a value. */
 data class MeRow(
     val glyph: String,
@@ -68,8 +74,7 @@ fun MeScreen(
     licenseActive: Boolean,
     plan: String,
     versionName: String,
-    groupA: List<MeRow>,
-    groupB: List<MeRow>,
+    groups: List<MeGroup>,
     modifier: Modifier = Modifier,
     onOpen: (OmnixDestination) -> Unit = {},
     onVersionTap: () -> Unit = {},
@@ -104,8 +109,17 @@ fun MeScreen(
                     modifier = Modifier.padding(top = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    RowGroup(rows = groupA, onOpen = onOpen)
-                    RowGroup(rows = groupB, onOpen = onOpen)
+                    groups.forEach { group ->
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = group.title,
+                                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+                                color = colors.textSecondary,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                            RowGroup(rows = group.rows, onOpen = onOpen)
+                        }
+                    }
                 }
             }
 

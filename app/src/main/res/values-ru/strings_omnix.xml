@@ -26,22 +26,28 @@
     <string name="omnix_state_working">Выполняю…</string>
 
     <!-- ===== Подсказки на Home ===== -->
-    <string name="omnix_home_example_time">«Омни, который час?»</string>
-    <string name="omnix_home_hint_idle">Скажите «Omni» или нажмите на ядро</string>
+    <string name="omnix_home_off_title">OMNIX выключен</string>
+    <string name="omnix_home_off_hint">Нажмите на логотип, чтобы включить</string>
+    <string name="omnix_home_starting">Включаю…</string>
+    <string name="omnix_home_stopping">Выключаю…</string>
+    <string name="omnix_home_on_hint">Скажите «Omni» или нажмите «Говорить»</string>
+    <string name="omnix_home_talk">Говорить</string>
+    <string name="omnix_home_talk_stop">Стоп</string>
+    <string name="omnix_home_power_a11y">Ассистент OMNIX</string>
+    <string name="omnix_home_power_on_state">Включён</string>
+    <string name="omnix_home_power_off_state">Выключен</string>
+    <string name="omnix_home_error_mic">Чтобы OMNIX вас слышал, нужен доступ к микрофону.</string>
+    <string name="omnix_home_error_mic_action">Разрешить</string>
+    <string name="omnix_home_error_mic_settings">Открыть настройки</string>
+    <string name="omnix_home_error_rejected">Android не дал запустить OMNIX. Попробуйте ещё раз.</string>
+    <string name="omnix_home_error_timeout">OMNIX не включился. Попробуйте ещё раз.</string>
+    <string name="omnix_home_error_retry">Повторить</string>
+    <string name="omnix_home_error_dismiss">Закрыть</string>
     <string name="omnix_home_hint_listening">Говорите — я в ваших наушниках</string>
     <string name="omnix_home_offline_pill">ОФЛАЙН · НА УСТРОЙСТВЕ</string>
-    <string name="omnix_home_core_start">Начать прослушивание</string>
-    <string name="omnix_home_core_stop">Остановить прослушивание</string>
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Наушники подключены, заряд %1$d%%</string>
-    <string name="omnix_home_card_translator">Переводчик</string>
-    <string name="omnix_home_card_translator_sub">В наушники, вживую</string>
-    <string name="omnix_home_card_memory">Память</string>
-    <string name="omnix_home_card_memory_sub">Что я о вас помню</string>
-    <string name="omnix_home_card_reminders">Напоминания</string>
-    <string name="omnix_home_card_reminders_sub">Будильники и дела</string>
     <string name="omnix_home_card_automations">Автоматизации</string>
-    <string name="omnix_home_card_automations_sub">Сценарии по фразе</string>
 
     <!-- ===== Действия ===== -->
     <string name="omnix_action_calling">Звоню %1$s…</string>
@@ -114,36 +120,11 @@
     <string name="omnix_error_unavailable_body">На вашем устройстве это сейчас не поддерживается.</string>
 
     <!-- ===== Первый запуск ===== -->
-    <string name="omnix_welcome_headline">Голос в вашем ухе.</string>
-    <string name="omnix_welcome_body">Говорите как обычно.\nОстальное сделает OMNIX.</string>
-    <string name="omnix_welcome_cta">Начать</string>
     <string name="omnix_onboarding_step_a11y">Шаг %1$d из %2$d</string>
 
-    <string name="omnix_pairing_title">Поиск Clip</string>
-    <string name="omnix_pairing_searching">Держите Clip рядом с телефоном.</string>
-    <string name="omnix_pairing_code_link">Ввести код активации</string>
-    <string name="omnix_pairing_not_found_title">Clip не найден</string>
-    <string name="omnix_pairing_not_found_body">Убедитесь, что Clip заряжен, а Bluetooth включён.</string>
-    <string name="omnix_pairing_retry">Искать снова</string>
-    <string name="omnix_pairing_skip">Пропустить</string>
-    <string name="omnix_pairing_found_body">Всё готово.</string>
-    <string name="omnix_pairing_found_title">Clip подключён</string>
 
-    <string name="omnix_clip_ready_title">Всё готово.</string>
-    <string name="omnix_clip_ready_say">Скажите:</string>
 
-    <string name="omnix_mic_request_title">Доступ к микрофону</string>
-    <string name="omnix_mic_request_body">OMNIX нужен микрофон, чтобы слышать ваши голосовые команды.</string>
-    <string name="omnix_mic_denied_title">Микрофон выключен</string>
-    <string name="omnix_mic_denied_body">Включите доступ в настройках, чтобы управлять голосом.</string>
-    <string name="omnix_mic_ready">Готово.</string>
-    <string name="omnix_mic_connected">Микрофон подключён.</string>
-    <string name="omnix_mic_continue">Продолжить</string>
-    <string name="omnix_mic_open_settings">Открыть настройки</string>
 
-    <string name="omnix_first_success_title">Вы только что использовали OMNIX.</string>
-    <string name="omnix_first_success_body">Теперь говорите с OMNIX обычным языком.</string>
-    <string name="omnix_first_success_cta">Готово</string>
 
     <string name="omnix_activation_title">Активация OMNIX</string>
     <string name="omnix_activation_body">Введите код с карточки из коробки Clip.</string>
@@ -214,12 +195,16 @@
     <!-- ===== Настройки ===== -->
     <string name="omnix_settings_title">Настройки</string>
     <string name="omnix_me_title">Я</string>
+    <string name="omnix_me_section_features">Возможности</string>
+    <string name="omnix_me_section_settings">Настройки</string>
+    <string name="omnix_me_row_language">Язык</string>
+    <string name="omnix_me_row_notifications">Уведомления</string>
+    <string name="omnix_me_glyph_language">Яз</string>
+    <string name="omnix_me_glyph_notifications">Ув</string>
     <string name="omnix_me_license_active">Лицензия активна</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
     <string name="omnix_me_row_voice">Голос и слово «Omni»</string>
-    <string name="omnix_me_row_model">Локальная модель</string>
     <string name="omnix_me_row_memory">Память и приватность</string>
-    <string name="omnix_me_glyph_headphones">Bd</string>
     <string name="omnix_me_glyph_voice">Гл</string>
     <string name="omnix_me_glyph_translator">Пр</string>
     <string name="omnix_me_glyph_automations">Ав</string>
@@ -227,8 +212,6 @@
     <string name="omnix_me_glyph_memory">Пм</string>
     <string name="omnix_me_glyph_appearance">Вд</string>
     <string name="omnix_me_model_ready">Готова</string>
-    <string name="omnix_me_model_downloading">Загружается</string>
-    <string name="omnix_me_model_missing">Не установлена</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Оформление</string>
 
@@ -260,7 +243,23 @@
     <string name="omnix_privacy_permissions_manage">Управлять</string>
     <string name="omnix_privacy_delete_history">Удалить историю запросов</string>
 
-    <string name="omnix_ai_title">AI</string>
+    <string name="omnix_ai_title">ИИ-модель</string>
+    <string name="omnix_ai_model_auto">Авто</string>
+    <string name="omnix_ai_model_auto_body">Короткие простые ответы — на телефоне, остальное — в облаке OMNIX.</string>
+    <string name="omnix_ai_model_on_device">На телефоне</string>
+    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
+    <string name="omnix_ai_model_cloud">Облако OMNIX</string>
+    <string name="omnix_ai_model_cloud_body">Модель на сервере OMNIX: отвечает подробнее. Нужен интернет.</string>
+    <string name="omnix_ai_model_checking">Проверяю…</string>
+    <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
+    <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>
+    <string name="omnix_ai_model_low_memory">Не хватает памяти телефона</string>
+    <string name="omnix_ai_model_broken">Не загружается</string>
+    <string name="omnix_ai_model_error_not_installed">Модели ещё нет на телефоне. Скачайте её ниже и выберите снова. Остаётся прежний выбор.</string>
+    <string name="omnix_ai_model_error_downloading">Модель ещё скачивается. Выберите её, когда загрузка закончится.</string>
+    <string name="omnix_ai_model_error_memory">Телефону не хватает памяти для этой модели. Остаётся прежний выбор.</string>
+    <string name="omnix_ai_model_error_load">Модель не загрузилась (%1$s). Остаётся прежний выбор.</string>
+    <string name="omnix_ai_model_error_server">Сервер OMNIX не отвечает. Остаётся прежний выбор.</string>
     <string name="omnix_ai_personality">Как OMNIX отвечает</string>
     <string name="omnix_ai_personality_body">Задайте тон и указания, которым следует OMNIX.</string>
 
@@ -273,6 +272,32 @@
     <string name="omnix_local_model_downloaded">Скачана, включится при первом запросе</string>
     <string name="omnix_local_model_loading">Загружается в память…</string>
     <string name="omnix_local_model_loading_screen">Локальная модель загружается в память…</string>
+    <string name="omnix_launch_checking">Проверяю лицензию…</string>
+    <string name="omnix_launch_unreachable_title">Нет связи с сервером OMNIX</string>
+    <string name="omnix_launch_unreachable_body">Не получилось проверить лицензию. Проверьте интернет и попробуйте снова — или введите код активации.</string>
+    <string name="omnix_launch_retry">Повторить</string>
+    <string name="omnix_launch_enter_code">Ввести код</string>
+    <string name="omnix_setup_welcome_title">Голос в ваших наушниках</string>
+    <string name="omnix_setup_welcome_body">OMNIX слышит вас через наушники, отвечает голосом и управляет телефоном.</string>
+    <string name="omnix_setup_start">Начать</string>
+    <string name="omnix_setup_have_code">У меня есть код активации</string>
+    <string name="omnix_setup_access_title">Нужен микрофон</string>
+    <string name="omnix_setup_access_granted">Микрофон включён</string>
+    <string name="omnix_setup_access_body">OMNIX слышит вас, только пока он включён. Уведомление покажет, что он работает, — оттуда же его можно выключить.</string>
+    <string name="omnix_setup_access_denied">Доступа нет. Без микрофона OMNIX вас не услышит — включите его в настройках телефона.</string>
+    <string name="omnix_setup_allow">Разрешить</string>
+    <string name="omnix_setup_open_settings">Открыть настройки</string>
+    <string name="omnix_setup_later">Позже</string>
+    <string name="omnix_setup_next">Дальше</string>
+    <string name="omnix_setup_turn_on_title">Включите OMNIX</string>
+    <string name="omnix_setup_turn_on_hint">Нажмите на логотип. Так OMNIX включается и выключается.</string>
+    <string name="omnix_setup_on_title">OMNIX включён</string>
+    <string name="omnix_setup_try_hint">Скажите: «Omni, который час?»</string>
+    <string name="omnix_setup_success">Получилось</string>
+    <string name="omnix_setup_success_body">Теперь просто говорите «Omni» — в наушниках или рядом с телефоном.</string>
+    <string name="omnix_setup_done">Готово</string>
+    <string name="omnix_setup_skip">Пропустить</string>
+    <string name="omnix_setup_connect_headphones">Подключить наушники</string>
     <string name="omnix_local_model_ready">Готова к офлайн-ответам</string>
     <string name="omnix_local_model_failed">Не запустилась: %1$s</string>
     <string name="omnix_local_model_low_memory">Не хватает свободной RAM (нужно %1$d МБ) — отвечаю из облака</string>
@@ -327,7 +352,6 @@
     <string name="omnix_advanced_saved">Сохранено</string>
 
     <!-- ===== Общее ===== -->
-    <string name="omnix_continue">Продолжить</string>
     <string name="omnix_cancel">Отмена</string>
 
     <!-- ===== Доступность ===== -->
@@ -342,7 +366,6 @@
     <!-- Spoken decision words shown as hints (§17) -->
     <string name="omnix_voice_yes">Да</string>
 
-    <string name="omnix_skip_for_now">Пропустить</string>
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Ещё не настроено</string>
     <string name="omnix_chat_clear">Очистить</string>

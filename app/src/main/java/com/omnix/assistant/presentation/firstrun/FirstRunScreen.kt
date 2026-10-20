@@ -1,80 +1,74 @@
 package com.omnix.assistant.presentation.firstrun
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.remember
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.components.OmnixPrimaryButton
-import com.omnix.assistant.presentation.components.omnixPressScale
-import com.omnix.assistant.presentation.components.OmnixSpokenExample
-import com.omnix.assistant.presentation.components.OmnixTextButton
-import com.omnix.assistant.presentation.components.SystemStateView
-import com.omnix.assistant.presentation.core.CoreState
-import com.omnix.assistant.presentation.core.OmnixCore
+import com.omnix.assistant.presentation.components.OmnixMicLineIcon
+import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import com.omnix.assistant.presentation.design.OmnixWordmarkStyle
+import com.omnix.assistant.presentation.home.ClipPill
+import com.omnix.assistant.presentation.home.PowerLogo
+import com.omnix.assistant.presentation.state.AssistantPower
+import com.omnix.assistant.presentation.state.AssistantPowerError
 import com.omnix.assistant.presentation.state.ClipState
+import com.omnix.assistant.presentation.state.OmnixPhase
 import com.omnix.assistant.presentation.state.OmnixUiState
-import com.omnix.assistant.presentation.state.SystemStateType
-import kotlinx.coroutines.delay
 
 /**
- * First run (§34, §67).
+ * First run — three steps in the Home language: one large visual in the
+ * middle, one title, one short explanation, one main action at the bottom
+ * within thumb reach. Progress dots at the top say where the user is.
  *
- * The Core is present from the very first screen and stays in place across
- * every step — the user meets one object and watches it react, rather than
- * paging through a carousel of illustrations (§30).
- *
- * Композиция мока Welcome (2026-09-24), распространённая на ВСЕ шаги:
- * заголовок и подзаголовок — над кольцом, в одну композицию (блок 82% ширины,
- * логичный перенос); под кольцом — только действия. Кольцо между шагами не
- * двигается, меняется лишь его состояние; заголовок обновляется на месте.
+ *  - **Welcome** — the mark, what OMNIX is, "Start"; "I have an activation
+ *    code" opens the real code entry without leaving the flow.
+ *  - **Access** — the microphone, asked for in plain words (notifications
+ *    and Bluetooth ride along in the same system prompt). Three honest
+ *    states: never asked, denied (then the system page), granted (the step
+ *    moves on by itself).
+ *  - **Turn on** — the same logo switch as on Home, so the first thing the
+ *    user learns is how OMNIX is really turned on; then one spoken request.
+ *    The headphones are shown as they are, with the Bluetooth page a tap
+ *    away.
  */
 @Composable
 fun FirstRunScreen(
@@ -83,527 +77,305 @@ fun FirstRunScreen(
     microphoneGranted: Boolean,
     microphonePrompted: Boolean,
     modifier: Modifier = Modifier,
-    clipSearchTimedOut: Boolean = false,
     onAdvance: () -> Unit,
-    onSkipDevice: () -> Unit,
     onRequestMicrophone: () -> Unit,
     onOpenSystemSettings: () -> Unit,
     onEnterActivationCode: () -> Unit,
-    onSearchAgain: () -> Unit
+    onLogoTap: () -> Unit,
+    onOpenBluetooth: () -> Unit
 ) {
-    val spacing = OmnixTheme.spacing
-    val colors = OmnixTheme.colors
-
-    // Единая фаза кольца для всего клип-флоу: кольцо, копия и кнопки видят
-    // одно и то же состояние (мок: поиск завершается «не найден», а не
-    // крутится вечно).
-    val clipPhase = clipVisualPhase(state.clip, clipSearchTimedOut)
-
-    // The durations are read here, in composable scope: `transitionSpec`
-    // runs outside it and cannot touch the theme.
-    // Мок «подключение Clip» (2026-09-24): флоу подключения живёт в своей
-    // эстетике — маленький знак-кольцо без надписи вместо логотипа-текста,
-    // тонкое кольцо вместо ядра; остальные шаги — в прежней композиции.
-    val isClipFlow = step == FirstRunStep.DeviceDetection || step == FirstRunStep.ClipPairing
-
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .systemBarsPadding()
-            .padding(horizontal = spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(spacing.xxxl))
+        val visualSize = (maxHeight * 0.30f).coerceIn(160.dp, 240.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(24.dp))
+            step.progressIndex?.let { OnboardingProgressDots(total = step.progressTotal, active = it) }
 
-        if (isClipFlow) {
-            OmnixRingMark()
-        } else {
-            Text(
-                text = stringResource(R.string.omnix_wordmark),
-                style = OmnixWordmarkStyle,
-                color = colors.textSecondary
-            )
-
-            // Мок 2026-09-24: точки прогресса вместо «непонятного подчёркивания» —
-            // сразу видно, что это шаг 1 из 3 вех онбординга.
-            val progressIndex = step.progressIndex
-            if (progressIndex != null) {
-                Spacer(Modifier.height(spacing.sm))
-                OnboardingProgressDots(
-                    total = step.progressTotal,
-                    active = progressIndex
-                )
+            // transitionSpec runs outside composition: read the theme here.
+            val enterMs = OmnixTheme.motion.screenEnterMs
+            val exitMs = OmnixTheme.motion.screenExitMs
+            AnimatedContent(
+                targetState = step,
+                transitionSpec = { fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs)) },
+                modifier = Modifier.weight(1f),
+                label = "first_run_step"
+            ) { shown ->
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    when (shown) {
+                        FirstRunStep.Welcome -> WelcomeStep(visualSize, onAdvance, onEnterActivationCode)
+                        FirstRunStep.Access -> AccessStep(
+                            visualSize = visualSize,
+                            state = microphoneVisualState(microphoneGranted, microphonePrompted),
+                            onAllow = onRequestMicrophone,
+                            onOpenSettings = onOpenSystemSettings,
+                            onNext = onAdvance
+                        )
+                        FirstRunStep.TurnOn -> TurnOnStep(
+                            visualSize = visualSize,
+                            state = state,
+                            onLogoTap = onLogoTap,
+                            onOpenBluetooth = onOpenBluetooth,
+                            onFinish = onAdvance
+                        )
+                        FirstRunStep.Complete -> Unit
+                    }
+                }
             }
         }
+    }
+}
 
-        if (isClipFlow) {
-            // Мок 2026-09-25 (пересмотр): кольцо — «сцена» между знаком и
-            // копирайтом; заголовок ПОД кольцом, действия прижаты к низу.
-            Spacer(Modifier.weight(1f))
-            ClipPairingRing(phase = clipPhase)
-            Spacer(Modifier.weight(1f))
-            StepHeadingSlot(
-                step = step,
-                state = state,
-                clipPhase = clipPhase,
-                microphoneGranted = microphoneGranted,
-                microphonePrompted = microphonePrompted
-            )
-            Spacer(Modifier.height(CLIP_ACTIONS_TOP_GAP))
-            // Мок: зона действий фиксированной минимальной высоты, содержимое
-            // прижато к низу — фазы меняются, кольцо и копирайт стоят на месте.
+// ---------------------------------------------------------------- Welcome
+
+@Composable
+private fun WelcomeStep(visualSize: Dp, onStart: () -> Unit, onEnterCode: () -> Unit) {
+    val colors = OmnixTheme.colors
+    StepBody(
+        visual = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = CLIP_ACTIONS_MIN_HEIGHT),
-                contentAlignment = Alignment.BottomCenter
+                    .size(visualSize)
+                    .clip(CircleShape)
+                    .background(lerp(colors.background, colors.surface, 0.5f))
+                    .border(BorderStroke(1.5.dp, colors.accentBrand), CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                StepActionsSlot(
-                    step = step,
-                    state = state,
-                    clipPhase = clipPhase,
-                    onAdvance = onAdvance,
-                    onSkipDevice = onSkipDevice,
-                    onEnterActivationCode = onEnterActivationCode,
-                    onSearchAgain = onSearchAgain,
-                    onRequestMicrophone = onRequestMicrophone,
-                    onOpenSystemSettings = onOpenSystemSettings,
-                    microphoneGranted = microphoneGranted,
-                    microphonePrompted = microphonePrompted
+                OmnixRingMark(
+                    color = colors.accentBrand,
+                    width = visualSize * 0.42f,
+                    height = visualSize * 0.42f * 80f / 104f,
+                    strokeUnits = 2.6f
                 )
             }
-
-            // Мок: отступ копирайта/действий от нижнего края — 28px.
-            Spacer(Modifier.height(CLIP_BOTTOM_GAP))
-        } else {
-            // Заголовок — НАД кольцом (мок онбординга): шаги сменяются,
-            // композиция остаётся на месте, кольцо не прыгает.
-            Spacer(Modifier.height(spacing.xxl))
-            StepHeadingSlot(
-                step = step,
-                state = state,
-                clipPhase = clipPhase,
-                microphoneGranted = microphoneGranted,
-                microphonePrompted = microphonePrompted
-            )
-
-            Spacer(Modifier.weight(1f))
-
-            // Кольцо Welcome несёт смысл — брендовый синий (в тон лого) и
-            // волна «слушающих» столбиков внутри; остальные шаги говорят
-            // состоянием ядра (монохром, §30). Шум микрофона — своё тонкое
-            // кольцо (мок 2026-09-24): три состояния «запрос / отказ / готово».
-            StepCoreSlot(
-                step = step,
-                state = state,
-                microphoneGranted = microphoneGranted,
-                microphonePrompted = microphonePrompted
-            )
-
-            Spacer(Modifier.height(spacing.xxl))
-
-            StepActionsSlot(
-                step = step,
-                state = state,
-                clipPhase = clipPhase,
-                onAdvance = onAdvance,
-                onSkipDevice = onSkipDevice,
-                onEnterActivationCode = onEnterActivationCode,
-                onSearchAgain = onSearchAgain,
-                onRequestMicrophone = onRequestMicrophone,
-                onOpenSystemSettings = onOpenSystemSettings,
-                microphoneGranted = microphoneGranted,
-                microphonePrompted = microphonePrompted
-            )
-
-            Spacer(Modifier.weight(1f))
-            // Мок: кнопка не прилипает к жест-бару — запас сверх systemBarsPadding.
-            Spacer(Modifier.height(spacing.xxxl))
-        }
-    }
-}
-
-/**
- * Заголовок шага как анимированный слот: фейд между шагами; ширина и ритм —
- * по флоу (онбординг — 82% ширины, подключение Clip — вся ширина).
- */
-@Composable
-private fun StepHeadingSlot(
-    step: FirstRunStep,
-    state: OmnixUiState,
-    clipPhase: ClipRingPhase,
-    microphoneGranted: Boolean,
-    microphonePrompted: Boolean
-) {
-    // Читаем до лямбды: transitionSpec — не композабельный контекст.
-    val enterMs = OmnixTheme.motion.screenEnterMs
-    val exitMs = OmnixTheme.motion.screenExitMs
-    AnimatedContent(
-        targetState = step,
-        transitionSpec = {
-            fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
         },
-        label = "first-run-heading"
-    ) { current ->
-        val clipFlow =
-            current == FirstRunStep.DeviceDetection || current == FirstRunStep.ClipPairing
-        StepHeading(clipFlow = clipFlow) {
-            HeadingOf(current, state, clipPhase, microphoneGranted, microphonePrompted)
+        title = stringResource(R.string.omnix_setup_welcome_title),
+        body = stringResource(R.string.omnix_setup_welcome_body),
+        actions = {
+            SetupButton(text = stringResource(R.string.omnix_setup_start), filled = true, onClick = onStart)
+            SetupLink(text = stringResource(R.string.omnix_setup_have_code), onClick = onEnterCode)
         }
-    }
-}
-
-/**
- * Сцена обычных шагов: ядро говорит состоянием, микрофон — своим тонким
- * кольцом, Welcome — волной внутри брендового кольца.
- */
-@Composable
-private fun StepCoreSlot(
-    step: FirstRunStep,
-    state: OmnixUiState,
-    microphoneGranted: Boolean,
-    microphonePrompted: Boolean
-) {
-    Box(contentAlignment = Alignment.Center) {
-        if (step == FirstRunStep.Microphone) {
-            MicrophoneRing(microphoneVisualState(microphoneGranted, microphonePrompted))
-        } else {
-            OmnixCore(
-                state = coreStateFor(step, state, microphoneGranted),
-                size = OmnixTheme.coreSizes.home,
-                audioLevel = state.audioLevel,
-                ringColor = if (step == FirstRunStep.Welcome) {
-                    OmnixTheme.colors.accentBrand
-                } else {
-                    null
-                }
-            )
-            if (step == FirstRunStep.Welcome) {
-                OnboardingWaveform()
-            }
-        }
-    }
-}
-
-/** Действия шага как анимированный слот — под сценой или копирайтом. */
-@Composable
-private fun StepActionsSlot(
-    step: FirstRunStep,
-    state: OmnixUiState,
-    clipPhase: ClipRingPhase,
-    onAdvance: () -> Unit,
-    onSkipDevice: () -> Unit,
-    onEnterActivationCode: () -> Unit,
-    onSearchAgain: () -> Unit,
-    onRequestMicrophone: () -> Unit,
-    onOpenSystemSettings: () -> Unit,
-    microphoneGranted: Boolean,
-    microphonePrompted: Boolean
-) {
-    // Под сценой/копирайтом — только действия шага. Читаем motion до
-    // лямбды: transitionSpec — не композабельный контекст.
-    val enterMs = OmnixTheme.motion.screenEnterMs
-    val exitMs = OmnixTheme.motion.screenExitMs
-    AnimatedContent(
-        targetState = step,
-        transitionSpec = {
-            fadeIn(tween(enterMs)) togetherWith fadeOut(tween(exitMs))
-        },
-        label = "first-run-actions"
-    ) { current ->
-        when (current) {
-            FirstRunStep.Welcome -> WelcomeActions(onAdvance)
-
-            // Оба шага клип-флоу делят одни действия: подтверждение — «Продолжить»,
-            // потеря связи на подтверждении — те же «Искать снова / код / Пропустить»
-            // (§34: отключившийся Clip не запирает экран без кнопок).
-            FirstRunStep.DeviceDetection, FirstRunStep.ClipPairing -> ClipFlowActions(
-                phase = clipPhase,
-                onAdvance = onAdvance,
-                onSkip = onSkipDevice,
-                onEnterCode = onEnterActivationCode,
-                onSearchAgain = onSearchAgain
-            )
-
-            FirstRunStep.Microphone -> MicrophoneActions(
-                granted = microphoneGranted,
-                prompted = microphonePrompted,
-                onRequest = onRequestMicrophone,
-                onOpenSettings = onOpenSystemSettings,
-                onAdvance = onAdvance
-            )
-
-            FirstRunStep.FirstCommand -> FirstCommandActions(
-                state = state,
-                onAdvance = onAdvance
-            )
-
-            FirstRunStep.Complete -> Box(Modifier.fillMaxWidth())
-        }
-    }
-}
-
-/**
- * The Core reflects the step, so progress is felt rather than counted. There
- * is no progress bar and no "Step 2 of 5" (§30, §84).
- */
-private fun coreStateFor(
-    step: FirstRunStep,
-    state: OmnixUiState,
-    microphoneGranted: Boolean
-): CoreState = when (step) {
-    FirstRunStep.Welcome -> CoreState.IDLE
-    FirstRunStep.DeviceDetection -> when (state.clip) {
-        is ClipState.Connected -> CoreState.SUCCESS
-        is ClipState.Connecting, ClipState.Searching -> CoreState.THINKING
-        else -> CoreState.IDLE
-    }
-    FirstRunStep.ClipPairing ->
-        if (state.clip is ClipState.Connected) CoreState.SUCCESS else CoreState.EXECUTING
-    FirstRunStep.Microphone -> if (microphoneGranted) CoreState.SUCCESS else CoreState.IDLE
-    // During the first command the Core does what it will always do.
-    FirstRunStep.FirstCommand -> state.coreState
-    FirstRunStep.Complete -> CoreState.IDLE
-}
-
-/**
- * Пара «заголовок + подзаголовок» как блок: онбординг — 82% ширины, флоу
- * подключения Clip — вся ширина и зазор мока 10px. Вертикальный ритм вокруг
- * задаёт флоу, не блок. Копирайт клип-флоу — «живая» область (мок:
- * aria-live="polite"): смена фазы объявляется скринридеру без взгляда на
- * экран. [content] отдаёт пару «заголовок/подзаголовок» шага — composables
- * из-за stringResource.
- */
-@Composable
-private fun StepHeading(clipFlow: Boolean, content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(if (clipFlow) 1f else 0.82f)
-            .semantics { if (clipFlow) liveRegion = LiveRegionMode.Polite },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            if (clipFlow) CLIP_TITLE_GAP else OmnixTheme.spacing.sm
-        )
-    ) {
-        content()
-    }
-}
-
-@Composable
-private fun HeadingOf(
-    step: FirstRunStep,
-    state: OmnixUiState,
-    clipPhase: ClipRingPhase,
-    microphoneGranted: Boolean,
-    microphonePrompted: Boolean
-) {
-    when (step) {
-        FirstRunStep.Welcome -> Heading(
-            title = stringResource(R.string.omnix_welcome_headline),
-            body = stringResource(R.string.omnix_welcome_body)
-        )
-
-        FirstRunStep.DeviceDetection, FirstRunStep.ClipPairing -> {
-            // Мок подключения Clip: копия зависит от фазы кольца, а не от шага.
-            when (clipPhase) {
-                ClipRingPhase.SEARCH -> Heading(
-                    title = stringResource(R.string.omnix_pairing_title),
-                    body = stringResource(R.string.omnix_pairing_searching),
-                    clip = true
-                )
-
-                ClipRingPhase.LOST -> Heading(
-                    title = stringResource(R.string.omnix_pairing_not_found_title),
-                    body = stringResource(R.string.omnix_pairing_not_found_body),
-                    clip = true
-                )
-
-                ClipRingPhase.FOUND -> Heading(
-                    title = stringResource(R.string.omnix_pairing_found_title),
-                    body = stringResource(R.string.omnix_pairing_found_body),
-                    clip = true
-                )
-            }
-        }
-
-        FirstRunStep.Microphone -> when (
-            microphoneVisualState(microphoneGranted, microphonePrompted)
-        ) {
-            MicrophoneVisualState.Request -> Heading(
-                title = stringResource(R.string.omnix_mic_request_title),
-                body = stringResource(R.string.omnix_mic_request_body)
-            )
-
-            MicrophoneVisualState.Denied -> Heading(
-                title = stringResource(R.string.omnix_mic_denied_title),
-                body = stringResource(R.string.omnix_mic_denied_body)
-            )
-
-            MicrophoneVisualState.Granted -> Heading(
-                title = stringResource(R.string.omnix_mic_ready),
-                body = stringResource(R.string.omnix_mic_connected)
-            )
-        }
-
-        FirstRunStep.FirstCommand ->
-            if (state.lastInteraction != null) {
-                Heading(
-                    title = stringResource(R.string.omnix_first_success_title),
-                    body = stringResource(R.string.omnix_first_success_body)
-                )
-            } else {
-                Heading(
-                    title = stringResource(R.string.omnix_clip_ready_title),
-                    body = stringResource(R.string.omnix_clip_ready_say)
-                )
-            }
-
-        FirstRunStep.Complete -> Unit
-    }
-}
-
-/**
- * Пара «заголовок + подзаголовок». Обычные шаги — типографика темы; флоу
- * подключения Clip — типографика мока: 28sp/600 с плотным трекингом и 17sp
- * серым, подзаголовок с минимальной высотой (фазы сменяются без прыжков).
- */
-@Composable
-private fun Heading(title: String, body: String?, clip: Boolean = false) {
-    val colors = OmnixTheme.colors
-    Text(
-        text = title,
-        style = if (clip) ClipTitleStyle else OmnixTheme.typography.display,
-        color = colors.textPrimary,
-        textAlign = TextAlign.Center
     )
-    body?.let {
+}
+
+// ----------------------------------------------------------------- Access
+
+@Composable
+private fun AccessStep(
+    visualSize: Dp,
+    state: MicrophoneVisualState,
+    onAllow: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onNext: () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    val tint by animateColorAsState(
+        targetValue = when (state) {
+            MicrophoneVisualState.Granted -> colors.accentBrand
+            MicrophoneVisualState.Denied -> colors.stateWarning
+            MicrophoneVisualState.Request -> colors.textPrimary
+        },
+        animationSpec = tween(OmnixTheme.motion.stateTransitionMs),
+        label = "access_tint"
+    )
+    StepBody(
+        visual = {
+            Box(
+                modifier = Modifier
+                    .size(visualSize)
+                    .clip(CircleShape)
+                    .background(lerp(colors.background, colors.surface, 0.5f))
+                    .border(BorderStroke(1.5.dp, tint.copy(alpha = if (state == MicrophoneVisualState.Request) 0.10f else 1f)), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(OmnixMicLineIcon, contentDescription = null, tint = tint, modifier = Modifier.size(visualSize * 0.26f))
+            }
+        },
+        title = stringResource(
+            if (state == MicrophoneVisualState.Granted) R.string.omnix_setup_access_granted else R.string.omnix_setup_access_title
+        ),
+        body = stringResource(
+            if (state == MicrophoneVisualState.Denied) R.string.omnix_setup_access_denied else R.string.omnix_setup_access_body
+        ),
+        actions = {
+            when (state) {
+                MicrophoneVisualState.Request -> {
+                    SetupButton(text = stringResource(R.string.omnix_setup_allow), filled = true, onClick = onAllow)
+                    SetupLink(text = stringResource(R.string.omnix_setup_later), onClick = onNext)
+                }
+                MicrophoneVisualState.Denied -> {
+                    SetupButton(text = stringResource(R.string.omnix_setup_open_settings), filled = true, onClick = onOpenSettings)
+                    SetupLink(text = stringResource(R.string.omnix_setup_later), onClick = onNext)
+                }
+                MicrophoneVisualState.Granted ->
+                    SetupButton(text = stringResource(R.string.omnix_setup_next), filled = true, onClick = onNext)
+            }
+        }
+    )
+}
+
+// ---------------------------------------------------------------- Turn on
+
+@Composable
+private fun TurnOnStep(
+    visualSize: Dp,
+    state: OmnixUiState,
+    onLogoTap: () -> Unit,
+    onOpenBluetooth: () -> Unit,
+    onFinish: () -> Unit
+) {
+    val succeeded = state.lastInteraction != null
+    val title = when {
+        succeeded -> stringResource(R.string.omnix_setup_success)
+        state.assistantPower == AssistantPower.STARTING -> stringResource(R.string.omnix_home_starting)
+        state.assistantPower == AssistantPower.ON && (state.phase is OmnixPhase.Listening || state.phase is OmnixPhase.Recognizing) ->
+            stringResource(R.string.omnix_state_listening)
+        state.assistantPower == AssistantPower.ON -> stringResource(R.string.omnix_setup_on_title)
+        else -> stringResource(R.string.omnix_setup_turn_on_title)
+    }
+    val body = when {
+        succeeded -> stringResource(R.string.omnix_setup_success_body)
+        state.assistantPowerError != null -> stringResource(errorText(state.assistantPowerError))
+        state.assistantPower == AssistantPower.ON -> stringResource(R.string.omnix_setup_try_hint)
+        else -> stringResource(R.string.omnix_setup_turn_on_hint)
+    }
+    StepBody(
+        visual = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                PowerLogo(state = state, size = visualSize, onTap = onLogoTap)
+                Spacer(Modifier.height(16.dp))
+                HeadphonesLine(clip = state.clip, onOpenBluetooth = onOpenBluetooth)
+            }
+        },
+        title = title,
+        body = body,
+        actions = {
+            if (succeeded || state.assistantPower == AssistantPower.ON) {
+                SetupButton(text = stringResource(R.string.omnix_setup_done), filled = true, onClick = onFinish)
+            } else {
+                SetupLink(text = stringResource(R.string.omnix_setup_skip), onClick = onFinish)
+            }
+        }
+    )
+}
+
+/** The headphones as they are; not connected — a tap opens Bluetooth. */
+@Composable
+private fun HeadphonesLine(clip: ClipState, onOpenBluetooth: () -> Unit) {
+    val connected = clip is ClipState.Connected || clip is ClipState.BatteryLow
+    if (connected) {
+        ClipPill(clip = clip, onClick = {})
+    } else {
+        SetupLink(text = stringResource(R.string.omnix_setup_connect_headphones), onClick = onOpenBluetooth)
+    }
+}
+
+private fun errorText(error: AssistantPowerError): Int = when (error) {
+    AssistantPowerError.MICROPHONE_PERMISSION -> R.string.omnix_home_error_mic
+    AssistantPowerError.START_REJECTED -> R.string.omnix_home_error_rejected
+    AssistantPowerError.START_TIMEOUT -> R.string.omnix_home_error_timeout
+}
+
+// ----------------------------------------------------------------- shared
+
+/** Visual in the middle, title and body under it, actions at the bottom. */
+@Composable
+private fun StepBody(
+    visual: @Composable () -> Unit,
+    title: String,
+    body: String,
+    actions: @Composable () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.weight(1f))
+        visual()
+        Spacer(Modifier.height(32.dp))
         Text(
-            text = it,
-            style = if (clip) ClipBodyStyle else OmnixTheme.typography.body,
+            text = title,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 28.sp, lineHeight = 32.sp),
+            color = colors.textPrimary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = body,
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp),
             color = colors.textSecondary,
             textAlign = TextAlign.Center,
-            modifier = if (clip) {
-                Modifier.heightIn(min = CLIP_BODY_MIN_HEIGHT)
-            } else {
-                Modifier
-            }
+            modifier = Modifier.widthIn(max = 320.dp)
+        )
+        Spacer(Modifier.weight(1f))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            actions()
+        }
+    }
+}
+
+@Composable
+private fun SetupButton(text: String, filled: Boolean, onClick: () -> Unit) {
+    val colors = OmnixTheme.colors
+    Box(
+        modifier = Modifier
+            .widthIn(max = 400.dp)
+            .fillMaxWidth()
+            .heightIn(min = 54.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (filled) colors.accentBrand else colors.background)
+            .border(
+                BorderStroke(1.dp, if (filled) colors.accentBrand else colors.textPrimary.copy(alpha = 0.12f)),
+                RoundedCornerShape(16.dp)
+            )
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
+            color = if (filled) colors.background else colors.textPrimary
         )
     }
 }
 
-/** Типографика мока подключения Clip: заголовок 28sp/600, трекинг −0.022em. */
-private val ClipTitleStyle = TextStyle(
-    fontSize = 28.sp,
-    fontWeight = FontWeight.SemiBold,
-    letterSpacing = (-0.62).sp
-)
-
-/** Подзаголовок мока: 17sp, трекинг −0.01em, интерлиньяж 1.35. */
-private val ClipBodyStyle = TextStyle(
-    fontSize = 17.sp,
-    letterSpacing = (-0.17).sp,
-    lineHeight = 23.sp
-)
-
-/** Тихая кнопка мока: 15sp. */
-private val ClipQuietStyle = TextStyle(fontSize = 15.sp)
-
-private val ACTION_GAP = 4.dp
-private val LINK_HEIGHT = 44.dp
-private val QUIET_HEIGHT = 40.dp
-private val CLIP_BODY_MIN_HEIGHT = 46.dp
-
-// Мок 2026-09-25 (пересмотр композиции): зазор заголовок→подзаголовок 10px,
-// отступ копирайт→действия 22px, зона действий от 150px (кнопки прижаты к
-// низу), нижний отступ 28px.
-private val CLIP_TITLE_GAP = 10.dp
-private val CLIP_ACTIONS_TOP_GAP = 22.dp
-private val CLIP_ACTIONS_MIN_HEIGHT = 150.dp
-private val CLIP_BOTTOM_GAP = 28.dp
-
-// ---- Действия шагов (под кольцом) ----
-
 @Composable
-private fun WelcomeActions(onAdvance: () -> Unit) {
-    OmnixPrimaryButton(
-        text = stringResource(R.string.omnix_welcome_cta),
-        onClick = onAdvance
-    )
-}
-
-@Composable
-private fun ClipFlowActions(
-    phase: ClipRingPhase,
-    onAdvance: () -> Unit,
-    onSkip: () -> Unit,
-    onEnterCode: () -> Unit,
-    onSearchAgain: () -> Unit
-) {
-    when (phase) {
-        // Мок прячет кнопки на время поиска, но §34: путь вперёд всегда
-        // открыт — остаётся тихое «Пропустить» (отклонение зафиксировано).
-        ClipRingPhase.SEARCH ->
-            ClipQuietButton(stringResource(R.string.omnix_pairing_skip), onSkip)
-
-        ClipRingPhase.LOST -> Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(ACTION_GAP)
-        ) {
-            OmnixPrimaryButton(stringResource(R.string.omnix_pairing_retry), onSearchAgain)
-            ClipLinkButton(stringResource(R.string.omnix_pairing_code_link), onEnterCode)
-            ClipQuietButton(stringResource(R.string.omnix_pairing_skip), onSkip)
-        }
-
-        ClipRingPhase.FOUND ->
-            OmnixPrimaryButton(stringResource(R.string.omnix_continue), onAdvance)
-    }
-}
-
-/**
- * Ссылка мока: системный синий без рамки, 17sp, рост 44dp (пересмотр
- * 2026-09-25: дизайнер подтвердил системный синий вместо брендового).
- */
-@Composable
-private fun ClipLinkButton(text: String, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    TextButton(
-        onClick = onClick,
-        interactionSource = interactionSource,
+private fun SetupLink(text: String, onClick: () -> Unit) {
+    Box(
         modifier = Modifier
-            .omnixPressScale(interactionSource, pressedScale = 0.98f)
-            .defaultMinSize(minHeight = LINK_HEIGHT),
-        colors = ButtonDefaults.textButtonColors(
-            contentColor = OmnixTheme.colors.actionLink
-        ),
-        contentPadding = PaddingValues(horizontal = OmnixTheme.spacing.md, vertical = OmnixTheme.spacing.xs)
+            .heightIn(min = 44.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = text, style = ClipBodyStyle)
+        Text(
+            text = text,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+            color = OmnixTheme.colors.textSecondary
+        )
     }
 }
 
 /**
- * Тихая кнопка мока: серый мелкий текст, 15sp, рост 40dp.
- */
-@Composable
-private fun ClipQuietButton(text: String, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    TextButton(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        modifier = Modifier
-            .omnixPressScale(interactionSource, pressedScale = 0.98f)
-            .defaultMinSize(minHeight = QUIET_HEIGHT),
-        colors = ButtonDefaults.textButtonColors(
-            contentColor = OmnixTheme.colors.textSecondary
-        ),
-        contentPadding = PaddingValues(horizontal = OmnixTheme.spacing.md, vertical = OmnixTheme.spacing.xs)
-    ) {
-        Text(text = text, style = ClipQuietStyle)
-    }
-}
-
-/**
- * The three visual states of the microphone step (mock 2026-09-24).
+ * The three visual states of the microphone step.
  *
  * Request and Denied both mean "the permission is not granted"; the
  * difference is whether the system prompt was actually shown. Only after a
@@ -630,227 +402,8 @@ internal fun microphoneVisualState(granted: Boolean, prompted: Boolean): Microph
 
 /**
  * Auto-advance is only for a grant that happened on this screen. If the
- * user arrives at the step already granted (back gesture from the first
- * command), the step shows its way forward instead of bouncing them ahead.
+ * user arrives at the step already granted (back gesture from the next
+ * step), the step shows its way forward instead of bouncing them ahead.
  */
 internal fun microphoneShouldAutoAdvance(granted: Boolean, grantedOnEntry: Boolean): Boolean =
     granted && !grantedOnEntry
-
-// Мок 2026-09-24, геометрия: кольцо 132 px, трек/дуга 2 px, микрофон 32 px,
-// галочка 44 px — пропорции сохранены на размере ядра 150 dp.
-private const val MIC_RING_ARC_MS = 600L
-private const val MIC_MIC_FADE_MS = 250L
-private const val MIC_CHECK_FADE_MS = 300L
-private const val MIC_GLYPH_RATIO = 0.24f
-private const val MIC_CHECK_GLYPH_RATIO = 0.33f
-
-// Дуга закрывается на 600 мс, микрофон гаснет на 850, галочка проявляется к
-// 1150 мс — сверху добавлена пауза, чтобы текст «Готово» успели прочитать.
-private const val MIC_ADVANCE_DELAY_MS = 1600L
-
-/**
- * The microphone actions (§38, §50) under the ring — three honest states
- * (mock 2026-09-24); the WHAT-WHY heading lives above the ring in
- * [HeadingOf].
- *
- *  - **Request** — the prompt has never been shown: "Allow" and
- *    "Skip for now". No settings link yet — there is nothing to open.
- *  - **Denied** — the prompt was shown and the microphone is still off, so
- *    the system Settings screen becomes the primary button.
- *  - **Granted** — the step advances on its own, because the thing it asked
- *    for actually happened. On a revisit (back gesture) a Continue button
- *    is shown instead.
- *
- * The Android permission identifier is never shown.
- */
-@Composable
-private fun MicrophoneActions(
-    granted: Boolean,
-    prompted: Boolean,
-    onRequest: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onAdvance: () -> Unit
-) {
-    // Captured on entry to the step: true when the permission was already
-    // granted before this composition (back gesture from the first command).
-    val grantedOnEntry = remember { granted }
-    val autoAdvance = microphoneShouldAutoAdvance(granted, grantedOnEntry)
-
-    when (microphoneVisualState(granted, prompted)) {
-        MicrophoneVisualState.Request -> Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
-        ) {
-            OmnixPrimaryButton(stringResource(R.string.omnix_error_mic_action), onRequest)
-            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
-        }
-
-        MicrophoneVisualState.Denied -> Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
-        ) {
-            OmnixPrimaryButton(stringResource(R.string.omnix_mic_open_settings), onOpenSettings)
-            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
-        }
-
-        MicrophoneVisualState.Granted -> Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(OmnixTheme.spacing.xs)
-        ) {
-            if (!autoAdvance) {
-                // Revisit of an already completed step — one honest way on.
-                OmnixPrimaryButton(stringResource(R.string.omnix_mic_continue), onAdvance)
-            }
-        }
-    }
-
-    // A genuine grant is its own confirmation: let the ring close and the
-    // check land (1150 ms), give the copy a beat, then move on — no button
-    // needed for something that already happened.
-    LaunchedEffect(granted, grantedOnEntry) {
-        if (autoAdvance) {
-            delay(MIC_ADVANCE_DELAY_MS)
-            onAdvance()
-        }
-    }
-}
-
-/**
- * The microphone step's ring (mock 2026-09-24): a thin 2 dp track in the
- * border tone (the mock's #2c2c2e) with the mic glyph inside.
- *
- *  - Request — the dim circle, the mic in primary ink.
- *  - Denied — the mic dimmed and crossed with a diagonal slash.
- *  - Granted — an ink circle draws itself over the track from the top
- *    (600 ms, ease-out), the mic fades out (250 ms), and a check fades in
- *    (300 ms). Reduced motion — everything instant.
- */
-@Composable
-private fun MicrophoneRing(state: MicrophoneVisualState) {
-    val colors = OmnixTheme.colors
-    val reduced = OmnixTheme.reducedMotion
-
-    val arc = remember { Animatable(0f) }
-    val micAlpha = remember { Animatable(1f) }
-    val checkAlpha = remember { Animatable(0f) }
-
-    LaunchedEffect(state, reduced) {
-        if (state != MicrophoneVisualState.Granted) {
-            arc.snapTo(0f)
-            micAlpha.snapTo(1f)
-            checkAlpha.snapTo(0f)
-            return@LaunchedEffect
-        }
-        if (reduced) {
-            arc.snapTo(1f)
-            micAlpha.snapTo(0f)
-            checkAlpha.snapTo(1f)
-            return@LaunchedEffect
-        }
-        arc.animateTo(1f, tween(MIC_RING_ARC_MS.toInt(), easing = FastOutSlowInEasing))
-        micAlpha.animateTo(0f, tween(MIC_MIC_FADE_MS.toInt(), easing = LinearEasing))
-        checkAlpha.animateTo(1f, tween(MIC_CHECK_FADE_MS.toInt(), easing = LinearEasing))
-    }
-
-    Box(modifier = Modifier.size(OmnixTheme.coreSizes.home)) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 2.dp.toPx()
-            // The track is always present — the mock's faint full circle.
-            drawCircle(color = colors.border, style = Stroke(strokeWidth))
-            if (arc.value > 0f) {
-                drawArc(
-                    color = colors.textPrimary,
-                    startAngle = -90f,
-                    sweepAngle = 360f * arc.value,
-                    useCenter = false,
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                )
-            }
-            if (micAlpha.value > 0f) {
-                val micColor = if (state == MicrophoneVisualState.Denied) {
-                    colors.textTertiary
-                } else {
-                    colors.textPrimary
-                }
-                drawMicGlyph(
-                    sizePx = size.minDimension * MIC_GLYPH_RATIO,
-                    color = micColor.copy(alpha = micAlpha.value),
-                    slashed = state == MicrophoneVisualState.Denied
-                )
-            }
-            if (checkAlpha.value > 0f) {
-                drawCheckGlyph(
-                    sizePx = size.minDimension * MIC_CHECK_GLYPH_RATIO,
-                    color = colors.textPrimary.copy(alpha = checkAlpha.value)
-                )
-            }
-        }
-    }
-}
-
-/**
- * Mic glyph on a 24 dp design box (capsule, holder arc, stem, base),
- * centered in the canvas; 2 dp round-capped stroke, the mock's 1.8 px at
- * 32 px. [slashed] draws the denied state's diagonal over it.
- */
-private fun DrawScope.drawMicGlyph(sizePx: Float, color: Color, slashed: Boolean) {
-    val u = sizePx / 24f
-    val origin = size.minDimension / 2f - sizePx / 2f
-    fun p(v: Float) = v * u + origin
-    val strokeWidth = 2.dp.toPx()
-    drawRoundRect(
-        topLeft = Offset(p(9f), p(3f)),
-        size = Size(6f * u, 11f * u),
-        cornerRadius = CornerRadius(3f * u, 3f * u),
-        color = color,
-        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-    )
-    drawArc(
-        topLeft = Offset(p(5.5f), p(4f)),
-        size = Size(13f * u, 13f * u),
-        startAngle = 0f,
-        sweepAngle = 180f,
-        useCenter = false,
-        color = color,
-        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-    )
-    drawLine(color, Offset(p(12f), p(17f)), Offset(p(12f), p(21f)), strokeWidth, StrokeCap.Round)
-    drawLine(color, Offset(p(9f), p(21f)), Offset(p(15f), p(21f)), strokeWidth, StrokeCap.Round)
-    if (slashed) {
-        drawLine(color, Offset(p(4.5f), p(19.5f)), Offset(p(19.5f), p(4.5f)), strokeWidth, StrokeCap.Round)
-    }
-}
-
-/** Check mark for the granted state — one stroke, round caps. */
-private fun DrawScope.drawCheckGlyph(sizePx: Float, color: Color) {
-    val u = sizePx / 24f
-    val origin = size.minDimension / 2f - sizePx / 2f
-    fun p(v: Float) = v * u + origin
-    val strokeWidth = 2.dp.toPx()
-    drawLine(color, Offset(p(5.5f), p(13f)), Offset(p(10.5f), p(17.5f)), strokeWidth, StrokeCap.Round)
-    drawLine(color, Offset(p(10.5f), p(17.5f)), Offset(p(18.5f), p(7f)), strokeWidth, StrokeCap.Round)
-}
-
-/**
- * The first real command. Success here is a genuine interaction, not a
- * simulated one — the state comes from the live pipeline (§34).
- */
-@Composable
-private fun FirstCommandActions(state: OmnixUiState, onAdvance: () -> Unit) {
-    val spacing = OmnixTheme.spacing
-
-    if (state.lastInteraction != null) {
-        OmnixPrimaryButton(stringResource(R.string.omnix_first_success_cta), onAdvance)
-    } else {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.xs)
-        ) {
-            OmnixSpokenExample(stringResource(R.string.omnix_home_example_time))
-            if (state.systemState == SystemStateType.MICROPHONE_DENIED) {
-                SystemStateView(type = SystemStateType.MICROPHONE_DENIED)
-            }
-            OmnixTextButton(stringResource(R.string.omnix_skip_for_now), onAdvance)
-        }
-    }
-}

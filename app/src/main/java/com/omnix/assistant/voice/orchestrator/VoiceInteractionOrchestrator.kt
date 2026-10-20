@@ -147,7 +147,20 @@ class VoiceInteractionOrchestrator @Inject constructor(
      * переводы могут завершиться в неправильном порядке и перекрыться в TTS. */
     private var translationJob: Job? = null
 
-    private var isServiceActive = false
+    private val _serviceActive = MutableStateFlow(false)
+
+    /**
+     * Включён ли ассистент на самом деле: служба поднята и голосовой пайплайн
+     * запущен. Это источник правды для переключателя на главном экране
+     * (нажатие на логотип), а не состояние кнопки.
+     */
+    val serviceActive: StateFlow<Boolean> = _serviceActive.asStateFlow()
+
+    private var isServiceActive: Boolean
+        get() = _serviceActive.value
+        set(value) {
+            _serviceActive.value = value
+        }
 
     private val isProcessingQuery = AtomicBoolean(false)
 
@@ -219,6 +232,15 @@ class VoiceInteractionOrchestrator @Inject constructor(
         }
 
         isServiceActive = true
+        enterActivePipeline()
+    }
+
+    /**
+     * Маршрут звука и вход в STANDBY для уже включённого ассистента. Отдельно от
+     * [startServicePipeline], чтобы возврат после звонка не упирался в защиту
+     * от повторного старта (раньше resumeAfterPhoneCall оставлял ассистента на паузе).
+     */
+    private fun enterActivePipeline() {
         bluetoothAudioRouter.checkHeadsetConnection()
 
         if (isHeadsetOnlyMode && !bluetoothAudioRouter.isHeadsetConnected()) {
@@ -1217,7 +1239,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 Log.d(TAG, "resumeAfterPhoneCall: restoring LIVE_EAR_INTERPRETER")
                 startLiveEarInterpreter()
             } else {
-                startServicePipeline()
+                enterActivePipeline()
             }
         }
     }
