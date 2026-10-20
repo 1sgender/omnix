@@ -191,7 +191,7 @@ private val OmnixPhase.isHearing: Boolean
  * stopping turn a lime arc around the ring until the service answers.
  */
 @Composable
-private fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
+internal fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
     val colors = OmnixTheme.colors
     val motion = OmnixTheme.motion
     val reduced = OmnixTheme.reducedMotion
@@ -452,7 +452,7 @@ private fun PillButton(text: String, filled: Boolean, onClick: () -> Unit) {
  * shows that one value — never an invented second number.
  */
 @Composable
-private fun ClipPill(clip: ClipState, onClick: () -> Unit) {
+internal fun ClipPill(clip: ClipState, onClick: () -> Unit) {
     val colors = OmnixTheme.colors
     val battery = when (clip) {
         is ClipState.Connected -> (clip.battery as? ClipCapability.Available)?.value

@@ -104,10 +104,7 @@ fun OmnixNavGraph(
             }
 
             composable(OmnixDestination.Me.route) {
-                MeRoute(
-                    clip = uiState.clip,
-                    onOpen = { navController.navigateSingleTop(it) }
-                )
+                MeRoute(onOpen = { navController.navigateSingleTop(it) })
             }
 
             composable(OmnixDestination.Chat.route) {

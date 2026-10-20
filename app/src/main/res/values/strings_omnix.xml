@@ -27,7 +27,6 @@
     <string name="omnix_state_working">Working…</string>
 
     <!-- ===== Home guidance (§9, §24–§26) ===== -->
-    <string name="omnix_home_example_time">“Omni, what time is it?”</string>
     <string name="omnix_home_off_title">OMNIX is off</string>
     <string name="omnix_home_off_hint">Tap the logo to turn it on</string>
     <string name="omnix_home_starting">Turning on…</string>
@@ -45,21 +44,11 @@
     <string name="omnix_home_error_timeout">OMNIX did not turn on. Try again.</string>
     <string name="omnix_home_error_retry">Try again</string>
     <string name="omnix_home_error_dismiss">Close</string>
-    <string name="omnix_home_hint_idle">Say “Omni” or tap the core</string>
     <string name="omnix_home_hint_listening">Go ahead — I’m in your headphones</string>
     <string name="omnix_home_offline_pill">OFFLINE · ON DEVICE</string>
-    <string name="omnix_home_core_start">Start listening</string>
-    <string name="omnix_home_core_stop">Stop listening</string>
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Headphones connected, battery %1$d%%</string>
-    <string name="omnix_home_card_translator">Translator</string>
-    <string name="omnix_home_card_translator_sub">Live, into your headphones</string>
-    <string name="omnix_home_card_memory">Memory</string>
-    <string name="omnix_home_card_memory_sub">What I remember about you</string>
-    <string name="omnix_home_card_reminders">Reminders</string>
-    <string name="omnix_home_card_reminders_sub">Alarms and to-dos</string>
     <string name="omnix_home_card_automations">Automations</string>
-    <string name="omnix_home_card_automations_sub">Routines by phrase</string>
 
     <!-- ===== Action phrasing (§16, §19) ===== -->
     <string name="omnix_action_calling">Calling %1$s…</string>
@@ -133,36 +122,11 @@
     <string name="omnix_error_unavailable_body">This isn’t supported on your device right now.</string>
 
     <!-- ===== First run (§30–§35) ===== -->
-    <string name="omnix_welcome_headline">Voice in your ear.</string>
-    <string name="omnix_welcome_body">Speak naturally.\nOMNIX takes care of the rest.</string>
-    <string name="omnix_welcome_cta">Get started</string>
     <string name="omnix_onboarding_step_a11y">Step %1$d of %2$d</string>
 
-    <string name="omnix_pairing_title">Searching for Clip</string>
-    <string name="omnix_pairing_searching">Keep the Clip near your phone.</string>
-    <string name="omnix_pairing_code_link">Enter activation code</string>
-    <string name="omnix_pairing_not_found_title">No Clip found</string>
-    <string name="omnix_pairing_not_found_body">Make sure the Clip is charged and Bluetooth is on.</string>
-    <string name="omnix_pairing_retry">Search again</string>
-    <string name="omnix_pairing_skip">Skip</string>
-    <string name="omnix_pairing_found_body">All set.</string>
-    <string name="omnix_pairing_found_title">Clip connected</string>
 
-    <string name="omnix_clip_ready_title">You’re ready.</string>
-    <string name="omnix_clip_ready_say">Say:</string>
 
-    <string name="omnix_mic_request_title">Microphone access</string>
-    <string name="omnix_mic_request_body">OMNIX needs the microphone to hear your voice commands.</string>
-    <string name="omnix_mic_denied_title">Microphone is off</string>
-    <string name="omnix_mic_denied_body">Turn on access in Settings to control OMNIX by voice.</string>
-    <string name="omnix_mic_ready">Ready.</string>
-    <string name="omnix_mic_connected">Microphone connected.</string>
-    <string name="omnix_mic_continue">Continue</string>
-    <string name="omnix_mic_open_settings">Open settings</string>
 
-    <string name="omnix_first_success_title">You just used OMNIX.</string>
-    <string name="omnix_first_success_body">You can now talk to OMNIX naturally.</string>
-    <string name="omnix_first_success_cta">Done</string>
 
     <string name="omnix_activation_title">Activate OMNIX</string>
     <string name="omnix_activation_body">Enter the code from the card in your Clip box.</string>
@@ -233,12 +197,16 @@
     <!-- ===== Settings (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Settings</string>
     <string name="omnix_me_title">Me</string>
+    <string name="omnix_me_section_features">Features</string>
+    <string name="omnix_me_section_settings">Settings</string>
+    <string name="omnix_me_row_language">Language</string>
+    <string name="omnix_me_row_notifications">Notifications</string>
+    <string name="omnix_me_glyph_language">La</string>
+    <string name="omnix_me_glyph_notifications">No</string>
     <string name="omnix_me_license_active">License active</string>
     <string name="omnix_me_license_inactive">License not active</string>
     <string name="omnix_me_row_voice">Voice and the word “Omni”</string>
-    <string name="omnix_me_row_model">Local model</string>
     <string name="omnix_me_row_memory">Memory and privacy</string>
-    <string name="omnix_me_glyph_headphones">Bd</string>
     <string name="omnix_me_glyph_voice">Vo</string>
     <string name="omnix_me_glyph_translator">Tr</string>
     <string name="omnix_me_glyph_automations">Au</string>
@@ -246,8 +214,6 @@
     <string name="omnix_me_glyph_memory">Me</string>
     <string name="omnix_me_glyph_appearance">Ap</string>
     <string name="omnix_me_model_ready">Ready</string>
-    <string name="omnix_me_model_downloading">Downloading</string>
-    <string name="omnix_me_model_missing">Not installed</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Appearance</string>
 
@@ -308,6 +274,32 @@
     <string name="omnix_local_model_downloaded">Downloaded, loads on first request</string>
     <string name="omnix_local_model_loading">Loading into memory…</string>
     <string name="omnix_local_model_loading_screen">Loading local model…</string>
+    <string name="omnix_launch_checking">Checking the licence…</string>
+    <string name="omnix_launch_unreachable_title">No connection to the OMNIX server</string>
+    <string name="omnix_launch_unreachable_body">The licence could not be checked. Check the internet and try again — or enter an activation code.</string>
+    <string name="omnix_launch_retry">Try again</string>
+    <string name="omnix_launch_enter_code">Enter a code</string>
+    <string name="omnix_setup_welcome_title">A voice in your headphones</string>
+    <string name="omnix_setup_welcome_body">OMNIX hears you through your headphones, answers aloud and runs your phone.</string>
+    <string name="omnix_setup_start">Start</string>
+    <string name="omnix_setup_have_code">I have an activation code</string>
+    <string name="omnix_setup_access_title">OMNIX needs the microphone</string>
+    <string name="omnix_setup_access_granted">The microphone is on</string>
+    <string name="omnix_setup_access_body">OMNIX hears you only while it is on. A notification shows that it is running — and turns it off.</string>
+    <string name="omnix_setup_access_denied">No access. Without the microphone OMNIX cannot hear you — turn it on in the phone settings.</string>
+    <string name="omnix_setup_allow">Allow</string>
+    <string name="omnix_setup_open_settings">Open settings</string>
+    <string name="omnix_setup_later">Later</string>
+    <string name="omnix_setup_next">Next</string>
+    <string name="omnix_setup_turn_on_title">Turn OMNIX on</string>
+    <string name="omnix_setup_turn_on_hint">Tap the logo. This is how OMNIX turns on and off.</string>
+    <string name="omnix_setup_on_title">OMNIX is on</string>
+    <string name="omnix_setup_try_hint">Say: “Omni, what time is it?”</string>
+    <string name="omnix_setup_success">It works</string>
+    <string name="omnix_setup_success_body">From now on just say “Omni” — in your headphones or near the phone.</string>
+    <string name="omnix_setup_done">Done</string>
+    <string name="omnix_setup_skip">Skip</string>
+    <string name="omnix_setup_connect_headphones">Connect headphones</string>
     <string name="omnix_local_model_ready">Ready for offline answers</string>
     <string name="omnix_local_model_failed">Did not start: %1$s</string>
     <string name="omnix_local_model_low_memory">Not enough free RAM (%1$d MB needed) — answering from the cloud</string>
@@ -362,7 +354,6 @@
     <string name="omnix_advanced_saved">Saved</string>
 
     <!-- ===== Shared ===== -->
-    <string name="omnix_continue">Continue</string>
     <string name="omnix_cancel">Cancel</string>
     <string name="omnix_percent" translatable="false">%1$d%%</string>
 
@@ -378,7 +369,6 @@
     <!-- Spoken decision words shown as hints (§17) -->
     <string name="omnix_voice_yes">Yes</string>
 
-    <string name="omnix_skip_for_now">Skip for now</string>
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Not set up yet</string>
     <string name="omnix_chat_clear">Clear</string>
