@@ -71,7 +71,7 @@ class DiagnosticsReportTest {
 
         val text = DiagnosticsReport.build(emptyList(), build, crashes)
 
-        assertTrue(text.contains("recent crashes (captured in-app):"))
+        assertTrue(text.contains("recent crashes (captured in-app) and process exits (reported by Android):"))
         assertTrue(text.contains("crash_20260922_170500.txt"))
         assertTrue(text.contains("IllegalStateException: boom"))
     }

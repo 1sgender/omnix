@@ -126,8 +126,10 @@ class DiagnosticsViewModel @Inject constructor(
                 sdkInt = Build.VERSION.SDK_INT,
                 timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
             ),
-            // Java-краши, записанные CrashCapture (нативные — см. ModelInitCrashGuard).
-            crashes = CrashCapture.latestReports(appContext)
+            // Java-краши, записанные CrashCapture, и записи Android о причине
+            // смерти прошлых процессов (след нативных вылетов и OOM-убийств).
+            crashes = CrashCapture.latestReports(appContext) +
+                CrashCapture.processExitReports(appContext)
         )
 
     private fun setStatus(id: DiagnosticCheckId, status: DiagnosticStatus) {
