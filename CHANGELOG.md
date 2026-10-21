@@ -8,6 +8,13 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Changed (privacy screen)
+
+- «Приватность» проще (замечание владельца: экран разработчика). На виду — микрофон, где хранятся
+  данные, облако, разрешения, «Что помнит OMNIX» и удаление истории. Подтверждения звонков и
+  сообщений, доверенные контакты, списки приложений для чтения экрана, факты и сценарии — под
+  «Дополнительно». Факты подписаны по-человечески: «Имя», «Город», «Мама», а не user.name.
+
 ### Fixed
 
 ### Fixed
