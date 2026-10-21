@@ -1117,9 +1117,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 wakeWordEngine.stop()
                                 speechRecognizerManager.startListening()
                             }
+                            OrchestratorMode.STANDBY_WAKE_WORD -> resumeWakeWordAfterSpeech()
                             else -> Unit
                         }
                     }
+                    // Речь прервана (stop) — тоже конец фразы.
+                    is TtsState.Ready -> resumeWakeWordAfterSpeech()
                     is TtsState.Error -> {
                         if (_currentMode.value != OrchestratorMode.LIVE_EAR_INTERPRETER) {
                             startStandbyMode()
@@ -1128,6 +1131,19 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     else -> Unit
                 }
             }
+        }
+    }
+
+    /**
+     * Фраза закончилась, а ассистент ждёт «Omni»: движок, остановленный на
+     * время речи, включаем обратно. Синтезатор общий — ответы чата и
+     * автоматизаций тоже озвучиваются, — и раньше после такой фразы движок
+     * оставался выключенным: режим «жду Omni», но никто не слушал
+     * (отчёт владельца 2026-10-21, v305).
+     */
+    private fun resumeWakeWordAfterSpeech() {
+        if (isServiceActive && _currentMode.value == OrchestratorMode.STANDBY_WAKE_WORD) {
+            wakeWordEngine.start()
         }
     }
 
