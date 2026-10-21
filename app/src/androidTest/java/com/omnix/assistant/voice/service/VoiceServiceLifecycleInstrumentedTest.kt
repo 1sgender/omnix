@@ -74,10 +74,8 @@ class VoiceServiceLifecycleInstrumentedTest {
                 shell("dumpsys activity services ${context.packageName}")
                     .contains(OmnixVoiceService::class.java.name)
             )
-            assertTrue(
-                "partial wake lock not observed while service is active",
-                eventually { shell("dumpsys power").contains("OMNIX:BackgroundVoiceWakeLock") }
-            )
+            val held = eventually { activeWakeLocks().contains(WAKE_LOCK_TAG) }
+            assertTrue("partial wake lock not observed while service is active: " + activeWakeLocks(), held)
 
             OmnixVoiceService.stop(context)
             assertTrue(
@@ -86,16 +84,27 @@ class VoiceServiceLifecycleInstrumentedTest {
                     .contains(OmnixVoiceService::class.java.name) }
             )
             // onDestroy can still be finishing when the service leaves the list.
-            assertTrue(
-                "wake lock leaked after service destruction",
-                eventually { !shell("dumpsys power").contains("OMNIX:BackgroundVoiceWakeLock") }
-            )
+            val released = eventually { !activeWakeLocks().contains(WAKE_LOCK_TAG) }
+            assertTrue("wake lock leaked after service destruction: " + activeWakeLocks(), released)
         }
     }
 
     private companion object {
         const val PIPELINE_SURVIVAL_MS = 8_000L
+        const val WAKE_LOCK_TAG = "OMNIX:BackgroundVoiceWakeLock"
     }
+
+    /**
+     * Wake locks held right now. The rest of `dumpsys power` includes the
+     * "Wake Lock Log" history, which keeps the tag after the lock is released,
+     * so searching the whole dump never sees a release.
+     */
+    private fun activeWakeLocks(): String =
+        shell("dumpsys power").lineSequence()
+            .dropWhile { !it.trimStart().startsWith("Wake Locks: size=") }
+            .drop(1)
+            .takeWhile { it.isNotBlank() }
+            .joinToString("\n")
 
     private fun eventually(timeoutMs: Long = 8_000, condition: () -> Boolean): Boolean {
         val deadline = SystemClock.elapsedRealtime() + timeoutMs
