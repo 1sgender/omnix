@@ -40,16 +40,40 @@ class VoiceServiceLifecycleInstrumentedTest {
 
     @Test
     fun foregroundStartAcquiresWakeLockAndStopReleasesResources() {
+        // Grant the microphone through the shell: without it this test used to
+        // be skipped in CI, so the real pipeline start was never exercised.
+        instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.RECORD_AUDIO)
         assumeTrue(
-            "grant RECORD_AUDIO before the real service lifecycle test",
+            "RECORD_AUDIO could not be granted",
             context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         )
+        val crashDir = java.io.File(context.filesDir, "crash")
+        val crashesBefore = crashDir.listFiles()?.map { it.name }?.toSet().orEmpty()
         ActivityScenario.launch(MainActivity::class.java).use {
             assertTrue("foreground service request was rejected", OmnixVoiceService.start(context))
             assertTrue(
                 "voice service did not become active",
                 eventually { shell("dumpsys activity services ${context.packageName}")
                     .contains(OmnixVoiceService::class.java.name) }
+            )
+            // Field report 2026-10-21: the app died right after turning OMNIX
+            // on. Let the wake-word engine open its ONNX sessions and record;
+            // a crash there kills this process and fails the run with its trace.
+            SystemClock.sleep(PIPELINE_SURVIVAL_MS)
+            // Errors the guards caught are written as crash files: show the
+            // first one as the failure message, it is the real cause.
+            val newCrash = crashDir.listFiles()
+                ?.filter { it.name !in crashesBefore }
+                ?.maxByOrNull { it.name }
+            assertTrue(
+                "voice pipeline reported an error:
+" + newCrash?.readText()?.take(3_000),
+                newCrash == null
+            )
+            assertTrue(
+                "voice service died while the pipeline was starting",
+                shell("dumpsys activity services ${context.packageName}")
+                    .contains(OmnixVoiceService::class.java.name)
             )
             assertTrue(
                 "partial wake lock not observed while service is active",
@@ -67,6 +91,10 @@ class VoiceServiceLifecycleInstrumentedTest {
                 shell("dumpsys power").contains("OMNIX:BackgroundVoiceWakeLock")
             )
         }
+    }
+
+    private companion object {
+        const val PIPELINE_SURVIVAL_MS = 8_000L
     }
 
     private fun eventually(timeoutMs: Long = 8_000, condition: () -> Boolean): Boolean {
