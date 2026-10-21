@@ -113,10 +113,11 @@ class LocalAiRoutingIntegrationTest {
     }
 
     private class FakeCloud(
-        private val response: Resource<String> = Resource.Success("Ответ из облака")
+        private val response: Resource<String> = Resource.Success("Ответ из облака"),
+        private val online: Boolean = true
     ) : CloudAiExecutor {
         val calls = AtomicInteger(0)
-        override fun isAvailable() = true
+        override fun isAvailable() = online
         override suspend fun complete(request: ExecutionRequest): Resource<String> {
             calls.incrementAndGet()
             return response
@@ -130,7 +131,7 @@ class LocalAiRoutingIntegrationTest {
 
         override suspend fun run(plan: ExecutionPlan): ExecutionResult {
             runCalls.incrementAndGet()
-            return ExecutionResult.Success("План выполнен, сэр.", ExecutionType.AGENT)
+            return ExecutionResult.Success("План выполнен.", ExecutionType.AGENT)
         }
     }
 
@@ -160,7 +161,9 @@ class LocalAiRoutingIntegrationTest {
         localAnswer: String = "Это квантовая корреляция частиц.",
         modelInstalled: Boolean = true,
         agentPlan: ExecutionPlan? = null,
-        cloudResponse: Resource<String> = Resource.Success("Ответ из облака")
+        cloudResponse: Resource<String> = Resource.Success("Ответ из облака"),
+        autoPrefersCloud: Boolean = false,
+        online: Boolean = true
     ): Harness {
         val tool = OpenAppTool()
         val registry = ToolRegistry(setOf(tool), ToolDiscoveryEngine(SemanticTextMatcher()))
@@ -174,7 +177,7 @@ class LocalAiRoutingIntegrationTest {
             dispatchers = TestDispatchers()
         )
 
-        val cloud = FakeCloud(cloudResponse)
+        val cloud = FakeCloud(cloudResponse, online)
         val agent = FakeAgent(agentPlan)
 
         val engine = ExecutionDecisionEngine(
@@ -184,7 +187,7 @@ class LocalAiRoutingIntegrationTest {
             localAi = NoWorkflowLocalAiExecutor(localAi),
             cloudAi = cloud,
             workingMemory = workingMemory,
-            config = ExecutionDecisionConfig()
+            config = ExecutionDecisionConfig(autoPrefersCloud = autoPrefersCloud)
         )
 
         return Harness(engine, tool, runtime, cloud, agent)
@@ -281,7 +284,46 @@ class LocalAiRoutingIntegrationTest {
      */
     @Test
     fun `private request is answered locally without cloud`() = runBlocking {
-        val h = harness(localAnswer = "Отвечаю локально, сэр.")
+        val h = harness(localAnswer = "Отвечаю локально.")
+
+        val result = h.engine.execute(
+            voice("Напомни, что я записывал о своём здоровье", privacy = PrivacyLevel.PRIVATE)
+        )
+
+        assertTrue("Ожидался Success: $result", result is ExecutionResult.Success)
+        assertEquals(ExecutionType.LOCAL_AI, (result as ExecutionResult.Success).executionType)
+        assertEquals("Приватный запрос НЕ должен уходить в облако", 0, h.cloud.calls.get())
+    }
+
+    // Решение владельца 2026-10-21: в «Авто» с сетью разговор отвечает облако —
+    // модель на телефоне отвечала бессвязно («Прима, это как зову?»).
+
+    @Test
+    fun `auto online sends conversation to the cloud, not the phone model`() = runBlocking {
+        val h = harness(autoPrefersCloud = true)
+
+        val result = h.engine.execute(voice("как дела?"))
+
+        assertTrue("Ожидался Success: $result", result is ExecutionResult.Success)
+        assertEquals(ExecutionType.CLOUD_AI, (result as ExecutionResult.Success).executionType)
+        assertEquals("Модель на телефоне не должна отвечать при сети", 0, h.runtime.calls.get())
+        assertEquals(1, h.cloud.calls.get())
+    }
+
+    @Test
+    fun `auto offline still answers on the phone`() = runBlocking {
+        val h = harness(autoPrefersCloud = true, online = false)
+
+        val result = h.engine.execute(voice("Что значит квантовая запутанность?"))
+
+        assertTrue("Ожидался Success: $result", result is ExecutionResult.Success)
+        assertEquals(ExecutionType.LOCAL_AI, (result as ExecutionResult.Success).executionType)
+        assertEquals(1, h.runtime.calls.get())
+    }
+
+    @Test
+    fun `auto online keeps a private request on the phone`() = runBlocking {
+        val h = harness(autoPrefersCloud = true)
 
         val result = h.engine.execute(
             voice("Напомни, что я записывал о своём здоровье", privacy = PrivacyLevel.PRIVATE)

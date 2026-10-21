@@ -231,6 +231,7 @@
     <string name="omnix_me_glyph_language">Dl</string>
     <string name="omnix_me_glyph_notifications">Bl</string>
     <string name="omnix_me_license_active">Ygtyýarnama işjeň</string>
+    <string name="omnix_me_no_name">Siziň profiliňiz</string>
     <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
     <string name="omnix_me_row_voice">Ses we «Omni» sözi</string>
     <string name="omnix_me_row_memory">Ýat we gizlinlik</string>
@@ -276,7 +277,7 @@
     <string name="omnix_ai_model_auto">Awto</string>
     <string name="omnix_ai_model_auto_body">Gysga ýönekeý jogaplar — telefonda, galanlary — OMNIX bulutynda.</string>
     <string name="omnix_ai_model_on_device">Telefonda</string>
-    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Internetsiz işleýär, soraglar telefondan çykmaýar. Bulutdan ýönekeý jogap berýär.</string>
+    <string name="omnix_ai_model_on_device_body">%1$s. Internetsiz işleýär, soraglar telefondan çykmaýar. Bulutdan ýönekeý jogap berýär.</string>
     <string name="omnix_ai_model_cloud">OMNIX buluty</string>
     <string name="omnix_ai_model_cloud_body">OMNIX serwerindäki model: has doly jogap berýär. Internet gerek.</string>
     <string name="omnix_ai_model_checking">Barlaýaryn…</string>
@@ -293,7 +294,7 @@
     <string name="omnix_ai_personality_body">OMNIX-iň beräýýän tony we görkezmelerini düzüň.</string>
 
     <string name="omnix_local_model_title">Enjamdaky model</string>
-    <string name="omnix_local_model_not_installed">Göçürilmedik · 521 MB</string>
+    <string name="omnix_local_model_not_installed">Göçürilmedik · %1$s</string>
     <string name="omnix_local_model_not_installed_body">Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut jogap berýär.</string>
     <string name="omnix_local_model_download_now">Şu wagt göçürip al</string>
     <string name="omnix_local_model_download_wifi">Wi-Fi arkaly göçürip al</string>
@@ -335,7 +336,7 @@
     <string name="omnix_local_model_delete_redownload">Poz we täzeden göçürip al</string>
     <string name="omnix_local_fallback_notice">Oflain model elýeterli däl (%1$s). Jogap bulutdan gelýär.</string>
     <string name="omnix_local_model_consent_title">Enjamdaky modeli göçürip alaýaýmyňyz?</string>
-    <string name="omnix_local_model_consent_body">521 MB. Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut adaty ýaly jogap berýär.</string>
+    <string name="omnix_local_model_consent_body">%1$s. Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut adaty ýaly jogap berýär.</string>
     <string name="omnix_local_model_later">Soňrak</string>
 
     <string name="omnix_language_title">Dil</string>

@@ -165,7 +165,7 @@ class AlarmTimerTool @Inject constructor(
             // Честный исход: отправлено, но система не подтвердила. Для будильника,
             // на который рассчитывают проснуться, это USER_ACTION_REQUIRED.
             ToolExecutionResult.userActionRequired(
-                summary = "Будильник на $hour:00 отправлен в приложение часов, но система его не подтвердила. Проверьте будильник в часах, сэр.",
+                summary = "Будильник на $hour:00 отправлен в приложение часов, но система его не подтвердила. Проверьте будильник в часах.",
                 reason = "ALARM_UNVERIFIED",
                 data = data
             )

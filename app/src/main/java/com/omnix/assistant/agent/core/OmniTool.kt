@@ -165,7 +165,7 @@ interface OmniTool {
                 permissions = requiredPermissions
             )
             is ActivityNotFoundException -> ToolExecutionResult.userActionRequired(
-                summary = "Приложение для этого действия не найдено на устройстве, сэр.",
+                summary = "Приложение для этого действия не найдено на устройстве.",
                 reason = "ACTIVITY_NOT_FOUND"
             )
             else -> ToolExecutionResult.failure(

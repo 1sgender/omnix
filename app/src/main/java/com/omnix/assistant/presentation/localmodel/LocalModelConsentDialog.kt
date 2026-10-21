@@ -24,7 +24,9 @@ fun LocalModelConsentDialog(
     AlertDialog(
         onDismissRequest = onLater,
         title = { Text(stringResource(R.string.omnix_local_model_consent_title)) },
-        text = { Text(stringResource(R.string.omnix_local_model_consent_body)) },
+        text = {
+            Text(stringResource(R.string.omnix_local_model_consent_body, localModelSizeLabel(rememberLocalModelSpec())))
+        },
         confirmButton = {
             Row {
                 TextButton(onClick = onDownloadWifi) {
