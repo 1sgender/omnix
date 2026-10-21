@@ -49,6 +49,13 @@
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Headphones connected, battery %1$d%%</string>
     <string name="omnix_home_card_automations">Automations</string>
+    <string name="omnix_home_card_translator">Translator</string>
+    <string name="omnix_home_card_translator_sub">Live, into your headphones</string>
+    <string name="omnix_home_card_memory">Memory</string>
+    <string name="omnix_home_card_memory_sub">What I remember about you</string>
+    <string name="omnix_home_card_reminders">Reminders</string>
+    <string name="omnix_home_card_reminders_sub">Alarms and to-dos</string>
+    <string name="omnix_home_card_automations_sub">Routines by phrase</string>
 
     <!-- ===== Action phrasing (§16, §19) ===== -->
     <string name="omnix_action_calling">Calling %1$s…</string>

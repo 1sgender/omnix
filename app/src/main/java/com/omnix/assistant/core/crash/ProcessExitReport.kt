@@ -16,7 +16,9 @@ data class ProcessExit(
     val status: Int,
     val importance: Int,
     val rssKb: Long,
-    val description: String
+    val description: String,
+    /** Читаемые строки из дампа нативного вылета (библиотеки, функции, abort message). */
+    val traceHighlights: List<String> = emptyList()
 )
 
 /**
@@ -82,9 +84,42 @@ object ProcessExitReport {
                 append("state: ${importanceName(e.importance)}, rss=${e.rssKb / 1024} MB\n")
                 append("system note: ")
                 append(e.description.trim().ifEmpty { "(none)" }.take(maxDescriptionChars))
+                if (e.traceHighlights.isNotEmpty()) {
+                    append("\nnative trace:")
+                    e.traceHighlights.forEach { append("\n  ").append(it) }
+                }
             }
         }
     }
+
+    /**
+     * Дамп нативного вылета (tombstone) — бинарный protobuf; его строки
+     * (пути .so, имена функций, abort message) лежат в нём читаемым текстом.
+     * Достаём их без парсера proto: печатные ASCII-цепочки, и только те, что
+     * говорят о месте сбоя. Порядок сохраняется — это порядок кадров стека.
+     */
+    fun tombstoneHighlights(bytes: ByteArray, max: Int = 24): List<String> {
+        val runs = mutableListOf<String>()
+        val current = StringBuilder()
+        fun flush() {
+            if (current.length >= MIN_RUN) runs += current.toString()
+            current.setLength(0)
+        }
+        for (b in bytes) {
+            val c = b.toInt() and 0xFF
+            if (c in 0x20..0x7E) current.append(c.toChar()) else flush()
+        }
+        flush()
+        return runs
+            .filter { run -> HIGHLIGHT_MARKERS.any { run.contains(it) } }
+            .distinct()
+            .take(max)
+            .map { it.take(MAX_RUN_CHARS) }
+    }
+
+    private const val MIN_RUN = 6
+    private const val MAX_RUN_CHARS = 200
+    private val HIGHLIGHT_MARKERS = listOf(".so", "abort", "Abort", "FORTIFY", "JNI", "Fatal", "terminat", "Check failed", "Ort", "onnx", "mediapipe")
 
     private val ABNORMAL = setOf(2, 3, 4, 5, 6, 7, 9, 14)
 }

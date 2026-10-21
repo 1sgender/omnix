@@ -141,11 +141,41 @@ object CrashCapture {
                     status = it.status,
                     importance = it.importance,
                     rssKb = it.rss,
-                    description = it.description.orEmpty()
+                    description = it.description.orEmpty(),
+                    traceHighlights = nativeTrace(it)
                 )
             }
             ProcessExitReport.format(exits, limit)
         }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Читаемые строки дампа нативного вылета. Android отдаёт дамп (tombstone)
+     * через ApplicationExitInfo начиная с Android 12; раньше — пусто.
+     */
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
+    private fun nativeTrace(info: android.app.ApplicationExitInfo): List<String> {
+        if (info.reason != android.app.ApplicationExitInfo.REASON_CRASH_NATIVE) return emptyList()
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return emptyList()
+        return runCatching {
+            info.traceInputStream?.use { stream -> ProcessExitReport.tombstoneHighlights(stream.readBytes()) }
+        }.getOrNull().orEmpty()
+    }
+
+    /**
+     * Ошибка, которую поймал обработчик фоновой задачи и не дал ей уронить
+     * процесс. Пишется тем же форматом, что и краш, с пометкой «handled»,
+     * чтобы её можно было прислать из «Диагностики».
+     */
+    fun recordHandled(where: String, throwable: Throwable) {
+        val fileStore = store ?: return
+        runCatching {
+            fileStore.write(
+                deviceInfo = deviceInfo(),
+                threadName = "handled in $where (${Thread.currentThread().name})",
+                stackTrace = Log.getStackTraceString(throwable)
+            )
+        }
     }
 
     /** Последние краш-отчёты для OMNIX DIAGNOSTICS. */

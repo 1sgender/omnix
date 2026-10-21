@@ -19,6 +19,7 @@ import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
+import com.omnix.assistant.core.crash.CrashCapture
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.domain.models.VoiceAssistantState
@@ -90,7 +91,15 @@ class VoiceInteractionOrchestrator @Inject constructor(
     }
 
     private var orchestratorJob = SupervisorJob()
-    private var scope = CoroutineScope(Dispatchers.Main.immediate + orchestratorJob)
+
+    // Ошибка в наблюдателе или запросе не должна ронять приложение вместе со
+    // службой: логируем, пишем в «Диагностику», голосовой режим продолжает жить.
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(TAG, "orchestrator coroutine failed", throwable)
+        CrashCapture.recordHandled("orchestrator", throwable)
+    }
+
+    private var scope = CoroutineScope(Dispatchers.Main.immediate + orchestratorJob + exceptionHandler)
 
     private val _currentMode = MutableStateFlow(OrchestratorMode.STANDBY_WAKE_WORD)
     val currentMode: StateFlow<OrchestratorMode> = _currentMode.asStateFlow()
@@ -227,7 +236,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
         if (!orchestratorJob.isActive) {
             orchestratorJob = SupervisorJob()
-            scope = CoroutineScope(Dispatchers.Main.immediate + orchestratorJob)
+            scope = CoroutineScope(Dispatchers.Main.immediate + orchestratorJob + exceptionHandler)
             observePipelines()
         }
 

@@ -19,17 +19,22 @@ import java.io.File
 import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.omnix.assistant.core.crash.CrashCapture
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Neural wake-word движок (§4 ТЗ): AudioRecord 16 кГц -> OpenWakeWordPipeline
@@ -65,8 +70,28 @@ class NeuralWakeWordEngine @Inject constructor(
         private const val DEBUG_LOG_EVERY_CHUNK = 25
     }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Любая ошибка движка (ONNX Runtime, нативная библиотека, AudioRecord)
+    // останавливает распознавание «Omni», но не роняет приложение: без
+    // обработчика исключение фоновой корутины убивало процесс при включении.
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(TAG, "wakeword engine failed", throwable)
+        CrashCapture.recordHandled("wakeword", throwable)
+        running.set(false)
+        _errors.tryEmit(WakeWordEngineError.InferenceFailed(throwable.javaClass.simpleName))
+    }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + exceptionHandler)
     private val running = AtomicBoolean(false)
+
+    /**
+     * Номер текущего запуска. stop() его меняет, и прошлый цикл выходит на
+     * следующем кадре, даже если start() уже снова поднял [running]: раньше
+     * старый цикл продолжал работать рядом с новым на тех же сессиях ONNX.
+     */
+    private val generation = AtomicInteger(0)
+
+    /** Циклы и закрытие сессий — строго по очереди, никогда во время вычисления. */
+    private val loopMutex = Mutex()
     private var worker: Job? = null
 
     private val _detections = MutableSharedFlow<WakeWordDetection>(extraBufferCapacity = 4)
@@ -104,11 +129,19 @@ class NeuralWakeWordEngine @Inject constructor(
 
     override fun start() {
         if (!running.compareAndSet(false, true)) return
-        worker = scope.launch { runLoop() }
+        val run = generation.incrementAndGet()
+        // Новый цикл ждёт, пока прошлый выйдет (он видит смену номера на
+        // следующем кадре), и только потом открывает микрофон.
+        worker = scope.launch {
+            loopMutex.withLock {
+                if (generation.get() == run) runLoop(run)
+            }
+        }
     }
 
     override fun stop() {
         if (!running.compareAndSet(true, false)) return
+        generation.incrementAndGet()
         worker?.cancel()
         worker = null
         policy.reset()
@@ -118,11 +151,24 @@ class NeuralWakeWordEngine @Inject constructor(
 
     override fun destroy() {
         stop()
-        sessions?.close()
-        sessions = null
-        pipeline = null
-        sessionAssetPaths = null
-        scope.cancel()
+        // Сессии закрываются под замком цикла — никогда посреди вычисления
+        // (закрытие сессии ONNX во время run() роняет процесс нативно).
+        // Область не отменяем: движок один на приложение и снова нужен при
+        // следующем включении ассистента.
+        scope.launch {
+            loopMutex.withLock {
+                if (running.get()) return@withLock
+                sessions?.close()
+                sessions = null
+                pipeline = null
+                sessionAssetPaths = null
+            }
+        }
+    }
+
+    /** Закончить ТОЛЬКО свой запуск: новый, уже поднятый start(), не трогаем. */
+    private fun endRun(run: Int) {
+        if (generation.get() == run) running.set(false)
     }
 
     /**
@@ -141,12 +187,12 @@ class NeuralWakeWordEngine @Inject constructor(
     /** Пути моделей — то, от чего зависят сессии (остальной конфиг сессий не меняет). */
     private data class AssetPaths(val model: String, val mel: String, val embedding: String)
 
-    private suspend fun runLoop() {
+    private suspend fun runLoop(run: Int) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
             PackageManager.PERMISSION_GRANTED
         ) {
             _errors.emit(WakeWordEngineError.PermissionDenied)
-            running.set(false)
+            endRun(run)
             return
         }
 
@@ -158,7 +204,7 @@ class NeuralWakeWordEngine @Inject constructor(
         }
         if (!config.enabled) {
             Log.i(TAG, "wakeword disabled in settings")
-            running.set(false)
+            endRun(run)
             return
         }
         applyConfig(config)
@@ -172,7 +218,7 @@ class NeuralWakeWordEngine @Inject constructor(
                     e.assetPath, e.expectedSha256, e.actualSha256
                 )
             )
-            running.set(false)
+            endRun(run)
             return
         } catch (e: IOException) {
             Log.e(TAG, "wakeword model load failed", e)
@@ -182,7 +228,17 @@ class NeuralWakeWordEngine @Inject constructor(
             } else {
                 _errors.emit(WakeWordEngineError.InferenceFailed(e.message ?: "model load failed"))
             }
-            running.set(false)
+            endRun(run)
+            return
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            // OrtException, UnsatisfiedLinkError и прочее из нативного движка:
+            // распознавание «Omni» недоступно, приложение продолжает работать.
+            Log.e(TAG, "wakeword sessions failed", e)
+            CrashCapture.recordHandled("wakeword sessions", e)
+            _errors.emit(WakeWordEngineError.InferenceFailed(e.javaClass.simpleName))
+            endRun(run)
             return
         }
 
@@ -191,7 +247,7 @@ class NeuralWakeWordEngine @Inject constructor(
         if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
             record?.release()
             _errors.emit(WakeWordEngineError.MicrophoneUnavailable)
-            running.set(false)
+            endRun(run)
             return
         }
 
@@ -215,12 +271,12 @@ class NeuralWakeWordEngine @Inject constructor(
                 // Громко в errors, без тихой смерти (§21); release в finally ниже.
                 Log.e(TAG, "startRecording denied", e)
                 _errors.emit(WakeWordEngineError.PermissionDenied)
-                running.set(false)
+                endRun(run)
                 return
             }
             val chunk = ShortArray(OpenWakeWordPipeline.CHUNK_SAMPLES)
             var chunkIndex = 0L
-            while (running.get()) {
+            while (running.get() && generation.get() == run) {
                 val read = record.read(chunk, 0, chunk.size)
                 if (read < 0) {
                     Log.w(TAG, "AudioRecord.read error=$read")
@@ -233,7 +289,7 @@ class NeuralWakeWordEngine @Inject constructor(
                 if (dead.observe(frame)) {
                     Log.e(TAG, "microphone dead signal: constant stream for 20s")
                     _errors.emit(WakeWordEngineError.MicrophoneDeadSignal)
-                    running.set(false)
+                    endRun(run)
                     break
                 }
 
@@ -249,7 +305,7 @@ class NeuralWakeWordEngine @Inject constructor(
                 } catch (e: Exception) {
                     Log.e(TAG, "wakeword inference failed", e)
                     _errors.emit(WakeWordEngineError.InferenceFailed(e.message ?: "inference failed"))
-                    running.set(false)
+                    endRun(run)
                     break
                 }
                 chunkIndex++
