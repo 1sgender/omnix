@@ -5,12 +5,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.SystemClock
 import android.text.format.Formatter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -18,6 +20,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
 import java.util.Locale
@@ -28,6 +33,12 @@ import kotlinx.coroutines.withContext
 
 /** Период опроса хода загрузки: DownloadManager не шлёт промежуточных событий. */
 private const val DOWNLOAD_POLL_MS = 1_000L
+
+/** Повторная проверка обновления при возврате в приложение — не чаще. */
+private const val RECHECK_INTERVAL_MS = 30 * 60 * 1_000L
+
+/** Нет отложенной версии. */
+private const val NO_VERSION = -1L
 
 private sealed interface UpdateUiState {
     data object Idle : UpdateUiState
@@ -70,6 +81,26 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
     var checkKey by remember { mutableIntStateOf(0) }
+    var lastCheckAt by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    // «Позже» откладывает эту версию до следующего запуска, а не до следующего возврата.
+    var postponedVersion by remember { mutableLongStateOf(NO_VERSION) }
+
+    // Проверка не только при холодном старте: процесс живёт долго (служба
+    // ассистента), и новая версия не появлялась, пока приложение не убить
+    // (владелец 2026-10-21). При возврате в приложение — не чаще раза в 30 мин.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME &&
+                state is UpdateUiState.Idle &&
+                SystemClock.elapsedRealtime() - lastCheckAt >= RECHECK_INTERVAL_MS
+            ) {
+                checkKey += 1
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     suspend fun syncWithPending(): Boolean {
         val pending =
@@ -104,10 +135,11 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
     }
 
     LaunchedEffect(checkKey) {
+        lastCheckAt = SystemClock.elapsedRealtime()
         if (syncWithPending()) return@LaunchedEffect
         val current = withContext(Dispatchers.IO) { manager.currentVersionCode() }
         val latest = checker.check(channel)
-        if (latest != null && isUpdateAvailable(latest, current)) {
+        if (latest != null && isUpdateAvailable(latest, current) && latest.versionCode != postponedVersion) {
             state = UpdateUiState.Available(latest)
         }
     }
@@ -166,7 +198,10 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
                     watchDownload(otaMonitor, manager, id, current.info.versionCode)
                 }
             },
-            onLater = { state = UpdateUiState.Idle }
+            onLater = {
+                postponedVersion = current.info.versionCode
+                state = UpdateUiState.Idle
+            }
         )
         is UpdateUiState.Downloading -> DownloadingDialog(
             downloadId = current.downloadId,
