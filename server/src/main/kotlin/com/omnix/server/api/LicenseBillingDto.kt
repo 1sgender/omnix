@@ -75,7 +75,15 @@ data class LicenseValidateResponse(
      * Soft-привязка Clip: информативно, AI НЕ блокируется без клипа.
      * null = сервер не смог проверить (repo не подключён, только тесты).
      */
-    @SerialName("clip") val clip: ClipBindingDto? = null
+    @SerialName("clip") val clip: ClipBindingDto? = null,
+    /**
+     * Аккаунт — админ (ADMIN_ACCOUNT_IDS): клиент показывает выбор модели для
+     * тестов. Решает только сервер; запросы с выбором провайдера от не-админа
+     * сервер всё равно игнорирует.
+     */
+    @SerialName("admin") val admin: Boolean = false,
+    /** Облачные модели для теста; только админу, иначе null. */
+    @SerialName("admin_models") val adminModels: List<AdminCloudModelDto>? = null
 )
 
 /** Зеркало PlanLimits для validate-ответа (см. PlanCatalog). */

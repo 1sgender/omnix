@@ -246,7 +246,12 @@ class OmnixApiHandler(
         // Main.kt на основании X-Request-Deadline / server default).
         return when (val result = router.execute(parsed, client, requestId, request.deadlineEpochMs)) {
             is RouterResult.Success -> {
-                val payload = AiExecutionResponse(text = result.text, requestId = result.requestId)
+                val payload = AiExecutionResponse(
+                    text = result.text,
+                    requestId = result.requestId,
+                    provider = result.provider,
+                    model = result.model
+                )
                 HttpResponseContext(
                     status = 200,
                     body = json.encodeToString(AiExecutionResponse.serializer(), payload)
