@@ -8,6 +8,13 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Changed (update screen)
+
+- Экран обновления на весь экран вместо системных окошек (просьба владельца: «максимально
+  красивым»): лаймовое кольцо со знаком OMNIX, кольцо прогресса с процентом при загрузке,
+  галочка готовности, красное кольцо при ошибке; плашка «Версия 312 · 139 МБ», «что нового»
+  списком, если сервер его отдаёт (поле `notes`, необязательное), и понятные кнопки.
+
 ### Fixed
 
 ### Fixed

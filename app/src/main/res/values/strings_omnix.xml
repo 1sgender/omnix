@@ -406,22 +406,24 @@
     <string name="omnix_diag_battery">Battery</string>
 
     <!-- In-app update (staging self-update) -->
-    <string name="omnix_update_available_title">Update available</string>
-    <string name="omnix_update_available_body">A new OMNIX build is ready: %1$d. Download and install?</string>
+    <string name="omnix_update_available_title">New OMNIX version</string>
+    <string name="omnix_update_available_body">Fixes and improvements. Your chats, memory and settings stay.</string>
     <string name="omnix_update_sources_hint">To install, allow “Install unknown apps” for OMNIX — the system will open the right screen.</string>
     <string name="omnix_update_action_update">Update</string>
     <string name="omnix_update_action_later">Later</string>
-    <string name="omnix_update_downloading_title">Downloading update</string>
-    <string name="omnix_update_downloading_body">Build %1$d is downloading. You can keep using the app.</string>
-    <string name="omnix_update_progress_caption">Downloaded %1$s of %2$s · %3$s</string>
+    <string name="omnix_update_downloading_title">Downloading the update</string>
+    <string name="omnix_update_downloading_body">Keep using OMNIX — the download runs in the background.</string>
+    <string name="omnix_update_progress_caption">%1$s of %2$s</string>
     <string name="omnix_update_progress_no_total">Downloaded %1$s</string>
     <string name="omnix_update_paused_body">Download paused — waiting for network or Wi-Fi.</string>
     <string name="omnix_update_unit_mb">MB</string>
     <string name="omnix_update_action_hide">Hide</string>
-    <string name="omnix_update_ready_title">Update downloaded</string>
-    <string name="omnix_update_ready_body">Build %1$d is ready to install.</string>
+    <string name="omnix_update_ready_title">Update is ready</string>
+    <string name="omnix_update_ready_body">Your chats, memory and settings stay.</string>
+    <string name="omnix_update_version_only">Version %1$d</string>
+    <string name="omnix_update_version_chip">Version %1$d · %2$s</string>
     <string name="omnix_update_action_install">Install</string>
-    <string name="omnix_update_failed_title">Update failed</string>
+    <string name="omnix_update_failed_title">Couldn’t download</string>
     <string name="omnix_update_failed_body">Download failed for build %1$d. Check your connection and try again.</string>
     <string name="omnix_update_action_retry">Retry</string>
     <string name="omnix_update_download_title">OMNIX: update</string>
