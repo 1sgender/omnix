@@ -27,4 +27,18 @@ class ChatConversationStoreTest {
         store.open(ChatConversationStore.LEGACY_CONVERSATION_ID)
         assertEquals(ChatConversationStore.LEGACY_CONVERSATION_ID, store.currentId.value)
     }
+
+    @Test
+    fun `a new chat after opening an old one never reuses an issued id`() {
+        val store = ChatConversationStore()
+        val first = store.currentId.value
+        store.startNew()
+        val second = store.currentId.value
+
+        // В ту же миллисекунду: открыть первый чат и начать новый.
+        store.open(first)
+        store.startNew()
+
+        assertTrue(store.currentId.value > second)
+    }
 }
