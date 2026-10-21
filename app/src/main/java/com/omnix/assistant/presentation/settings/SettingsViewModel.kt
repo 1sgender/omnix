@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val userName: String = "Сэр",
+    val userName: String = "",
     /** Токен доступа к OMNIX API (Этап 3). Ключей провайдеров на устройстве нет. */
     val accessToken: String = "",
     val isAccessTokenHidden: Boolean = true,

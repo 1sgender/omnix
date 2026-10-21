@@ -64,7 +64,7 @@ class CompositeLocalAiExecutor @Inject constructor(
         if (workflowResult != null) {
             Log.d(TAG, "local layer = PROCEDURAL_MEMORY")
             return if (workflowResult.isSuccess) {
-                LocalAiOutcome.Handled("${workflowResult.summary}, сэр.")
+                LocalAiOutcome.Handled("${workflowResult.summary}.")
             } else {
                 LocalAiOutcome.Failed(workflowResult.summary)
             }

@@ -149,6 +149,9 @@ fun MeScreen(
 @Composable
 private fun AccountCard(userName: String, licenseActive: Boolean, plan: String, modifier: Modifier = Modifier) {
     val colors = OmnixTheme.colors
+    // Имени по умолчанию больше нет (было «Сэр»): без имени — нейтральная подпись.
+    val placeholder = stringResource(R.string.omnix_me_no_name)
+    val shownName = userName.trim().ifBlank { placeholder }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -167,14 +170,14 @@ private fun AccountCard(userName: String, licenseActive: Boolean, plan: String, 
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = userName.trim().take(1).uppercase(Locale.getDefault()),
+                text = shownName.take(1).uppercase(Locale.getDefault()),
                 style = TextStyle(fontFamily = OmnixSans, fontSize = 18.sp),
                 color = colors.textPrimary
             )
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = userName,
+                text = shownName,
                 style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
                 color = colors.textPrimary,
                 maxLines = 1

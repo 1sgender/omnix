@@ -15,6 +15,7 @@ import com.omnix.assistant.agent.decision.CompositeLocalAiExecutor
 import com.omnix.assistant.agent.decision.RepositoryCloudAiExecutor
 import com.omnix.assistant.agent.localai.LocalAi
 import com.omnix.assistant.agent.localai.LocalModelManager
+import com.omnix.assistant.agent.localai.LocalModelSelection
 import com.omnix.assistant.agent.localai.LocalModelSpec
 import com.omnix.assistant.agent.localai.LocalPromptBuilder
 import com.omnix.assistant.agent.localai.OmniLocalPromptBuilder
@@ -422,6 +423,7 @@ abstract class LocalAiModule {
          */
         @Provides
         @Singleton
-        fun provideLocalModelSpec(): LocalModelSpec = LocalModelSpec.QWEN2_5_0_5B_INSTRUCT_Q8
+        fun provideLocalModelSpec(@ApplicationContext context: Context): LocalModelSpec =
+            LocalModelSelection.forDevice(context)
     }
 }

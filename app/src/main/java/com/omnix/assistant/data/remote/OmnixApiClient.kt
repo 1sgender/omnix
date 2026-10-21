@@ -293,8 +293,8 @@ class OmnixApiClient @Inject constructor(
     private fun userMessageFor(code: String): String = when (code) {
         "UNAUTHORIZED" -> "Требуется активация. Проверьте код в настройках."
         "FORBIDDEN" -> "Операция недоступна для вашего тарифа."
-        "RATE_LIMITED" -> "Слишком много запросов. Подождите немного, сэр."
-        "QUOTA_EXCEEDED" -> "Дневной лимит тарифа исчерпан. Продолжим завтра, сэр."
+        "RATE_LIMITED" -> "Слишком много запросов. Подождите немного."
+        "QUOTA_EXCEEDED" -> "Дневной лимит тарифа исчерпан. Продолжим завтра."
         "PRIVACY_POLICY_VIOLATION" ->
             "Этот запрос помечен как приватный и не может быть обработан в облаке."
         "PROVIDER_TIMEOUT" -> "Сервер AI не ответил вовремя. Попробуйте ещё раз."

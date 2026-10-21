@@ -101,11 +101,11 @@ class WeatherTool @Inject constructor(
                 )
                 is LocationResult.PermissionRequired -> return ToolExecutionResult.permissionRequired(
                     summary = "Чтобы сообщить погоду поблизости, нужен доступ к местоположению. " +
-                        "Либо назовите город, например «погода в Берлине», сэр.",
+                        "Либо назовите город, например «погода в Берлине».",
                     permissions = current.permissions
                 )
                 is LocationResult.Unavailable -> return ToolExecutionResult.failure(
-                    summary = "Текущее местоположение неизвестно: ${current.reason}. Назовите город, сэр.",
+                    summary = "Текущее местоположение неизвестно: ${current.reason}. Назовите город.",
                     error = "LOCATION_UNAVAILABLE"
                 )
             }

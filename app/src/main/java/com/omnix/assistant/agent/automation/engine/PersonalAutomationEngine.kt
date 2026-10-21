@@ -148,7 +148,7 @@ class PersonalAutomationEngine @Inject constructor(
                     } else {
                         results.joinToString(". ") { it.summary }
                             .takeIf { it.isNotBlank() }
-                            ?.let { "$it, сэр." }
+                            ?.let { "$it." }
                             .orEmpty()
                     }
                     if (voiceFeedback.isNotBlank()) voiceMessages.add(voiceFeedback)
@@ -278,7 +278,7 @@ class PersonalAutomationEngine @Inject constructor(
             triggerParam = "07:00",
             conditionsJson = "",
             actionsJson = actions,
-            voiceAnnouncement = "Доброе утро, сэр. Вот ваш план на день: календарь, погода, расписание и задачи.",
+            voiceAnnouncement = "Доброе утро. Вот ваш план на день: календарь, погода, расписание и задачи.",
             isEnabled = true,
             priority = 30,
             // Точное время — срабатываем раз в сутки, а не каждую минуту.
@@ -308,7 +308,7 @@ class PersonalAutomationEngine @Inject constructor(
             triggerType = AutomationTriggerType.HEADPHONES_CONNECTED.name,
             conditionsJson = timeCondition,
             actionsJson = actions,
-            voiceAnnouncement = "Доброе утро, сэр. Громкость установлена на 50%.",
+            voiceAnnouncement = "Доброе утро. Громкость установлена на 50%.",
             isEnabled = true,
             priority = 10,
             cooldownMs = DEFAULT_COOLDOWN_MS
@@ -332,7 +332,7 @@ class PersonalAutomationEngine @Inject constructor(
             triggerType = AutomationTriggerType.WIFI_CONNECTED.name,
             conditionsJson = "",
             actionsJson = actions,
-            voiceAnnouncement = "С возвращением домой, сэр. Громкость установлена на 70%.",
+            voiceAnnouncement = "С возвращением домой. Громкость установлена на 70%.",
             isEnabled = true,
             priority = 5,
             cooldownMs = DEFAULT_COOLDOWN_MS
@@ -362,7 +362,7 @@ class PersonalAutomationEngine @Inject constructor(
             triggerType = AutomationTriggerType.BATTERY_LOW.name,
             conditionsJson = "",
             actionsJson = actions,
-            voiceAnnouncement = "Внимание, сэр. Низкий заряд батареи. Включаю режим экономии.",
+            voiceAnnouncement = "Внимание. Низкий заряд батареи. Включаю режим экономии.",
             isEnabled = true,
             priority = 20,
             cooldownMs = DEFAULT_COOLDOWN_MS

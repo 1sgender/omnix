@@ -131,14 +131,12 @@ class FastCommandRouterTest {
     // Greetings
     // ===========================================
     
+    // Владелец 2026-10-21: шаблон «Приветствую» убран — приветствие отвечает ИИ.
     @Test
-    fun `greeting is handled locally without tool call`() {
-        val result = router.route("привет")
-        assertTrue(result is FastRouteResult.HandledLocally)
-        
-        val handled = result as FastRouteResult.HandledLocally
-        assertNull(handled.toolCall)
-        assertTrue(handled.immediateVoiceResponse.isNotBlank())
+    fun `greeting is answered by the ai, not by a template`() {
+        for (greeting in listOf("привет", "салам", "ты тут?")) {
+            assertEquals(greeting, FastRouteResult.ForwardToLlm, router.route(greeting))
+        }
     }
     
     // ===========================================
