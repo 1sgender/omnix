@@ -3,7 +3,6 @@ package com.omnix.assistant.domain.chat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,9 +26,18 @@ class ChatConversationStore @Inject constructor() {
     /** Разговор, в который пишутся новые сообщения и из которого берётся контекст для ИИ. */
     val currentId: StateFlow<Long> = _currentId.asStateFlow()
 
-    /** Новый пустой разговор; id всегда больше прежнего, даже в ту же миллисекунду. */
+    /** Самый поздний id, выданный новому разговору: открытый из истории может быть старше. */
+    private var lastStartedId = _currentId.value
+
+    /**
+     * Новый пустой разговор; id больше всех выданных, даже в ту же миллисекунду.
+     * Сравнение только с текущим не годится: после «открыть прошлый чат» текущий
+     * старше, и новый id мог совпасть с уже выданным — новый чат показал бы чужие сообщения.
+     */
+    @Synchronized
     fun startNew() {
-        _currentId.update { previous -> maxOf(System.currentTimeMillis(), previous + 1) }
+        lastStartedId = maxOf(System.currentTimeMillis(), lastStartedId + 1, _currentId.value + 1)
+        _currentId.value = lastStartedId
     }
 
     /** Продолжить разговор из истории. */
