@@ -170,7 +170,9 @@ class BluetoothAudioRouter @Inject constructor(
                         // наушником и перестраиваем роутинг только если реально
                         // появился аудиовыход-гарнитура (checkHeadsetConnection
                         // слушает getDevices(GET_DEVICES_OUTPUTS), а не ACL).
-                        if (checkHeadsetConnection()) markBluetoothConnected(name)
+                        if (checkHeadsetConnection()) {
+                            markBluetoothConnected(name)
+                        }
                     }
                     BluetoothDevice.ACTION_ACL_DISCONNECTED,
                     AudioManager.ACTION_AUDIO_BECOMING_NOISY -> {
