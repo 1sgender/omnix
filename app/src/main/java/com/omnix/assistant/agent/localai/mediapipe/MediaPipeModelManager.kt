@@ -10,6 +10,7 @@ import com.omnix.assistant.agent.localai.LocalModelRuntime
 import com.omnix.assistant.agent.localai.LocalModelSpec
 import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
+import com.omnix.assistant.core.admin.AdminModelStore
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadStatus
 import com.omnix.assistant.agent.localai.downloader.ModelDownloader
 import com.omnix.assistant.agent.localai.downloader.ModelFileIntegrity
@@ -193,6 +194,13 @@ class MediaPipeModelManager @Inject constructor(
         if (storedId != ModelDownloadPolicy.NO_DOWNLOAD_ID) {
             runCatching { downloader.cancel(storedId) }
             settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+        }
+        // Админ переключает модели для теста: файлы обеих остаются, иначе
+        // каждое переключение — новая загрузка 0.5–1.6 ГБ.
+        if (AdminModelStore.isAdmin(context)) {
+            settings.setLocalModelSpecId(spec.modelId)
+            Log.i(TAG, "local model changed by admin: $previous -> ${spec.modelId}; files kept")
+            return
         }
         val dir = File(context.filesDir, MODEL_DIR)
         LocalModelSpec.ALL.filter { it.fileName != spec.fileName }.forEach { old ->

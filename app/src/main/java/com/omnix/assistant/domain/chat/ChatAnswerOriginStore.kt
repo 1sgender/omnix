@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import com.omnix.assistant.agent.decision.ExecutionType
+import com.omnix.assistant.core.admin.AdminModelTesting
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,7 +23,9 @@ import javax.inject.Singleton
  * ответ никогда не назван облачным по ошибке.
  */
 @Singleton
-class ChatAnswerOriginStore @Inject constructor() {
+class ChatAnswerOriginStore @Inject constructor(
+    private val adminModels: AdminModelTesting = AdminModelTesting.OFF
+) {
 
     private val _cloudMessageIds = MutableStateFlow<Set<Long>>(emptySet())
 
@@ -36,5 +40,16 @@ class ChatAnswerOriginStore @Inject constructor() {
     fun markCloud(messageId: Long) {
         if (messageId <= 0L) return
         _cloudMessageIds.update { ids -> ids + messageId }
+    }
+
+    private val _adminLabels = MutableStateFlow<Map<Long, String>>(emptyMap())
+
+    /** Тест моделей: id ответа → кто ответил («Groq · …», «Телефон · …»). Только у админа. */
+    val adminLabels: StateFlow<Map<Long, String>> = _adminLabels.asStateFlow()
+
+    fun markAdminLabel(messageId: Long, executionType: ExecutionType?) {
+        if (messageId <= 0L) return
+        val label = adminModels.answerLabel(executionType) ?: return
+        _adminLabels.update { labels -> labels + (messageId to label) }
     }
 }
