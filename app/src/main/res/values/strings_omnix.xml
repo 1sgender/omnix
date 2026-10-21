@@ -173,7 +173,7 @@
     <string name="omnix_chat_voice_mode">Voice mode</string>
     <string name="omnix_voice_starting">Turning OMNIX on…</string>
     <string name="omnix_voice_idle">Tap the microphone to talk</string>
-    <string name="omnix_voice_listening">Listening…</string>
+    <string name="omnix_voice_mode_listening">Listening…</string>
     <string name="omnix_voice_thinking">Thinking…</string>
     <string name="omnix_voice_speaking">Answering…</string>
     <string name="omnix_voice_confirming">Say “yes” or “no”</string>

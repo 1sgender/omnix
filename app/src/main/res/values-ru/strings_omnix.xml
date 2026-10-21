@@ -171,7 +171,7 @@
     <string name="omnix_chat_voice_mode">Голосовой режим</string>
     <string name="omnix_voice_starting">Включаю OMNIX…</string>
     <string name="omnix_voice_idle">Нажмите на микрофон, чтобы говорить</string>
-    <string name="omnix_voice_listening">Слушаю…</string>
+    <string name="omnix_voice_mode_listening">Слушаю…</string>
     <string name="omnix_voice_thinking">Думаю…</string>
     <string name="omnix_voice_speaking">Отвечаю…</string>
     <string name="omnix_voice_confirming">Скажите «да» или «нет»</string>

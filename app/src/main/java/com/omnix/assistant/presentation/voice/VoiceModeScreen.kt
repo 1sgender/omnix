@@ -180,7 +180,7 @@ private fun statusText(state: VoiceModeUiState): String = when {
         when (state.phase) {
             VoicePhase.STARTING -> R.string.omnix_voice_starting
             VoicePhase.IDLE -> R.string.omnix_voice_idle
-            VoicePhase.LISTENING -> R.string.omnix_voice_listening
+            VoicePhase.LISTENING -> R.string.omnix_voice_mode_listening
             VoicePhase.THINKING -> R.string.omnix_voice_thinking
             VoicePhase.SPEAKING -> R.string.omnix_voice_speaking
             VoicePhase.CONFIRMING -> R.string.omnix_voice_confirming
