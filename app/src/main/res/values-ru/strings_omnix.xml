@@ -160,9 +160,16 @@
 
     <!-- ===== Чат ===== -->
     <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_new">Новый чат</string>
+    <string name="omnix_chat_history_open">История чатов</string>
+    <string name="omnix_chat_history_title">История</string>
+    <string name="omnix_chat_history_empty_title">Пока нет разговоров</string>
+    <string name="omnix_chat_history_empty_body">Здесь появятся прошлые чаты. Каждый запуск начинает новый.</string>
+    <string name="omnix_chat_untitled">Без названия</string>
+    <string name="omnix_chat_delete">Удалить чат</string>
+    <string name="omnix_chat_delete_confirm_title">Удалить этот чат?</string>
     <string name="omnix_chat_subtitle_on_device">Отвечает на устройстве</string>
     <string name="omnix_chat_subtitle_online">Отвечает на устройстве и в облаке</string>
-    <string name="omnix_chat_more">Ещё</string>
     <string name="omnix_chat_today">СЕГОДНЯ</string>
     <string name="omnix_chat_yesterday">ВЧЕРА</string>
     <string name="omnix_chat_from_cloud">Ответ из облака</string>
@@ -375,7 +382,6 @@
 
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Ещё не настроено</string>
-    <string name="omnix_chat_clear">Очистить</string>
     <!-- Human labels for continuous values (§42) -->
     <string name="omnix_level_lowest">Самая медленная</string>
     <string name="omnix_level_low">Медленнее</string>

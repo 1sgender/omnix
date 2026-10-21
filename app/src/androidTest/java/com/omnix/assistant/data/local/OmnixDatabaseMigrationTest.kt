@@ -1,8 +1,10 @@
 package com.omnix.assistant.data.local
 
+import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -54,6 +56,38 @@ class OmnixDatabaseMigrationTest {
             assertTrue("Колонка trigger_param должна существовать", cursor.columnCount >= 1)
         }
         db.close()
+    }
+
+    @Test
+    fun migration5To6KeepsMessagesInTheEarlierConversation() {
+        val v5 = helper.createDatabase(TEST_DB, 5)
+        v5.execSQL(
+            "INSERT INTO messages (role, text, timestamp) VALUES ('user', 'старое сообщение', 1)"
+        )
+        v5.close()
+
+        val v6 = helper.runMigrationsAndValidate(TEST_DB, 6, true, OmnixMigrations.MIGRATION_5_6)
+        v6.query("SELECT text, conversation_id FROM messages").use { cursor ->
+            assertTrue("Сообщение должно пережить миграцию", cursor.moveToFirst())
+            assertEquals("старое сообщение", cursor.getString(0))
+            assertEquals(0L, cursor.getLong(1))
+        }
+        v6.close()
+    }
+
+    /** Полная цепочка через настоящую Room: схема после миграций совпадает с кодом. */
+    @Test
+    fun roomOpensV5DatabaseThroughAllMigrations() {
+        helper.createDatabase(TEST_DB, 5).close()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val database = Room.databaseBuilder(context, OmnixDatabase::class.java, TEST_DB)
+            .addMigrations(*OmnixMigrations.ALL)
+            .build()
+        try {
+            database.openHelper.writableDatabase
+        } finally {
+            database.close()
+        }
     }
 
     companion object {

@@ -96,6 +96,28 @@ val OmnixOnDeviceLineIcon: ImageVector = omnixLineIcon(
 
 val OmnixBackLineIcon: ImageVector = omnixLineIcon("Back", "M15 18l-6-6 6-6")
 
+// ---- Chat header ----
+
+/** История чатов. */
+val OmnixMenuLineIcon: ImageVector = omnixLineIcon("Menu", "M4 7h16", "M4 12h16", "M4 17h10")
+
+/** Новый чат: карандаш над строкой. */
+val OmnixNewChatLineIcon: ImageVector = omnixLineIcon(
+    "NewChat",
+    "M12 20h8",
+    "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+)
+
+/** Удалить: корзина. */
+val OmnixTrashLineIcon: ImageVector = omnixLineIcon(
+    "Trash",
+    "M4 7h16",
+    "M10 11v6",
+    "M14 11v6",
+    "M6 7l1 13h10l1-13",
+    "M9 7V4h6v3"
+)
+
 val OmnixSwapLineIcon: ImageVector = omnixLineIcon("Swap", "M7 7h13l-4-4", "M17 17H4l4 4")
 
 val OmnixPauseLineIcon: ImageVector = omnixLineIcon("Pause", 2.2f, "M9 5v14", "M15 5v14")
