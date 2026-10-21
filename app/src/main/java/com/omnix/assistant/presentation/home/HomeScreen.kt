@@ -49,7 +49,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -65,7 +67,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
+import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
+import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
+import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.components.OmnixOnDeviceLineIcon
 import com.omnix.assistant.presentation.components.SystemStateView
 import com.omnix.assistant.presentation.components.clipDotColor
@@ -108,10 +114,17 @@ fun HomeScreen(
     onClipTap: () -> Unit = {},
     onPowerErrorAction: (AssistantPowerError) -> Unit = {},
     onPowerErrorDismiss: () -> Unit = {},
+    onTranslatorTap: () -> Unit = {},
+    onMemoryTap: () -> Unit = {},
+    onRemindersTap: () -> Unit = {},
+    onAutomationsTap: () -> Unit = {},
     onSystemStateAction: () -> Unit = {},
     microphoneSettingsNeeded: Boolean = false
 ) {
     val on = state.assistantPower == AssistantPower.ON
+    // Карточки видны, пока OMNIX выключен, и уходят с первого нажатия на
+    // логотип: при работающем ассистенте экран — только для разговора.
+    val showCards = state.assistantPower == AssistantPower.OFF || state.assistantPower == AssistantPower.STOPPING
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The logo gives up size on short screens before anything else.
@@ -177,6 +190,22 @@ fun HomeScreen(
             }
 
             Spacer(Modifier.weight(1.2f))
+
+            AnimatedVisibility(
+                visible = showCards,
+                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)) + expandVertically(),
+                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) + shrinkVertically()
+            ) {
+                Column {
+                    QuickActions(
+                        onTranslatorTap = onTranslatorTap,
+                        onMemoryTap = onMemoryTap,
+                        onRemindersTap = onRemindersTap,
+                        onAutomationsTap = onAutomationsTap
+                    )
+                    Spacer(Modifier.height(SCREEN_PADDING))
+                }
+            }
         }
     }
 }
@@ -513,6 +542,102 @@ private fun OnDevicePill() {
     }
 }
 
+/** The 2×2 quick actions. */
+@Composable
+private fun QuickActions(
+    onTranslatorTap: () -> Unit,
+    onMemoryTap: () -> Unit,
+    onRemindersTap: () -> Unit,
+    onAutomationsTap: () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickActionCard(
+                icon = OmnixTranslatorLineIcon,
+                iconTint = colors.accentBrand,
+                title = stringResource(R.string.omnix_home_card_translator),
+                subtitle = stringResource(R.string.omnix_home_card_translator_sub),
+                onClick = onTranslatorTap,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                icon = OmnixMemoryLineIcon,
+                iconTint = colors.textPrimary,
+                title = stringResource(R.string.omnix_home_card_memory),
+                subtitle = stringResource(R.string.omnix_home_card_memory_sub),
+                onClick = onMemoryTap,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickActionCard(
+                icon = OmnixAlarmLineIcon,
+                iconTint = colors.textPrimary,
+                title = stringResource(R.string.omnix_home_card_reminders),
+                subtitle = stringResource(R.string.omnix_home_card_reminders_sub),
+                onClick = onRemindersTap,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                icon = OmnixBoltLineIcon,
+                iconTint = colors.textPrimary,
+                title = stringResource(R.string.omnix_home_card_automations),
+                subtitle = stringResource(R.string.omnix_home_card_automations_sub),
+                onClick = onAutomationsTap,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(
+    icon: ImageVector,
+    iconTint: Color,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    val interaction = remember { MutableInteractionSource() }
+    Column(
+        modifier = modifier
+            .omnixPressScale(interaction)
+            .clip(CardShape)
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), CardShape)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Button,
+                onClick = onClick
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+                color = colors.textPrimary,
+                maxLines = 1
+            )
+            Text(
+                text = subtitle,
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                color = colors.textSecondary,
+                maxLines = 1
+            )
+        }
+    }
+}
+
 /** Resolves the current phase into human copy. */
 @Composable
 fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
@@ -542,3 +667,4 @@ private const val MARK_RATIO = 104f / 248f
 private const val BREATH_MS = 2_400
 private const val SWEEP_MS = 1_100
 private val PillShape = RoundedCornerShape(18.dp)
+private val CardShape = RoundedCornerShape(18.dp)

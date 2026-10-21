@@ -21,6 +21,9 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.omnix.assistant.core.crash.CrashCapture
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,7 +68,17 @@ class NeuralWakeWordEngine @Inject constructor(
         private const val DEBUG_LOG_EVERY_CHUNK = 25
     }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Любая ошибка движка (ONNX Runtime, нативная библиотека, AudioRecord)
+    // останавливает распознавание «Omni», но не роняет приложение: без
+    // обработчика исключение фоновой корутины убивало процесс при включении.
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(TAG, "wakeword engine failed", throwable)
+        CrashCapture.recordHandled("wakeword", throwable)
+        running.set(false)
+        _errors.tryEmit(WakeWordEngineError.InferenceFailed(throwable.javaClass.simpleName))
+    }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + exceptionHandler)
     private val running = AtomicBoolean(false)
     private var worker: Job? = null
 
@@ -182,6 +195,16 @@ class NeuralWakeWordEngine @Inject constructor(
             } else {
                 _errors.emit(WakeWordEngineError.InferenceFailed(e.message ?: "model load failed"))
             }
+            running.set(false)
+            return
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            // OrtException, UnsatisfiedLinkError и прочее из нативного движка:
+            // распознавание «Omni» недоступно, приложение продолжает работать.
+            Log.e(TAG, "wakeword sessions failed", e)
+            CrashCapture.recordHandled("wakeword sessions", e)
+            _errors.emit(WakeWordEngineError.InferenceFailed(e.javaClass.simpleName))
             running.set(false)
             return
         }

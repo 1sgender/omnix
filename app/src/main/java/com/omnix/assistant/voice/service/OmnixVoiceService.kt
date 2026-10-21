@@ -26,6 +26,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.omnix.assistant.agent.memory.WorkingMemory
+import com.omnix.assistant.core.crash.CrashCapture
 import com.omnix.assistant.presentation.MainActivity
 import com.omnix.assistant.voice.orchestrator.OrchestratorMode
 import com.omnix.assistant.voice.orchestrator.VoiceInteractionOrchestrator
@@ -187,8 +188,19 @@ class OmnixVoiceService : Service() {
         when (intent?.action) {
             ACTION_START, ACTION_RESUME, null -> {
                 // null = STICKY restart системой — всегда безопасно перезапускаем
-                // pipeline с нуля.
-                orchestrator.startServicePipeline()
+                // pipeline с нуля. Сбой запуска не должен ронять приложение:
+                // служба останавливается, причина уходит в «Диагностику», а экран
+                // показывает, что OMNIX не включился.
+                try {
+                    orchestrator.startServicePipeline()
+                } catch (failure: Exception) {
+                    Log.e(TAG, "voice pipeline start failed", failure)
+                    CrashCapture.recordHandled("voice pipeline start", failure)
+                    orchestrator.stopServicePipeline()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf(startId)
+                    return START_NOT_STICKY
+                }
             }
             ACTION_PAUSE -> {
                 orchestrator.stopServicePipeline()

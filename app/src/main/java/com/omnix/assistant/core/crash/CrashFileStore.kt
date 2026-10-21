@@ -148,6 +148,22 @@ object CrashCapture {
         }.getOrDefault(emptyList())
     }
 
+    /**
+     * Ошибка, которую поймал обработчик фоновой задачи и не дал ей уронить
+     * процесс. Пишется тем же форматом, что и краш, с пометкой «handled»,
+     * чтобы её можно было прислать из «Диагностики».
+     */
+    fun recordHandled(where: String, throwable: Throwable) {
+        val fileStore = store ?: return
+        runCatching {
+            fileStore.write(
+                deviceInfo = deviceInfo(),
+                threadName = "handled in $where (${Thread.currentThread().name})",
+                stackTrace = Log.getStackTraceString(throwable)
+            )
+        }
+    }
+
     /** Последние краш-отчёты для OMNIX DIAGNOSTICS. */
     fun latestReports(appContext: Context, limit: Int = 3): List<String> =
         (store ?: CrashFileStore(File(appContext.filesDir, DIR))).latestReports(limit)

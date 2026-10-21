@@ -48,6 +48,13 @@
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Наушники подключены, заряд %1$d%%</string>
     <string name="omnix_home_card_automations">Автоматизации</string>
+    <string name="omnix_home_card_translator">Переводчик</string>
+    <string name="omnix_home_card_translator_sub">В наушники, вживую</string>
+    <string name="omnix_home_card_memory">Память</string>
+    <string name="omnix_home_card_memory_sub">Что я о вас помню</string>
+    <string name="omnix_home_card_reminders">Напоминания</string>
+    <string name="omnix_home_card_reminders_sub">Будильники и дела</string>
+    <string name="omnix_home_card_automations_sub">Сценарии по фразе</string>
 
     <!-- ===== Действия ===== -->
     <string name="omnix_action_calling">Звоню %1$s…</string>

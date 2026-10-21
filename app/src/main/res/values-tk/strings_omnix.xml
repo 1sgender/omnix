@@ -48,6 +48,13 @@
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Gulaklyklar birikdirildi, zarýad %1$d%%</string>
     <string name="omnix_home_card_automations">Awtomatizasiýalar</string>
+    <string name="omnix_home_card_translator">Terjimeçi</string>
+    <string name="omnix_home_card_translator_sub">Gulaklyga, göni</string>
+    <string name="omnix_home_card_memory">Ýat</string>
+    <string name="omnix_home_card_memory_sub">Siz hakda näme ýadymda</string>
+    <string name="omnix_home_card_reminders">Ýatlatmalar</string>
+    <string name="omnix_home_card_reminders_sub">Oýardyjylar we işler</string>
+    <string name="omnix_home_card_automations_sub">Söz boýunça ssenariler</string>
 
     <!-- ===== Hereketleriň aýdylyşy (§16, §19) ===== -->
     <string name="omnix_action_calling">Jaň edýärin: %1$s…</string>

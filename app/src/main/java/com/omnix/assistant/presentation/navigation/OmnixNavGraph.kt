@@ -99,7 +99,8 @@ fun OmnixNavGraph(
                 HomeRoute(
                     state = uiState,
                     viewModel = omnixViewModel,
-                    onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) }
+                    onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) },
+                    onOpen = { navController.navigateSingleTop(it) }
                 )
             }
 

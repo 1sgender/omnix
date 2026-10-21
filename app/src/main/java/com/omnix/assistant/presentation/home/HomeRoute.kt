@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.omnix.assistant.presentation.navigation.OmnixDestination
 import com.omnix.assistant.presentation.state.AssistantPowerError
 import com.omnix.assistant.presentation.state.OmnixUiState
 import com.omnix.assistant.presentation.state.OmnixViewModel
@@ -28,6 +29,7 @@ fun HomeRoute(
     state: OmnixUiState,
     viewModel: OmnixViewModel,
     onClipTap: () -> Unit,
+    onOpen: (OmnixDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -51,6 +53,10 @@ fun HomeRoute(
         onLogoTap = viewModel::onLogoTap,
         onTalkTap = viewModel::onTalkTap,
         onClipTap = onClipTap,
+        onTranslatorTap = { onOpen(OmnixDestination.Translator) },
+        onMemoryTap = { onOpen(OmnixDestination.Privacy) },
+        onRemindersTap = { onOpen(OmnixDestination.Chat) },
+        onAutomationsTap = { onOpen(OmnixDestination.Automations) },
         microphoneSettingsNeeded = settingsNeeded,
         onPowerErrorAction = { error ->
             when {
