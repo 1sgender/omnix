@@ -462,12 +462,14 @@ class OmnixVoiceService : Service() {
         started.set(false)
         // Штатная остановка — не сбой запуска.
         startGuard.cleared()
-        // Сначала останавливаем наблюдателей, потом orchestrator со всеми
-        // своими подсистемами (TTS/STT/Wake/Bluetooth), затем освобождаем
-        // system-level ресурсы сервиса.
-        serviceScope.cancel()
-        orchestrator.destroy()
+        // Блокировку сна отпускаем первой: если остановка подсистем ниже
+        // бросит исключение, телефон всё равно не останется без сна.
         releaseWakeLock()
+        // Затем наблюдатели и orchestrator со всеми своими подсистемами
+        // (TTS/STT/Wake/Bluetooth).
+        serviceScope.cancel()
+        runCatching { orchestrator.destroy() }
+            .onFailure { Log.e(TAG, "onDestroy: orchestrator.destroy() failed", it) }
 
         if (receiverRegistered.compareAndSet(true, false)) {
             runCatching { unregisterReceiver(systemEventReceiver) }

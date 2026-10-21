@@ -85,9 +85,10 @@ class VoiceServiceLifecycleInstrumentedTest {
                 eventually { !shell("dumpsys activity services ${context.packageName}")
                     .contains(OmnixVoiceService::class.java.name) }
             )
-            assertFalse(
+            // onDestroy can still be finishing when the service leaves the list.
+            assertTrue(
                 "wake lock leaked after service destruction",
-                shell("dumpsys power").contains("OMNIX:BackgroundVoiceWakeLock")
+                eventually { !shell("dumpsys power").contains("OMNIX:BackgroundVoiceWakeLock") }
             )
         }
     }
