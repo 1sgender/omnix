@@ -9,7 +9,6 @@
     <string name="podklyuchite_naushniki_dlya_raboty">● Подключите наушники для работы</string>
 
     <!-- ===== Format-строки (audit #17) ===== -->
-    <string name="oshibka">Ошибка: %1$s</string>
     <string name="s_sir">%1$s, сэр.</string>
     <string name="ne_udalos_vypolnit">Не удалось выполнить: %1$s</string>
 
