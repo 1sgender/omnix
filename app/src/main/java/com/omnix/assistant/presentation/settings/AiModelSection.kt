@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.localmodel.rememberLocalModelSpec
 import com.omnix.assistant.agent.decision.AiModelActivation
 import com.omnix.assistant.agent.decision.AiModelActivationError
 import com.omnix.assistant.agent.decision.AiModelChoice
@@ -126,7 +127,11 @@ private fun OptionRow(
                 color = colors.textPrimary
             )
             Text(
-                text = stringResource(body),
+                text = if (option == AiModelChoice.ON_DEVICE) {
+                    stringResource(body, rememberLocalModelSpec().displayName)
+                } else {
+                    stringResource(body)
+                },
                 style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 17.sp),
                 color = colors.textSecondary
             )

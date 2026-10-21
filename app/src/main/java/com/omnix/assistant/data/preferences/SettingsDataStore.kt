@@ -85,6 +85,7 @@ class SettingsDataStore @Inject constructor(
         val WAKEWORD_NEAR_MISS_CAPTURE = booleanPreferencesKey("wakeword.near_miss_capture")
         val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
         val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")
+        val LOCAL_MODEL_SPEC_ID = stringPreferencesKey("local_model_spec_id")
     }
 
     val userNameFlow: Flow<String> = context.dataStore.data
@@ -356,6 +357,22 @@ class SettingsDataStore @Inject constructor(
         .map { preferences ->
             preferences[PreferencesKeys.LOCAL_MODEL_DOWNLOAD_ID] ?: -1L
         }
+
+    /**
+     * Модель на телефоне, для которой шли загрузка и файлы (modelId); null —
+     * версия до выбора модели по памяти, тогда это была 0.5B.
+     */
+    val localModelSpecIdFlow: Flow<String?> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences -> preferences[PreferencesKeys.LOCAL_MODEL_SPEC_ID] }
+
+    suspend fun setLocalModelSpecId(modelId: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LOCAL_MODEL_SPEC_ID] = modelId
+        }
+    }
 
     suspend fun setLocalModelDownloadId(downloadId: Long) {
         context.dataStore.edit { preferences ->
