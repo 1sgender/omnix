@@ -5,31 +5,26 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import android.os.SystemClock
+import android.text.format.Formatter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
-import com.omnix.assistant.presentation.design.OmnixTheme
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -38,6 +33,12 @@ import kotlinx.coroutines.withContext
 
 /** Период опроса хода загрузки: DownloadManager не шлёт промежуточных событий. */
 private const val DOWNLOAD_POLL_MS = 1_000L
+
+/** Повторная проверка обновления при возврате в приложение — не чаще. */
+private const val RECHECK_INTERVAL_MS = 30 * 60 * 1_000L
+
+/** Нет отложенной версии. */
+private const val NO_VERSION = -1L
 
 private sealed interface UpdateUiState {
     data object Idle : UpdateUiState
@@ -80,6 +81,26 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
     var checkKey by remember { mutableIntStateOf(0) }
+    var lastCheckAt by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    // «Позже» откладывает эту версию до следующего запуска, а не до следующего возврата.
+    var postponedVersion by remember { mutableLongStateOf(NO_VERSION) }
+
+    // Проверка не только при холодном старте: процесс живёт долго (служба
+    // ассистента), и новая версия не появлялась, пока приложение не убить
+    // (владелец 2026-10-21). При возврате в приложение — не чаще раза в 30 мин.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME &&
+                state is UpdateUiState.Idle &&
+                SystemClock.elapsedRealtime() - lastCheckAt >= RECHECK_INTERVAL_MS
+            ) {
+                checkKey += 1
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     suspend fun syncWithPending(): Boolean {
         val pending =
@@ -114,10 +135,11 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
     }
 
     LaunchedEffect(checkKey) {
+        lastCheckAt = SystemClock.elapsedRealtime()
         if (syncWithPending()) return@LaunchedEffect
         val current = withContext(Dispatchers.IO) { manager.currentVersionCode() }
         val latest = checker.check(channel)
-        if (latest != null && isUpdateAvailable(latest, current)) {
+        if (latest != null && isUpdateAvailable(latest, current) && latest.versionCode != postponedVersion) {
             state = UpdateUiState.Available(latest)
         }
     }
@@ -176,7 +198,10 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
                     watchDownload(otaMonitor, manager, id, current.info.versionCode)
                 }
             },
-            onLater = { state = UpdateUiState.Idle }
+            onLater = {
+                postponedVersion = current.info.versionCode
+                state = UpdateUiState.Idle
+            }
         )
         is UpdateUiState.Downloading -> DownloadingDialog(
             downloadId = current.downloadId,
@@ -199,58 +224,36 @@ fun AppUpdatePrompt(otaMonitor: OtaDownloadMonitor) {
             },
             onHide = { state = UpdateUiState.Idle }
         )
-        is UpdateUiState.Ready -> AlertDialog(
-            onDismissRequest = { state = UpdateUiState.Idle },
-            title = { Text(stringResource(R.string.omnix_update_ready_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.omnix_update_ready_body,
-                        current.versionCode
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val started = manager.installApk()
-                    state = if (started) {
-                        UpdateUiState.Idle
-                    } else {
-                        UpdateUiState.Failed(current.versionCode)
-                    }
-                }) {
-                    Text(stringResource(R.string.omnix_update_action_install))
+        is UpdateUiState.Ready -> UpdateScreen(
+            stage = UpdateStage.READY,
+            title = stringResource(R.string.omnix_update_ready_title),
+            onDismiss = { state = UpdateUiState.Idle },
+            chip = stringResource(R.string.omnix_update_version_only, current.versionCode),
+            body = stringResource(R.string.omnix_update_ready_body),
+            primary = UpdateAction(stringResource(R.string.omnix_update_action_install)) {
+                val started = manager.installApk()
+                state = if (started) {
+                    UpdateUiState.Idle
+                } else {
+                    UpdateUiState.Failed(current.versionCode)
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { state = UpdateUiState.Idle }) {
-                    Text(stringResource(R.string.omnix_update_action_later))
-                }
+            secondary = UpdateAction(stringResource(R.string.omnix_update_action_later)) {
+                state = UpdateUiState.Idle
             }
         )
-        is UpdateUiState.Failed -> AlertDialog(
-            onDismissRequest = { state = UpdateUiState.Idle },
-            title = { Text(stringResource(R.string.omnix_update_failed_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.omnix_update_failed_body,
-                        current.versionCode
-                    )
-                )
+        is UpdateUiState.Failed -> UpdateScreen(
+            stage = UpdateStage.FAILED,
+            title = stringResource(R.string.omnix_update_failed_title),
+            onDismiss = { state = UpdateUiState.Idle },
+            chip = stringResource(R.string.omnix_update_version_only, current.versionCode),
+            body = stringResource(R.string.omnix_update_failed_body, current.versionCode),
+            primary = UpdateAction(stringResource(R.string.omnix_update_action_retry)) {
+                state = UpdateUiState.Idle
+                checkKey += 1
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    state = UpdateUiState.Idle
-                    checkKey += 1
-                }) {
-                    Text(stringResource(R.string.omnix_update_action_retry))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { state = UpdateUiState.Idle }) {
-                    Text(stringResource(R.string.omnix_update_action_later))
-                }
+            secondary = UpdateAction(stringResource(R.string.omnix_update_action_later)) {
+                state = UpdateUiState.Idle
             }
         )
     }
@@ -279,24 +282,30 @@ private fun AvailableDialog(
     onUpdate: () -> Unit,
     onLater: () -> Unit
 ) {
-    val body = stringResource(R.string.omnix_update_available_body, info.versionCode)
-    val hint = stringResource(R.string.omnix_update_sources_hint)
-    AlertDialog(
-        onDismissRequest = onLater,
-        title = { Text(stringResource(R.string.omnix_update_available_title)) },
-        text = { Text(if (canInstall) body else "$body\n\n$hint") },
-        confirmButton = {
-            TextButton(onClick = onUpdate) {
-                Text(stringResource(R.string.omnix_update_action_update))
-            }
+    val context = LocalContext.current
+    val size = remember(info.sizeBytes) {
+        info.sizeBytes.takeIf { it > 0 }?.let { Formatter.formatShortFileSize(context, it) }
+    }
+    UpdateScreen(
+        stage = UpdateStage.AVAILABLE,
+        title = stringResource(R.string.omnix_update_available_title),
+        onDismiss = onLater,
+        chip = if (size != null) {
+            stringResource(R.string.omnix_update_version_chip, info.versionCode, size)
+        } else {
+            stringResource(R.string.omnix_update_version_only, info.versionCode)
         },
-        dismissButton = {
-            TextButton(onClick = onLater) {
-                Text(stringResource(R.string.omnix_update_action_later))
-            }
-        }
+        // Сервер с «что нового» — список; без него — общая строка.
+        body = if (info.notes.isEmpty()) stringResource(R.string.omnix_update_available_body) else null,
+        notes = info.notes.filter { it.isNotBlank() }.take(MAX_NOTES),
+        hint = if (canInstall) null else stringResource(R.string.omnix_update_sources_hint),
+        primary = UpdateAction(stringResource(R.string.omnix_update_action_update), onUpdate),
+        secondary = UpdateAction(stringResource(R.string.omnix_update_action_later), onLater)
     )
 }
+
+/** Сколько строк «что нового» помещается без прокрутки. */
+private const val MAX_NOTES = 6
 
 /**
  * Диалог загрузки с живым прогрессом: раз в секунду опрашивает
@@ -342,71 +351,43 @@ private fun DownloadingDialog(
 
     val snapshot = progress
     val unitMb = stringResource(R.string.omnix_update_unit_mb)
-    AlertDialog(
-        onDismissRequest = onHide,
-        title = { Text(stringResource(R.string.omnix_update_downloading_title)) },
-        text = {
-            Column {
-                Text(
-                    stringResource(
-                        R.string.omnix_update_downloading_body,
-                        versionCode
-                    )
-                )
-                Spacer(Modifier.height(12.dp))
-                // DownloadManager не сразу знает размер: страховка — sizeBytes
-                // из ответа сервера, сохранённый при старте загрузки.
-                val total = snapshot?.totalBytes?.takeIf { it > 0 } ?: expectedBytes
-                if (snapshot != null && total > 0) {
-                    val percent = progressPercent(snapshot.bytesSoFar, total)
-                    LinearProgressIndicator(
-                        progress = { snapshot.bytesSoFar.toFloat() / total },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        stringResource(
-                            R.string.omnix_update_progress_caption,
-                            formatMegaBytes(
-                                snapshot.bytesSoFar,
-                                Locale.getDefault(),
-                                unitMb
-                            ),
-                            formatMegaBytes(total, Locale.getDefault(), unitMb),
-                            stringResource(R.string.omnix_percent, percent)
-                        ),
-                        style = OmnixTheme.typography.caption
-                    )
-                } else {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    if (snapshot != null) {
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            stringResource(
-                                R.string.omnix_update_progress_no_total,
-                                formatMegaBytes(
-                                    snapshot.bytesSoFar,
-                                    Locale.getDefault(),
-                                    unitMb
-                                )
-                            ),
-                            style = OmnixTheme.typography.caption
-                        )
-                    }
-                }
-                if (snapshot?.status == DownloadManager.STATUS_PAUSED) {
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        stringResource(R.string.omnix_update_paused_body),
-                        style = OmnixTheme.typography.caption
-                    )
-                }
-            }
+    // DownloadManager не сразу знает размер: страховка — sizeBytes из ответа
+    // сервера, сохранённый при старте загрузки.
+    val total = snapshot?.totalBytes?.takeIf { it > 0 } ?: expectedBytes
+    val soFar = snapshot?.bytesSoFar
+    val known = soFar != null && total > 0
+    val caption = when {
+        snapshot == null -> null
+        known -> stringResource(
+            R.string.omnix_update_progress_caption,
+            formatMegaBytes(snapshot.bytesSoFar, Locale.getDefault(), unitMb),
+            formatMegaBytes(total, Locale.getDefault(), unitMb)
+        )
+        else -> stringResource(
+            R.string.omnix_update_progress_no_total,
+            formatMegaBytes(snapshot.bytesSoFar, Locale.getDefault(), unitMb)
+        )
+    }
+    UpdateScreen(
+        stage = UpdateStage.DOWNLOADING,
+        title = stringResource(R.string.omnix_update_downloading_title),
+        onDismiss = onHide,
+        progress = if (soFar != null && total > 0) soFar.toFloat() / total else null,
+        centerLabel = if (soFar != null && total > 0) {
+            stringResource(R.string.omnix_percent, progressPercent(soFar, total))
+        } else {
+            null
         },
-        confirmButton = {
-            TextButton(onClick = onHide) {
-                Text(stringResource(R.string.omnix_update_action_hide))
+        chip = stringResource(R.string.omnix_update_version_only, versionCode),
+        body = caption,
+        hint = stringResource(
+            if (snapshot?.status == DownloadManager.STATUS_PAUSED) {
+                R.string.omnix_update_paused_body
+            } else {
+                R.string.omnix_update_downloading_body
             }
-        }
+        ),
+        secondary = UpdateAction(stringResource(R.string.omnix_update_action_hide), onHide),
+        secondaryOutlined = true
     )
 }

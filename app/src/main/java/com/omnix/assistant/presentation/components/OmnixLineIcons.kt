@@ -108,6 +108,17 @@ val OmnixNewChatLineIcon: ImageVector = omnixLineIcon(
     "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
 )
 
+/** Голосовой режим: звуковая волна. */
+val OmnixVoiceWaveLineIcon: ImageVector = omnixLineIcon(
+    "VoiceWave",
+    2.2f,
+    "M4 10v4",
+    "M8 7v10",
+    "M12 4v16",
+    "M16 7v10",
+    "M20 10v4"
+)
+
 /** Удалить: корзина. */
 val OmnixTrashLineIcon: ImageVector = omnixLineIcon(
     "Trash",
