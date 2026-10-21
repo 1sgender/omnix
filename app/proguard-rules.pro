@@ -4,12 +4,23 @@
 # Preserve runtime-visible annotations used by generated serializers and DI.
 -keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations,AnnotationDefault,InnerClasses,EnclosingMethod
 
-# MediaPipe LLM's public Java wrappers are reached from its native/JNI layer.
-# Keep only that API package, not all MediaPipe/protobuf/Guava classes.
--keep class com.google.mediapipe.tasks.genai.llminference.LlmInference { *; }
--keep class com.google.mediapipe.tasks.genai.llminference.LlmInference$* { *; }
--keep class com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession { *; }
--keep class com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession$* { *; }
+# MediaPipe LLM: its native layer calls back into this package by name.
+# Reproduced release failure (2026-10-21, v292 on SM-S928B / Android 16):
+# "JNI DETECTED ERROR IN APPLICATION: mid == null" in
+# libllm_inference_engine_jni.so — the native code looks up
+# LlmTaskRunnerDelegate.onAsyncResponse([B)V, which R8 had renamed; only
+# LlmInference and LlmInferenceSession were kept before. The package has
+# about 70 classes, so keep all of it rather than chase single callbacks.
+# Not all MediaPipe/protobuf/Guava classes: only this API package.
+-keep class com.google.mediapipe.tasks.genai.llminference.** { *; }
+
+# ONNX Runtime (wake word engine): its JNI code finds the result and error
+# classes by name (FindClass/GetMethodID) on every OrtSession.run.
+# Reproduced release failure (2026-10-21, v300 on SM-S928B / Android 16):
+# "JNI DETECTED ERROR IN APPLICATION: java_class == null from boolean[]
+# ai.onnxruntime.OrtSession.run(...)" — the app died the moment OMNIX was
+# turned on. The AAR ships no consumer rules for this.
+-keep class ai.onnxruntime.** { *; }
 
 # Reproduced release failure (2026-09-21, v93 on a real device):
 # "RuntimeException: Field modelPath_ for c2.g not found" — R8 renamed the
@@ -20,6 +31,8 @@
 # temperature/topK/topP) and LlmResponseContext (parsing native responses).
 # Debug builds are unminified, which is why CI never caught it.
 -keep class com.google.mediapipe.tasks.genai.llminference.jni.proto.** { *; }
+# scripts/verify-r8-native-keep.sh checks the R8 mapping on every PR, so a
+# rename in either package fails CI instead of the phone.
 
 # Generic JNI entry points may be invoked by symbol/name from native code.
 -keepclasseswithmembernames,includedescriptorclasses class * {

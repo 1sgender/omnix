@@ -157,6 +157,13 @@ jobs:
           bash ./gradlew :app:assembleStagingRelease \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
+      # Нативный код ONNX Runtime и MediaPipe ищет Java-классы по имени. Если R8
+      # их переименует, релиз падает на телефоне (v292/v300), а debug и
+      # эмулятор проходят. Проверяем mapping той же staging-сборки.
+      - name: R8 keeps classes used by native code
+        shell: bash
+        run: bash ./scripts/verify-r8-native-keep.sh
+
       # PAD: debug-бандл тянет 521 МБ модель в install-time пак и проверяет,
       # что пак реально внутри AAB. Единственное автоматическое доказательство
       # wiring'а доставки модели (release-workflow запускается только вручную).

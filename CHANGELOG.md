@@ -792,6 +792,14 @@ must be added only when the repository owner creates an actual release.
 - Отчёт «Диагностики» показывает строки дампа нативного вылета (библиотеки, функции, abort message).
 - Главный экран: четыре карточки (Переводчик, Память, Напоминания, Автоматизации) снова видны, пока
   OMNIX выключен, и уходят при включении.
+- Настоящая причина вылета при включении OMNIX (отчёт «Диагностики» v300 с нативным дампом):
+  в релизной сборке R8 переименовывал классы ONNX Runtime, а его нативный код ищет их по имени
+  на каждом `OrtSession.run` — «JNI DETECTED ERROR: java_class == null», процесс убит. То же
+  с локальной моделью MediaPipe: нативный код вызывает `LlmTaskRunnerDelegate.onAsyncResponse`,
+  который R8 тоже переименовывал («mid == null»). Пакеты `ai.onnxruntime` и
+  `com.google.mediapipe.tasks.genai.llminference` теперь сохраняются целиком, а CI на каждом PR
+  проверяет mapping релизной сборки (`scripts/verify-r8-native-keep.sh`): debug-сборка и
+  эмулятор этого не ловили, потому что не минифицируются.
 
 ## Release history
 
