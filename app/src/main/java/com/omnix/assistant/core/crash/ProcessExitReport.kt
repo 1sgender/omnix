@@ -85,10 +85,8 @@ object ProcessExitReport {
                 append("system note: ")
                 append(e.description.trim().ifEmpty { "(none)" }.take(maxDescriptionChars))
                 if (e.traceHighlights.isNotEmpty()) {
-                    append("
-native trace:")
-                    e.traceHighlights.forEach { append("
-  ").append(it) }
+                    append("\nnative trace:")
+                    e.traceHighlights.forEach { append("\n  ").append(it) }
                 }
             }
         }
