@@ -8,6 +8,12 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (earbuds status)
+
+- «Наушники» показывали «Bluetooth выключен», когда Bluetooth включён и TWS подключены (отчёт
+  владельца 2026-10-21). Состояние Bluetooth теперь живое, а наушники распознаются по аудиовыходам
+  системы — это работает и без разрешения «Устройства поблизости».
+
 ### Fixed
 
 ### Fixed

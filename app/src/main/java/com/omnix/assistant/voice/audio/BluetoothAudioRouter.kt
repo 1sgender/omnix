@@ -1,6 +1,7 @@
 package com.omnix.assistant.voice.audio
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothHeadset
@@ -10,9 +11,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.omnix.assistant.R
@@ -53,6 +57,14 @@ class BluetoothAudioRouter @Inject constructor(
 ) {
     companion object {
         private const val TAG = "BluetoothAudioRouter"
+        // TYPE_BLE_HEADSET (API 31) — просто число: на Android 10–11 таких
+        // устройств нет, и с ним ничего не совпадёт.
+        @SuppressLint("InlinedApi")
+        private val BLUETOOTH_OUTPUT_TYPES = setOf(
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+            AudioDeviceInfo.TYPE_BLE_HEADSET,
+        )
     }
 
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
@@ -119,10 +131,7 @@ class BluetoothAudioRouter @Inject constructor(
                         if (hasBluetoothConnectPermission()) connectedDevices.first().name else null
                     } catch (_: SecurityException) { null }
                         ?: context.getString(R.string.bluetooth_garnitura)
-                    _audioState.value = BluetoothAudioState.Connected(name, isSingleEarbud = true)
-                    _isHeadsetPlugged.value = true
-                    routeAudioToEarbud()
-                    triggerHeadphoneAutomation()
+                    markBluetoothConnected(name)
                 }
             }
         }
@@ -161,12 +170,7 @@ class BluetoothAudioRouter @Inject constructor(
                         // наушником и перестраиваем роутинг только если реально
                         // появился аудиовыход-гарнитура (checkHeadsetConnection
                         // слушает getDevices(GET_DEVICES_OUTPUTS), а не ACL).
-                        if (checkHeadsetConnection()) {
-                            _audioState.value = BluetoothAudioState.Connected(name, isSingleEarbud = true)
-                            _isHeadsetPlugged.value = true
-                            routeAudioToEarbud()
-                            triggerHeadphoneAutomation()
-                        }
+                        if (checkHeadsetConnection()) markBluetoothConnected(name)
                     }
                     BluetoothDevice.ACTION_ACL_DISCONNECTED,
                     AudioManager.ACTION_AUDIO_BECOMING_NOISY -> {
@@ -207,6 +211,54 @@ class BluetoothAudioRouter @Inject constructor(
         }
     }
 
+    /**
+     * Наушники видны по аудиовыходам: система сообщает о них без
+     * BLUETOOTH_CONNECT. ACL-события на Android 12+ без этого разрешения не
+     * приходят, и экран «Наушники» показывал «Bluetooth выключен» при
+     * подключённых TWS (отчёт владельца 2026-10-21). При регистрации callback
+     * сразу получает уже подключённые устройства.
+     */
+    private val audioDeviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) {
+            onAudioOutputsChanged(addedDevices)
+        }
+
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>) {
+            onAudioOutputsChanged(emptyArray())
+        }
+    }
+
+    private fun onAudioOutputsChanged(added: Array<out AudioDeviceInfo>) {
+        if (disposed.get()) return
+        runCatching {
+            val wasConnected = isBluetoothConnected()
+            if (!checkHeadsetConnection()) {
+                if (wasConnected) routeAudioToSpeaker()
+                return@runCatching
+            }
+            val bluetooth = added.firstOrNull { it.isSink && it.type in BLUETOOTH_OUTPUT_TYPES }
+            if (bluetooth != null && !wasConnected) {
+                val name = bluetooth.productName?.toString()?.takeIf { it.isNotBlank() }
+                    ?: context.getString(R.string.bluetooth_naushnik)
+                markBluetoothConnected(name)
+            }
+        }.onFailure { Log.e(TAG, "audio device callback failed", it) }
+    }
+
+    /**
+     * Наушники подключились. Имя обновляется при каждом сигнале (ACL знает
+     * точное имя, аудиовыход — имя модели), а маршрут и автоматизация
+     * «наушники подключены» — только при первом: сигналы приходят парами.
+     */
+    private fun markBluetoothConnected(name: String) {
+        val wasConnected = isBluetoothConnected()
+        _audioState.value = BluetoothAudioState.Connected(name, isSingleEarbud = true)
+        _isHeadsetPlugged.value = true
+        if (wasConnected) return
+        routeAudioToEarbud()
+        triggerHeadphoneAutomation()
+    }
+
     init {
         registerSafely()
     }
@@ -231,6 +283,7 @@ class BluetoothAudioRouter @Inject constructor(
                 addAction(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)
             }
             context.registerReceiver(receiver, filter)
+            audioManager?.registerAudioDeviceCallback(audioDeviceCallback, Handler(Looper.getMainLooper()))
             checkHeadsetConnection()
         } catch (e: Exception) {
             Log.e(TAG, "registerConnectionReceiver: не удалось зарегистрировать ресивер", e)
@@ -407,6 +460,7 @@ class BluetoothAudioRouter @Inject constructor(
                 .onFailure { Log.w(TAG, "dispose: не удалось unregister receiver", it) }
         }
         connectionReceiver = null
+        runCatching { audioManager?.unregisterAudioDeviceCallback(audioDeviceCallback) }
 
         bluetoothHeadset?.let { proxy ->
             safeCloseProxy(proxy)
