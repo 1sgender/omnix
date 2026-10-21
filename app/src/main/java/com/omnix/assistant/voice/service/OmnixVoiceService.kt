@@ -27,6 +27,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.omnix.assistant.agent.memory.WorkingMemory
 import com.omnix.assistant.core.crash.CrashCapture
+import java.io.File
 import com.omnix.assistant.presentation.MainActivity
 import com.omnix.assistant.voice.orchestrator.OrchestratorMode
 import com.omnix.assistant.voice.orchestrator.VoiceInteractionOrchestrator
@@ -36,6 +37,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
@@ -61,6 +63,9 @@ class OmnixVoiceService : Service() {
     private val serviceScope = CoroutineScope(
         Dispatchers.Main + serviceJob + exceptionHandler
     )
+
+    /** Защита от петли «служба поднимается и роняет приложение» (см. VoiceStartGuard). */
+    private val startGuard by lazy { VoiceStartGuard(File(filesDir, "voice/start_marker")) }
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var telephonyManager: TelephonyManager? = null
@@ -187,9 +192,24 @@ class OmnixVoiceService : Service() {
 
         when (intent?.action) {
             ACTION_START, ACTION_RESUME, null -> {
-                // null = STICKY restart системой — всегда безопасно перезапускаем
-                // pipeline с нуля. Сбой запуска не должен ронять приложение:
-                // служба останавливается, причина уходит в «Диагностику», а экран
+                // null = STICKY restart системой. Если прошлый запуск пайплайна
+                // убил процесс, повтор уронит приложение снова при каждом
+                // открытии: не повторяем, ассистент остаётся выключенным.
+                if (intent == null && !startGuard.systemRestartAllowed()) {
+                    Log.w(TAG, "system restart skipped: the previous pipeline start killed the process")
+                    startGuard.cleared()
+                    orchestrator.stopServicePipeline()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf(startId)
+                    return START_NOT_STICKY
+                }
+                startGuard.attemptStarted()
+                serviceScope.launch {
+                    delay(VoiceStartGuard.SURVIVAL_MS)
+                    startGuard.cleared()
+                }
+                // Сбой запуска не должен ронять приложение: служба
+                // останавливается, причина уходит в «Диагностику», а экран
                 // показывает, что OMNIX не включился.
                 try {
                     orchestrator.startServicePipeline()
@@ -207,6 +227,7 @@ class OmnixVoiceService : Service() {
                 updateNotification(getString(R.string.omnix_na_pauze))
             }
             ACTION_STOP -> {
+                startGuard.cleared()
                 orchestrator.stopServicePipeline()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf(startId)
@@ -439,6 +460,8 @@ class OmnixVoiceService : Service() {
 
     override fun onDestroy() {
         started.set(false)
+        // Штатная остановка — не сбой запуска.
+        startGuard.cleared()
         // Сначала останавливаем наблюдателей, потом orchestrator со всеми
         // своими подсистемами (TTS/STT/Wake/Bluetooth), затем освобождаем
         // system-level ресурсы сервиса.
