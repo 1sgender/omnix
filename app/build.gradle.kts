@@ -246,6 +246,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs {
+            // x86 в APK не попадает (abiFilters выше), а sherpa-onnx и
+            // onnxruntime-android оба кладут lib/x86/libonnxruntime.so —
+            // слияние нативных библиотек падало на дубле.
+            excludes += "lib/x86/**"
+        }
     }
 }
 
