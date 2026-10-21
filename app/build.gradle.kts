@@ -1,4 +1,5 @@
 import java.net.URI
+import java.security.MessageDigest
 import java.util.Properties
 import javax.inject.Inject
 
@@ -455,7 +456,7 @@ abstract class DownloadVerified : DefaultTask() {
     }
 
     private fun sha256Of(file: File): String {
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = MessageDigest.getInstance("SHA-256")
         file.inputStream().use { input ->
             val buffer = ByteArray(1 shl 16)
             while (true) {
