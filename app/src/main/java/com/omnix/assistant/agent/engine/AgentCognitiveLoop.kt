@@ -76,7 +76,7 @@ class AgentCognitiveLoop @Inject constructor(
             PlanExecutionSummary(
                 plan = initialPlan,
                 observations = emptyList(),
-                finalVoiceSummary = "Не удалось закончить план вовремя, сэр.",
+                finalVoiceSummary = "Не удалось закончить план вовремя.",
                 isAllSuccessful = false,
                 pendingConfirmation = null,
                 timedOut = true
@@ -316,12 +316,12 @@ class AgentCognitiveLoop @Inject constructor(
         val blocked = blockedNotices.joinToString(" ").trim()
 
         return when {
-            isAllSuccessful && done.isNotEmpty() -> "$done, сэр."
-            isAllSuccessful -> "Готово, сэр."
+            isAllSuccessful && done.isNotEmpty() -> "$done."
+            isAllSuccessful -> "Готово."
             done.isNotEmpty() && blocked.isNotEmpty() -> "$done. $blocked"
             blocked.isNotEmpty() -> blocked
             done.isNotEmpty() -> "План выполнен частично: $done."
-            else -> "Не удалось выполнить план, сэр."
+            else -> "Не удалось выполнить план."
         }
     }
 }

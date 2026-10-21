@@ -104,9 +104,9 @@ class SetBrightnessTool @Inject constructor(
             val opened = openWriteSettingsScreen()
             return ToolExecutionResult.userActionRequired(
                 summary = if (opened) {
-                    "Чтобы менять яркость, OMNIX нужно разрешение «Изменение системных настроек». Открыл нужный экран — включите доступ, сэр."
+                    "Чтобы менять яркость, OMNIX нужно разрешение «Изменение системных настроек». Открыл нужный экран — включите доступ."
                 } else {
-                    "Чтобы менять яркость, нужно вручную выдать разрешение «Изменение системных настроек» в настройках приложения, сэр."
+                    "Чтобы менять яркость, нужно вручную выдать разрешение «Изменение системных настроек» в настройках приложения."
                 },
                 reason = "WRITE_SETTINGS_PERMISSION_REQUIRED",
                 data = buildJsonObject {

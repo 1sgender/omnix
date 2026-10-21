@@ -3,6 +3,8 @@ package com.omnix.assistant.presentation.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.localmodel.localModelSizeLabel
+import com.omnix.assistant.presentation.localmodel.rememberLocalModelSpec
 import com.omnix.assistant.agent.localai.LocalModelState
 
 /**
@@ -29,7 +31,10 @@ fun LocalModelSettingsBlock(
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_local_model_title),
                 subtitle = stringResource(R.string.omnix_local_model_not_installed_body),
-                value = stringResource(R.string.omnix_local_model_not_installed),
+                value = stringResource(
+                    R.string.omnix_local_model_not_installed,
+                    localModelSizeLabel(rememberLocalModelSpec())
+                ),
                 inset = true
             )
             OmnixGroupDivider()

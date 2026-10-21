@@ -95,7 +95,7 @@ class OmnixStateMapperTest {
     @Test
     fun `Success is not produced while TTS is still speaking`() {
         val phase = OmnixStateMapper.phaseOf(
-            assistantState = VoiceAssistantState.Speaking("Alarm set, sir."),
+            assistantState = VoiceAssistantState.Speaking("Alarm set."),
             mode = OrchestratorMode.TTS_SPEAKING,
             pendingCall = call(),
             isOnline = true,

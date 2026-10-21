@@ -9,6 +9,7 @@ import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.domain.models.VoiceSettings
 import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
+import com.omnix.assistant.domain.chat.ChatConversationStore
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.usecases.ClearChatHistoryUseCase
 import com.omnix.assistant.domain.usecases.GetChatHistoryUseCase
@@ -54,6 +55,7 @@ class ChatViewModelPrivacyConsentTest {
     private lateinit var toolExecutor: ToolExecutor
     private lateinit var messageRepository: MessageRepository
     private lateinit var memoryManager: OmniMemoryManager
+    private val conversationStore = ChatConversationStore()
 
     @Before
     fun setUp() {
@@ -103,7 +105,8 @@ class ChatViewModelPrivacyConsentTest {
         speechRecognizerManager = stt,
         toolExecutor = toolExecutor,
         messageRepository = messageRepository,
-        answerOriginStore = ChatAnswerOriginStore()
+        answerOriginStore = ChatAnswerOriginStore(),
+        conversationStore = conversationStore
     )
 
     @Test
@@ -262,5 +265,32 @@ class ChatViewModelPrivacyConsentTest {
                 requestId = any()
             )
         }
+    }
+
+    @Test
+    fun `new chat, opening and deleting conversations`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+        val first = conversationStore.currentId.value
+
+        vm.openHistory()
+        assertTrue(vm.uiState.value.showHistory)
+
+        vm.startNewConversation()
+        advanceUntilIdle()
+        val second = conversationStore.currentId.value
+        assertTrue(second > first)
+        assertFalse(vm.uiState.value.showHistory)
+        assertEquals(second, vm.uiState.value.currentConversationId)
+
+        vm.openConversation(first)
+        advanceUntilIdle()
+        assertEquals(first, conversationStore.currentId.value)
+
+        // Удаление открытого чата начинает новый, удалённый уходит из базы.
+        vm.deleteConversation(first)
+        advanceUntilIdle()
+        assertTrue(conversationStore.currentId.value > second)
+        coVerify(exactly = 1) { messageRepository.deleteConversation(first) }
     }
 }

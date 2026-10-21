@@ -160,9 +160,16 @@
 
     <!-- ===== Чат ===== -->
     <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_new">Новый чат</string>
+    <string name="omnix_chat_history_open">История чатов</string>
+    <string name="omnix_chat_history_title">История</string>
+    <string name="omnix_chat_history_empty_title">Пока нет разговоров</string>
+    <string name="omnix_chat_history_empty_body">Здесь появятся прошлые чаты. Каждый запуск начинает новый.</string>
+    <string name="omnix_chat_untitled">Без названия</string>
+    <string name="omnix_chat_delete">Удалить чат</string>
+    <string name="omnix_chat_delete_confirm_title">Удалить этот чат?</string>
     <string name="omnix_chat_subtitle_on_device">Отвечает на устройстве</string>
     <string name="omnix_chat_subtitle_online">Отвечает на устройстве и в облаке</string>
-    <string name="omnix_chat_more">Ещё</string>
     <string name="omnix_chat_today">СЕГОДНЯ</string>
     <string name="omnix_chat_yesterday">ВЧЕРА</string>
     <string name="omnix_chat_from_cloud">Ответ из облака</string>
@@ -209,6 +216,7 @@
     <string name="omnix_me_glyph_language">Яз</string>
     <string name="omnix_me_glyph_notifications">Ув</string>
     <string name="omnix_me_license_active">Лицензия активна</string>
+    <string name="omnix_me_no_name">Ваш профиль</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
     <string name="omnix_me_row_voice">Голос и слово «Omni»</string>
     <string name="omnix_me_row_memory">Память и приватность</string>
@@ -254,7 +262,7 @@
     <string name="omnix_ai_model_auto">Авто</string>
     <string name="omnix_ai_model_auto_body">Короткие простые ответы — на телефоне, остальное — в облаке OMNIX.</string>
     <string name="omnix_ai_model_on_device">На телефоне</string>
-    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
+    <string name="omnix_ai_model_on_device_body">%1$s. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
     <string name="omnix_ai_model_cloud">Облако OMNIX</string>
     <string name="omnix_ai_model_cloud_body">Модель на сервере OMNIX: отвечает подробнее. Нужен интернет.</string>
     <string name="omnix_ai_model_checking">Проверяю…</string>
@@ -271,7 +279,7 @@
     <string name="omnix_ai_personality_body">Задайте тон и указания, которым следует OMNIX.</string>
 
     <string name="omnix_local_model_title">Локальная модель</string>
-    <string name="omnix_local_model_not_installed">Не скачана · 521 МБ</string>
+    <string name="omnix_local_model_not_installed">Не скачана · %1$s</string>
     <string name="omnix_local_model_not_installed_body">Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако.</string>
     <string name="omnix_local_model_download_now">Скачать сейчас</string>
     <string name="omnix_local_model_download_wifi">Скачать по Wi-Fi</string>
@@ -313,7 +321,7 @@
     <string name="omnix_local_model_delete_redownload">Удалить и скачать заново</string>
     <string name="omnix_local_fallback_notice">Офлайн-модель недоступна (%1$s). Отвечаю из облака.</string>
     <string name="omnix_local_model_consent_title">Скачать локальную модель?</string>
-    <string name="omnix_local_model_consent_body">521 МБ. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
+    <string name="omnix_local_model_consent_body">%1$s. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
     <string name="omnix_local_model_later">Позже</string>
 
     <string name="omnix_language_title">Язык</string>
@@ -375,7 +383,6 @@
 
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Ещё не настроено</string>
-    <string name="omnix_chat_clear">Очистить</string>
     <!-- Human labels for continuous values (§42) -->
     <string name="omnix_level_lowest">Самая медленная</string>
     <string name="omnix_level_low">Медленнее</string>

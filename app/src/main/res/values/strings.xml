@@ -14,18 +14,18 @@
     <string name="podklyuchite_naushniki_dlya_raboty">● Connect headphones to start</string>
 
     <!-- ===== Format strings (audit #17) ===== -->
-    <string name="s_sir">%1$s, sir.</string>
+    <string name="s_sir">%1$s.</string>
     <string name="ne_udalos_vypolnit">Couldn’t do that: %1$s</string>
 
     <string name="oshibka_vypolneniya_zaprosa">Request failed</string>
-    <string name="operaciya_otmenena_sir">Operation cancelled, sir.</string>
+    <string name="operaciya_otmenena_sir">Operation cancelled.</string>
     <string name="pozhaluysta_vvedite_kod">Please enter the activation code from the scratch card in the box.</string>
 
     <!-- ===== Voice layer (audit #17) ===== -->
     <string name="omnix_na_pauze">OMNIX is paused</string>
     <string name="omnix_slushaet_v_naushnike">OMNIX is listening (in your ear)…</string>
     <string name="omnix_slushaet">OMNIX is listening…</string>
-    <string name="vremya_ozhidaniya_isteklo">Time’s up. Operation cancelled, sir.</string>
+    <string name="vremya_ozhidaniya_isteklo">Time’s up. Operation cancelled.</string>
     <string name="vy_nichego_ne_skazali">You didn’t say anything.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Headphones disconnected. Waiting…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">I didn’t catch that. Say yes or no.</string>
@@ -38,7 +38,7 @@
     <string name="oshibka_svyazi_s_ai">Couldn’t reach the AI</string>
     <string name="podklyuchite_naushniki">Connect headphones</string>
     <string name="provodnye_naushniki">Wired headphones</string>
-    <string name="rezhim_perevodchika_aktivirovan">Live interpreter mode is on. Listening for the other speaker, sir.</string>
+    <string name="rezhim_perevodchika_aktivirovan">Live interpreter mode is on. Listening for the other speaker.</string>
     <string name="slushayu_prodolzhenie_dialoga">Listening for more…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Background wake word recognition and spoken replies</string>
     <string name="ya_ne_rasslyshal_zapros">I didn’t hear the request.</string>
@@ -50,7 +50,7 @@
     <string name="server_licenziy_nedostupen">The activation server is temporarily unavailable. The code wasn’t activated — try again later.</string>
     <string name="proverte_internet">Can’t reach the activation server. Check your internet and try again.</string>
     <string name="slishkom_mnogo_popytok_aktivacii">Too many activation attempts. Wait a moment and try again later.</string>
-    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip activated! Your first 30 days are included free, sir.</string>
+    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip activated! Your first 30 days are included free.</string>
     <string name="pustoy_zapros">Empty request</string>
     <string name="zapros_ne_mozhet_byt_pustym">A request can’t be empty</string>
 
@@ -67,8 +67,8 @@
     <string name="bluetooth_vyklyuchen">Bluetooth is off</string>
     <string name="sopryazhennyh_ustroystv">. Paired devices: %1$d</string>
     <string name="net_sopryazhennyh_ustroystv">. No paired devices</string>
-    <string name="bluetooth_uzhe_vklyuchen">Bluetooth is already on, sir.</string>
-    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth is already off, sir.</string>
+    <string name="bluetooth_uzhe_vklyuchen">Bluetooth is already on.</string>
+    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth is already off.</string>
     <string name="chtoby_upravlyat_bluetooth">Bluetooth permission is needed to control Bluetooth</string>
 
     <!-- C-02: privacy consent UI -->
@@ -76,7 +76,7 @@
     <string name="cloud_consent_sensitive_prompt">The request contains sensitive data (passwords, passport details, payment information). Without your permission OMNIX won’t send it to the cloud model and will try to answer on this device. Send it to the cloud for a better answer?</string>
     <string name="cloud_consent_voice_private">The request contains private data. Send it to the cloud for a better answer? Say yes or no.</string>
     <string name="cloud_consent_voice_sensitive">The request contains sensitive data. Send it to the cloud for a better answer? Say yes or no.</string>
-    <string name="cloud_consent_declined">Understood — answering on this device, sir.</string>
+    <string name="cloud_consent_declined">Understood — answering on this device.</string>
     <string name="cloud_consent_timeout">Timed out — answering on this device.</string>
     <string name="wakeword_engine_unavailable">Voice activation unavailable</string>
     <string name="oflayn_model_ne_skachana">Offline model is not downloaded: Settings → AI → On-device model. Once downloaded, the assistant answers without internet.</string>

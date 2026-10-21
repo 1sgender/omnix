@@ -23,6 +23,8 @@ class OmniLocalPromptBuilder @Inject constructor() : LocalPromptBuilder {
     private companion object {
         const val IM_START = "<|im_start|>"
         const val IM_END = "<|im_end|>"
+        const val MEMORY_INTRO =
+            "Справка о пользователе. Используй её, только если вопрос об этом; не пересказывай её и не отвечай ею на приветствие:"
 
         val SYSTEM_PROMPT = """
             Ты OMNIX — локальный офлайн AI-ассистент на устройстве пользователя.
@@ -51,16 +53,20 @@ class OmniLocalPromptBuilder @Inject constructor() : LocalPromptBuilder {
         // История диалога локальной модели НЕ отправляется (контекст 1280
         // токенов); из памяти — только retrieved-блок ≤800 символов, поэтому
         // офлайн-модель тоже знает long-term факты («как зовут дочь?»).
+        // Память — в system-блоке как справка, а не в реплике пользователя:
+        // там 0.5B-модель принимала её за вопрос и пересказывала дословно
+        // («salam» → «Имя пользователя: Иван, Майк.», скриншот владельца 2026-10-21).
         return buildString {
             append(IM_START).append("system\n")
             append(AppConstants.IDENTITY_PROMPT).append("\n")
             append(SYSTEM_PROMPT).append("\n")
-            append(styleHint).append(IM_END).append("\n")
-            append(IM_START).append("user\n")
+            append(styleHint)
             val memory = request.memoryContext.trim()
             if (memory.isNotBlank()) {
-                append(memory).append("\n\n")
+                append("\n").append(MEMORY_INTRO).append("\n").append(memory)
             }
+            append(IM_END).append("\n")
+            append(IM_START).append("user\n")
             append(request.text.trim()).append(IM_END).append("\n")
             append(IM_START).append("assistant\n")
         }

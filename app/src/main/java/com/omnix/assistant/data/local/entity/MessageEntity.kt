@@ -9,7 +9,7 @@ import com.omnix.assistant.domain.models.MessageRole
 
 @Entity(
     tableName = "messages",
-    indices = [Index(value = ["timestamp"])]
+    indices = [Index(value = ["timestamp"]), Index(value = ["conversation_id"])]
 )
 data class MessageEntity(
     @PrimaryKey(autoGenerate = true)
@@ -23,7 +23,24 @@ data class MessageEntity(
     val text: String,
 
     @ColumnInfo(name = "timestamp")
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+
+    /**
+     * Разговор, к которому относится сообщение (v6). Старые сообщения после
+     * миграции 5 → 6 получают 0 — общий разговор «Ранее».
+     */
+    @ColumnInfo(name = "conversation_id", defaultValue = "0")
+    val conversationId: Long = 0L
+)
+
+/** Строка списка «История»: один разговор. */
+data class ConversationSummaryRow(
+    val conversationId: Long,
+    val startedAt: Long,
+    val lastMessageAt: Long,
+    val messageCount: Int,
+    /** Первое сообщение пользователя; null, если он ещё ничего не написал. */
+    val title: String?
 )
 
 fun MessageEntity.toDomain(): Message {
@@ -31,7 +48,8 @@ fun MessageEntity.toDomain(): Message {
         id = id,
         role = MessageRole.fromString(role),
         text = text,
-        timestamp = timestamp
+        timestamp = timestamp,
+        conversationId = conversationId
     )
 }
 
@@ -40,6 +58,7 @@ fun Message.toEntity(): MessageEntity {
         id = id,
         role = role.value,
         text = text,
-        timestamp = timestamp
+        timestamp = timestamp,
+        conversationId = conversationId
     )
 }
