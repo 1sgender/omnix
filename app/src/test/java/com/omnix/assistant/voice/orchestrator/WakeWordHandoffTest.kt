@@ -164,6 +164,26 @@ class WakeWordHandoffTest {
     }
 
     @Test
+    fun `сбой инференса показывает ошибку ассистента`() = runTest {
+        buildOrchestrator()
+        runCurrent()
+        assertTrue(engineErrors.tryEmit(WakeWordEngineError.InferenceFailed("OrtException")))
+        runCurrent()
+
+        assertTrue(orchestrator.assistantState.value is VoiceAssistantState.Error)
+    }
+
+    @Test
+    fun `занятый микрофон показывает ошибку ассистента`() = runTest {
+        buildOrchestrator()
+        runCurrent()
+        assertTrue(engineErrors.tryEmit(WakeWordEngineError.MicrophoneUnavailable))
+        runCurrent()
+
+        assertTrue(orchestrator.assistantState.value is VoiceAssistantState.Error)
+    }
+
+    @Test
     fun `возврат в STANDBY после активации перезапускает движок`() = runTest {
         buildOrchestrator()
         every { bluetooth.checkHeadsetConnection() } returns true

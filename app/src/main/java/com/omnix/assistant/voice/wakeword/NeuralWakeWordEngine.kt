@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
@@ -68,6 +69,9 @@ class NeuralWakeWordEngine @Inject constructor(
         private const val RING_SAMPLES = (SAMPLE_RATE * 640) / 1000
         /** Период debug-лога скоров (каждый N-й чанк), чтобы не спамить. */
         private const val DEBUG_LOG_EVERY_CHUNK = 25
+        /** Ошибок чтения микрофона подряд до остановки (~1 с с паузами). */
+        private const val MAX_READ_ERRORS_IN_ROW = 50
+        private const val READ_ERROR_PAUSE_MS = 20L
     }
 
     // Любая ошибка движка (ONNX Runtime, нативная библиотека, AudioRecord)
@@ -77,6 +81,7 @@ class NeuralWakeWordEngine @Inject constructor(
         Log.e(TAG, "wakeword engine failed", throwable)
         CrashCapture.recordHandled("wakeword", throwable)
         running.set(false)
+        lastProblem = "engine failed: ${throwable.javaClass.simpleName}"
         _errors.tryEmit(WakeWordEngineError.InferenceFailed(throwable.javaClass.simpleName))
     }
 
@@ -126,6 +131,38 @@ class NeuralWakeWordEngine @Inject constructor(
 
     @Volatile
     private var activeWakeWord = "Omni"
+
+    /**
+     * Почему движок последний раз остановился сам (ошибка или выключен в
+     * настройках); null, пока текущий запуск слушает. Для «Диагностики»:
+     * [errors] не хранит прошлых событий.
+     */
+    @Volatile
+    var lastProblem: String? = null
+        private set
+
+    /** Базовый порог из настроек и действующий порог последнего кадра (с поправкой на шум). */
+    @Volatile
+    var baseThreshold: Float = 0f
+        private set
+
+    @Volatile
+    var effectiveThreshold: Float = 0f
+        private set
+
+    /** Сколько раз AudioRecord.read вернул ошибку и её последний код (0 — ошибок не было). */
+    @Volatile
+    var micReadErrors: Long = 0
+        private set
+
+    @Volatile
+    var lastMicReadError: Int = 0
+        private set
+
+    private suspend fun report(error: WakeWordEngineError) {
+        lastProblem = error.toString()
+        _errors.emit(error)
+    }
 
     override fun start() {
         if (!running.compareAndSet(false, true)) return
@@ -191,7 +228,7 @@ class NeuralWakeWordEngine @Inject constructor(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
             PackageManager.PERMISSION_GRANTED
         ) {
-            _errors.emit(WakeWordEngineError.PermissionDenied)
+            report(WakeWordEngineError.PermissionDenied)
             endRun(run)
             return
         }
@@ -204,6 +241,7 @@ class NeuralWakeWordEngine @Inject constructor(
         }
         if (!config.enabled) {
             Log.i(TAG, "wakeword disabled in settings")
+            lastProblem = "disabled in settings"
             endRun(run)
             return
         }
@@ -213,7 +251,7 @@ class NeuralWakeWordEngine @Inject constructor(
             ensureSessions(config)
         } catch (e: ModelDigestMismatch) {
             Log.e(TAG, "wakeword model digest mismatch", e)
-            _errors.emit(
+            report(
                 WakeWordEngineError.ModelCorrupted(
                     e.assetPath, e.expectedSha256, e.actualSha256
                 )
@@ -224,9 +262,9 @@ class NeuralWakeWordEngine @Inject constructor(
             Log.e(TAG, "wakeword model load failed", e)
             val missing = missingAssetPath(config, e)
             if (missing != null) {
-                _errors.emit(WakeWordEngineError.ModelMissing(missing))
+                report(WakeWordEngineError.ModelMissing(missing))
             } else {
-                _errors.emit(WakeWordEngineError.InferenceFailed(e.message ?: "model load failed"))
+                report(WakeWordEngineError.InferenceFailed(e.message ?: "model load failed"))
             }
             endRun(run)
             return
@@ -237,7 +275,7 @@ class NeuralWakeWordEngine @Inject constructor(
             // распознавание «Omni» недоступно, приложение продолжает работать.
             Log.e(TAG, "wakeword sessions failed", e)
             CrashCapture.recordHandled("wakeword sessions", e)
-            _errors.emit(WakeWordEngineError.InferenceFailed(e.javaClass.simpleName))
+            report(WakeWordEngineError.InferenceFailed(e.javaClass.simpleName))
             endRun(run)
             return
         }
@@ -246,7 +284,7 @@ class NeuralWakeWordEngine @Inject constructor(
         val record = createAudioRecord()
         if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
             record?.release()
-            _errors.emit(WakeWordEngineError.MicrophoneUnavailable)
+            report(WakeWordEngineError.MicrophoneUnavailable)
             endRun(run)
             return
         }
@@ -270,25 +308,40 @@ class NeuralWakeWordEngine @Inject constructor(
                 // Гонка: пермишен отозвали между проверкой и стартом.
                 // Громко в errors, без тихой смерти (§21); release в finally ниже.
                 Log.e(TAG, "startRecording denied", e)
-                _errors.emit(WakeWordEngineError.PermissionDenied)
+                report(WakeWordEngineError.PermissionDenied)
                 endRun(run)
                 return
             }
+            lastProblem = null
             val chunk = ShortArray(OpenWakeWordPipeline.CHUNK_SAMPLES)
             var chunkIndex = 0L
+            var readErrorsInRow = 0
             while (running.get() && generation.get() == run) {
                 val read = record.read(chunk, 0, chunk.size)
                 if (read < 0) {
+                    // Раньше ошибка чтения молча повторялась без паузы: движок
+                    // «работал», но ничего не слышал. Микрофон потерян
+                    // (DEAD_OBJECT) или ошибки идут подряд — говорим об этом.
                     Log.w(TAG, "AudioRecord.read error=$read")
+                    micReadErrors++
+                    lastMicReadError = read
+                    readErrorsInRow++
+                    if (read == AudioRecord.ERROR_DEAD_OBJECT || readErrorsInRow >= MAX_READ_ERRORS_IN_ROW) {
+                        report(WakeWordEngineError.MicrophoneUnavailable)
+                        endRun(run)
+                        break
+                    }
+                    delay(READ_ERROR_PAUSE_MS)
                     continue
                 }
+                readErrorsInRow = 0
                 if (read == 0) continue
                 val frame = if (read == chunk.size) chunk else chunk.copyOf(read)
 
                 // «Мёртвый» микрофон: 20 с константного потока (owner review п.5).
                 if (dead.observe(frame)) {
                     Log.e(TAG, "microphone dead signal: constant stream for 20s")
-                    _errors.emit(WakeWordEngineError.MicrophoneDeadSignal)
+                    report(WakeWordEngineError.MicrophoneDeadSignal)
                     endRun(run)
                     break
                 }
@@ -304,7 +357,7 @@ class NeuralWakeWordEngine @Inject constructor(
                     p.accept(frame)
                 } catch (e: Exception) {
                     Log.e(TAG, "wakeword inference failed", e)
-                    _errors.emit(WakeWordEngineError.InferenceFailed(e.message ?: "inference failed"))
+                    report(WakeWordEngineError.InferenceFailed(e.message ?: "inference failed"))
                     endRun(run)
                     break
                 }
@@ -317,6 +370,7 @@ class NeuralWakeWordEngine @Inject constructor(
                 } else {
                     config.threshold
                 }
+                effectiveThreshold = threshold
                 val fired = policy.observe(result.score, threshold)
                 metrics.recordFrame(result.score, fired, result.melMs, result.embMs, result.clfMs)
                 if (debugLogging && chunkIndex % DEBUG_LOG_EVERY_CHUNK == 0L) {
@@ -360,6 +414,8 @@ class NeuralWakeWordEngine @Inject constructor(
     }
 
     private fun applyConfig(config: WakeWordConfig) {
+        baseThreshold = config.threshold
+        effectiveThreshold = config.threshold
         policy.threshold = config.threshold
         policy.patienceFrames = config.patienceFrames
         policy.cooldownMs = config.cooldownMs

@@ -388,6 +388,7 @@
     <string name="omnix_diagnostics_running">ТЕСТ %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">ЭКСПОРТ ОТЧЁТА</string>
     <string name="omnix_diagnostics_share_title">Отправить отчёт диагностики</string>
+    <string name="omnix_diag_wake_word">Слово «Omni»</string>
     <string name="omnix_diag_mic">Микрофон</string>
     <string name="omnix_diag_stt">Распознавание речи</string>
     <string name="omnix_diag_local_ai">Локальный ИИ</string>

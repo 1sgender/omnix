@@ -389,6 +389,7 @@
     <string name="omnix_diagnostics_running">GEÇIRILÝÄR %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">HASABATY ÇYKAR</string>
     <string name="omnix_diagnostics_share_title">Diagnostika hasabatyny paýlaş</string>
+    <string name="omnix_diag_wake_word">«Omni» sözi</string>
     <string name="omnix_diag_mic">Mikrofon</string>
     <string name="omnix_diag_stt">Sözi tanamak</string>
     <string name="omnix_diag_local_ai">Ýerli AI</string>

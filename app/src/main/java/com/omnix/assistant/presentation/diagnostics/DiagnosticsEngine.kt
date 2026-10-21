@@ -28,8 +28,10 @@ import com.omnix.assistant.voice.audio.BluetoothAudioRouter
 import com.omnix.assistant.voice.audio.BluetoothAudioState
 import com.omnix.assistant.voice.tts.TextToSpeechManager
 import com.omnix.assistant.voice.tts.TtsState
+import com.omnix.assistant.voice.wakeword.NeuralWakeWordEngine
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +41,8 @@ import javax.inject.Singleton
  * Каждая проверка — реальное измерение через менеджер, который владеет
  * подсистемой в проде, а не пересказ настроек:
  *
+ * - Wake word — снимок [NeuralWakeWordEngine]: слушает ли, кадры, лучший
+ *   скор «Omni» против порога, причина остановки;
  * - Mic — пробный захват через AudioRecord (16 кГц, VOICE_RECOGNITION);
  * - STT — SpeechRecognizer.isRecognitionAvailable;
  * - Local AI — состояние [LocalModelManager];
@@ -67,7 +71,8 @@ class DiagnosticsEngine @Inject constructor(
     private val clipRepository: ClipRepository,
     private val licenseManager: LicenseManager,
     private val serverValidator: LicenseServerValidator,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    private val wakeWordEngine: NeuralWakeWordEngine
 ) {
     /** Запускает одну проверку, замеряя длительность. Не бросает исключений. */
     suspend fun runCheck(id: DiagnosticCheckId): DiagnosticResult =
@@ -75,6 +80,7 @@ class DiagnosticsEngine @Inject constructor(
             val started = SystemClock.elapsedRealtime()
             val (status, detail) = try {
                 when (id) {
+                    DiagnosticCheckId.WAKE_WORD -> checkWakeWord()
                     DiagnosticCheckId.MIC -> checkMic()
                     DiagnosticCheckId.STT -> checkStt()
                     DiagnosticCheckId.LOCAL_AI -> checkLocalAi()
@@ -100,6 +106,37 @@ class DiagnosticsEngine @Inject constructor(
         }
 
     // ------------------------------------------------------------ checks
+
+    /**
+     * Движок слова «Omni»: слушает ли он, сколько кадров услышал, лучший скор
+     * за последнюю минуту против порога и почему остановился. Отличает «модель
+     * не узнаёт голос» (кадры идут, скор ниже порога) от «движок не слушает».
+     */
+    private fun checkWakeWord(): Pair<DiagnosticStatus, String> {
+        val m = wakeWordEngine.metricsSnapshot()
+        val problem = wakeWordEngine.lastProblem
+        val micErrors = wakeWordEngine.micReadErrors.let {
+            if (it > 0) ", mic read errors=$it (last ${wakeWordEngine.lastMicReadError})" else ""
+        }
+        val scores = "best score last 60s=${fmt(m.recentMaxScore)} (ever ${fmt(m.maxScore)}), " +
+            "threshold=${fmt(wakeWordEngine.baseThreshold)} " +
+            "(now ${fmt(wakeWordEngine.effectiveThreshold)}), " +
+            "frames=${m.framesObserved}, detections=${m.detections}$micErrors"
+        return when {
+            !wakeWordEngine.isRunning() && problem != null ->
+                DiagnosticStatus.FAIL to "stopped: $problem; $scores"
+            !wakeWordEngine.isRunning() ->
+                DiagnosticStatus.WARNING to "not listening (OMNIX off or busy); $scores"
+            m.framesObserved == 0L ->
+                DiagnosticStatus.WARNING to "listening, no audio frames yet; $scores"
+            m.detections > 0 ->
+                DiagnosticStatus.OK to "listening; $scores"
+            else ->
+                DiagnosticStatus.WARNING to "listening, no detection yet (say 'Omni', then re-run); $scores"
+        }
+    }
+
+    private fun fmt(v: Float): String = String.format(Locale.US, "%.2f", v)
 
     private fun checkMic(): Pair<DiagnosticStatus, String> {
         if (
