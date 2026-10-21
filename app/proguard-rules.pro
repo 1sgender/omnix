@@ -22,6 +22,11 @@
 # turned on. The AAR ships no consumer rules for this.
 -keep class ai.onnxruntime.** { *; }
 
+# Wake phrase «Окей, Омни»: libsherpa-onnx-jni.so reads config fields
+# (KeywordSpotterConfig, OnlineModelConfig, FeatureConfig, ...) and builds
+# KeywordSpotterResult by name. The AAR ships no consumer rules.
+-keep class com.k2fsa.sherpa.onnx.** { *; }
+
 # Reproduced release failure (2026-09-21, v93 on a real device):
 # "RuntimeException: Field modelPath_ for c2.g not found" — R8 renamed the
 # fields of LlmOptionsProto$LlmModelSettings. The protobuf runtime reaches

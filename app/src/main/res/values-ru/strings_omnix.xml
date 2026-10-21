@@ -30,7 +30,7 @@
     <string name="omnix_home_off_hint">Нажмите на логотип, чтобы включить</string>
     <string name="omnix_home_starting">Включаю…</string>
     <string name="omnix_home_stopping">Выключаю…</string>
-    <string name="omnix_home_on_hint">Скажите «Omni» или нажмите «Говорить»</string>
+    <string name="omnix_home_on_hint">Скажите «Окей, Омни» или нажмите «Говорить»</string>
     <string name="omnix_home_talk">Говорить</string>
     <string name="omnix_home_talk_stop">Стоп</string>
     <string name="omnix_home_power_a11y">Ассистент OMNIX</string>
@@ -109,7 +109,7 @@
     <string name="omnix_error_user_action_action">Продолжить</string>
 
     <string name="omnix_error_not_understood_title">Не расслышал.</string>
-    <string name="omnix_error_not_understood_body">Скажите «Omni» и повторите.</string>
+    <string name="omnix_error_not_understood_body">Скажите «Окей, Омни» и повторите.</string>
 
     <string name="omnix_error_generic_title">Не получилось.</string>
     <string name="omnix_error_generic_body">Попробуйте ещё раз.</string>
@@ -151,7 +151,7 @@
     <string name="omnix_devices_title">Наушники</string>
     <string name="omnix_devices_clip_name">Omnix Buds</string>
     <string name="omnix_devices_battery">ЗАРЯД</string>
-    <string name="omnix_devices_wake_title">Слово «Omni»</string>
+    <string name="omnix_devices_wake_title">Фраза «Окей, Омни»</string>
     <string name="omnix_devices_wake_sub">Вызов без рук</string>
     <string name="omnix_devices_translate_title">Перевод в наушники</string>
     <string name="omnix_devices_translate_sub">Собеседник звучит на вашем языке</string>
@@ -218,7 +218,7 @@
     <string name="omnix_me_license_active">Лицензия активна</string>
     <string name="omnix_me_no_name">Ваш профиль</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
-    <string name="omnix_me_row_voice">Голос и слово «Omni»</string>
+    <string name="omnix_me_row_voice">Голос и фраза «Окей, Омни»</string>
     <string name="omnix_me_row_memory">Память и приватность</string>
     <string name="omnix_me_glyph_voice">Гл</string>
     <string name="omnix_me_glyph_translator">Пр</string>
@@ -235,7 +235,7 @@
     <string name="omnix_voice_tone">Тембр</string>
     <string name="omnix_voice_feedback">Голосовые ответы</string>
     <string name="omnix_voice_listening">Прослушивание</string>
-    <string name="omnix_voice_listening_body">OMNIX ждёт слово «Omni» в фоне.</string>
+    <string name="omnix_voice_listening_body">OMNIX ждёт слово «Окей, Омни» в фоне.</string>
     <string name="omnix_voice_headset_only">Только с подключённым Clip</string>
     <string name="omnix_voice_headset_only_body">Экономит батарею: OMNIX слушает только через Clip.</string>
     <string name="omnix_voice_sensitivity">Чувствительность</string>
@@ -243,7 +243,7 @@
     <string name="omnix_voice_background_body">Разрешите OMNIX работать при выключенном экране.</string>
     <string name="omnix_voice_background_action">Разрешить</string>
     <string name="omnix_voice_automations">Автоматизации</string>
-    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Скажите: «Omni, когда подключится Clip — включи музыку».</string>
+    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Скажите: «Окей, Омни, когда подключится Clip — включи музыку».</string>
 
     <string name="omnix_privacy_title">Приватность</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
@@ -271,6 +271,11 @@
     <string name="omnix_admin_models_restart">Модель на телефоне сменится после перезапуска приложения. Если её ещё нет на телефоне, скачайте её на этом экране.</string>
     <string name="omnix_admin_answer_phone">Телефон · %1$s</string>
     <string name="omnix_admin_answer_cloud">Облако</string>
+    <string name="omnix_admin_wake_title">Тест фразы вызова (админ)</string>
+    <string name="omnix_admin_wake_body">Сравните на своём телефоне. Сменится при следующем запуске прослушивания.</string>
+    <string name="omnix_admin_wake_okay_omni">«Окей, Омни» — новый движок</string>
+    <string name="omnix_admin_wake_omni">«Омни» — новый движок</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — прежняя модель</string>
     <string name="omnix_ai_model_checking">Проверяю…</string>
     <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>
@@ -313,9 +318,9 @@
     <string name="omnix_setup_turn_on_title">Включите OMNIX</string>
     <string name="omnix_setup_turn_on_hint">Нажмите на логотип. Так OMNIX включается и выключается.</string>
     <string name="omnix_setup_on_title">OMNIX включён</string>
-    <string name="omnix_setup_try_hint">Скажите: «Omni, который час?»</string>
+    <string name="omnix_setup_try_hint">Скажите: «Окей, Омни, который час?»</string>
     <string name="omnix_setup_success">Получилось</string>
-    <string name="omnix_setup_success_body">Теперь просто говорите «Omni» — в наушниках или рядом с телефоном.</string>
+    <string name="omnix_setup_success_body">Теперь просто говорите «Окей, Омни» — в наушниках или рядом с телефоном.</string>
     <string name="omnix_setup_done">Готово</string>
     <string name="omnix_setup_skip">Пропустить</string>
     <string name="omnix_setup_connect_headphones">Подключить наушники</string>
@@ -401,7 +406,7 @@
     <string name="omnix_diagnostics_running">ТЕСТ %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">ЭКСПОРТ ОТЧЁТА</string>
     <string name="omnix_diagnostics_share_title">Отправить отчёт диагностики</string>
-    <string name="omnix_diag_wake_word">Слово «Omni»</string>
+    <string name="omnix_diag_wake_word">Фраза «Окей, Омни»</string>
     <string name="omnix_diag_mic">Микрофон</string>
     <string name="omnix_diag_stt">Распознавание речи</string>
     <string name="omnix_diag_local_ai">Локальный ИИ</string>
@@ -510,8 +515,8 @@
     <string name="omnix_memory_type_episodic">Событие</string>
     <string name="omnix_memory_type_procedural">Сценарий</string>
     <string name="omnix_memory_type_other">Воспоминание</string>
-    <string name="omnix_voice_wake_word">Ключевое слово «Omni»</string>
-    <string name="omnix_voice_wake_word_body">Откликаться на слово «Omni» — выключите, если прослушивание не нужно</string>
+    <string name="omnix_voice_wake_word">Фраза «Окей, Омни»</string>
+    <string name="omnix_voice_wake_word_body">Откликаться на «Окей, Омни» — выключите, если прослушивание не нужно</string>
     <string name="omnix_devices_on_this_phone">На этом телефоне</string>
     <string name="omnix_capability_bluetooth">Bluetooth</string>
     <string name="omnix_capability_wifi">Wi-Fi</string>

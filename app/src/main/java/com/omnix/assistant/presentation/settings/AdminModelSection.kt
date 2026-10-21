@@ -35,6 +35,8 @@ import com.omnix.assistant.core.admin.cloudModelLabel
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.localmodel.rememberLocalModelSpec
+import com.omnix.assistant.voice.wakeword.phrase.WakeEngineKind
+import com.omnix.assistant.voice.wakeword.phrase.WakePhrase
 
 /**
  * Тест моделей (только админ): любая модель телефона или облака отвечает на
@@ -101,6 +103,63 @@ fun AdminModelSection(
                 color = colors.stateWarning,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
+        }
+    }
+}
+
+/**
+ * Тест фразы вызова (только админ): новая фраза «Окей, Омни», одно «Омни» на
+ * том же движке и прежняя модель «Omni» — чтобы сравнить на своём телефоне.
+ * Действует со следующего запуска прослушивания.
+ */
+@Composable
+fun AdminWakeSection(
+    current: Pair<WakeEngineKind, WakePhrase>,
+    onSelect: (WakeEngineKind, WakePhrase) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    val options = listOf(
+        Triple(WakeEngineKind.PHRASE, WakePhrase.OKAY_OMNI, stringResource(R.string.omnix_admin_wake_okay_omni)),
+        Triple(WakeEngineKind.PHRASE, WakePhrase.OMNI, stringResource(R.string.omnix_admin_wake_omni)),
+        Triple(WakeEngineKind.LEGACY_OMNI, WakePhrase.OKAY_OMNI, stringResource(R.string.omnix_admin_wake_legacy)),
+    )
+    // Прежняя модель не зависит от фразы: отмечаем её по движку.
+    fun isSelected(engine: WakeEngineKind, phrase: WakePhrase) =
+        engine == current.first && (engine == WakeEngineKind.LEGACY_OMNI || phrase == current.second)
+
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.omnix_admin_wake_title),
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        Text(
+            text = stringResource(R.string.omnix_admin_wake_body),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 17.sp),
+            color = colors.textSecondary,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+                .selectableGroup()
+        ) {
+            options.forEachIndexed { index, (engine, phrase, label) ->
+                if (index > 0) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(colors.textPrimary.copy(alpha = 0.06f))
+                    )
+                }
+                PinRow(title = label, selected = isSelected(engine, phrase), onClick = { onSelect(engine, phrase) })
+            }
         }
     }
 }

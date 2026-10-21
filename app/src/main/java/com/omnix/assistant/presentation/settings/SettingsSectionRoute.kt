@@ -83,6 +83,7 @@ fun SettingsSectionRoute(
             val aiApplying by aiModelViewModel.applying.collectAsState()
             val aiFailure by aiModelViewModel.failure.collectAsState()
             val adminModels by aiModelViewModel.admin.collectAsState()
+            val wakeListening by aiModelViewModel.wakeListening.collectAsState()
             AiSettingsScreen(
                 modifier = modifier,
                 onBack = onBack,
@@ -98,6 +99,11 @@ fun SettingsSectionRoute(
                         AdminModelSection(
                             state = adminModels,
                             onPin = aiModelViewModel::pinAdminModel,
+                            modifier = Modifier.padding(top = 20.dp)
+                        )
+                        AdminWakeSection(
+                            current = wakeListening,
+                            onSelect = aiModelViewModel::setWakeListening,
                             modifier = Modifier.padding(top = 20.dp)
                         )
                     }

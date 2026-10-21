@@ -8,6 +8,17 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Changed (wake phrase)
+
+- Ассистент отзывается на фразу «Окей, Омни» вместо одного «Omni» (жалоба владельца: срабатывал на
+  любые слова). Прежняя модель давала 38 ложных срабатываний за 5 минут чужой речи, новая — ни
+  одного; фраза узнаётся и по-русски, и по-английски («Okay Omni»). Детектор — sherpa-onnx на
+  русской потоковой модели Vosk; замеры и ограничения — docs/WAKEWORD_NEURAL.md.
+- Админ сравнивает на своём телефоне: «Я → ИИ-модель → Тест фразы вызова» — «Окей, Омни», «Омни»
+  на новом движке и прежняя модель «Omni».
+- Сборка качает sherpa-onnx и модель с GitHub и сверяет SHA-256; в репозитории их нет. APK
+  растёт: нативная библиотека 16–27 МБ на каждую из трёх ABI и модель ~28 МБ.
+
 ### Added (admin model testing)
 
 - Админ (аккаунт из `ADMIN_ACCOUNT_IDS` на сервере) тестирует любые модели (просьба владельца
