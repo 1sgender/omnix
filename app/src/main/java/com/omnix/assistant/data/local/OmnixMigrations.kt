@@ -23,6 +23,9 @@ object OmnixMigrations {
     /** Earliest schema from which in-place upgrades are supported. */
     const val MIN_SUPPORTED_VERSION = 5
 
+    /** The schema [OmnixDatabase] declares; bump it together with a migration. */
+    const val CURRENT_VERSION = 6
+
     /**
      * v6: the chat is split into conversations (owner, 2026-10-21: every
      * launch starts a new chat, past ones stay in history). Existing

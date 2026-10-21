@@ -14,7 +14,7 @@ import java.nio.file.StandardCopyOption
  *
  * Authentic exported schemas/migrations do not exist, so guessing SQL would
  * risk corrupting user data. We archive the complete legacy SQLite file set in
- * internal app storage and create a clean v5 database. The archive is retained
+ * internal app storage and create a clean database at the current version. The archive is retained
  * for support/manual recovery and the reset is recorded in preferences.
  */
 object LegacyDatabasePolicy {
