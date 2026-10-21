@@ -211,6 +211,7 @@
     <string name="omnix_me_glyph_language">La</string>
     <string name="omnix_me_glyph_notifications">No</string>
     <string name="omnix_me_license_active">License active</string>
+    <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
     <string name="omnix_me_row_voice">Voice and the word “Omni”</string>
     <string name="omnix_me_row_memory">Memory and privacy</string>

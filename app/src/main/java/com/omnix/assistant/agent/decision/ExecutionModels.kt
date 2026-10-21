@@ -97,6 +97,13 @@ data class ExecutionRequest(
      */
     val localOnly: Boolean = false,
     /**
+     * «Авто», есть сеть и запрос можно отправить в облако без согласия: ответ
+     * даёт облачная модель — модель на телефоне (0.5B) для свободного разговора
+     * слишком слабая (скриншот владельца 2026-10-21). Локальный слой при этом
+     * по-прежнему выполняет сценарии пользователя (процедурная память).
+     */
+    val preferCloud: Boolean = false,
+    /**
      * Privacy classification result that accompanies this request.
      *
      * H-02 / Refactor #3: this is the SINGLE source of truth for privacy
@@ -302,5 +309,12 @@ sealed class ExecutionResult {
  *  HandledLocally без toolCall (реплика-ответ) = 0.80, ForwardToLlm = 0.0.
  */
 data class ExecutionDecisionConfig(
-    val deviceConfidenceThreshold: Float = 0.75f
+    val deviceConfidenceThreshold: Float = 0.75f,
+    /**
+     * «Авто» отдаёт свободный разговор облаку, когда оно доступно и запрос не
+     * приватный (решение владельца 2026-10-21: качество ответа важнее).
+     * false — прежний порядок «сначала телефон, потом облако»; так его меряют
+     * бенчмарк маршрутизации и тесты локального слоя.
+     */
+    val autoPrefersCloud: Boolean = true
 )

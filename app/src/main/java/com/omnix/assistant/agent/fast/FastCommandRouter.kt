@@ -42,7 +42,7 @@ class FastCommandRouter @Inject constructor() {
                         toolId = "memory.forget",
                         arguments = buildJsonObject { put("target", target) }
                     ),
-                    immediateVoiceResponse = "Удаляю информацию о \"$target\" из памяти, сэр."
+                    immediateVoiceResponse = "Удаляю информацию о \"$target\" из памяти."
                 )
             }
         }
@@ -94,27 +94,23 @@ class FastCommandRouter @Inject constructor() {
                             put("trigger_type", triggerType)
                             put("tool_action", actionTool)
                             put("action_params", actionParams)
-                            put("voice_announcement", "Автоматизация '$ruleName' успешно сработала, сэр.")
+                            put("voice_announcement", "Автоматизация '$ruleName' успешно сработала.")
                         }
                     ),
-                    immediateVoiceResponse = "Создаю автоматизацию: при событии '$ruleName' выполнить $actionTool, сэр."
+                    immediateVoiceResponse = "Создаю автоматизацию: при событии '$ruleName' выполнить $actionTool."
                 )
             }
         }
 
-        // 2. Приветствия и проверка связи
-        if (q in listOf("ты тут", "ты тут?", "ты здесь", "ты здесь?", "але", "алло", "на связи")) {
-            return FastRouteResult.HandledLocally(immediateVoiceResponse = "Да, сэр, я на связи. Чем могу помочь?")
-        }
-        if (q in listOf("привет", "здравствуй", "добрый день", "добрый вечер", "хай", "салам")) {
-            return FastRouteResult.HandledLocally(immediateVoiceResponse = "Приветствую, сэр. Я готов к работе.")
-        }
+        // 2. Приветствия и «ты тут?» не перехватываются шаблоном: отвечает ИИ,
+        //    живо и на языке пользователя (раньше — «Приветствую. Я готов
+        //    к работе.» на любое «привет», скриншот владельца 2026-10-21).
 
         // 2.1 Персональный аудио-брифинг в ухо ("Джарвис, брифинг", "Утренняя сводка", "Что нового")
         if (q.contains("брифинг") || q.contains("сводка") || q.contains("что нового") || q == "утренний брифинг" || q == "вечерний брифинг") {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "productivity.ear_briefing", arguments = JsonObject(emptyMap())),
-                immediateVoiceResponse = "Формирую персональный брифинг, сэр."
+                immediateVoiceResponse = "Формирую персональный брифинг."
             )
         }
 
@@ -140,7 +136,7 @@ class FastCommandRouter @Inject constructor() {
                             put("target_lang", targetLang)
                         }
                     ),
-                    immediateVoiceResponse = "Перевожу, сэр."
+                    immediateVoiceResponse = "Перевожу."
                 )
             }
         }
@@ -159,22 +155,22 @@ class FastCommandRouter @Inject constructor() {
                         }
                     ),
                     immediateVoiceResponse = if (mediaIntent == MediaIntent.VOLUME_UP) {
-                        "Делаю музыку громче, сэр."
+                        "Делаю музыку громче."
                     } else {
-                        "Делаю музыку тише, сэр."
+                        "Делаю музыку тише."
                     }
                 )
             }
 
             val voice = when (mediaIntent) {
-                MediaIntent.PLAY_MEDIA -> "Включаю музыку, сэр."
-                MediaIntent.PAUSE_MEDIA -> "Ставлю музыку на паузу, сэр."
-                MediaIntent.RESUME_MEDIA -> "Продолжаю воспроизведение, сэр."
-                MediaIntent.NEXT_TRACK -> "Включаю следующий трек, сэр."
-                MediaIntent.PREVIOUS_TRACK -> "Переключаю назад, сэр."
-                MediaIntent.STOP_MEDIA -> "Останавливаю воспроизведение, сэр."
-                MediaIntent.TOGGLE_PLAY_PAUSE -> "Переключаю воспроизведение, сэр."
-                MediaIntent.VOLUME_UP, MediaIntent.VOLUME_DOWN -> "Изменяю громкость, сэр."
+                MediaIntent.PLAY_MEDIA -> "Включаю музыку."
+                MediaIntent.PAUSE_MEDIA -> "Ставлю музыку на паузу."
+                MediaIntent.RESUME_MEDIA -> "Продолжаю воспроизведение."
+                MediaIntent.NEXT_TRACK -> "Включаю следующий трек."
+                MediaIntent.PREVIOUS_TRACK -> "Переключаю назад."
+                MediaIntent.STOP_MEDIA -> "Останавливаю воспроизведение."
+                MediaIntent.TOGGLE_PLAY_PAUSE -> "Переключаю воспроизведение."
+                MediaIntent.VOLUME_UP, MediaIntent.VOLUME_DOWN -> "Изменяю громкость."
             }
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(
@@ -196,7 +192,7 @@ class FastCommandRouter @Inject constructor() {
                         toolId = "device.flashlight",
                         arguments = buildJsonObject { put("enabled", enabled) }
                     ),
-                    immediateVoiceResponse = if (enabled) "Фонарик включён, сэр." else "Фонарик выключен, сэр."
+                    immediateVoiceResponse = if (enabled) "Фонарик включён." else "Фонарик выключен."
                 )
             }
         }
@@ -214,7 +210,7 @@ class FastCommandRouter @Inject constructor() {
                             put("percent", percent)
                         }
                     ),
-                    immediateVoiceResponse = "Устанавливаю громкость на $percent процентов, сэр."
+                    immediateVoiceResponse = "Устанавливаю громкость на $percent процентов."
                 )
             }
 
@@ -227,11 +223,11 @@ class FastCommandRouter @Inject constructor() {
             }
 
             val voice = when (action) {
-                "max" -> "Громкость на максимуме, сэр."
-                "mute" -> "Звук полностью отключен, сэр."
-                "down" -> "Сделал тише, сэр."
-                "up" -> "Сделал громче, сэр."
-                else -> "Громкость изменена, сэр."
+                "max" -> "Громкость на максимуме."
+                "mute" -> "Звук полностью отключен."
+                "down" -> "Сделал тише."
+                "up" -> "Сделал громче."
+                else -> "Громкость изменена."
             }
 
             return FastRouteResult.HandledLocally(
@@ -283,7 +279,7 @@ class FastCommandRouter @Inject constructor() {
 
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "device.brightness", arguments = arguments),
-                immediateVoiceResponse = "Настраиваю яркость, сэр."
+                immediateVoiceResponse = "Настраиваю яркость."
             )
         }
 
@@ -308,7 +304,7 @@ class FastCommandRouter @Inject constructor() {
 
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "intelligence.weather", arguments = arguments),
-                immediateVoiceResponse = "Запрашиваю погоду, сэр."
+                immediateVoiceResponse = "Запрашиваю погоду."
             )
         }
 
@@ -322,7 +318,7 @@ class FastCommandRouter @Inject constructor() {
         if (q.contains("батаре") || q.contains("заряд") || q.contains("аккумулятор") || q.contains("сколько процентов")) {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "system.battery", arguments = JsonObject(emptyMap())),
-                immediateVoiceResponse = "Проверяю заряд батареи, сэр."
+                immediateVoiceResponse = "Проверяю заряд батареи."
             )
         }
 
@@ -330,7 +326,7 @@ class FastCommandRouter @Inject constructor() {
         if (q.contains("время") || q.contains("который час") || q.contains("сколько времени") || q.contains("число") || q.contains("дата") || q.contains("день недели")) {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "system.time", arguments = JsonObject(emptyMap())),
-                immediateVoiceResponse = "Проверяю время, сэр."
+                immediateVoiceResponse = "Проверяю время."
             )
         }
 
@@ -338,7 +334,7 @@ class FastCommandRouter @Inject constructor() {
         if (q.contains("скриншот") || q.contains("снимок экрана")) {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "device.screenshot", arguments = JsonObject(emptyMap())),
-                immediateVoiceResponse = "Делаю скриншот экрана, сэр."
+                immediateVoiceResponse = "Делаю скриншот экрана."
             )
         }
 
@@ -346,7 +342,7 @@ class FastCommandRouter @Inject constructor() {
         if (q.contains("что на экране") || q.contains("прочитай экран") || q.contains("что написано") || q.contains("что тут написано") || q == "экран") {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "accessibility.screen_reader", arguments = JsonObject(emptyMap())),
-                immediateVoiceResponse = "Считываю информацию с экрана, сэр."
+                immediateVoiceResponse = "Считываю информацию с экрана."
             )
         }
 
@@ -362,7 +358,7 @@ class FastCommandRouter @Inject constructor() {
                             put("target_text", target)
                         }
                     ),
-                    immediateVoiceResponse = "Нажимаю на \"$target\", сэр."
+                    immediateVoiceResponse = "Нажимаю на \"$target\"."
                 )
             }
         }
@@ -372,7 +368,7 @@ class FastCommandRouter @Inject constructor() {
                     toolId = "accessibility.ui_click",
                     arguments = buildJsonObject { put("action", "scroll_down") }
                 ),
-                immediateVoiceResponse = "Прокручиваю вниз, сэр."
+                immediateVoiceResponse = "Прокручиваю вниз."
             )
         }
         if (q.contains("прокрути вверх") || q.contains("листай вверх") || q.contains("вверх страницу") || q == "скролл вверх") {
@@ -381,7 +377,7 @@ class FastCommandRouter @Inject constructor() {
                     toolId = "accessibility.ui_click",
                     arguments = buildJsonObject { put("action", "scroll_up") }
                 ),
-                immediateVoiceResponse = "Прокручиваю вверх, сэр."
+                immediateVoiceResponse = "Прокручиваю вверх."
             )
         }
 
@@ -390,7 +386,7 @@ class FastCommandRouter @Inject constructor() {
             val isOff = q.contains("выключ") || q.contains("отключ")
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "device.dnd", arguments = buildJsonObject { put("enabled", !isOff) }),
-                immediateVoiceResponse = if (!isOff) "Режим 'Не беспокоить' активирован, сэр." else "Режим 'Не беспокоить' отключен, сэр."
+                immediateVoiceResponse = if (!isOff) "Режим 'Не беспокоить' активирован." else "Режим 'Не беспокоить' отключен."
             )
         }
 
@@ -400,7 +396,7 @@ class FastCommandRouter @Inject constructor() {
             if (dest.isNotEmpty()) {
                 return FastRouteResult.HandledLocally(
                     toolCall = ToolCall(toolId = "location.navigation", arguments = buildJsonObject { put("destination", dest) }),
-                    immediateVoiceResponse = "Прокладываю маршрут в $dest, сэр."
+                    immediateVoiceResponse = "Прокладываю маршрут в $dest."
                 )
             }
         }
@@ -411,7 +407,7 @@ class FastCommandRouter @Inject constructor() {
             if (contact.isNotEmpty()) {
                 return FastRouteResult.HandledLocally(
                     toolCall = ToolCall(toolId = "communication.call", arguments = buildJsonObject { put("recipient", contact) }),
-                    immediateVoiceResponse = "Набираю $contact, сэр."
+                    immediateVoiceResponse = "Набираю $contact."
                 )
             }
         }
@@ -464,7 +460,7 @@ class FastCommandRouter @Inject constructor() {
                         toolId = "device.open_app",
                         arguments = buildJsonObject { put("app_name", app) }
                     ),
-                    immediateVoiceResponse = "Открываю $appTitle, сэр."
+                    immediateVoiceResponse = "Открываю $appTitle."
                 )
             }
         }
@@ -481,7 +477,7 @@ class FastCommandRouter @Inject constructor() {
                     toolId = "device.bluetooth",
                     arguments = buildJsonObject { put("action", resolveToggleIntent(q)) }
                 ),
-                immediateVoiceResponse = "Проверяю Bluetooth, сэр."
+                immediateVoiceResponse = "Проверяю Bluetooth."
             )
         }
         val explicitWifiQuery = q.contains("вайфай") || q.contains("wifi") || q.contains("wi-fi") ||
@@ -492,7 +488,7 @@ class FastCommandRouter @Inject constructor() {
                     toolId = "device.wifi",
                     arguments = buildJsonObject { put("action", resolveToggleIntent(q)) }
                 ),
-                immediateVoiceResponse = "Проверяю Wi-Fi, сэр."
+                immediateVoiceResponse = "Проверяю Wi-Fi."
             )
         }
 
@@ -500,7 +496,7 @@ class FastCommandRouter @Inject constructor() {
         if (q.contains("модель") || q.contains("что за телефон") || q.contains("версия андроид") || q.contains("характеристики")) {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(toolId = "system.device_info", arguments = JsonObject(emptyMap())),
-                immediateVoiceResponse = "Получаю информацию об устройстве, сэр."
+                immediateVoiceResponse = "Получаю информацию об устройстве."
             )
         }
 

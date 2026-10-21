@@ -42,7 +42,7 @@ class EarBriefingTool @Inject constructor(
         if (!planGate.tryConsume(ClientQuotaFeature.EAR_MINUTES, minutes)) {
             return ToolExecutionResult.failure(
                 summary = "Дневной лимит голосовых брифингов исчерпан. " +
-                    "Продолжим завтра, сэр.",
+                    "Продолжим завтра.",
                 error = ClientPlanGate.ERROR_PLAN_LIMIT
             )
         }

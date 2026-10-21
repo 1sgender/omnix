@@ -62,6 +62,11 @@ internal fun resolveNearMissCapture(stored: Boolean?, flavorAllowed: Boolean): B
 class SettingsDataStore @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+    private companion object {
+        /** Имя по умолчанию до 2026-10-21 — обращение «Джарвиса», не имя. */
+        const val LEGACY_DEFAULT_USER_NAME = "Сэр"
+    }
+
     private object PreferencesKeys {
         val USER_NAME = stringPreferencesKey("user_name")
         val SYSTEM_PROMPT = stringPreferencesKey("system_prompt")
@@ -87,7 +92,9 @@ class SettingsDataStore @Inject constructor(
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }
         .map { preferences ->
-            preferences[PreferencesKeys.USER_NAME] ?: "Сэр"
+            // «Сэр» — старое обращение «Джарвиса», записанное как имя по
+            // умолчанию; теперь имени по умолчанию нет.
+            preferences[PreferencesKeys.USER_NAME]?.takeUnless { it == LEGACY_DEFAULT_USER_NAME }.orEmpty()
         }
 
     val systemPromptFlow: Flow<String> = context.dataStore.data
@@ -358,7 +365,7 @@ class SettingsDataStore @Inject constructor(
 
     suspend fun resetDefaults() {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.USER_NAME] = "Сэр"
+            preferences.remove(PreferencesKeys.USER_NAME)
             preferences[PreferencesKeys.SYSTEM_PROMPT] = AppConstants.DEFAULT_SYSTEM_PROMPT
             preferences[PreferencesKeys.SPEECH_RATE] = AppConstants.DEFAULT_SPEECH_RATE
             preferences[PreferencesKeys.SPEECH_PITCH] = AppConstants.DEFAULT_SPEECH_PITCH

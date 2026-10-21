@@ -209,6 +209,7 @@
     <string name="omnix_me_glyph_language">Яз</string>
     <string name="omnix_me_glyph_notifications">Ув</string>
     <string name="omnix_me_license_active">Лицензия активна</string>
+    <string name="omnix_me_no_name">Ваш профиль</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
     <string name="omnix_me_row_voice">Голос и слово «Omni»</string>
     <string name="omnix_me_row_memory">Память и приватность</string>

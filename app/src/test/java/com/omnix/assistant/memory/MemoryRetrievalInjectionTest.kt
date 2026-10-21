@@ -146,6 +146,11 @@ class MemoryRetrievalInjectionTest {
         )
         assertTrue(prompt.contains("дочь Алиса"))
         assertTrue(prompt.contains("как зовут мою дочь?"))
+        // Память — справка в system-блоке, не часть реплики пользователя:
+        // иначе маленькая модель пересказывала её вместо ответа.
+        val userTurn = prompt.substringAfter("<|im_start|>user")
+        assertFalse(userTurn.contains("дочь Алиса"))
+        assertTrue(prompt.substringBefore("<|im_start|>user").contains("дочь Алиса"))
     }
 
     @Test

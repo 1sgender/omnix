@@ -116,7 +116,7 @@ class SmsTool @Inject constructor(
             is ContactResolution.Ambiguous -> return ToolExecutionResult.failure(
                 summary = "Найдено несколько контактов: " +
                     resolution.candidates.joinToString(", ") { (name, number) -> "$name ($number)" } +
-                    ". Уточните получателя, сэр.",
+                    ". Уточните получателя.",
                 error = "AMBIGUOUS_CONTACT"
             )
             is ContactResolution.PermissionRequired -> return ToolExecutionResult.permissionRequired(

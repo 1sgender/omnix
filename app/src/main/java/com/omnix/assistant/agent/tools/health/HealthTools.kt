@@ -53,33 +53,33 @@ abstract class HealthToolBase(
 class WearOsTool @Inject constructor() : HealthToolBase(
     toolId = "health.wear_os",
     description = "Показывает состояние подключения носимого устройства Wear OS (будет в следующих версиях)",
-    reason = "Подключение Wear OS не реализовано в текущей версии, сэр."
+    reason = "Подключение Wear OS не реализовано в текущей версии."
 )
 
 @Singleton
 class HeartRateTool @Inject constructor() : HealthToolBase(
     toolId = "health.heart_rate",
     description = "Показывает текущий пульс с носимого устройства (будет в следующих версиях)",
-    reason = "Данные пульса недоступны: нет подключённого носимого устройства или сенсора, сэр."
+    reason = "Данные пульса недоступны: нет подключённого носимого устройства или сенсора."
 )
 
 @Singleton
 class StepsTool @Inject constructor() : HealthToolBase(
     toolId = "health.steps",
     description = "Показывает количество шагов за день (будет в следующих версиях)",
-    reason = "Счётчик шагов недоступен: нет интеграции с Health Connect, сэр."
+    reason = "Счётчик шагов недоступен: нет интеграции с Health Connect."
 )
 
 @Singleton
 class SleepTool @Inject constructor() : HealthToolBase(
     toolId = "health.sleep",
     description = "Показывает данные сна за прошлую ночь (будет в следующих версиях)",
-    reason = "Данные сна недоступны: нет подключённого носимого устройства, сэр."
+    reason = "Данные сна недоступны: нет подключённого носимого устройства."
 )
 
 @Singleton
 class ActivityTool @Inject constructor() : HealthToolBase(
     toolId = "health.activity",
     description = "Показывает уровень физической активности за день (будет в следующих версиях)",
-    reason = "Данные активности недоступны: нет интеграции с Health Connect, сэр."
+    reason = "Данные активности недоступны: нет интеграции с Health Connect."
 )

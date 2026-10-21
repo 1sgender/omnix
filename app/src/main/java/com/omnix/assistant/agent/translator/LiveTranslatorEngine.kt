@@ -140,7 +140,7 @@ class LiveTranslatorEngine @Inject constructor(
         if (gate != null && gate.remaining(ClientQuotaFeature.TRANSLATION_UNITS) < units) {
             Log.i(TAG, "translation quota exhausted")
             return TranslationResult.Error(
-                "Дневной лимит перевода исчерпан. Продолжим завтра, сэр."
+                "Дневной лимит перевода исчерпан. Продолжим завтра."
             )
         }
 
@@ -204,7 +204,7 @@ class LiveTranslatorEngine @Inject constructor(
     fun describeFailure(result: TranslationResult): String = when (result) {
         is TranslationResult.Success -> result.translatedText
         is TranslationResult.Unsupported ->
-            "Пара языков ${result.sourceLang} → ${result.targetLang} не поддерживается, сэр."
+            "Пара языков ${result.sourceLang} → ${result.targetLang} не поддерживается."
         is TranslationResult.NetworkRequired ->
             "Для перевода нужен интернет: ${result.reason}."
         is TranslationResult.ModelUnavailable ->

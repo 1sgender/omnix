@@ -9,18 +9,18 @@
     <string name="podklyuchite_naushniki_dlya_raboty">● Подключите наушники для работы</string>
 
     <!-- ===== Format-строки (audit #17) ===== -->
-    <string name="s_sir">%1$s, сэр.</string>
+    <string name="s_sir">%1$s.</string>
     <string name="ne_udalos_vypolnit">Не удалось выполнить: %1$s</string>
 
     <string name="oshibka_vypolneniya_zaprosa">Ошибка выполнения запроса</string>
-    <string name="operaciya_otmenena_sir">Операция отменена, сэр.</string>
+    <string name="operaciya_otmenena_sir">Операция отменена.</string>
     <string name="pozhaluysta_vvedite_kod">Пожалуйста, введите код активации со скретч-карты из коробки.</string>
 
     <!-- ===== Voice layer (audit #17) ===== -->
     <string name="omnix_na_pauze">OMNIX на паузе</string>
     <string name="omnix_slushaet_v_naushnike">OMNIX слушает (в наушнике)…</string>
     <string name="omnix_slushaet">OMNIX слушает…</string>
-    <string name="vremya_ozhidaniya_isteklo">Время ожидания истекло. Операция отменена, сэр.</string>
+    <string name="vremya_ozhidaniya_isteklo">Время ожидания истекло. Операция отменена.</string>
     <string name="vy_nichego_ne_skazali">Вы ничего не сказали.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Наушники отключены. Ожидание…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">Не понял. Скажите да или нет.</string>
@@ -33,7 +33,7 @@
     <string name="oshibka_svyazi_s_ai">Ошибка связи с AI</string>
     <string name="podklyuchite_naushniki">Подключите наушники</string>
     <string name="provodnye_naushniki">Проводные наушники</string>
-    <string name="rezhim_perevodchika_aktivirovan">Режим синхронного переводчика в ухе активирован. Слушаю собеседника, сэр.</string>
+    <string name="rezhim_perevodchika_aktivirovan">Режим синхронного переводчика в ухе активирован. Слушаю собеседника.</string>
     <string name="slushayu_prodolzhenie_dialoga">Слушаю продолжение диалога…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Фоновое распознавание ключевого слова и голосовые ответы</string>
     <string name="ya_ne_rasslyshal_zapros">Я не расслышал запрос.</string>
@@ -45,7 +45,7 @@
     <string name="server_licenziy_nedostupen">Сервер активации временно недоступен. Код не был активирован — повторите позже.</string>
     <string name="proverte_internet">Нет соединения с сервером активации. Проверьте интернет и повторите.</string>
     <string name="slishkom_mnogo_popytok_aktivacii">Слишком много попыток активации. Подождите и повторите позже.</string>
-    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip успешно активирован! Первые 30 дней использования включены бесплатно, сэр.</string>
+    <string name="omnix_uspeshno_aktivirovan">OMNIX Clip успешно активирован! Первые 30 дней использования включены бесплатно.</string>
     <string name="pustoy_zapros">Пустой запрос</string>
     <string name="zapros_ne_mozhet_byt_pustym">Запрос не может быть пустым</string>
 
@@ -62,8 +62,8 @@
     <string name="bluetooth_vyklyuchen">Bluetooth выключен</string>
     <string name="sopryazhennyh_ustroystv">. Сопряжённых устройств: %1$d</string>
     <string name="net_sopryazhennyh_ustroystv">. Нет сопряжённых устройств</string>
-    <string name="bluetooth_uzhe_vklyuchen">Bluetooth уже включён, сэр.</string>
-    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth уже выключен, сэр.</string>
+    <string name="bluetooth_uzhe_vklyuchen">Bluetooth уже включён.</string>
+    <string name="bluetooth_uzhe_vyklyuchen">Bluetooth уже выключен.</string>
     <string name="chtoby_upravlyat_bluetooth">Чтобы управлять Bluetooth, нужно разрешение на доступ к Bluetooth</string>
 
     <!-- C-02: privacy consent UI -->
@@ -71,7 +71,7 @@
     <string name="cloud_consent_sensitive_prompt">Запрос содержит чувствительные данные (пароли, паспортные данные, платёжную информацию). Без вашего разрешения OMNIX не отправит его в облачную модель и попробует ответить локально. Отправить в облако для более точного ответа?</string>
     <string name="cloud_consent_voice_private">Запрос содержит приватные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
     <string name="cloud_consent_voice_sensitive">Запрос содержит чувствительные данные. Отправить его в облако для более точного ответа? Скажите да или нет.</string>
-    <string name="cloud_consent_declined">Понял, обрабатываю локально, сэр.</string>
+    <string name="cloud_consent_declined">Понял, обрабатываю локально.</string>
     <string name="cloud_consent_timeout">Время ожидания истекло, обрабатываю локально.</string>
     <string name="wakeword_engine_unavailable">Голосовая активация недоступна</string>
     <string name="oflayn_model_ne_skachana">Офлайн-модель не скачана: Настройки → ИИ → Модель на устройстве. После скачивания ассистент отвечает и без интернета.</string>

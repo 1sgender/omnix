@@ -204,9 +204,9 @@ class BluetoothTool @Inject constructor(
                 }
                 ToolExecutionResult.userActionRequired(
                     summary = if (opened) {
-                        "$statePhrase Открываю настройки Bluetooth — переключите его там, сэр."
+                        "$statePhrase Открываю настройки Bluetooth — переключите его там."
                     } else {
-                        "$statePhrase Системный экран Bluetooth открыть не удалось — переключите Bluetooth вручную, сэр."
+                        "$statePhrase Системный экран Bluetooth открыть не удалось — переключите Bluetooth вручную."
                     },
                     reason = "BLUETOOTH_TOGGLE_REQUIRES_USER",
                     data = buildJsonObject {

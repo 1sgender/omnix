@@ -97,9 +97,9 @@ class DoNotDisturbTool @Inject constructor(
                 val opened = openPolicyAccessSettings()
                 ToolExecutionResult.userActionRequired(
                     summary = if (opened) {
-                        "Чтобы управлять режимом «Не беспокоить», выдайте OMNIX доступ к уведомлениям. Открыл нужный экран — включите доступ, сэр."
+                        "Чтобы управлять режимом «Не беспокоить», выдайте OMNIX доступ к уведомлениям. Открыл нужный экран — включите доступ."
                     } else {
-                        "Чтобы управлять режимом «Не беспокоить», выдайте OMNIX доступ к уведомлениям в настройках, сэр."
+                        "Чтобы управлять режимом «Не беспокоить», выдайте OMNIX доступ к уведомлениям в настройках."
                     },
                     reason = "NOTIFICATION_POLICY_ACCESS_REQUIRED",
                     data = buildJsonObject {

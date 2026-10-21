@@ -216,6 +216,9 @@ class AutonomousMemoryExtractor @Inject constructor() {
     }
 
     private fun isDiscardableNoise(text: String): Boolean {
+        // Вопрос — не факт о пользователе: «как меня зовут?» записывалось как
+        // имя «Как меня зовут» (экран «Приватность» владельца, 2026-10-21).
+        if (isQuestion(text)) return true
         // Команды устройства, приветствия, запросы времени, погоды, общие вопросы
         return text.startsWith("включи") ||
                 text.startsWith("выключи") ||
@@ -230,6 +233,21 @@ class AutonomousMemoryExtractor @Inject constructor() {
                 text.startsWith("привет") ||
                 text.startsWith("ты тут") ||
                 text.length < 5
+    }
+
+    private fun isQuestion(text: String): Boolean {
+        val t = text.trim()
+        val firstWord = t.lowercase().split(WORD_SEPARATORS).firstOrNull { it.isNotEmpty() }
+        return t.endsWith("?") || firstWord in QUESTION_STARTS
+    }
+
+    private companion object {
+        /** Начала вопросов: «как меня зовут», «где я живу», «что я люблю»… */
+        val QUESTION_STARTS = listOf(
+            "как", "какое", "какой", "какая", "какие", "кто", "что", "где", "когда",
+            "куда", "откуда", "сколько", "зачем", "почему", "ли", "напомни", "скажи"
+        )
+        val WORD_SEPARATORS = Regex("[\\s,.!?:;—-]+")
     }
 
     private fun String.capitalizeFirst(): String {
