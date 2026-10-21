@@ -116,6 +116,11 @@ class RepositoryCloudAiExecutorHistoryTest {
         coVerify { aiRepo.generateResponse(any(), capture(sysSlot), any(), any(), any(), cloudExplicitlyAllowed = any(), history = capture(histSlot), requestId = any()) }
         assertTrue("sys prompt should contain BASE-SYS", sysSlot.single().contains("BASE-SYS"))
         assertTrue("sys prompt should contain TOOLS", sysSlot.single().contains("TOOLS"))
+        // Кто такой OMNIX — в каждом облачном запросе, независимо от настроек.
+        assertTrue(
+            "sys prompt should name the OMNIX team as creator",
+            sysSlot.single().startsWith(com.omnix.assistant.core.constants.AppConstants.IDENTITY_PROMPT)
+        )
         assertTrue("history should not contain BASE-SYS",
             histSlot.single().none { it.text.contains("BASE-SYS") })
     }

@@ -5,6 +5,7 @@ import com.omnix.assistant.agent.engine.AgentCognitiveLoop
 import com.omnix.assistant.agent.planner.CognitivePlanner
 import com.omnix.assistant.agent.planner.ExecutionPlan
 import com.omnix.assistant.agent.registry.ToolRegistry
+import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.network.NetworkMonitor
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.repository.AIRepository
@@ -58,6 +59,8 @@ class RepositoryCloudAiExecutor @Inject constructor(
         val targetedToolsPrompt = toolRegistry.buildTargetedSystemPrompt(request.text)
 
         val fullSystemPrompt = buildString {
+            append(AppConstants.IDENTITY_PROMPT)
+            append("\n\n")
             append(baseSystemPrompt)
             if (targetedToolsPrompt.isNotBlank()) {
                 append("\n\n")

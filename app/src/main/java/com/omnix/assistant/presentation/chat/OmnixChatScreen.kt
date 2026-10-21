@@ -133,7 +133,8 @@ fun OmnixChatScreen(
         state.pendingConfirmation == null &&
         state.pendingCloudConsent == null
     val rows = remember(state.messages) { chatRows(state.messages) }
-    val rowCount = rows.size + if (showThinking) 1 else 0
+    val localOnly = state.localOnlyAnswer
+    val rowCount = rows.size + (if (showThinking) 1 else 0) + (if (localOnly != null) 1 else 0)
 
     LaunchedEffect(rowCount) {
         if (rowCount > 0) listState.animateScrollToItem(rowCount - 1)
@@ -187,6 +188,20 @@ fun OmnixChatScreen(
                             is ChatRow.Bubble -> MessageRow(
                                 message = row.message,
                                 fromCloud = row.message.id in state.cloudMessageIds,
+                                threadWidth = threadWidth
+                            )
+                        }
+                    }
+                    // Не хранится в истории (чтение экрана): только в ленте.
+                    if (localOnly != null) {
+                        item(key = "omnix-local-only") {
+                            MessageRow(
+                                message = Message(
+                                    role = MessageRole.ASSISTANT,
+                                    text = localOnly,
+                                    timestamp = 0L
+                                ),
+                                fromCloud = false,
                                 threadWidth = threadWidth
                             )
                         }

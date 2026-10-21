@@ -14,11 +14,12 @@ import com.omnix.assistant.domain.usecases.ClearChatHistoryUseCase
 import com.omnix.assistant.domain.usecases.GetChatHistoryUseCase
 import com.omnix.assistant.domain.usecases.GetSettingsUseCase
 import com.omnix.assistant.domain.usecases.SendPromptUseCase
+import com.omnix.assistant.voice.stt.SpeechRecognitionEvent
 import com.omnix.assistant.voice.stt.SpeechRecognizerManager
-import com.omnix.assistant.voice.tts.TextToSpeechManager
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.After
@@ -49,7 +50,6 @@ class ChatViewModelPrivacyConsentTest {
     private lateinit var clearHistory: ClearChatHistoryUseCase
     private lateinit var sendPrompt: SendPromptUseCase
     private lateinit var getSettings: GetSettingsUseCase
-    private lateinit var tts: TextToSpeechManager
     private lateinit var stt: SpeechRecognizerManager
     private lateinit var toolExecutor: ToolExecutor
     private lateinit var messageRepository: MessageRepository
@@ -80,7 +80,6 @@ class ChatViewModelPrivacyConsentTest {
                 wakeWordSensitivity = 0.5f
             )
         )
-        tts = mockk(relaxed = true)
         stt = mockk(relaxed = true)
         toolExecutor = mockk(relaxed = true)
         messageRepository = mockk(relaxed = true)
@@ -101,7 +100,6 @@ class ChatViewModelPrivacyConsentTest {
         clearChatHistoryUseCase = clearHistory,
         sendPromptUseCase = sendPrompt,
         getSettingsUseCase = getSettings,
-        textToSpeechManager = tts,
         speechRecognizerManager = stt,
         toolExecutor = toolExecutor,
         messageRepository = messageRepository,
@@ -213,5 +211,56 @@ class ChatViewModelPrivacyConsentTest {
         )
         // Сообщение-ассистент об отказе должно быть сохранено.
         coVerify(atLeast = 1) { messageRepository.insertMessage(match { it.role == MessageRole.ASSISTANT }) }
+    }
+
+    // Отчёт владельца 2026-10-21: распознаватель общий с голосовым ассистентом,
+    // и фраза, услышанная ассистентом (даже голос самого OMNIX), уходила в чат
+    // как сообщение пользователя — OMNIX говорил сам с собой.
+    @Test
+    fun `speech the chat did not start is not sent as a user message`() = runTest {
+        val speech = MutableStateFlow<SpeechRecognitionEvent>(SpeechRecognitionEvent.Idle)
+        every { stt.speechState } returns speech
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        speech.value = SpeechRecognitionEvent.FinalResult("Я Сергей. Чем могу помочь сегодня?")
+        advanceUntilIdle()
+
+        assertEquals("", vm.uiState.value.inputText)
+        coVerify(exactly = 0) {
+            sendPrompt.invoke(
+                userPrompt = any(),
+                source = any(),
+                privacyLevel = any(),
+                cloudExplicitlyAllowed = any(),
+                originTimestampMs = any(),
+                requestId = any()
+            )
+        }
+    }
+
+    @Test
+    fun `dictation fills the input and leaves sending to the user`() = runTest {
+        val speech = MutableStateFlow<SpeechRecognitionEvent>(SpeechRecognitionEvent.Idle)
+        every { stt.speechState } returns speech
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.toggleVoiceDictation()
+        speech.value = SpeechRecognitionEvent.FinalResult("напиши сообщение сердару")
+        advanceUntilIdle()
+
+        assertEquals("напиши сообщение сердару", vm.uiState.value.inputText)
+        assertFalse(vm.uiState.value.isVoiceDictating)
+        coVerify(exactly = 0) {
+            sendPrompt.invoke(
+                userPrompt = any(),
+                source = any(),
+                privacyLevel = any(),
+                cloudExplicitlyAllowed = any(),
+                originTimestampMs = any(),
+                requestId = any()
+            )
+        }
     }
 }
