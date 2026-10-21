@@ -86,6 +86,7 @@ import com.omnix.assistant.presentation.components.OmnixTrashLineIcon
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
 import com.omnix.assistant.presentation.components.OmnixSendLineIcon
+import com.omnix.assistant.presentation.components.OmnixVoiceWaveLineIcon
 import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.LocalReducedMotion
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
@@ -131,7 +132,8 @@ fun OmnixChatScreen(
     onDeleteConversation: (Long) -> Unit,
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
-    onToggleDictation: () -> Unit
+    onToggleDictation: () -> Unit,
+    onOpenVoiceMode: () -> Unit
 ) {
     if (state.showHistory) {
         BackHandler(onBack = onCloseHistory)
@@ -239,7 +241,8 @@ fun OmnixChatScreen(
             isDictating = state.isVoiceDictating,
             onTextChange = onInputChange,
             onSend = onSend,
-            onToggleDictation = onToggleDictation
+            onToggleDictation = onToggleDictation,
+            onOpenVoiceMode = onOpenVoiceMode
         )
     }
 
@@ -745,10 +748,11 @@ private fun PrivacyBadge(level: PrivacyLevel) {
 }
 
 /**
- * The composer: one field and one lime button — the microphone while the
- * field is empty, send once there is text. The field grows while the user
- * types and stays editable while a request is in flight; the ViewModel
- * guards double sends.
+ * The composer (owner mock 2026-10-21, like ChatGPT): the field with the
+ * dictation microphone inside it, and one lime button — voice mode while the
+ * field is empty, send once there is text. Dictation fills the field; the
+ * user sends. The field grows while the user types and stays editable while
+ * a request is in flight; the ViewModel guards double sends.
  */
 @Composable
 private fun ChatComposer(
@@ -757,16 +761,14 @@ private fun ChatComposer(
     isDictating: Boolean,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
-    onToggleDictation: () -> Unit
+    onToggleDictation: () -> Unit,
+    onOpenVoiceMode: () -> Unit
 ) {
     val colors = OmnixTheme.colors
     val hasText = text.isNotBlank()
-    val buttonLabel = stringResource(
-        when {
-            hasText -> R.string.omnix_chat_send
-            isDictating -> R.string.omnix_chat_dictation_stop
-            else -> R.string.omnix_chat_dictation_start
-        }
+    val buttonLabel = stringResource(if (hasText) R.string.omnix_chat_send else R.string.omnix_chat_voice_mode)
+    val dictationLabel = stringResource(
+        if (isDictating) R.string.omnix_chat_dictation_stop else R.string.omnix_chat_dictation_start
     )
     val interaction = remember { MutableInteractionSource() }
 
@@ -777,39 +779,65 @@ private fun ChatComposer(
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .weight(1f)
                 .heightIn(min = 48.dp)
                 .clip(FieldShape)
                 .background(colors.surface)
                 .border(BorderStroke(1.dp, colors.border), FieldShape)
-                .padding(horizontal = 18.dp, vertical = 13.dp),
-            contentAlignment = Alignment.CenterStart
+                .padding(start = 18.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (text.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.omnix_chat_input_hint),
-                    style = FieldText,
-                    color = colors.textTertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 13.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                if (text.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.omnix_chat_input_hint),
+                        style = FieldText,
+                        color = colors.textTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                BasicTextField(
+                    value = text,
+                    onValueChange = onTextChange,
+                    singleLine = false,
+                    maxLines = 6,
+                    textStyle = FieldText.copy(color = colors.textPrimary),
+                    cursorBrush = SolidColor(colors.textPrimary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { onSend() }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 132.dp)
+                        .verticalScroll(rememberScrollState())
                 )
             }
-            BasicTextField(
-                value = text,
-                onValueChange = onTextChange,
-                singleLine = false,
-                maxLines = 6,
-                textStyle = FieldText.copy(color = colors.textPrimary),
-                cursorBrush = SolidColor(colors.textPrimary),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
+            // Диктовка: текст попадает в поле, отправляет пользователь.
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 132.dp)
-                    .verticalScroll(rememberScrollState())
-            )
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onToggleDictation)
+                    .clearAndSetSemantics {
+                        contentDescription = dictationLabel
+                        role = Role.Button
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = OmnixMicLineIcon,
+                    contentDescription = null,
+                    tint = if (isDictating) colors.accentBrand else colors.textSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
         Box(
@@ -822,7 +850,7 @@ private fun ChatComposer(
                     interactionSource = interaction,
                     indication = null,
                     enabled = !hasText || !isSending,
-                    onClick = if (hasText) onSend else onToggleDictation
+                    onClick = if (hasText) onSend else onOpenVoiceMode
                 )
                 .clearAndSetSemantics {
                     contentDescription = buttonLabel
@@ -831,7 +859,7 @@ private fun ChatComposer(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (hasText) OmnixSendLineIcon else OmnixMicLineIcon,
+                imageVector = if (hasText) OmnixSendLineIcon else OmnixVoiceWaveLineIcon,
                 contentDescription = null,
                 tint = colors.background,
                 modifier = Modifier.size(22.dp)
