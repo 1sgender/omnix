@@ -182,7 +182,8 @@ fun OmnixNavGraph(
                     },
                     onRequestPermissions = { permissions ->
                         permissionLauncher.launch(permissions.toTypedArray())
-                    }
+                    },
+                    onBack = navController::popBackStack
                 )
             }
 

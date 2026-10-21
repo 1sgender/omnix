@@ -28,17 +28,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixChatBubbleLineIcon
-import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
 import com.omnix.assistant.presentation.components.OmnixPersonLineIcon
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 
 /**
- * The OMNIX tab bar: `Home | Chat | Headphones | Me` — design v2 canvas, the
- * bar under every artboard.
+ * The OMNIX tab bar: `Home | Chat | Me` (owner decision 2026-10-21; the
+ * headphones moved to a Me row).
  *
- * Full width on the screen ground with a hairline on top; four equal tabs,
+ * Full width on the screen ground with a hairline on top; three equal tabs,
  * each an icon over a label. The active tab has the lime icon and the paper
  * label, the rest are dimmed. Secondary screens keep their parent tab lit via
  * [tabForRoute]: OMNIX's modes keep Home, everything reached from Me keeps Me.
@@ -91,13 +90,6 @@ fun OmnixNavigationBar(
                 onClick = { onNavigate(OmnixDestination.Chat) },
                 modifier = Modifier.weight(1f)
             ) { tint -> TabIcon(OmnixChatBubbleLineIcon, tint) }
-
-            NavigationItem(
-                label = stringResource(R.string.omnix_nav_headphones),
-                selected = currentTab == OmnixDestination.Devices,
-                onClick = { onNavigate(OmnixDestination.Devices) },
-                modifier = Modifier.weight(1f)
-            ) { tint -> TabIcon(OmnixHeadphonesLineIcon, tint) }
 
             NavigationItem(
                 label = stringResource(R.string.omnix_nav_me),
