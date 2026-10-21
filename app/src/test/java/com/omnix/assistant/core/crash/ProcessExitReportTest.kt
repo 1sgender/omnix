@@ -71,4 +71,29 @@ class ProcessExitReportTest {
         ).single()
         assertTrue(block.length < 400)
     }
+
+    @Test
+    fun `tombstone highlights keep the crashing libraries and the abort message in order`() {
+        // A protobuf-like blob: binary framing around readable strings.
+        val blob = byteArrayOf(0x0A, 0x12) +
+            "Abort message: 'FORTIFY: pthread_mutex_lock called on a destroyed mutex'".toByteArray() +
+            byteArrayOf(0x00, 0x1A, 0x05) + "noise".toByteArray() + byteArrayOf(0x02) +
+            "/data/app/~~x/com.omnix.assistant.staging/lib/arm64/libonnxruntime.so".toByteArray() +
+            byteArrayOf(0x10, 0x01) + "OrtSessionRun".toByteArray() + byteArrayOf(0x7F, 0x03)
+
+        val highlights = ProcessExitReport.tombstoneHighlights(blob)
+
+        assertEquals(3, highlights.size)
+        assertTrue(highlights[0].contains("FORTIFY"))
+        assertTrue(highlights[1].endsWith("libonnxruntime.so"))
+        assertEquals("OrtSessionRun", highlights[2])
+    }
+
+    @Test
+    fun `native trace lines are printed under the exit`() {
+        val block = ProcessExitReport.format(
+            listOf(exit(reason = 5).copy(traceHighlights = listOf("libonnxruntime.so")))
+        ).single()
+        assertTrue(block.contains("native trace:\n  libonnxruntime.so"))
+    }
 }

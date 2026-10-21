@@ -66,8 +66,7 @@ class VoiceServiceLifecycleInstrumentedTest {
                 ?.filter { it.name !in crashesBefore }
                 ?.maxByOrNull { it.name }
             assertTrue(
-                "voice pipeline reported an error:
-" + newCrash?.readText()?.take(3_000),
+                "voice pipeline reported an error: " + newCrash?.readText()?.take(3_000),
                 newCrash == null
             )
             assertTrue(
