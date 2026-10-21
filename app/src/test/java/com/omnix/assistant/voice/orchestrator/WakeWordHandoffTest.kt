@@ -62,6 +62,7 @@ class WakeWordHandoffTest {
 
     private lateinit var detections: MutableSharedFlow<WakeWordDetection>
     private lateinit var engineErrors: MutableSharedFlow<WakeWordEngineError>
+    private lateinit var ttsStates: MutableStateFlow<TtsState>
     private lateinit var orchestrator: VoiceInteractionOrchestrator
 
     @Before
@@ -87,7 +88,8 @@ class WakeWordHandoffTest {
         every { engine.errors } returns engineErrors
         every { stt.speechState } returns MutableStateFlow(SpeechRecognitionEvent.Idle)
         every { stt.audioLevel } returns MutableStateFlow(0f)
-        every { tts.ttsState } returns MutableStateFlow(TtsState.Idle)
+        ttsStates = MutableStateFlow(TtsState.Idle)
+        every { tts.ttsState } returns ttsStates
         every { engine.start() } just Runs
         every { engine.stop() } just Runs
         every { engine.resetDetectionSeries() } just Runs
@@ -195,5 +197,47 @@ class WakeWordHandoffTest {
 
         assertEquals(OrchestratorMode.STANDBY_WAKE_WORD, orchestrator.currentMode.value)
         verify { engine.start() }
+    }
+
+    @Test
+    fun `фраза чата в STANDBY не оставляет движок выключенным`() = runTest {
+        buildOrchestrator()
+        every { bluetooth.checkHeadsetConnection() } returns true
+        every { bluetooth.isHeadsetConnected() } returns false
+        runCurrent()
+        orchestrator.startServicePipeline()
+        runCurrent()
+        verify(exactly = 1) { engine.start() }
+
+        // Чат озвучивает ответ через тот же синтезатор: движок гасится на время речи…
+        ttsStates.value = TtsState.Speaking
+        runCurrent()
+        verify(exactly = 1) { engine.stop() }
+
+        // …и включается снова, когда фраза закончилась.
+        ttsStates.value = TtsState.Done
+        runCurrent()
+        assertEquals(OrchestratorMode.STANDBY_WAKE_WORD, orchestrator.currentMode.value)
+        verify(exactly = 2) { engine.start() }
+
+        // Прерванная фраза (stop → Ready) — тоже.
+        ttsStates.value = TtsState.Speaking
+        runCurrent()
+        ttsStates.value = TtsState.Ready
+        runCurrent()
+        verify(exactly = 3) { engine.start() }
+    }
+
+    @Test
+    fun `конец фразы при выключенном ассистенте движок не включает`() = runTest {
+        buildOrchestrator()
+        runCurrent()
+
+        ttsStates.value = TtsState.Speaking
+        runCurrent()
+        ttsStates.value = TtsState.Done
+        runCurrent()
+
+        verify(exactly = 0) { engine.start() }
     }
 }
