@@ -47,31 +47,47 @@ for cls in $REQUIRED; do
   fi
 done
 
-# Every class of the watched packages keeps its name, and every member keeps
-# its name. Inlined frames map an original method to the name of the kept
-# method it was inlined into, so a member's new name must be one of the
-# original member names of the same class; a rename gives a new short name.
+# Every class of the watched packages keeps its name, and every member it
+# declares keeps its name. Not checked, because native code cannot look them
+# up on this class: methods R8 synthesized (marked r8.synthesized) and methods
+# of other classes that R8 moved or inlined here (their original name is
+# qualified with the other class). Inlined frames of the same class map an
+# original method to the name of the kept method it was inlined into, so a
+# member's new name must be one of the original member names of the class; a
+# rename gives a new short name.
 report=$(awk -v watched="$WATCHED" '
+  function commit() {
+    if (pending_line == "") return
+    orignames[pending_orig] = 1
+    if (!(pending_new in cand)) cand[pending_new] = pending_line
+    pending_line = ""
+  }
   function flush() {
-    if (cls == "") return
-    for (n in newnames) if (!(n in orignames)) print "member renamed in " cls ": -> " n
-    delete newnames; delete orignames
+    commit()
+    if (cls != "")
+      for (n in cand) if (!(n in orignames)) print "member renamed in " cls ":" cand[n]
+    delete cand; delete orignames
   }
   /^#/ { next }
+  /^ +#/ {
+    if ($0 ~ /r8[.]synthesized/) pending_line = ""
+    next
+  }
   /^[^ ]/ {
     flush()
     cls = ""
     split($0, parts, " -> ")
     from = parts[1]; to = parts[2]; sub(/:$/, "", to)
     if (from !~ watched) next
-    # R8-synthesized helpers (lambdas, outlines) are not looked up by name.
-    if (from ~ /\$\$ExternalSynthetic|\$r8\$/) next
+    # R8-synthesized helper classes (lambdas, outlines) are not looked up by name.
+    if (from ~ /\$\$ExternalSynthetic|\$r8\$|\$-CC$/) next
     if (from != to) { print "class renamed: " from " -> " to; next }
     cls = from
     next
   }
   /^    / {
     if (cls == "") next
+    commit()
     line = $0
     p = index(line, " -> ")
     if (p == 0) next
@@ -82,11 +98,11 @@ report=$(awk -v watched="$WATCHED" '
     orig = tok[n]
     sub(/\(.*/, "", orig)
     sub(/:.*/, "", orig)
-    # Inlined frames may name a method of another class: keep the last part.
-    k = split(orig, seg, ".")
-    orig = seg[k]
-    orignames[orig] = 1
-    newnames[newname] = 1
+    # Moved or inlined from another class: not a member of this class.
+    if (index(orig, ".") > 0) next
+    pending_orig = orig
+    pending_new = newname
+    pending_line = line
   }
   END { flush() }
 ' "$MAPPING")
