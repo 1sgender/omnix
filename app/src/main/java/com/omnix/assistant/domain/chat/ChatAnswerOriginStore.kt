@@ -24,8 +24,12 @@ import javax.inject.Singleton
  */
 @Singleton
 class ChatAnswerOriginStore @Inject constructor(
-    private val adminModels: AdminModelTesting = AdminModelTesting.OFF
+    private val adminModels: AdminModelTesting
 ) {
+
+    /** Без теста моделей (юнит-тесты). Не через значение по умолчанию: Kotlin
+     *  сделал бы второй конструктор с @Inject, а Hilt допускает только один. */
+    constructor() : this(AdminModelTesting.OFF)
 
     private val _cloudMessageIds = MutableStateFlow<Set<Long>>(emptySet())
 
