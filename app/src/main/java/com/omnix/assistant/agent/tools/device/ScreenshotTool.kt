@@ -67,7 +67,7 @@ class ScreenshotTool @Inject constructor(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             return ToolExecutionResult.unsupported(
                 summary = "Снимок экрана недоступен: Android ${Build.VERSION.RELEASE} не даёт приложениям делать системные скриншоты. " +
-                    "Воспользуйтесь аппаратной комбинацией кнопок, сэр.",
+                    "Воспользуйтесь аппаратной комбинацией кнопок.",
                 reason = "SCREENSHOT_UNSUPPORTED_BELOW_API_30",
                 data = buildJsonObject { put("sdk_int", Build.VERSION.SDK_INT) }
             )
@@ -79,9 +79,9 @@ class ScreenshotTool @Inject constructor(
                 val opened = openAccessibilitySettings()
                 return ToolExecutionResult.userActionRequired(
                     summary = if (opened) {
-                        "Для снимков экрана нужно включить службу OMNIX в разделе «Специальные возможности». Открыл нужный экран, сэр."
+                        "Для снимков экрана нужно включить службу OMNIX в разделе «Специальные возможности». Открыл нужный экран."
                     } else {
-                        "Для снимков экрана включите службу OMNIX в разделе «Специальные возможности», сэр."
+                        "Для снимков экрана включите службу OMNIX в разделе «Специальные возможности»."
                     },
                     reason = "ACCESSIBILITY_SERVICE_DISABLED",
                     data = buildJsonObject { put("opened_settings", opened) }

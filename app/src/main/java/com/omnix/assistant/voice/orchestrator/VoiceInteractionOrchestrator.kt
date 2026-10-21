@@ -871,7 +871,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     )
                     _lastToolResult.value = result
                     val voiceResponse = when {
-                        result.isSuccess -> "${result.summary}, сэр."
+                        result.isSuccess -> "${result.summary}."
                         // Разрешение/системный UI/неподдерживаемая возможность —
                         // это не «ошибка выполнения», а понятное объяснение.
                         result.isBlockedByAndroid -> result.summary

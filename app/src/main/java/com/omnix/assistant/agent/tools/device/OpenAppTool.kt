@@ -87,7 +87,7 @@ class OpenAppTool @Inject constructor(
             is AppResolution.Ambiguous -> ToolExecutionResult.failure(
                 summary = "Нашёл несколько подходящих приложений: " +
                     resolution.candidates.joinToString(", ") { it.label } +
-                    ". Какое именно открыть, сэр?",
+                    ". Какое именно открыть?",
                 error = "AMBIGUOUS_APP"
             ).copy(
                 data = buildJsonObject {

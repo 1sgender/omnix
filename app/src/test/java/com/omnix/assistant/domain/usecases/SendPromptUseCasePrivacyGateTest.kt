@@ -155,12 +155,12 @@ class SendPromptUseCasePrivacyGateTest {
     @Test
     fun `regular answer is persisted as-is`() = runTest {
         coEvery { pipeline.process(any<ExecutionRequest>()) } returns
-            Resource.Success(PromptExecutionResult.DirectAnswer("Громкость установлена на 40 процентов, сэр."))
+            Resource.Success(PromptExecutionResult.DirectAnswer("Громкость установлена на 40 процентов."))
 
         useCase("сделай громкость 40", RequestSource.CHAT, PrivacyLevel.NORMAL, false)
 
         coVerify(exactly = 1) {
-            messageRepo.insertMessage(match { it.text == "Громкость установлена на 40 процентов, сэр." })
+            messageRepo.insertMessage(match { it.text == "Громкость установлена на 40 процентов." })
         }
     }
 

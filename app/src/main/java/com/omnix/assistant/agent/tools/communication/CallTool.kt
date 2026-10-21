@@ -85,7 +85,7 @@ class CallTool @Inject constructor(
             is ContactResolution.Ambiguous -> return ToolExecutionResult.failure(
                 summary = "Найдено несколько контактов: " +
                     resolution.candidates.joinToString(", ") { (name, number) -> "$name ($number)" } +
-                    ". Уточните получателя, сэр.",
+                    ". Уточните получателя.",
                 error = "AMBIGUOUS_CONTACT"
             )
             is ContactResolution.PermissionRequired -> return ToolExecutionResult.permissionRequired(
@@ -135,7 +135,7 @@ class CallTool @Inject constructor(
         return try {
             context.startActivity(dialIntent)
             ToolExecutionResult.userActionRequired(
-                summary = "Открыл номеронабиратель с номером $recipient. Нажмите кнопку вызова, сэр — для автоматических звонков нужно разрешение на телефон.",
+                summary = "Открыл номеронабиратель с номером $recipient. Нажмите кнопку вызова — для автоматических звонков нужно разрешение на телефон.",
                 reason = "CALL_PHONE_PERMISSION_REQUIRED",
                 data = buildJsonObject {
                     put("recipient", recipient)

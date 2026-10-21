@@ -86,7 +86,7 @@ class ExecutionDecisionEngine @Inject constructor(
         private const val PRIVACY_BLOCKED_MESSAGE =
             "Запрос содержит приватные данные или не прошёл проверку приватности. Во внешний сервис он не отправлен."
 
-        private const val GENERIC_ERROR_MESSAGE = "Не удалось выполнить запрос, сэр."
+        private const val GENERIC_ERROR_MESSAGE = "Не удалось выполнить запрос."
 
         private const val ON_DEVICE_DECLINED_MESSAGE =
             "Модель на телефоне не может ответить на этот запрос. Выберите «Авто» или «Облако» в разделе «Я» → «ИИ-модель»."
@@ -144,12 +144,12 @@ class ExecutionDecisionEngine @Inject constructor(
 
     /** Минимальные команды без объекта нельзя безопасно «додумывать». */
     private fun clarificationPrompt(text: String): String? = when (text.lowercase().trim().trimEnd('?', '!', '.')) {
-        "открой", "запусти" -> "Что именно открыть, сэр?"
-        "найди", "найди это" -> "Что именно найти, сэр?"
-        "что лучше" -> "Какие варианты нужно сравнить, сэр?"
-        "проверь" -> "Что именно проверить, сэр?"
-        "переведи" -> "Какой текст и на какой язык перевести, сэр?"
-        "сделай", "сделай это" -> "Что именно нужно сделать, сэр?"
+        "открой", "запусти" -> "Что именно открыть?"
+        "найди", "найди это" -> "Что именно найти?"
+        "что лучше" -> "Какие варианты нужно сравнить?"
+        "проверь" -> "Что именно проверить?"
+        "переведи" -> "Какой текст и на какой язык перевести?"
+        "сделай", "сделай это" -> "Что именно нужно сделать?"
         else -> null
     }
 
@@ -210,10 +210,20 @@ class ExecutionDecisionEngine @Inject constructor(
             return runCloud(request, routing, trace)
         }
         val onDeviceOnly = choice == AiModelChoice.ON_DEVICE
+        // «Авто» с сетью: разговор отвечает облако, телефон — только сценарии
+        // пользователя. Приватный запрос без согласия остаётся на телефоне.
+        val preferCloud = choice == AiModelChoice.AUTO &&
+            config.autoPrefersCloud &&
+            cloudAi.isAvailable() &&
+            (request.effectivePrivacyLevel == PrivacyLevel.NORMAL || request.cloudExplicitlyAllowed)
         recordLaneStage(VoiceLatencyMetrics.VoiceLane.LOCAL, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
         val localAiStartedAt = latency.nowMs()
         val localOutcome = tryLocalAi(
-            if (onDeviceOnly) request.copy(localOnly = true) else request,
+            when {
+                onDeviceOnly -> request.copy(localOnly = true)
+                preferCloud -> request.copy(preferCloud = true)
+                else -> request
+            },
             routing,
             trace
         )
@@ -367,7 +377,7 @@ class ExecutionDecisionEngine @Inject constructor(
             // но контракт защищаем и здесь: наружу исключение не уходит.
             Log.e(TAG, "ToolExecutor threw | tool=${call.toolId} | type=${e.javaClass.simpleName}")
             return ExecutionResult.Error(
-                message = "Не удалось выполнить команду устройства, сэр.",
+                message = "Не удалось выполнить команду устройства.",
                 reason = DecisionReason.DEVICE_TOOL_FAILED
             )
         }
@@ -385,7 +395,7 @@ class ExecutionDecisionEngine @Inject constructor(
         // итогом (существующее правило проекта).
         return when {
             result.isSuccess -> ExecutionResult.Success(
-                text = "${result.summary}, сэр.",
+                text = "${result.summary}.",
                 executionType = ExecutionType.DEVICE_TOOL,
                 // Accessibility Lockdown: summary screen_reader — экральный
                 // контент, в историю чата пойдёт placeholder.

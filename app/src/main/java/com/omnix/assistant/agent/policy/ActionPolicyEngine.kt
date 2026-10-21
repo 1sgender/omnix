@@ -81,9 +81,9 @@ class ActionPolicyEngine @Inject constructor(
                 val preview = call.arguments["text"]?.jsonPrimitive?.contentOrNull?.take(60)
                 return PolicyDecision.RequireConfirmation(
                     prompt = if (preview.isNullOrBlank()) {
-                        "Выполнить действие в чужом приложении? Подтвердите, сэр."
+                        "Выполнить действие в чужом приложении? Подтвердите."
                     } else {
-                        "Ввести в активное поле текст «$preview»? Подтвердите, сэр."
+                        "Ввести в активное поле текст «$preview»? Подтвердите."
                     },
                     forced = true,
                     risk = ActionRiskLevel.HIGH,
@@ -158,7 +158,7 @@ class ActionPolicyEngine @Inject constructor(
         val floor = tool.riskLevel.policyFloor()
         if (floor != null) {
             return PolicyDecision.RequireConfirmation(
-                prompt = "Действие «${tool.description}» требует подтверждения. Подтвердить выполнение, сэр?",
+                prompt = "Действие «${tool.description}» требует подтверждения. Подтвердить выполнение?",
                 forced = tool.riskLevel == ToolRisk.HIGH || tool.riskLevel == ToolRisk.CRITICAL,
                 risk = floor,
                 rationale = "Static tool risk ${tool.riskLevel} is a policy floor"
@@ -195,9 +195,9 @@ class ActionPolicyEngine @Inject constructor(
     private fun callPrompt(recipient: String, origin: ActionOrigin): String {
         val who = recipient.ifBlank { "контакту" }
         return if (origin == ActionOrigin.AUTOMATION) {
-            "Автоматизация пытается позвонить $who. Подтвердите звонок, сэр."
+            "Автоматизация пытается позвонить $who. Подтвердите звонок."
         } else {
-            "Позвонить $who? Подтвердите, сэр."
+            "Позвонить $who? Подтвердите."
         }
     }
 
@@ -211,27 +211,27 @@ class ActionPolicyEngine @Inject constructor(
         val prefix = if (origin == ActionOrigin.AUTOMATION) "Автоматизация пытается отправить сообщение" else "Отправить"
         return when {
             amount != null && amount >= MoneyAmountDetector.LARGE_AMOUNT_THRESHOLD ->
-                "$prefix $who денежный перевод на ${MoneyAmountDetector.formatAmount(amount)}? Это крупная сумма — подтвердите обязательно, сэр."
+                "$prefix $who денежный перевод на ${MoneyAmountDetector.formatAmount(amount)}? Это крупная сумма — подтвердите обязательно."
             amount != null ->
-                "$prefix $who сумму ${MoneyAmountDetector.formatAmount(amount)}? Подтвердите перевод, сэр."
+                "$prefix $who сумму ${MoneyAmountDetector.formatAmount(amount)}? Подтвердите перевод."
             message.isNullOrBlank() ->
-                "$prefix $who сообщение? Подтвердите, сэр."
+                "$prefix $who сообщение? Подтвердите."
             else -> {
                 val preview = message.take(60)
-                "$prefix $who сообщение «$preview»? Подтвердите, сэр."
+                "$prefix $who сообщение «$preview»? Подтвердите."
             }
         }
     }
 
     private fun paymentPrompt(amount: Long?): String = if (amount != null) {
-        "Платёжная операция на ${MoneyAmountDetector.formatAmount(amount)} требует обязательного подтверждения. Подтвердить, сэр?"
+        "Платёжная операция на ${MoneyAmountDetector.formatAmount(amount)} требует обязательного подтверждения. Подтвердить?"
     } else {
-        "Платёжная операция требует обязательного подтверждения. Подтвердить, сэр?"
+        "Платёжная операция требует обязательного подтверждения. Подтвердить?"
     }
 
     private fun deletePrompt(target: String?, tool: OmniTool): String {
         val what = target?.takeIf { it.isNotBlank() } ?: tool.description
-        return "Удалить «$what»? Действие необратимо — подтвердите, сэр."
+        return "Удалить «$what»? Действие необратимо — подтвердите."
     }
 
     companion object {

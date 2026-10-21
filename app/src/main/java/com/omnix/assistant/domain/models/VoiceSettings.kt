@@ -1,7 +1,7 @@
 package com.omnix.assistant.domain.models
 
 data class VoiceSettings(
-    val userName: String = "Сэр",
+    val userName: String = "",
     val systemPrompt: String = "",
     val speechRate: Float = 1.0f,
     val speechPitch: Float = 1.0f,
