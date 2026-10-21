@@ -162,9 +162,16 @@
 
     <!-- ===== Chat (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_new">New chat</string>
+    <string name="omnix_chat_history_open">Chat history</string>
+    <string name="omnix_chat_history_title">History</string>
+    <string name="omnix_chat_history_empty_title">No chats yet</string>
+    <string name="omnix_chat_history_empty_body">Past chats appear here. Each launch starts a new one.</string>
+    <string name="omnix_chat_untitled">Untitled</string>
+    <string name="omnix_chat_delete">Delete chat</string>
+    <string name="omnix_chat_delete_confirm_title">Delete this chat?</string>
     <string name="omnix_chat_subtitle_on_device">Answers on the device</string>
     <string name="omnix_chat_subtitle_online">Answers on the device and in the cloud</string>
-    <string name="omnix_chat_more">More</string>
     <string name="omnix_chat_today">TODAY</string>
     <string name="omnix_chat_yesterday">YESTERDAY</string>
     <string name="omnix_chat_from_cloud">Answer from the cloud</string>
@@ -378,7 +385,6 @@
 
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Not set up yet</string>
-    <string name="omnix_chat_clear">Clear</string>
     <!-- Human labels for continuous values (§42) -->
     <string name="omnix_level_lowest">Slowest</string>
     <string name="omnix_level_low">Slower</string>

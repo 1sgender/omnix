@@ -58,7 +58,11 @@ class ChatComposerInputTest {
                     onSend = {},
                     onConfirm = {},
                     onCancel = {},
-                    onClear = {},
+                    onNewChat = {},
+                    onOpenHistory = {},
+                    onCloseHistory = {},
+                    onOpenConversation = {},
+                    onDeleteConversation = {},
                     onAllowCloud = {},
                     onKeepLocal = {},
                     onToggleDictation = {}
