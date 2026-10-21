@@ -126,7 +126,11 @@ class MemoryRetrievalInjectionTest {
             aiRepo.generateResponse(any(), capture(sysSlot), any(), any(), any(),
                 cloudExplicitlyAllowed = any(), history = any(), requestId = any())
         }
-        assertEquals("BASE-SYS", sysSlot.captured)
+        // Только «кто такой OMNIX» и базовый промпт — блока памяти нет.
+        assertEquals(
+            com.omnix.assistant.core.constants.AppConstants.IDENTITY_PROMPT + "\n\nBASE-SYS",
+            sysSlot.captured
+        )
     }
 
     // ------------------------------------------------------- local path
