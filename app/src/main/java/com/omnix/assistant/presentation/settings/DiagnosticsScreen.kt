@@ -200,6 +200,7 @@ private fun DiagnosticRow(result: DiagnosticResult) {
 
 private fun titleFor(id: DiagnosticCheckId): Int =
     when (id) {
+        DiagnosticCheckId.WAKE_WORD -> R.string.omnix_diag_wake_word
         DiagnosticCheckId.MIC -> R.string.omnix_diag_mic
         DiagnosticCheckId.STT -> R.string.omnix_diag_stt
         DiagnosticCheckId.LOCAL_AI -> R.string.omnix_diag_local_ai

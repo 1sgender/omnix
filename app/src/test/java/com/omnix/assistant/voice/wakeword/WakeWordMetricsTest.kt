@@ -72,6 +72,19 @@ class WakeWordMetricsTest {
     }
 
     @Test
+    fun `недавний максимум забывает кадры старше окна, общий помнит`() {
+        val metrics = WakeWordMetrics()
+        metrics.recordFrame(0.8f, false, 1, 1, 1)
+        assertEquals(0.8f, metrics.snapshot().recentMaxScore, 0f)
+        for (i in 0 until WakeWordMetrics.RECENT_WINDOW) metrics.recordFrame(0.1f, false, 1, 1, 1)
+        val snap = metrics.snapshot()
+        assertEquals(0.1f, snap.recentMaxScore, 0f)
+        assertEquals(0.8f, snap.maxScore, 0f)
+        metrics.reset()
+        assertEquals(0f, metrics.snapshot().recentMaxScore, 0f)
+    }
+
+    @Test
     fun `p95 на пустых метриках ноль без деления`() {
         val metrics = WakeWordMetrics()
         val snap = metrics.snapshot()

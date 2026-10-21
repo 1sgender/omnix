@@ -32,7 +32,6 @@ import com.omnix.assistant.voice.tts.TextToSpeechManager
 import com.omnix.assistant.voice.tts.TtsState
 import com.omnix.assistant.voice.wakeword.WakeWordDetection
 import com.omnix.assistant.voice.wakeword.WakeWordEngine
-import com.omnix.assistant.voice.wakeword.WakeWordEngineError
 import com.omnix.assistant.voice.wakeword.WakeWordExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -336,19 +335,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
         scope.launch {
             wakeWordEngine.errors.collectLatest { error ->
                 Log.e(TAG, "wakeword engine error: $error")
-                // ModelCorrupted — подменённая/повреждённая ONNX-модель
-                // (digest mismatch, owner review 2026-09-26); MicrophoneDeadSignal
-                // — «живой» AudioRecord с константным потоком (баг прошивок).
-                // Оба — состояние, в котором детекция невозможна: показываем.
-                if (error is WakeWordEngineError.ModelMissing ||
-                    error is WakeWordEngineError.ModelCorrupted ||
-                    error is WakeWordEngineError.PermissionDenied ||
-                    error is WakeWordEngineError.MicrophoneDeadSignal
-                ) {
-                    _assistantState.value = VoiceAssistantState.Error(
-                        context.getString(R.string.wakeword_engine_unavailable),
-                    )
-                }
+                // Любая ошибка движка останавливает распознавание «Omni»:
+                // повреждённая модель, мёртвый или занятый микрофон, сбой
+                // инференса. Раньше сбой инференса и занятый микрофон не
+                // показывались — OMNIX выглядел включённым, но не слышал.
+                _assistantState.value = VoiceAssistantState.Error(
+                    context.getString(R.string.wakeword_engine_unavailable),
+                )
             }
         }
     }

@@ -20,6 +20,11 @@ class WakeWordMetrics {
         val p95MelMs: Double,
         val p95EmbMs: Double,
         val p95ClfMs: Double,
+        /**
+         * Лучший скор за последние [RECENT_WINDOW] кадров (~60 с): «Диагностика»
+         * показывает, насколько близко к порогу было только что сказанное «Omni».
+         */
+        val recentMaxScore: Float = 0f,
     )
 
     private val lock = Any()
@@ -27,10 +32,14 @@ class WakeWordMetrics {
     private var fires = 0L
     private var maxScore = 0f
     private val latencies = ArrayDeque<Triple<Long, Long, Long>>()
+    private val recentScores = ArrayDeque<Float>()
 
     companion object {
         /** Окно усреднения задержек (64 кадра ~= 5 c детекции). */
         const val LATENCY_WINDOW = 64
+
+        /** Окно «недавнего» лучшего скора: 750 кадров по 80 мс ~= 60 с. */
+        const val RECENT_WINDOW = 750
     }
 
     fun recordFrame(score: Float, fired: Boolean, melMs: Long, embMs: Long, clfMs: Long) {
@@ -40,6 +49,8 @@ class WakeWordMetrics {
             if (score > maxScore) maxScore = score
             latencies.addLast(Triple(melMs, embMs, clfMs))
             while (latencies.size > LATENCY_WINDOW) latencies.removeFirst()
+            recentScores.addLast(score)
+            while (recentScores.size > RECENT_WINDOW) recentScores.removeFirst()
         }
     }
 
@@ -59,6 +70,7 @@ class WakeWordMetrics {
                 p95MelMs = p95(mel),
                 p95EmbMs = p95(emb),
                 p95ClfMs = p95(clf),
+                recentMaxScore = recentScores.maxOrNull() ?: 0f,
             )
         }
     }
@@ -75,6 +87,7 @@ class WakeWordMetrics {
             fires = 0
             maxScore = 0f
             latencies.clear()
+            recentScores.clear()
         }
     }
 }

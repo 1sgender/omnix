@@ -8,6 +8,8 @@ package com.omnix.assistant.presentation.diagnostics
  * помечается [DiagnosticStatus.NA], а не «успехом».
  */
 enum class DiagnosticCheckId {
+    // Первой: снимок движка «Omni» до того, как проверка MIC займёт микрофон.
+    WAKE_WORD,
     MIC,
     STT,
     LOCAL_AI,
