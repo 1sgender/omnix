@@ -161,9 +161,16 @@
 
     <!-- ===== Söhbet (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_new">Täze çat</string>
+    <string name="omnix_chat_history_open">Çatlaryň taryhy</string>
+    <string name="omnix_chat_history_title">Taryh</string>
+    <string name="omnix_chat_history_empty_title">Heniz söhbet ýok</string>
+    <string name="omnix_chat_history_empty_body">Öňki çatlar şu ýerde peýda bolar. Her açylanda täze çat başlaýar.</string>
+    <string name="omnix_chat_untitled">Atsyz</string>
+    <string name="omnix_chat_delete">Çaty poz</string>
+    <string name="omnix_chat_delete_confirm_title">Bu çaty pozmalymy?</string>
     <string name="omnix_chat_subtitle_on_device">Enjamda jogap berýär</string>
     <string name="omnix_chat_subtitle_online">Enjamda we bulutda jogap berýär</string>
-    <string name="omnix_chat_more">Ýene</string>
     <string name="omnix_chat_today">ŞU GÜN</string>
     <string name="omnix_chat_yesterday">DÜÝN</string>
     <string name="omnix_chat_from_cloud">Bulutdan jogap</string>
@@ -377,7 +384,6 @@
 
     <!-- Ynançly mümkinçilik ýagdaýlary (§3, §33) -->
     <string name="omnix_not_configured">Entäk düzülmedik</string>
-    <string name="omnix_chat_clear">Arassala</string>
     <!-- Yzygiderli bahalaryň ady (§42) -->
     <string name="omnix_level_lowest">Iň haýal</string>
     <string name="omnix_level_low">Haýal</string>

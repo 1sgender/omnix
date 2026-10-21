@@ -147,6 +147,26 @@ jobs:
           bash ./gradlew :app:assembleDevDebug :app:assembleDevDebugAndroidTest \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
+      # Room пишет схему БД в app/schemas при компиляции. Новая или изменённая
+      # схема обязана лежать в репозитории (OmnixMigrations, MigrationTestHelper
+      # читает её оттуда); сгенерированные файлы — в артефакте room-schemas.
+      - name: Room schema is committed
+        shell: bash
+        run: |
+          changed=$(git status --porcelain -- app/schemas)
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            echo "::error::Room schema changed but is not committed: download the room-schemas artifact and commit app/schemas"
+            exit 1
+          fi
+
+      - name: Upload generated Room schemas
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: room-schemas
+          path: app/schemas/
+
       # R8/ProGuard-смоук: minifyEnabled release-вариант собирается на каждый PR,
       # чтобы ошибка шринкинга (missing class и т.п.) падала в CI, а не при
       # первом релизе. Подпись здесь не требуется: release-workflow отвечает

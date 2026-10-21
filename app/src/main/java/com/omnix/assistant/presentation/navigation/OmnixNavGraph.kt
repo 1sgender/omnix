@@ -118,7 +118,11 @@ fun OmnixNavGraph(
                     onSend = { chatViewModel.sendTextMessage() },
                     onConfirm = chatViewModel::confirmPendingAction,
                     onCancel = chatViewModel::cancelPendingAction,
-                    onClear = chatViewModel::clearAllHistory,
+                    onNewChat = chatViewModel::startNewConversation,
+                    onOpenHistory = chatViewModel::openHistory,
+                    onCloseHistory = chatViewModel::closeHistory,
+                    onOpenConversation = chatViewModel::openConversation,
+                    onDeleteConversation = chatViewModel::deleteConversation,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
                     onToggleDictation = chatViewModel::toggleVoiceDictation
