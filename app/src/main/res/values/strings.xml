@@ -14,7 +14,6 @@
     <string name="podklyuchite_naushniki_dlya_raboty">● Connect headphones to start</string>
 
     <!-- ===== Format strings (audit #17) ===== -->
-    <string name="oshibka">Error: %1$s</string>
     <string name="s_sir">%1$s, sir.</string>
     <string name="ne_udalos_vypolnit">Couldn’t do that: %1$s</string>
 

@@ -2,6 +2,7 @@ package com.omnix.assistant.agent.localai
 
 import com.omnix.assistant.agent.decision.ExecutionRequest
 import com.omnix.assistant.agent.decision.RequestSource
+import com.omnix.assistant.core.constants.AppConstants
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -52,6 +53,7 @@ class OmniLocalPromptBuilder @Inject constructor() : LocalPromptBuilder {
         // офлайн-модель тоже знает long-term факты («как зовут дочь?»).
         return buildString {
             append(IM_START).append("system\n")
+            append(AppConstants.IDENTITY_PROMPT).append("\n")
             append(SYSTEM_PROMPT).append("\n")
             append(styleHint).append(IM_END).append("\n")
             append(IM_START).append("user\n")

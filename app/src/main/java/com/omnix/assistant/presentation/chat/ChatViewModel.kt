@@ -25,7 +25,6 @@ import com.omnix.assistant.domain.usecases.GetSettingsUseCase
 import com.omnix.assistant.domain.usecases.SendPromptUseCase
 import com.omnix.assistant.voice.stt.SpeechRecognitionEvent
 import com.omnix.assistant.voice.stt.SpeechRecognizerManager
-import com.omnix.assistant.voice.tts.TextToSpeechManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
@@ -75,7 +74,12 @@ data class ChatUiState(
     /** C-02: запрос на отправку приватных данных в облако, ожидающий ответа пользователя. */
     val pendingCloudConsent: PendingCloudConsentUi? = null,
     /** id ответов ассистента из облачной модели: под ними «Ответ из облака». */
-    val cloudMessageIds: Set<Long> = emptySet()
+    val cloudMessageIds: Set<Long> = emptySet(),
+    /**
+     * Ответ, который нельзя хранить в истории (подтверждённое чтение экрана):
+     * виден в ленте до следующего сообщения. Раньше его только озвучивали.
+     */
+    val localOnlyAnswer: String? = null
 )
 
 @HiltViewModel
@@ -85,7 +89,6 @@ class ChatViewModel @Inject constructor(
     private val clearChatHistoryUseCase: ClearChatHistoryUseCase,
     private val sendPromptUseCase: SendPromptUseCase,
     private val getSettingsUseCase: GetSettingsUseCase,
-    private val textToSpeechManager: TextToSpeechManager,
     private val speechRecognizerManager: SpeechRecognizerManager,
     private val toolExecutor: ToolExecutor,
     private val messageRepository: MessageRepository,
@@ -104,8 +107,6 @@ class ChatViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
-    private var speechRate = 1.05f
-    private var speechPitch = 0.90f
     private var systemPrompt = ""
 
     /**
@@ -171,16 +172,23 @@ class ChatViewModel @Inject constructor(
     private fun observeSettings() {
         viewModelScope.launch {
             getSettingsUseCase().collectLatest { settings ->
-                speechRate = settings.speechRate
-                speechPitch = settings.speechPitch
                 systemPrompt = settings.systemPrompt
             }
         }
     }
 
+    /**
+     * Распознаватель речи общий с голосовым ассистентом. Чат берёт только ту
+     * речь, которую сам начал кнопкой диктовки: раньше любая фраза, услышанная
+     * ассистентом (в том числе голос самого OMNIX после ложного «Omni»),
+     * уходила в чат как сообщение пользователя — OMNIX говорил сам с собой
+     * (отчёт владельца 2026-10-21). Продиктованный текст остаётся в поле
+     * ввода: отправляет пользователь.
+     */
     private fun observeSpeechRecognizer() {
         viewModelScope.launch {
             speechRecognizerManager.speechState.collectLatest { event ->
+                if (!_uiState.value.isVoiceDictating) return@collectLatest
                 when (event) {
                     is SpeechRecognitionEvent.PartialResult -> {
                         // CR-17: голосовой промежуточный текст тоже идёт через debounce
@@ -192,9 +200,7 @@ class ChatViewModel @Inject constructor(
                     }
                     is SpeechRecognitionEvent.FinalResult -> {
                         _uiState.update { it.copy(inputText = event.recognizedText, isVoiceDictating = false) }
-                        // sendTextMessage сам классифицирует финальный query — дополнительно
-                        // не дёргаем debounce, чтобы не показать промежуточную метку на пустом поле.
-                        sendTextMessage(event.recognizedText)
+                        _inputClassificationRequests.tryEmit(event.recognizedText)
                     }
                     is SpeechRecognitionEvent.RecognitionError -> {
                         _uiState.update { it.copy(isVoiceDictating = false) }
@@ -230,6 +236,7 @@ class ChatViewModel @Inject constructor(
     fun sendTextMessage(textToSend: String = _uiState.value.inputText) {
         val query = textToSend.trim()
         if (query.isBlank() || _uiState.value.isSending) return
+        _uiState.update { it.copy(localOnlyAnswer = null) }
 
         // C-02: приоритет №1 — если висит cloud-consent вопрос, «да/нет» — ответ на него.
         val pendingConsent = _uiState.value.pendingCloudConsent
@@ -299,17 +306,13 @@ class ChatViewModel @Inject constructor(
                                     }
                                 )
                             }
-                            textToSpeechManager.speak(exec.promptMessage, speechRate, speechPitch)
                         }
-                        is PromptExecutionResult.DirectAnswer -> {
-                            textToSpeechManager.speak(exec.text, speechRate, speechPitch)
-                        }
+                        // Ответ уже в истории (его сохраняет SendPromptUseCase).
+                        is PromptExecutionResult.DirectAnswer -> Unit
                     }
                 }
-                is Resource.Error -> {
-                    val errorMsg = result.message ?: context.getString(R.string.oshibka_vypolneniya_zaprosa)
-                    textToSpeechManager.speak(context.getString(R.string.oshibka, errorMsg), speechRate, speechPitch)
-                }
+                // Ошибка тоже сохранена в историю (MessageRole.ERROR) и видна в ленте.
+                is Resource.Error -> Unit
                 is Resource.Loading -> Unit
                 // C-02: use case сигнализирует, что нужен согласие на облако.
                 is Resource.NeedsConsent -> {
@@ -322,9 +325,6 @@ class ChatViewModel @Inject constructor(
                             )
                         )
                     }
-                    // Читаем вопрос вслух, чтобы голосовой пользователь тоже услышал его
-                    // (при диктовке из микрофона чат виден на экране).
-                    textToSpeechManager.speak(result.prompt, speechRate, speechPitch)
                 }
             }
         }
@@ -368,17 +368,11 @@ class ChatViewModel @Inject constructor(
                                     ) else null
                                 )
                             }
-                            textToSpeechManager.speak(exec.promptMessage, speechRate, speechPitch)
                         }
-                        is PromptExecutionResult.DirectAnswer -> {
-                            textToSpeechManager.speak(exec.text, speechRate, speechPitch)
-                        }
+                        is PromptExecutionResult.DirectAnswer -> Unit
                     }
                 }
-                is Resource.Error -> {
-                    val errorMsg = result.message ?: context.getString(R.string.oshibka_vypolneniya_zaprosa)
-                    textToSpeechManager.speak(context.getString(R.string.oshibka, errorMsg), speechRate, speechPitch)
-                }
+                is Resource.Error -> Unit
                 is Resource.Loading -> Unit
                 // Теоретически не может прийти NeedsConsent второй раз — флаг уже true.
                 is Resource.NeedsConsent -> Unit
@@ -407,7 +401,6 @@ class ChatViewModel @Inject constructor(
                     timestamp = System.currentTimeMillis()
                 )
             )
-            textToSpeechManager.speak(declineMsg, speechRate, speechPitch)
         }
     }
 
@@ -449,8 +442,14 @@ class ChatViewModel @Inject constructor(
                     timestamp = System.currentTimeMillis()
                 )
             )
-            _uiState.update { it.copy(isSending = false) }
-            textToSpeechManager.speak(voiceResponse, speechRate, speechPitch)
+            // Результат чтения экрана в историю не пишется (см. выше), поэтому
+            // показываем его в ленте до следующего сообщения, не сохраняя.
+            _uiState.update {
+                it.copy(
+                    isSending = false,
+                    localOnlyAnswer = if (persistedText != voiceResponse) voiceResponse else null
+                )
+            }
 
             // Следующий запрос подтверждения из очереди (если есть).
             toolExecutor.peekPendingConfirmation()?.let { next ->
@@ -483,7 +482,6 @@ class ChatViewModel @Inject constructor(
                     timestamp = System.currentTimeMillis()
                 )
             )
-            textToSpeechManager.speak(cancelMsg, speechRate, speechPitch)
 
             // Показываем следующий ожидающий подтверждения, если есть.
             toolExecutor.peekPendingConfirmation()?.let { next ->
@@ -511,6 +509,7 @@ class ChatViewModel @Inject constructor(
     }
 
     fun clearAllHistory() {
+        _uiState.update { it.copy(localOnlyAnswer = null) }
         viewModelScope.launch {
             clearChatHistoryUseCase()
         }

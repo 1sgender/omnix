@@ -359,6 +359,7 @@ class OnDeviceLocalAiTest {
         val prompt = OmniLocalPromptBuilder().build(request("тест"))
 
         assertTrue(prompt.contains("НЕ управляешь устройством"))
+        assertTrue("Модель на телефоне тоже знает, кто её создал", prompt.contains("Тебя создала команда OMNIX"))
         assertTrue(prompt.contains("НЕТ доступа в интернет"))
         assertTrue("Текст запроса должен попасть в промпт", prompt.contains("тест"))
         assertTrue("Должен быть ChatML-шаблон Qwen", prompt.contains("<|im_start|>user"))
