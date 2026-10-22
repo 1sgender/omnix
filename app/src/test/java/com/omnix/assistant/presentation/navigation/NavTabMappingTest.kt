@@ -7,8 +7,7 @@ import org.junit.Test
 /**
  * Вкладка-«владелица» маршрута (мок 2026-09-25): активный пункт в навбаре —
  * белый и жирный, остальные приглушены; под-экраны держат вкладку родителя.
- * Дизайн v2 (2026-10-13): вкладки Главная · Чат · Наушники · Я, История
- * переехала в «Я».
+ * С 2026-10-21 вкладок три: Главная · Чат · Я; «Наушники» — строка в «Я».
  */
 class NavTabMappingTest {
 
@@ -16,17 +15,15 @@ class NavTabMappingTest {
     fun `primary routes map to themselves`() {
         assertEquals(OmnixDestination.Home, tabForRoute(OmnixDestination.Home.route))
         assertEquals(OmnixDestination.Chat, tabForRoute(OmnixDestination.Chat.route))
-        assertEquals(OmnixDestination.Devices, tabForRoute(OmnixDestination.Devices.route))
         assertEquals(OmnixDestination.Me, tabForRoute(OmnixDestination.Me.route))
     }
 
     @Test
-    fun `the bar shows exactly the four primary tabs in order`() {
+    fun `the bar shows exactly the three primary tabs in order`() {
         assertEquals(
             listOf(
                 OmnixDestination.Home,
                 OmnixDestination.Chat,
-                OmnixDestination.Devices,
                 OmnixDestination.Me
             ),
             OmnixDestination.primary
@@ -46,6 +43,7 @@ class NavTabMappingTest {
     @Test
     fun `me sub screens keep me lit`() {
         assertEquals(OmnixDestination.Me, tabForRoute(OmnixDestination.Privacy.route))
+        assertEquals(OmnixDestination.Me, tabForRoute(OmnixDestination.Devices.route))
         assertEquals(OmnixDestination.Me, tabForRoute(OmnixDestination.Automations.route))
         assertEquals(OmnixDestination.Me, tabForRoute("omnix/settings/voice"))
         assertEquals(OmnixDestination.Me, tabForRoute("omnix/settings/appearance"))

@@ -172,3 +172,44 @@ val OmnixSendLineIcon: ImageVector = omnixLineIcon("Send", 2.2f, "M12 19V5", "M5
 // ---- Me ----
 
 val OmnixChevronLineIcon: ImageVector = omnixLineIcon("Chevron", "M9 18l6-6-6-6")
+
+// ---- Me rows (2026-10-22: настоящие иконки вместо двухбуквенных плиток) ----
+
+/** Голос и фраза вызова. */
+val OmnixVoiceLineIcon: ImageVector = omnixLineIcon(
+    "Voice",
+    // rect x=9 y=3 w=6 h=11 rx=3
+    "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z",
+    "M5 11a7 7 0 0 0 14 0", "M12 18v3"
+)
+
+/** ИИ-модель: искра. */
+val OmnixSparkLineIcon: ImageVector = omnixLineIcon(
+    "Spark",
+    "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z",
+    "M19 16v4", "M17 18h4"
+)
+
+/** Оформление: круг, наполовину залитый линиями. */
+val OmnixAppearanceLineIcon: ImageVector = omnixLineIcon(
+    "Appearance",
+    // circle cx=12 cy=12 r=9
+    "M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0",
+    "M12 3v18", "M12 8h7.5", "M12 12h9", "M12 16h7.5"
+)
+
+/** Язык: глобус. */
+val OmnixGlobeLineIcon: ImageVector = omnixLineIcon(
+    "Globe",
+    "M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0",
+    "M3 12h18",
+    "M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9s1.3-6.5 3.8-9z"
+)
+
+/** Уведомления: колокольчик. */
+val OmnixBellLineIcon: ImageVector = omnixLineIcon(
+    "Bell",
+    "M6 16V11a6 6 0 0 1 12 0v5l2 2H4z",
+    "M10 21h4"
+)
+
