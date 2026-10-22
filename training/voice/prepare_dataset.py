@@ -225,8 +225,13 @@ def main():
             sim = similarity("".join(heard[j:k]), norm(text, lang))
             raw_peak = float(np.abs(clip).max())
             flags = []
-            if sim < (0.55 if lang == "ru" else 0.35):
+            # Туркменскую речь распознаёт русская модель — сходство там мало что значит,
+            # поэтому для неё полагаемся на длительность.
+            if lang == "ru" and sim < 0.55:
                 flags.append("проверить текст")
+            want = max(0.6, len(norm(text, lang)) * SECONDS_PER_CHAR)
+            if abs(np.log((len(y) / OUT_SR) / want)) > 0.7:
+                flags.append("проверить длину")
             if raw_peak > 0.98:
                 flags.append("перегруз")
             if raw_peak < 0.05:
