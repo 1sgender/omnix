@@ -118,7 +118,7 @@ class DiagnosticsEngine @Inject constructor(
         val micErrors = wakeWordEngine.micReadErrors.let {
             if (it > 0) ", mic read errors=$it (last ${wakeWordEngine.lastMicReadError})" else ""
         }
-        val scores = "best score last 60s=${fmt(m.recentMaxScore)} (ever ${fmt(m.maxScore)}), " +
+        val scores = "phrase=${wakeWordEngine.activeWakeWord}, best score last 60s=${fmt(m.recentMaxScore)} (ever ${fmt(m.maxScore)}), " +
             "threshold=${fmt(wakeWordEngine.baseThreshold)} " +
             "(now ${fmt(wakeWordEngine.effectiveThreshold)}), " +
             "frames=${m.framesObserved}, detections=${m.detections}$micErrors"
@@ -132,7 +132,7 @@ class DiagnosticsEngine @Inject constructor(
             m.detections > 0 ->
                 DiagnosticStatus.OK to "listening; $scores"
             else ->
-                DiagnosticStatus.WARNING to "listening, no detection yet (say 'Omni', then re-run); $scores"
+                DiagnosticStatus.WARNING to "listening, no detection yet (say the phrase, then re-run); $scores"
         }
     }
 

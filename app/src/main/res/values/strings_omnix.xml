@@ -31,7 +31,7 @@
     <string name="omnix_home_off_hint">Tap the logo to turn it on</string>
     <string name="omnix_home_starting">Turning on…</string>
     <string name="omnix_home_stopping">Turning off…</string>
-    <string name="omnix_home_on_hint">Say “Omni” or tap Speak</string>
+    <string name="omnix_home_on_hint">Say “Okay Omni” or tap Speak</string>
     <string name="omnix_home_talk">Speak</string>
     <string name="omnix_home_talk_stop">Stop</string>
     <string name="omnix_home_power_a11y">OMNIX assistant</string>
@@ -111,7 +111,7 @@
     <string name="omnix_error_user_action_action">Continue</string>
 
     <string name="omnix_error_not_understood_title">I didn’t catch that.</string>
-    <string name="omnix_error_not_understood_body">Say “Omni” and try again.</string>
+    <string name="omnix_error_not_understood_body">Say “Okay Omni” and try again.</string>
 
     <string name="omnix_error_generic_title">That didn’t work.</string>
     <string name="omnix_error_generic_body">Try again.</string>
@@ -153,7 +153,7 @@
     <string name="omnix_devices_title">Headphones</string>
     <string name="omnix_devices_clip_name">Omnix Buds</string>
     <string name="omnix_devices_battery">BATTERY</string>
-    <string name="omnix_devices_wake_title">The word “Omni”</string>
+    <string name="omnix_devices_wake_title">The phrase “Okay Omni”</string>
     <string name="omnix_devices_wake_sub">Hands-free call</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
@@ -232,7 +232,7 @@
     <string name="omnix_me_license_active">License active</string>
     <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
-    <string name="omnix_me_row_voice">Voice and the word “Omni”</string>
+    <string name="omnix_me_row_voice">Voice and “Okay Omni”</string>
     <string name="omnix_me_row_memory">Memory and privacy</string>
     <string name="omnix_me_model_ready">Ready</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
@@ -243,7 +243,7 @@
     <string name="omnix_voice_tone">Voice tone</string>
     <string name="omnix_voice_feedback">Voice feedback</string>
     <string name="omnix_voice_listening">Listening</string>
-    <string name="omnix_voice_listening_body">Keep OMNIX listening for “Omni” in the background.</string>
+    <string name="omnix_voice_listening_body">Keep OMNIX listening for “Okay Omni” in the background.</string>
     <string name="omnix_voice_headset_only">Only when the Clip is connected</string>
     <string name="omnix_voice_headset_only_body">Saves battery by listening only through your Clip.</string>
     <string name="omnix_voice_sensitivity">Wake sensitivity</string>
@@ -251,7 +251,7 @@
     <string name="omnix_voice_background_body">Allow OMNIX to keep working when the screen is off.</string>
     <string name="omnix_voice_background_action">Allow</string>
     <string name="omnix_voice_automations">Automations</string>
-    <string name="omnix_voice_automations_empty">No automations yet. Say: “Omni, when my Clip connects, play music.”</string>
+    <string name="omnix_voice_automations_empty">No automations yet. Say: “Okay Omni, when my Clip connects, play music.”</string>
 
     <string name="omnix_privacy_title">Privacy</string>
     <string name="omnix_privacy_microphone">Microphone</string>
@@ -279,6 +279,11 @@
     <string name="omnix_admin_models_restart">The phone model changes after the app restarts. If it is not on the phone yet, download it on this screen.</string>
     <string name="omnix_admin_answer_phone">Phone · %1$s</string>
     <string name="omnix_admin_answer_cloud">Cloud</string>
+    <string name="omnix_admin_wake_title">Wake phrase testing (admin)</string>
+    <string name="omnix_admin_wake_body">Compare on your phone. Applies the next time OMNIX starts listening.</string>
+    <string name="omnix_admin_wake_okay_omni">“Okay Omni” — new engine</string>
+    <string name="omnix_admin_wake_omni">“Omni” — new engine</string>
+    <string name="omnix_admin_wake_legacy">“Omni” — previous model</string>
     <string name="omnix_ai_model_checking">Checking…</string>
     <string name="omnix_ai_model_downloading">Downloading: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Not downloaded — the button is below</string>
@@ -321,9 +326,9 @@
     <string name="omnix_setup_turn_on_title">Turn OMNIX on</string>
     <string name="omnix_setup_turn_on_hint">Tap the logo. This is how OMNIX turns on and off.</string>
     <string name="omnix_setup_on_title">OMNIX is on</string>
-    <string name="omnix_setup_try_hint">Say: “Omni, what time is it?”</string>
+    <string name="omnix_setup_try_hint">Say: “Okay Omni, what time is it?”</string>
     <string name="omnix_setup_success">It works</string>
-    <string name="omnix_setup_success_body">From now on just say “Omni” — in your headphones or near the phone.</string>
+    <string name="omnix_setup_success_body">From now on just say “Okay Omni” — in your headphones or near the phone.</string>
     <string name="omnix_setup_done">Done</string>
     <string name="omnix_setup_skip">Skip</string>
     <string name="omnix_setup_connect_headphones">Connect headphones</string>
@@ -410,7 +415,7 @@
     <string name="omnix_diagnostics_running">RUNNING %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">EXPORT REPORT</string>
     <string name="omnix_diagnostics_share_title">Share diagnostics report</string>
-    <string name="omnix_diag_wake_word">Wake word «Omni»</string>
+    <string name="omnix_diag_wake_word">Wake phrase «Okay Omni»</string>
     <string name="omnix_diag_mic">Microphone</string>
     <string name="omnix_diag_stt">Speech recognition</string>
     <string name="omnix_diag_local_ai">Local AI</string>
@@ -532,8 +537,8 @@
     <string name="omnix_memory_type_episodic">Event</string>
     <string name="omnix_memory_type_procedural">Scenario</string>
     <string name="omnix_memory_type_other">Memory</string>
-    <string name="omnix_voice_wake_word">Wake word «Omni»</string>
-    <string name="omnix_voice_wake_word_body">Respond to the word «Omni» — turn this off if you do not want it listening</string>
+    <string name="omnix_voice_wake_word">Wake phrase «Okay Omni»</string>
+    <string name="omnix_voice_wake_word_body">Respond to «Okay Omni» — turn this off if you do not want it listening</string>
     <string name="omnix_devices_on_this_phone">On this phone</string>
     <string name="omnix_capability_bluetooth">Bluetooth</string>
     <string name="omnix_capability_wifi">Wi-Fi</string>
