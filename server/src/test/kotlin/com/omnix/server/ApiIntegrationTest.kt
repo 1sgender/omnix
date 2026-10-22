@@ -13,6 +13,7 @@ import com.omnix.server.config.PrivacyPolicyConfig
 import com.omnix.server.config.ProviderConfig
 import com.omnix.server.config.RateLimitConfig
 import com.omnix.server.config.ValidationConfig
+import com.omnix.server.cost.RequestCostEstimator
 import com.omnix.server.http.HttpRequestContext
 import com.omnix.server.http.OmnixApiHandler
 import com.omnix.server.observability.ConsoleStructuredLogger
@@ -727,6 +728,23 @@ class ApiIntegrationTest {
     fun `stt without a configured recogniser is unavailable, not a crash`() = runBlocking {
         val response = harness().handler.handle(post(sttBody(shortWav()), path = OmnixApiHandler.PATH_STT))
         assertEquals(503, response.status)
+    }
+
+    /** Чат получает свои правила (развёрнуто, markdown) и бюджет; голос — короткие. */
+    @Test
+    fun `chat and voice get their own answer rules`() = runBlocking {
+        val groq = FakeAiProvider.ok(ProviderId.GROQ, "ok")
+        val h = harness(providers = listOf(groq))
+
+        assertEquals(200, h.handler.handle(post("""{"text":"Объясни, как работает ИИ","source":"CHAT"}""")).status)
+        val chat = groq.lastRequest!!
+        assertTrue(chat.systemPrompt.startsWith(AiGenerationConfig.DEFAULT_CHAT_SYSTEM_PROMPT))
+        assertEquals(RequestCostEstimator.CHAT_SIMPLE_MAX_OUTPUT_TOKENS, chat.maxTokens)
+
+        assertEquals(200, h.handler.handle(post(requestBody(text = "Объясни, как работает память"))).status)
+        val voice = groq.lastRequest!!
+        assertTrue(voice.systemPrompt.startsWith(AiGenerationConfig.DEFAULT_SYSTEM_PROMPT))
+        assertEquals(RequestCostEstimator.SIMPLE_MAX_OUTPUT_TOKENS, voice.maxTokens)
     }
 
     /** CR-03: пустая история работает как раньше — в ProviderRequest.history пусто. */

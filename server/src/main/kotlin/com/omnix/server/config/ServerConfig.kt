@@ -152,20 +152,38 @@ data class PrivacyPolicyConfig(
 data class AiGenerationConfig(
     val maxTokens: Int = 512,
     val temperature: Double = 0.6,
-    val systemPrompt: String = DEFAULT_SYSTEM_PROMPT
+    val systemPrompt: String = DEFAULT_SYSTEM_PROMPT,
+    /**
+     * Текстовый чат: ответ читают, а не слушают. Раньше чат получал голосовые
+     * правила («1-3 предложения, без списков») и отвечал куце (отзыв владельца
+     * на v344: «чат должен быть как ChatGPT»).
+     */
+    val chatSystemPrompt: String = DEFAULT_CHAT_SYSTEM_PROMPT,
+    val chatMaxTokens: Int = 1_500
 ) {
     init {
         require(maxTokens > 0) { "maxTokens must be positive" }
+        require(chatMaxTokens > 0) { "chatMaxTokens must be positive" }
         require(temperature.isFinite() && temperature in 0.0..2.0) {
             "temperature must be finite and in 0.0..2.0"
         }
         require(systemPrompt.isNotBlank()) { "systemPrompt must not be blank" }
+        require(chatSystemPrompt.isNotBlank()) { "chatSystemPrompt must not be blank" }
     }
 
     companion object {
         const val DEFAULT_SYSTEM_PROMPT =
             "Ты OMNIX — персональный голосовой AI-ассистент. Отвечай кратко и по существу: " +
                 "1-3 предложения. Без markdown, списков и спецсимволов — ответ будет озвучен вслух."
+
+        const val DEFAULT_CHAT_SYSTEM_PROMPT =
+            "Ты OMNIX — персональный AI-ассистент. Это текстовый чат: ответ читают на экране телефона, " +
+                "он не озвучивается. Отвечай на языке пользователя. На простую реплику отвечай коротко. " +
+                "На вопрос, просьбу объяснить, составить план или текст отвечай полно и понятно, " +
+                "как хороший собеседник: начни с сути, затем подробности. Где это помогает, используй " +
+                "простой markdown: короткие абзацы, списки, **жирный** для главного, заголовки ## для " +
+                "длинных ответов, блоки кода для кода. Не используй таблицы и HTML. Не пиши вступлений " +
+                "вроде «Конечно!» и не повторяй вопрос."
     }
 }
 
@@ -436,6 +454,7 @@ data class ServerConfig(
                 ),
                 generation = AiGenerationConfig(
                     maxTokens = int("AI_MAX_TOKENS", 512),
+                    chatMaxTokens = int("AI_CHAT_MAX_TOKENS", 1_500),
                     temperature = str("AI_TEMPERATURE")?.toDoubleOrNull() ?: 0.6
                 ),
                 deployment = deployment,
