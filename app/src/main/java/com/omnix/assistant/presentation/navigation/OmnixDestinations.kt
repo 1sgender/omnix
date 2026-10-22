@@ -37,6 +37,9 @@ sealed class OmnixDestination(val route: String) {
      */
     data object Automations : OmnixDestination("omnix/automations")
 
+    /** Secondary: what OMNIX remembers about the user (owner report on v344). */
+    data object Memory : OmnixDestination("omnix/memory")
+
     /** Secondary: what OMNIX keeps and where it goes (§42, §52). */
     data object Privacy : OmnixDestination("omnix/privacy")
 
@@ -84,6 +87,7 @@ fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Me.route,
     OmnixDestination.Devices.route,
     OmnixDestination.Privacy.route,
+    OmnixDestination.Memory.route,
     OmnixDestination.Automations.route -> OmnixDestination.Me
     else -> route
         ?.takeIf { it.startsWith(OmnixDestination.SettingsSection.ROUTE_PREFIX) }

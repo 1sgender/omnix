@@ -26,6 +26,10 @@ import javax.inject.Singleton
 interface AutomationDeletionStore {
     fun markDeleted(ruleId: String)
     fun deletedRuleIds(): Set<String>
+
+    /** Шумные встроенные правила уже один раз выключены (миграция после v344). */
+    fun quietDefaultsApplied(): Boolean
+    fun markQuietDefaultsApplied()
 }
 
 @Singleton
@@ -42,9 +46,16 @@ class PreferencesAutomationDeletionStore @Inject constructor(
     override fun deletedRuleIds(): Set<String> =
         prefs.getStringSet(KEY, emptySet()) ?: emptySet()
 
+    override fun quietDefaultsApplied(): Boolean = prefs.getBoolean(KEY_QUIET_DEFAULTS, false)
+
+    override fun markQuietDefaultsApplied() {
+        prefs.edit().putBoolean(KEY_QUIET_DEFAULTS, true).apply()
+    }
+
     private companion object {
         const val PREFS = "automation_user_deletions"
         const val KEY = "deleted_rule_ids"
+        const val KEY_QUIET_DEFAULTS = "quiet_defaults_applied"
     }
 }
 
@@ -53,6 +64,9 @@ class PreferencesAutomationDeletionStore @Inject constructor(
  * выбрасываются правила, помеченные удалёнными. Отдельная функция, а не метод
  * движка, чтобы логику можно было проверить без Android-зависимостей.
  */
+/** Встроенное правило движка (а не созданное пользователем). */
+fun isDefaultRule(ruleId: String): Boolean = ruleId.startsWith("default_")
+
 fun survivingDefaults(
     defaults: List<AutomationEntity>,
     deletedRuleIds: Set<String>

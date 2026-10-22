@@ -9,9 +9,11 @@ import com.omnix.assistant.agent.automation.scheduler.AutomationScheduleManager
 import com.omnix.assistant.agent.executor.ToolExecutor
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.core.license.ClientPlanGate
+import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.tts.TextToSpeechManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -31,11 +33,13 @@ import javax.inject.Singleton
  * - Mutex для thread-safety
  * - Улучшенная обработка ошибок
  */
-@Singleton
 /** Исчерпан лимит автоматизаций тарифа (маппится в честный failure tool). */
 class AutomationLimitReachedException(val max: Int) :
     IllegalStateException("План позволяет максимум $max автоматизаций")
 
+// @Singleton стоял над классом исключения, и движок не был синглтоном: у каждой
+// точки внедрения — свой экземпляр и свой мьютекс инициализации.
+@Singleton
 class PersonalAutomationEngine @Inject constructor(
     private val automationDao: AutomationDao,
     private val toolExecutor: ToolExecutor,
@@ -44,13 +48,22 @@ class PersonalAutomationEngine @Inject constructor(
     private val scheduleManager: AutomationScheduleManager,
     private val json: Json,
     private val planGate: ClientPlanGate,
-    private val deletionStore: AutomationDeletionStore
+    private val deletionStore: AutomationDeletionStore,
+    private val experienceStore: OmnixExperienceStore
 ) {
     companion object {
         private const val TAG = "AutomationEngine"
 
         /** Защита от повторных срабатываний при «дребезге» системных событий. */
         private const val DEFAULT_COOLDOWN_MS = 60_000L
+
+        /** Встроенные правила, которые меняют громкость, яркость или говорят сами. */
+        private val QUIET_BY_DEFAULT = listOf(
+            "default_morning_schedule",
+            "default_morning_headphones",
+            "default_home_wifi",
+            "default_battery_low"
+        )
     }
 
     private val initMutex = Mutex()
@@ -173,7 +186,9 @@ class PersonalAutomationEngine @Inject constructor(
             }
         }
 
-        if (voiceMessages.isNotEmpty()) {
+        // «Озвучивать автоматизации» в разделе «Уведомления»: раньше переключатель
+        // сохранялся, но никем не читался.
+        if (voiceMessages.isNotEmpty() && experienceStore.notifyRoutines.first()) {
             withContext(Dispatchers.Main) {
                 textToSpeechManager.speak(voiceMessages.joinToString(" "))
             }
@@ -218,6 +233,16 @@ class PersonalAutomationEngine @Inject constructor(
      * Теперь проверяет каждое правило отдельно и добавляет только отсутствующие.
      */
     private suspend fun initDefaultAutomations() {
+        // v344 включал все встроенные правила сразу: телефон сам менял громкость
+        // при подключении к Wi-Fi и яркость при низком заряде. Один раз
+        // выключаем такие правила и у тех, кто уже установил приложение.
+        if (!deletionStore.quietDefaultsApplied()) {
+            for (ruleId in QUIET_BY_DEFAULT) {
+                automationDao.setAutomationEnabled(ruleId, false)
+            }
+            deletionStore.markQuietDefaultsApplied()
+        }
+
         val defaultRules = survivingDefaults(
             listOf(
                 createMorningHeadphonesRule(),
@@ -279,7 +304,7 @@ class PersonalAutomationEngine @Inject constructor(
             conditionsJson = "",
             actionsJson = actions,
             voiceAnnouncement = "Доброе утро. Вот ваш план на день: календарь, погода, расписание и задачи.",
-            isEnabled = true,
+            isEnabled = false,
             priority = 30,
             // Точное время — срабатываем раз в сутки, а не каждую минуту.
             cooldownMs = 24L * 60 * 60 * 1000
@@ -309,7 +334,7 @@ class PersonalAutomationEngine @Inject constructor(
             conditionsJson = timeCondition,
             actionsJson = actions,
             voiceAnnouncement = "Доброе утро. Громкость установлена на 50%.",
-            isEnabled = true,
+            isEnabled = false,
             priority = 10,
             cooldownMs = DEFAULT_COOLDOWN_MS
         )
@@ -333,7 +358,7 @@ class PersonalAutomationEngine @Inject constructor(
             conditionsJson = "",
             actionsJson = actions,
             voiceAnnouncement = "С возвращением домой. Громкость установлена на 70%.",
-            isEnabled = true,
+            isEnabled = false,
             priority = 5,
             cooldownMs = DEFAULT_COOLDOWN_MS
         )
@@ -363,7 +388,7 @@ class PersonalAutomationEngine @Inject constructor(
             conditionsJson = "",
             actionsJson = actions,
             voiceAnnouncement = "Внимание. Низкий заряд батареи. Включаю режим экономии.",
-            isEnabled = true,
+            isEnabled = false,
             priority = 20,
             cooldownMs = DEFAULT_COOLDOWN_MS
         )
@@ -403,10 +428,11 @@ class PersonalAutomationEngine @Inject constructor(
         cooldownMs: Long = DEFAULT_COOLDOWN_MS,
         triggerParam: String = ""
     ): Long = withContext(Dispatchers.IO) {
-        // Лимит тарифа (часть 2): считаем ВСЕ правила, включая выключенные
-        // (иначе лимит обходится toggle'ом). Дефолтные правила движка тоже
-        // в счётчике — честно: они занимают слоты тарифа.
-        val currentCount = automationDao.getAllAutomations().size
+        // Лимит тарифа (часть 2): считаем все правила пользователя, включая
+        // выключенные (иначе лимит обходится toggle'ом). Встроенные правила не
+        // считаются: их пять, а базовый тариф даёт три слота — пользователь не
+        // мог создать ни одного своего правила (отзыв владельца на v344).
+        val currentCount = automationDao.getAllAutomations().count { !isDefaultRule(it.ruleId) }
         if (!planGate.canCreateAutomation(currentCount)) {
             val max = planGate.entitlements().maxAutomations
             Log.i(TAG, "automation limit reached | count=$currentCount max=$max")

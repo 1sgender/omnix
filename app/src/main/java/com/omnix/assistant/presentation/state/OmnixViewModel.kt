@@ -348,10 +348,14 @@ class OmnixViewModel @Inject constructor(
         viewModelScope.launch { experienceStore.setMicrophonePrompted(true) }
     }
 
-    /** Driven by the pairing screen (§40). */
-    fun setSearching(active: Boolean) {
-        searching.value = active
-        if (active) clipRepository.refresh()
+    /**
+     * «Подключить наушники»: перепроверить соединение, пока пользователь
+     * подключает их в системных настройках. Статус «Поиск…» здесь больше не
+     * включается: в v344 его никто не выключал, и он висел до подключения.
+     */
+    fun refreshHeadphones() {
+        searching.value = false
+        clipRepository.refresh()
     }
 
     /**
