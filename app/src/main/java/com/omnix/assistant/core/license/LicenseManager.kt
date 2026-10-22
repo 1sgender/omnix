@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.omnix.assistant.R
+import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.security.AccessTokenPolicy
 import com.omnix.assistant.core.security.SecurityManager
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -107,7 +108,8 @@ class LicenseManagerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val serverValidator: LicenseServerValidator,
     private val validator: LicenseCodeValidator,
-    private val securityManager: SecurityManager
+    private val securityManager: SecurityManager,
+    private val adminModels: AdminModelTesting = AdminModelTesting.OFF
 ) : LicenseManager {
     companion object {
         private const val TAG = "LicenseManager"
@@ -164,6 +166,7 @@ class LicenseManagerImpl @Inject constructor(
         return when (val result = serverValidator.validate(hardwareId)) {
             is ServerLicenseValidationResult.Valid -> {
                 val info = persistServerRecord(result.license, hardwareId)
+                adminModels.onLicenseChecked(result.license.adminCloudModels)
                 LicenseRefreshResult.Valid(info)
             }
             ServerLicenseValidationResult.Expired -> {
@@ -174,6 +177,7 @@ class LicenseManagerImpl @Inject constructor(
             ServerLicenseValidationResult.WrongDevice -> {
                 invalidateProcessState(expired = false)
                 securityManager.clearAccessToken()
+                adminModels.onLicenseChecked(null)
                 LicenseRefreshResult.Revoked
             }
             ServerLicenseValidationResult.PaymentRequired,
@@ -184,6 +188,7 @@ class LicenseManagerImpl @Inject constructor(
             ServerLicenseValidationResult.Unauthorized -> {
                 invalidateProcessState(expired = false)
                 securityManager.clearAccessToken()
+                adminModels.onLicenseChecked(null)
                 LicenseRefreshResult.Unauthorized
             }
             ServerLicenseValidationResult.RateLimited ->

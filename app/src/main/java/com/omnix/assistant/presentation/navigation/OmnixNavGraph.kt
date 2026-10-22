@@ -53,6 +53,7 @@ import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.presentation.state.SystemStateType
 import com.omnix.assistant.presentation.translator.TranslatorRoute
+import com.omnix.assistant.presentation.voice.VoiceModeRoute
 
 /**
  * The OMNIX navigation graph (§20, §44).
@@ -125,8 +126,13 @@ fun OmnixNavGraph(
                     onDeleteConversation = chatViewModel::deleteConversation,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
-                    onToggleDictation = chatViewModel::toggleVoiceDictation
+                    onToggleDictation = chatViewModel::toggleVoiceDictation,
+                    onOpenVoiceMode = { navController.navigate(OmnixDestination.Voice.route) }
                 )
+            }
+
+            composable(OmnixDestination.Voice.route) {
+                VoiceModeRoute(onClose = navController::popBackStack)
             }
 
             composable(OmnixDestination.Translator.route) {
@@ -255,7 +261,7 @@ fun OmnixNavGraph(
         // their parent tab lit (mock 2026-09-25).
         // Full-screen modes draw their own controls and have no tab bar
         // (design v2 canvas: the Translator artboard).
-        if (currentRoute != OmnixDestination.Translator.route) {
+        if (currentRoute != OmnixDestination.Translator.route && currentRoute != OmnixDestination.Voice.route) {
             OmnixNavigationBar(
                 currentTab = tabForRoute(currentRoute),
                 onNavigate = { navController.navigateSingleTop(it) }
