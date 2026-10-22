@@ -235,10 +235,11 @@ class AiRouter(
             requiresWeb = request.requiresWeb,
             // Cost Control: SIMPLE-класс получает урезанный бюджет ответа —
             // короткая реплика не должна платить за длинный вывод.
-            maxTokens = com.omnix.server.cost.RequestCostEstimator.outputBudget(
-                costClass,
-                generation.maxTokens
-            ),
+            maxTokens = if (request.source == ApiRequestSource.CHAT) {
+                com.omnix.server.cost.RequestCostEstimator.chatOutputBudget(costClass, generation.chatMaxTokens)
+            } else {
+                com.omnix.server.cost.RequestCostEstimator.outputBudget(costClass, generation.maxTokens)
+            },
             temperature = generation.temperature,
             // CR-06: прокидываем общий deadline до менеджера провайдеров,
             // чтобы он мог делать early-out между fallback'ами и подрезать
@@ -416,7 +417,10 @@ class AiRouter(
      * а не заменяется им: правила ассистента остаются под контролем сервера.
      */
     private fun buildSystemPrompt(request: AiExecutionRequest): String {
-        val parts = mutableListOf(generation.systemPrompt)
+        // Голос и чат — разные правила ответа: голос короткий и без разметки,
+        // чат развёрнутый и с markdown.
+        val base = if (request.source == ApiRequestSource.CHAT) generation.chatSystemPrompt else generation.systemPrompt
+        val parts = mutableListOf(base)
 
         val clientContext = request.systemContext?.trim()
         if (!clientContext.isNullOrEmpty()) {
