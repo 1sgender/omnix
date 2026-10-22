@@ -245,6 +245,7 @@ class SendPromptUseCase @Inject constructor(
         if (executionType == ExecutionType.CLOUD_AI) {
             answerOriginStore.markCloud(messageId)
         }
+        answerOriginStore.markAdminLabel(messageId, executionType)
     }
 
     private suspend fun saveErrorMessage(text: String) {

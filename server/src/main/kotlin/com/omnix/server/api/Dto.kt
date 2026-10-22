@@ -89,7 +89,15 @@ data class AiExecutionRequest(
      *
      * При `history == emptyList()` поведение идентично прежнему.
      */
-    @SerialName("history") val history: List<MessageDto> = emptyList()
+    @SerialName("history") val history: List<MessageDto> = emptyList(),
+
+    /**
+     * Тест моделей админом: GROQ / GEMINI / OPENROUTER — только этот провайдер,
+     * без fallback. Сервер учитывает поле лишь для аккаунтов из
+     * ADMIN_ACCOUNT_IDS ([com.omnix.server.admin.AdminModelAccess]); для всех
+     * остальных модель по-прежнему выбирает сервер, а поле игнорируется.
+     */
+    @SerialName("adminProvider") val adminProvider: String? = null
 ) {
     companion object {
         // P2-cleanup (Этап 5): компактный memory-контекст (AR-04) был полуготовым
@@ -103,16 +111,27 @@ data class AiExecutionRequest(
 /**
  * Успешный ответ.
  *
- * Поле `provider` намеренно отсутствует: какой именно провайдер отработал —
- * это server-side telemetry (пункт 3 ТЗ). Клиенту эта деталь не нужна и её
- * раскрытие только привязало бы Android к инфраструктуре.
+ * Какой провайдер отработал — server-side telemetry (пункт 3 ТЗ): обычному
+ * клиенту `provider`/`model` не отдаются (null и опускаются). Исключение —
+ * админ, тестирующий модели (решение владельца 2026-10-21): ему они нужны,
+ * чтобы сравнивать ответы.
  */
 @Serializable
 data class AiExecutionResponse(
     @SerialName("success") val success: Boolean = true,
     @SerialName("text") val text: String,
     @SerialName("executionType") val executionType: ApiExecutionType = ApiExecutionType.CLOUD_AI,
-    @SerialName("requestId") val requestId: String
+    @SerialName("requestId") val requestId: String,
+    /** Только для админа (тест моделей): какой провайдер и модель ответили. */
+    @SerialName("provider") val provider: String? = null,
+    @SerialName("model") val model: String? = null
+)
+
+/** Облачная модель, доступная админу для теста (см. AdminModelAccess). */
+@Serializable
+data class AdminCloudModelDto(
+    @SerialName("provider") val provider: String,
+    @SerialName("model") val model: String
 )
 
 /** Тело ошибки — единый формат для всех сбоев. */

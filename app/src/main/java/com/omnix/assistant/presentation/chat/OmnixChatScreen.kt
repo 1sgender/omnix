@@ -207,6 +207,7 @@ fun OmnixChatScreen(
                             is ChatRow.Bubble -> MessageRow(
                                 message = row.message,
                                 fromCloud = row.message.id in state.cloudMessageIds,
+                                adminLabel = state.adminLabels[row.message.id],
                                 threadWidth = threadWidth
                             )
                         }
@@ -518,13 +519,19 @@ private fun DayLabel(date: LocalDate) {
  * warning mark. Each message is one accessibility node ("You: …").
  */
 @Composable
-private fun MessageRow(message: Message, fromCloud: Boolean, threadWidth: Dp) {
+private fun MessageRow(
+    message: Message,
+    fromCloud: Boolean,
+    threadWidth: Dp,
+    adminLabel: String? = null
+) {
     val colors = OmnixTheme.colors
     val isUser = message.role == MessageRole.USER
     val isError = message.role == MessageRole.ERROR
     val sender = stringResource(if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix)
-    val cloudCaption = stringResource(R.string.omnix_chat_from_cloud)
-    val description = if (fromCloud && !isUser) "$sender: ${message.text}. $cloudCaption" else "$sender: ${message.text}"
+    // Админу (тест моделей) подпись называет модель, остальным — «Ответ из облака».
+    val caption = adminLabel ?: if (fromCloud) stringResource(R.string.omnix_chat_from_cloud) else null
+    val description = if (caption != null && !isUser) "$sender: ${message.text}. $caption" else "$sender: ${message.text}"
 
     if (isUser) {
         Box(
@@ -571,14 +578,16 @@ private fun MessageRow(message: Message, fromCloud: Boolean, threadWidth: Dp) {
             // Ответ OMNIX — обычный текст на всю ширину, без пузыря (как в ChatGPT).
             Text(text = message.text, style = BubbleText, color = colors.textPrimary)
         }
-        if (fromCloud) {
+        if (caption != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Icon(OmnixCloudLineIcon, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(12.dp))
+                if (fromCloud) {
+                    Icon(OmnixCloudLineIcon, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(12.dp))
+                }
                 Text(
-                    text = cloudCaption,
+                    text = caption,
                     style = TextStyle(fontFamily = OmnixSans, fontSize = 11.sp),
                     color = colors.textTertiary
                 )

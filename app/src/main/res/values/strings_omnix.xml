@@ -281,6 +281,12 @@
     <string name="omnix_ai_model_on_device_body">%1$s. Works offline, requests never leave the phone. Simpler answers than the cloud.</string>
     <string name="omnix_ai_model_cloud">OMNIX cloud</string>
     <string name="omnix_ai_model_cloud_body">The model on the OMNIX server: fuller answers. Needs the internet.</string>
+    <string name="omnix_admin_models_title">Model testing (admin)</string>
+    <string name="omnix_admin_models_body">Only you see this. The chosen model answers every request, and each answer says who answered.</string>
+    <string name="omnix_admin_models_default">As for everyone</string>
+    <string name="omnix_admin_models_restart">The phone model changes after the app restarts. If it is not on the phone yet, download it on this screen.</string>
+    <string name="omnix_admin_answer_phone">Phone · %1$s</string>
+    <string name="omnix_admin_answer_cloud">Cloud</string>
     <string name="omnix_ai_model_checking">Checking…</string>
     <string name="omnix_ai_model_downloading">Downloading: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Not downloaded — the button is below</string>
