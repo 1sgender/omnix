@@ -78,6 +78,12 @@ class ExecutionDecisionEngine @Inject constructor(
         var localTried: Boolean = false
     }
     companion object {
+        /** Исходы инструментов, о которых OMNIX сообщает обычным ответом, а не ошибкой. */
+        val CONVERSATIONAL_TOOL_OUTCOMES = setOf(
+            "APP_NOT_INSTALLED", "AMBIGUOUS_APP", "APP_UNKNOWN", "MISSING_PARAM",
+            "SYSTEM_SCREEN_UNAVAILABLE", "NO_LAUNCH_INTENT"
+        )
+
         private const val TAG = "DecisionEngine"
 
         private const val OFFLINE_MESSAGE =
@@ -416,6 +422,19 @@ class ExecutionDecisionEngine @Inject constructor(
                     "tool_id" to call.toolId,
                     "blocked_by_android" to "true",
                     "status" to result.status.name
+                )
+            )
+
+            // Ожидаемый исход («такого приложения нет», «уточните какое») —
+            // обычная реплика разговора, а не авария: красный пузырь ошибки
+            // пугал и (до серверной правки) ломал историю разговора.
+            result.error in CONVERSATIONAL_TOOL_OUTCOMES -> ExecutionResult.Success(
+                text = result.summary,
+                executionType = ExecutionType.DEVICE_TOOL,
+                metadata = mapOf(
+                    "tool_id" to call.toolId,
+                    "tool_failed" to "true",
+                    "error" to result.error.orEmpty()
                 )
             )
 

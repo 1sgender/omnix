@@ -120,9 +120,10 @@ fun AdminWakeSection(
 ) {
     val colors = OmnixTheme.colors
     val options = listOf(
+        Triple(WakeEngineKind.PHRASE, WakePhrase.ALL, stringResource(R.string.omnix_admin_wake_all)),
         Triple(WakeEngineKind.PHRASE, WakePhrase.OKAY_OMNI, stringResource(R.string.omnix_admin_wake_okay_omni)),
         Triple(WakeEngineKind.PHRASE, WakePhrase.OMNI, stringResource(R.string.omnix_admin_wake_omni)),
-        Triple(WakeEngineKind.LEGACY_OMNI, WakePhrase.OKAY_OMNI, stringResource(R.string.omnix_admin_wake_legacy)),
+        Triple(WakeEngineKind.LEGACY_OMNI, WakePhrase.ALL, stringResource(R.string.omnix_admin_wake_legacy)),
     )
     // Прежняя модель не зависит от фразы: отмечаем её по движку.
     fun isSelected(engine: WakeEngineKind, phrase: WakePhrase) =

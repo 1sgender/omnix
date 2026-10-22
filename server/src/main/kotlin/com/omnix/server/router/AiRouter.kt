@@ -231,16 +231,7 @@ class AiRouter(
             requestId = requestId,
             prompt = request.text,
             systemPrompt = buildSystemPrompt(request),
-            history = request.history
-                .filter { it.content.isNotBlank() }
-                // validate() уже отклонил запрос с неизвестной ролью
-                // (INVALID_REQUEST), поэтому здесь normalizeRole не может
-                // вернуть null; mapNotNull сохраняет это без !!.
-                .mapNotNull { msg ->
-                    normalizeRole(msg.role)?.let { role ->
-                        com.omnix.server.provider.ProviderMessage(role = role, content = msg.content)
-                    }
-                },
+            history = providerHistory(request, requestId),
             requiresWeb = request.requiresWeb,
             // Cost Control: SIMPLE-класс получает урезанный бюджет ответа —
             // короткая реплика не должна платить за длинный вывод.
@@ -381,13 +372,33 @@ class AiRouter(
             ApiErrorCode.INVALID_REQUEST
         // CR-03: каждое сообщение истории валидируется по тому же пределу длины,
         // чтобы клиент не мог прислать одного гигантского history[*].content.
-        request.history.any { msg ->
-            msg.content.isBlank() || msg.content.length > validation.maxTextLength
-        } -> ApiErrorCode.INVALID_REQUEST
-        // CR-03: белый список ролей в истории — отсекает опечатки / подделки.
-        request.history.any { msg -> normalizeRole(msg.role) == null } -> ApiErrorCode.INVALID_REQUEST
+        request.history.any { msg -> msg.content.length > validation.maxTextLength } -> ApiErrorCode.INVALID_REQUEST
+        // Пустые сообщения и неизвестные роли не валят запрос: их отбрасывает
+        // сборка ProviderRequest. Раньше один красный пузырь ошибки (role
+        // "error") в истории ломал разговор: каждый следующий запрос получал
+        // INVALID_REQUEST (v344, 2026-10-22).
         else -> null
     }
+
+    /**
+     * История для провайдера: только user/assistant/system с непустым текстом.
+     * Остальное (например, клиентская роль "error") отбрасывается с warning —
+     * опечатка в истории не повод отказывать во всём ответе.
+     */
+    private fun providerHistory(request: AiExecutionRequest, requestId: String) =
+        request.history.mapNotNull { msg ->
+            val role = normalizeRole(msg.role)
+            if (role == null || msg.content.isBlank()) {
+                logger.warn(
+                    "history message dropped",
+                    "requestId" to requestId,
+                    "role" to LogSanitizer.describeText(msg.role)
+                )
+                null
+            } else {
+                com.omnix.server.provider.ProviderMessage(role = role, content = msg.content)
+            }
+        }
 
     /**
      * CR-03/16: приводит клиентскую роль к каноническому виду

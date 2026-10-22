@@ -4,6 +4,7 @@ import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.data.remote.OmnixApiClient
 import com.omnix.assistant.domain.models.Message
+import com.omnix.assistant.domain.models.MessageRole
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -112,7 +113,10 @@ class OmnixApiAiClient @Inject constructor(
             // (systemPrompt отправляется отдельно и серверный базовый промпт
             // не должен дублироваться через историю).
             history = history
-                .filter { it.role.value != "system" && it.text.isNotBlank() }
+                // Только реплики пользователя и OMNIX: SYSTEM-строки и красные
+                // ERROR-пузыри — служебные, сервер их не знает (роль "error"
+                // раньше превращала каждый следующий ответ в INVALID_REQUEST).
+                .filter { (it.role == MessageRole.USER || it.role == MessageRole.ASSISTANT) && it.text.isNotBlank() }
                 .map {
                     com.omnix.assistant.data.remote.MessageDto(
                         role = it.role.value,

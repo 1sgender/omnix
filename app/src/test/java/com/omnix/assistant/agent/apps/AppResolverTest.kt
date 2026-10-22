@@ -87,6 +87,37 @@ class AppResolverTest {
         assertEquals("com.google.android.youtube", (resolution as AppResolution.NotInstalled).knownPackage)
     }
 
+    /** Samsung: приложения называются по-русски, ключ алиаса английский. */
+    @Test
+    fun `samsung apps resolve by package and by localized label`() {
+        val samsungCalc = InstalledApp("com.sec.android.app.popupcalculator", "Калькулятор")
+        val samsungClock = InstalledApp("com.sec.android.app.clockpackage", "Часы")
+        val settingsTk = InstalledApp("com.android.settings", "Sazlamalar")
+        val installed = listOf(samsungCalc, samsungClock, settingsTk, telegram)
+
+        val calc = cascade.resolve(installed, "калькулятор")
+        assertTrue("got $calc", calc is AppResolution.Resolved)
+        assertEquals("com.sec.android.app.popupcalculator", (calc as AppResolution.Resolved).packageName)
+
+        val clock = cascade.resolve(installed, "будильник")
+        assertTrue("got $clock", clock is AppResolution.Resolved)
+        assertEquals("com.sec.android.app.clockpackage", (clock as AppResolution.Resolved).packageName)
+
+        // Короткое «saz» (музыка) не должно цеплять «Sazlamalar» (настройки).
+        val music = cascade.resolve(installed, "saz")
+        assertTrue("got $music", music !is AppResolution.Resolved || music.packageName != "com.android.settings")
+    }
+
+    /** Подпись приложения на другом языке находится через написания алиаса. */
+    @Test
+    fun `alias spellings match a label in another language`() {
+        val gallery = InstalledApp("com.example.gallery", "Galereýa")
+        val resolution = cascade.resolve(listOf(gallery, telegram), "галерея")
+
+        assertTrue("got $resolution", resolution is AppResolution.Resolved)
+        assertEquals("com.example.gallery", (resolution as AppResolution.Resolved).packageName)
+    }
+
     @Test
     fun `exact package match works for installed app`() {
         val resolution = cascade.resolve(listOf(youtube, telegram, maps), "org.telegram.messenger")

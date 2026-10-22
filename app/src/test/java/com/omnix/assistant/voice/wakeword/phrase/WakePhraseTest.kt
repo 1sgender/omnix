@@ -10,10 +10,12 @@ import java.io.File
 class WakePhraseTest {
 
     @Test
-    fun `new installs listen for Okay Omni on the phrase engine`() {
+    fun `new installs listen for Omni, Omnix and Okay Omni on the phrase engine`() {
         val config = WakeWordConfig()
         assertEquals(WakeEngineKind.PHRASE, config.engine)
-        assertEquals(WakePhrase.OKAY_OMNI, config.phrase)
+        assertEquals(WakePhrase.ALL, config.phrase)
+        val labels = WakePhrase.ALL.keywords.split("/").map { it.trim().split(" ").last() }.toSet()
+        assertEquals(setOf("@OKAY_OMNI", "@OMNI", "@OMNIX"), labels)
     }
 
     @Test
@@ -22,8 +24,8 @@ class WakePhraseTest {
         WakePhrase.entries.forEach { assertEquals(it, WakePhrase.fromStorageKey(it.storageKey)) }
         assertEquals(WakeEngineKind.PHRASE, WakeEngineKind.fromStorageKey(null))
         assertEquals(WakeEngineKind.PHRASE, WakeEngineKind.fromStorageKey("jarvis"))
-        assertEquals(WakePhrase.OKAY_OMNI, WakePhrase.fromStorageKey(null))
-        assertEquals(WakePhrase.OKAY_OMNI, WakePhrase.fromStorageKey("hey_omni"))
+        assertEquals(WakePhrase.ALL, WakePhrase.fromStorageKey(null))
+        assertEquals(WakePhrase.ALL, WakePhrase.fromStorageKey("hey_omni"))
     }
 
     @Test
@@ -35,6 +37,9 @@ class WakePhraseTest {
                 assertTrue("no tokens: $keyword", parts.size > 1)
                 assertTrue("word must start with ▁: $keyword", parts.first().startsWith("▁"))
                 parts.dropLast(1).forEach { token -> assertTrue("empty token: $keyword", token.isNotBlank()) }
+                parts.filter { it.startsWith(":") || it.startsWith("#") }.forEach { param ->
+                    assertTrue("bad parameter $param in $keyword", param.drop(1).toFloatOrNull() != null)
+                }
             }
         }
     }

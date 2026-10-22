@@ -24,12 +24,6 @@ sealed class OmnixDestination(val route: String) {
     /** Secondary: text conversation, deliberately not the main surface (§41). */
     data object Chat : OmnixDestination("omnix/chat")
 
-    /**
-     * Secondary: voice mode, full screen with its own controls and no tab bar
-     * (owner mock 2026-10-21). Opened from the chat composer.
-     */
-    data object Voice : OmnixDestination("omnix/voice")
-
     /** Secondary: translation as a mode, not a separate app (§43). */
     data object Translator : OmnixDestination("omnix/translator")
 
@@ -86,8 +80,7 @@ sealed class OmnixDestination(val route: String) {
 fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Home.route,
     OmnixDestination.Translator.route -> OmnixDestination.Home
-    OmnixDestination.Chat.route,
-    OmnixDestination.Voice.route -> OmnixDestination.Chat
+    OmnixDestination.Chat.route -> OmnixDestination.Chat
     OmnixDestination.Me.route,
     OmnixDestination.Devices.route,
     OmnixDestination.Privacy.route,
