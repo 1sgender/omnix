@@ -2,15 +2,22 @@ package com.omnix.assistant.presentation.state
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.audio.BluetoothAudioRouter
 import com.omnix.assistant.voice.audio.BluetoothAudioState
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,18 +51,40 @@ class ClipRepository @Inject constructor(
     fun hasBluetoothHardware(): Boolean = bluetoothAdapter != null
 
     /**
+     * Whether Bluetooth is on, live. Reading [isBluetoothEnabled] once per
+     * emission left «Bluetooth is off» on screen after the user turned it on
+     * and connected earbuds (owner report 2026-10-21): nothing else emitted.
+     * The state broadcast needs no permission.
+     */
+    private val bluetoothOn: Flow<Boolean> = callbackFlow {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val state = intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                trySend(state == BluetoothAdapter.STATE_ON)
+            }
+        }
+        ContextCompat.registerReceiver(
+            context,
+            receiver,
+            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        trySend(isBluetoothEnabled())
+        awaitClose { context.unregisterReceiver(receiver) }
+    }.distinctUntilChanged()
+
+    /**
      * Live Clip state.
      *
      * @param searching set by the pairing screen while it is actively looking,
      *        so "Searching" is a real UI intent rather than a guess.
      */
     fun clipState(searching: Flow<Boolean>): Flow<ClipState> = combine(
-        bluetoothAudioRouter.audioState,
-        bluetoothAudioRouter.isHeadsetPlugged,
-        experienceStore.clipLastSeenMillis,
-        experienceStore.clipLastDeviceName,
+        combine(bluetoothAudioRouter.audioState, bluetoothAudioRouter.isHeadsetPlugged, ::Pair),
+        combine(experienceStore.clipLastSeenMillis, experienceStore.clipLastDeviceName, ::Pair),
+        bluetoothOn,
         searching
-    ) { audioState, plugged, lastSeen, lastName, isSearching ->
+    ) { (audioState, plugged), (lastSeen, lastName), btOn, isSearching ->
         when {
             !hasBluetoothHardware() -> ClipState.Disconnected(lastName, lastSeen)
 
@@ -77,7 +106,7 @@ class ClipRepository @Inject constructor(
                 battery = ClipCapability.Unavailable
             )
 
-            !isBluetoothEnabled() -> ClipState.BluetoothOff
+            !btOn -> ClipState.BluetoothOff
 
             isSearching -> ClipState.Searching
 
