@@ -10,9 +10,9 @@ import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 /**
  * Translation is a mode of OMNIX, not a separate app (§25).
  *
- * The route feeds [TranslatorScreen] from the existing
- * [LiveInterpreterViewModel]: the phrases, the phrase still being heard, the
- * language pair and where the translation sounds.
+ * The route feeds [TranslatorScreen] from [LiveInterpreterViewModel]: the
+ * conversation, the language pair, whose earbud is whose and where the
+ * translation sounds.
  */
 @Composable
 fun TranslatorRoute(
@@ -21,20 +21,21 @@ fun TranslatorRoute(
     onBack: () -> Unit = {},
     viewModel: LiveInterpreterViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.state.collectAsState()
+    val outputToPhone by viewModel.outputToPhone.collectAsState()
 
     TranslatorScreen(
         state = state,
         isOnline = isOnline,
+        outputToPhone = outputToPhone,
         languages = LiveTranslatorEngine.SUPPORTED_LANGUAGES,
         modifier = modifier,
         onBack = onBack,
-        onSwap = viewModel::swapLanguages,
-        onMyLanguage = viewModel::setTargetLanguage,
-        onPartnerLanguage = viewModel::setSourceLanguage,
+        onMyLanguage = viewModel::setMyLanguage,
+        onTheirLanguage = viewModel::setTheirLanguage,
+        onSwapEars = viewModel::swapEars,
         onOutputToPhone = viewModel::setOutputToPhone,
-        onPause = { if (state.isListening) viewModel.toggleListening() },
-        onSpeak = { if (!state.isListening) viewModel.toggleListening() },
+        onToggle = { if (state.running) viewModel.stop() else viewModel.start() },
         onEnd = viewModel::endConversation
     )
 }

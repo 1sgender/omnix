@@ -519,6 +519,18 @@ object ServerBootstrap {
             metrics = metrics,
             json = json,
             healthProvider = healthProvider,
+            speechToText = config.providers
+                .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GROQ && it.enabled }
+                ?.apiKey
+                ?.takeIf { it.isNotBlank() }
+                ?.let { key ->
+                    com.omnix.server.stt.GroqWhisperSpeechToText(
+                        transport = transport,
+                        apiKey = key,
+                        model = System.getenv("GROQ_STT_MODEL")?.takeIf { it.isNotBlank() }
+                            ?: com.omnix.server.stt.GroqWhisperSpeechToText.DEFAULT_MODEL
+                    )
+                },
             metricsProvider = { renderMetrics(metrics) },
             prometheusMetricsProvider = { metrics.prometheus() },
             // AR-06: выбор реализации чекера — production-по-умолчанию через
@@ -713,7 +725,12 @@ private suspend fun handleExchange(
                 return
             }
             is RequestOriginResult.Accepted -> {
-                val maxBody = config.validation.maxBodyBytes
+                // Распознаванию речи нужна фраза целиком (до ~30 с WAV в base64).
+                val maxBody = if (exchange.requestURI.path == OmnixApiHandler.PATH_STT) {
+                    config.validation.maxSttBodyBytes
+                } else {
+                    config.validation.maxBodyBytes
+                }
 
                 // CR-06: эффективный deadline — min серверного бюджета и
                 // клиентского X-Request-Deadline (epoch ms). Клиентский

@@ -89,12 +89,27 @@ class OmnixApiHandler(
      * совпадает с healthProvider (нужно для тестов, которые создают
      * OmnixApiHandler напрямую).
      */
-    private val healthProviderFunc: (() -> String)? = null
+    private val healthProviderFunc: (() -> String)? = null,
+    /** Распознавание речи для переводчика; null — эндпоинт отвечает 503. */
+    private val speechToText: com.omnix.server.stt.SpeechToText? = null
 ) {
+    private val speechHandler = SpeechHttpHandler(
+        authenticator = authenticator,
+        authorizer = authorizer,
+        rateLimiter = rateLimiter,
+        validation = validation,
+        logger = logger,
+        metrics = metrics,
+        json = json,
+        entitlementChecker = entitlementChecker,
+        speechToText = speechToText
+    )
+
     /** Внешний (main-kickoff) вход в health — то же самое, что и PATH_HEALTH. */
     fun healthSnapshot(): String = (healthProviderFunc ?: healthProvider)()
     companion object {
         const val PATH_EXECUTE = "/v1/ai/execute"
+        const val PATH_STT = "/v1/stt/transcribe"
 
         /** Заголовок идентификатора устройства для привязки токена (V007). */
         const val HEADER_DEVICE_ID = "X-Omnix-Device"
@@ -129,7 +144,11 @@ class OmnixApiHandler(
             path == PATH_EXECUTE && method == "POST" ->
                 handleExecute(request)
 
-            path == PATH_EXECUTE ||
+            path == PATH_STT && method == "POST" ->
+                speechHandler.handle(request)
+
+            path == PATH_STT ||
+                path == PATH_EXECUTE ||
                 path == PATH_ADMIN_METRICS ||
                 path == PATH_ADMIN_METRICS_PROMETHEUS ||
                 path == PATH_HEALTH ->

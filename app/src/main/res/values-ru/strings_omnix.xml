@@ -193,18 +193,29 @@
 
     <!-- ===== Переводчик ===== -->
     <string name="omnix_translator_title">Переводчик</string>
-    <string name="omnix_translator_swap">Поменять языки местами</string>
     <string name="omnix_translator_i_speak">Я говорю</string>
     <string name="omnix_translator_partner">Собеседник</string>
     <string name="omnix_translator_status_online">ОНЛАЙН</string>
     <string name="omnix_translator_status_offline">ОФЛАЙН</string>
-    <string name="omnix_translator_meta_partner">R · СОБЕСЕДНИК · %1$s</string>
-    <string name="omnix_translator_meta_speaking">R · ГОВОРИТ…</string>
     <string name="omnix_translator_to_ears">В наушники</string>
     <string name="omnix_translator_to_phone">Вслух на телефоне</string>
     <string name="omnix_translator_pause">Пауза</string>
-    <string name="omnix_translator_speak">Говорить</string>
-    <string name="omnix_translator_end">Завершить разговор</string>
+    <string name="omnix_translator_speak">Начать</string>
+    <string name="omnix_translator_end">Завершить и очистить</string>
+    <string name="omnix_translator_auto_detect">Определю сам</string>
+    <string name="omnix_translator_ears">Ваш наушник: %1$s · собеседника: %2$s</string>
+    <string name="omnix_translator_ear_left">левый</string>
+    <string name="omnix_translator_ear_right">правый</string>
+    <string name="omnix_translator_swap_ears">Поменять наушники</string>
+    <string name="omnix_translator_hint">Дайте собеседнику второй наушник, положите телефон между вами и говорите по очереди. OMNIX сам поймёт, кто на каком языке говорит, и переведёт в ухо другому.</string>
+    <string name="omnix_translator_hearing">Слушаю…</string>
+    <string name="omnix_translator_working">Перевожу…</string>
+    <string name="omnix_translator_waiting">Жду первую фразу собеседника, чтобы понять его язык</string>
+    <string name="omnix_translator_problem_mic">Микрофон занят другим приложением.</string>
+    <string name="omnix_translator_problem_recognition">Не удалось распознать речь: %1$s</string>
+    <string name="omnix_translator_no_voice">Для этого языка пока нет голоса — перевод только на экране</string>
+    <string name="omnix_translator_me">Вы</string>
+    <string name="omnix_translator_them">Собеседник</string>
 
     <!-- ===== Настройки ===== -->
     <string name="omnix_settings_title">Настройки</string>

@@ -195,18 +195,29 @@
 
     <!-- ===== Translator (§24, §42) ===== -->
     <string name="omnix_translator_title">Translator</string>
-    <string name="omnix_translator_swap">Swap languages</string>
     <string name="omnix_translator_i_speak">I speak</string>
     <string name="omnix_translator_partner">The other person</string>
     <string name="omnix_translator_status_online">ONLINE</string>
     <string name="omnix_translator_status_offline">OFFLINE</string>
-    <string name="omnix_translator_meta_partner">R · OTHER PERSON · %1$s</string>
-    <string name="omnix_translator_meta_speaking">R · SPEAKING…</string>
     <string name="omnix_translator_to_ears">To headphones</string>
     <string name="omnix_translator_to_phone">Aloud on the phone</string>
     <string name="omnix_translator_pause">Pause</string>
-    <string name="omnix_translator_speak">Speak</string>
-    <string name="omnix_translator_end">End conversation</string>
+    <string name="omnix_translator_speak">Start</string>
+    <string name="omnix_translator_end">End and clear</string>
+    <string name="omnix_translator_auto_detect">I’ll detect it</string>
+    <string name="omnix_translator_ears">Your earbud: %1$s · theirs: %2$s</string>
+    <string name="omnix_translator_ear_left">left</string>
+    <string name="omnix_translator_ear_right">right</string>
+    <string name="omnix_translator_swap_ears">Swap earbuds</string>
+    <string name="omnix_translator_hint">Give the other person your second earbud, put the phone between you and take turns. OMNIX works out who speaks which language and translates into the other ear.</string>
+    <string name="omnix_translator_hearing">Listening…</string>
+    <string name="omnix_translator_working">Translating…</string>
+    <string name="omnix_translator_waiting">Waiting for the other person’s first phrase to learn their language</string>
+    <string name="omnix_translator_problem_mic">The microphone is busy in another app.</string>
+    <string name="omnix_translator_problem_recognition">Could not recognise speech: %1$s</string>
+    <string name="omnix_translator_no_voice">No voice for this language yet — translation is on screen only</string>
+    <string name="omnix_translator_me">You</string>
+    <string name="omnix_translator_them">Other person</string>
 
     <!-- ===== Settings (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Settings</string>

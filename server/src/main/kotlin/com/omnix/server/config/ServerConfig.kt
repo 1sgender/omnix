@@ -121,10 +121,15 @@ data class ExecutionPolicyConfig(
 /** Валидация входа (пункт 30 ТЗ). */
 data class ValidationConfig(
     val maxTextLength: Int = 8_000,
-    val maxBodyBytes: Long = 32 * 1024
+    val maxBodyBytes: Long = 32 * 1024,
+    /** Распознавание речи: фраза до ~30 с WAV в base64 (≈1,3 МБ). */
+    val maxSttBodyBytes: Long = 2L * 1024 * 1024
 ) {
     init {
         require(maxTextLength > 0) { "maxTextLength must be positive" }
+        require(maxSttBodyBytes in 1..(10L * 1024 * 1024)) {
+            "maxSttBodyBytes must be in 1..10 MiB"
+        }
         require(maxBodyBytes in 1..(10L * 1024 * 1024)) {
             "maxBodyBytes must be in 1..10 MiB"
         }

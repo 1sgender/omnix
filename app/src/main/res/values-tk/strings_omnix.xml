@@ -194,18 +194,29 @@
 
     <!-- ===== Tercime (§24, §42) ===== -->
     <string name="omnix_translator_title">Terjimeçi</string>
-    <string name="omnix_translator_swap">Dilleri çalyş</string>
     <string name="omnix_translator_i_speak">Men gürleýärin</string>
     <string name="omnix_translator_partner">Gürrüňdeş</string>
     <string name="omnix_translator_status_online">ONLAÝN</string>
     <string name="omnix_translator_status_offline">OFLAÝN</string>
-    <string name="omnix_translator_meta_partner">R · GÜRRÜŇDEŞ · %1$s</string>
-    <string name="omnix_translator_meta_speaking">R · GÜRLEÝÄR…</string>
     <string name="omnix_translator_to_ears">Gulaklyga</string>
     <string name="omnix_translator_to_phone">Telefonda sesli</string>
     <string name="omnix_translator_pause">Arakesme</string>
-    <string name="omnix_translator_speak">Gürle</string>
-    <string name="omnix_translator_end">Gürrüňi tamamla</string>
+    <string name="omnix_translator_speak">Başla</string>
+    <string name="omnix_translator_end">Gutar we arassala</string>
+    <string name="omnix_translator_auto_detect">Özüm kesgitlärin</string>
+    <string name="omnix_translator_ears">Siziň gulaklygyňyz: %1$s · gürrüňdeşiňiziňki: %2$s</string>
+    <string name="omnix_translator_ear_left">çep</string>
+    <string name="omnix_translator_ear_right">sag</string>
+    <string name="omnix_translator_swap_ears">Gulaklyklary çalyş</string>
+    <string name="omnix_translator_hint">Ikinji gulaklygy gürrüňdeşiňize beriň, telefony araňyzda goýuň we gezekli-gezegine gürläň. OMNIX kimiň haýsy dilde gürleýändigini özi anyklap, beýlekisiniň gulagyna terjime eder.</string>
+    <string name="omnix_translator_hearing">Diňleýärin…</string>
+    <string name="omnix_translator_working">Terjime edýärin…</string>
+    <string name="omnix_translator_waiting">Gürrüňdeşiňiziň dilini bilmek üçin onuň ilkinji sözlemine garaşýaryn</string>
+    <string name="omnix_translator_problem_mic">Mikrofon başga programma tarapyndan ulanylýar.</string>
+    <string name="omnix_translator_problem_recognition">Sözi tanap bolmady: %1$s</string>
+    <string name="omnix_translator_no_voice">Bu dil üçin heniz ses ýok — terjime diňe ekranda</string>
+    <string name="omnix_translator_me">Siz</string>
+    <string name="omnix_translator_them">Gürrüňdeş</string>
 
     <!-- ===== Sazlamalar (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Sazlamalar</string>
