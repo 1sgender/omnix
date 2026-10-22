@@ -7,6 +7,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.voice.wakeword.WakeWordConfig
+import com.omnix.assistant.voice.wakeword.phrase.WakeEngineKind
+import com.omnix.assistant.voice.wakeword.phrase.WakePhrase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -83,6 +85,9 @@ class SettingsDataStore @Inject constructor(
         val WAKEWORD_COOLDOWN_MS = longPreferencesKey("wakeword.cooldown_ms")
         val WAKEWORD_DEBUG = booleanPreferencesKey("wakeword.debug_logging")
         val WAKEWORD_NEAR_MISS_CAPTURE = booleanPreferencesKey("wakeword.near_miss_capture")
+        /** Тест движков админом: фраза sherpa-onnx (по умолчанию) или прежняя модель «Omni». */
+        val WAKEWORD_ENGINE = stringPreferencesKey("wakeword.engine")
+        val WAKEWORD_PHRASE = stringPreferencesKey("wakeword.phrase")
         val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
         val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")
         val LOCAL_MODEL_SPEC_ID = stringPreferencesKey("local_model_spec_id")
@@ -227,8 +232,18 @@ class SettingsDataStore @Inject constructor(
                     preferences[PreferencesKeys.WAKEWORD_NEAR_MISS_CAPTURE],
                     BuildConfig.NEAR_MISS_CAPTURE_ENABLED
                 ),
+                engine = WakeEngineKind.fromStorageKey(preferences[PreferencesKeys.WAKEWORD_ENGINE]),
+                phrase = WakePhrase.fromStorageKey(preferences[PreferencesKeys.WAKEWORD_PHRASE]),
             )
         }
+
+    /** Тест движков админом: чем и что слушать; действует со следующего запуска прослушивания. */
+    suspend fun setWakeListening(engine: WakeEngineKind, phrase: WakePhrase) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.WAKEWORD_ENGINE] = engine.storageKey
+            preferences[PreferencesKeys.WAKEWORD_PHRASE] = phrase.storageKey
+        }
+    }
 
     /**
      * Состояние near-miss переключателя для UI: явный выбор пользователя, а

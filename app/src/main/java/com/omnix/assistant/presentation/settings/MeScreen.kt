@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -51,9 +52,9 @@ data class MeGroup(
     val rows: List<MeRow>
 )
 
-/** One row of the Me lists: a two-letter glyph tile, a label, a value. */
+/** One row of the Me lists: an icon tile, a label, a value. */
 data class MeRow(
-    val glyph: String,
+    val icon: ImageVector,
     val label: String,
     val value: String,
     val destination: OmnixDestination
@@ -243,10 +244,11 @@ private fun RowGroup(rows: List<MeRow>, onOpen: (OmnixDestination) -> Unit) {
                         .clearAndSetSemantics {},
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = row.glyph,
-                        style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
-                        color = colors.textPrimary
+                    Icon(
+                        row.icon,
+                        contentDescription = null,
+                        tint = colors.textPrimary,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
                 Text(

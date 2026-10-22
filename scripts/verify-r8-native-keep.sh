@@ -20,7 +20,7 @@ MAPPING="${1:-app/build/outputs/mapping/stagingRelease/mapping.txt}"
 [ -f "$MAPPING" ] || { echo "FAIL: R8 mapping not found: $MAPPING"; exit 1; }
 
 # Packages whose classes are reached from native code by name.
-WATCHED='^(ai[.]onnxruntime[.]|com[.]google[.]mediapipe[.])'
+WATCHED='^(ai[.]onnxruntime[.]|com[.]google[.]mediapipe[.]|com[.]k2fsa[.]sherpa[.]onnx[.])'
 
 # Classes the native code of the shipped features needs; each must be present
 # under its own name.
@@ -33,6 +33,13 @@ ai.onnxruntime.OrtSession\$Result
 ai.onnxruntime.OrtEnvironment
 com.google.mediapipe.tasks.genai.llminference.LlmInference
 com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
+com.k2fsa.sherpa.onnx.KeywordSpotter
+com.k2fsa.sherpa.onnx.KeywordSpotterConfig
+com.k2fsa.sherpa.onnx.KeywordSpotterResult
+com.k2fsa.sherpa.onnx.OnlineModelConfig
+com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
+com.k2fsa.sherpa.onnx.FeatureConfig
+com.k2fsa.sherpa.onnx.OnlineStream
 "
 
 fail=0

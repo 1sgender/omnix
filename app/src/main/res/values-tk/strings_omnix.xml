@@ -30,7 +30,7 @@
     <string name="omnix_home_off_hint">Açmak üçin logotipe basyň</string>
     <string name="omnix_home_starting">Açylýar…</string>
     <string name="omnix_home_stopping">Öçürilýär…</string>
-    <string name="omnix_home_on_hint">«Omni» diýiň ýa-da «Gürle» basyň</string>
+    <string name="omnix_home_on_hint">«Okeý, Omni» diýiň ýa-da «Gürle» basyň</string>
     <string name="omnix_home_talk">Gürle</string>
     <string name="omnix_home_talk_stop">Bes et</string>
     <string name="omnix_home_power_a11y">OMNIX kömekçisi</string>
@@ -110,7 +110,7 @@
     <string name="omnix_error_user_action_action">Dowam et</string>
 
     <string name="omnix_error_not_understood_title">Düşünmedim.</string>
-    <string name="omnix_error_not_understood_body">«Omni» diýip gaýtadan synanyşyň.</string>
+    <string name="omnix_error_not_understood_body">«Okeý, Omni» diýip gaýtadan synanyşyň.</string>
 
     <string name="omnix_error_generic_title">Bu işleşmedi.</string>
     <string name="omnix_error_generic_body">Gaýtadan synanyşyň.</string>
@@ -152,7 +152,7 @@
     <string name="omnix_devices_title">Gulaklyklar</string>
     <string name="omnix_devices_clip_name">Omnix Buds</string>
     <string name="omnix_devices_battery">ZARÝAD</string>
-    <string name="omnix_devices_wake_title">«Omni» sözi</string>
+    <string name="omnix_devices_wake_title">«Okeý, Omni» sözi</string>
     <string name="omnix_devices_wake_sub">Elsiz çagyryş</string>
     <string name="omnix_devices_translate_title">Gulaklyga terjime</string>
     <string name="omnix_devices_translate_sub">Gürrüňdeş siziň diliňizde eşidilýär</string>
@@ -228,19 +228,11 @@
     <string name="omnix_me_section_settings">Sazlamalar</string>
     <string name="omnix_me_row_language">Dil</string>
     <string name="omnix_me_row_notifications">Bildirişler</string>
-    <string name="omnix_me_glyph_language">Dl</string>
-    <string name="omnix_me_glyph_notifications">Bl</string>
     <string name="omnix_me_license_active">Ygtyýarnama işjeň</string>
     <string name="omnix_me_no_name">Siziň profiliňiz</string>
     <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
-    <string name="omnix_me_row_voice">Ses we «Omni» sözi</string>
+    <string name="omnix_me_row_voice">Ses we «Okeý, Omni» sözi</string>
     <string name="omnix_me_row_memory">Ýat we gizlinlik</string>
-    <string name="omnix_me_glyph_voice">Ss</string>
-    <string name="omnix_me_glyph_translator">Tr</string>
-    <string name="omnix_me_glyph_automations">Aw</string>
-    <string name="omnix_me_glyph_model">EA</string>
-    <string name="omnix_me_glyph_memory">Ýt</string>
-    <string name="omnix_me_glyph_appearance">Gö</string>
     <string name="omnix_me_model_ready">Taýýar</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Görnüş</string>
@@ -250,7 +242,7 @@
     <string name="omnix_voice_tone">Dawuş tony</string>
     <string name="omnix_voice_feedback">Sesli jogap</string>
     <string name="omnix_voice_listening">Diňleme</string>
-    <string name="omnix_voice_listening_body">OMNIX fonda «Omni» sözüni diňläp durşun.</string>
+    <string name="omnix_voice_listening_body">OMNIX fonda «Okeý, Omni» sözüni diňläp durşun.</string>
     <string name="omnix_voice_headset_only">Diňe Clip birikdirilen wagty</string>
     <string name="omnix_voice_headset_only_body">Diňe Cligiňiz arkaly diňlemek batareýany tygşytlaýar.</string>
     <string name="omnix_voice_sensitivity">Oýandyryş duýgurlygy</string>
@@ -258,7 +250,7 @@
     <string name="omnix_voice_background_body">OMNIX-e ekran öçüli wagtynda-da işlemäge rugsat beriň.</string>
     <string name="omnix_voice_background_action">Rugsat ber</string>
     <string name="omnix_voice_automations">Awtomatiki işler</string>
-    <string name="omnix_voice_automations_empty">Entäk awtomatiki iş ýok. Aýdyň: «Omni, Clip birikdirilende saz goý.»</string>
+    <string name="omnix_voice_automations_empty">Entäk awtomatiki iş ýok. Aýdyň: «Okeý, Omni, Clip birikdirilende saz goý.»</string>
 
     <string name="omnix_privacy_title">Hususylyk</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
@@ -286,6 +278,11 @@
     <string name="omnix_admin_models_restart">Telefondaky model programma täzeden açylandan soň üýtgär. Ol entek telefonda ýok bolsa, şu ekranda ýükläp alyň.</string>
     <string name="omnix_admin_answer_phone">Telefon · %1$s</string>
     <string name="omnix_admin_answer_cloud">Bulut</string>
+    <string name="omnix_admin_wake_title">Çagyryş sözlerini synag (admin)</string>
+    <string name="omnix_admin_wake_body">Öz telefonyňyzda deňeşdiriň. Indiki diňlemek başlanda üýtgär.</string>
+    <string name="omnix_admin_wake_okay_omni">«Okeý, Omni» — täze hereketlendiriji</string>
+    <string name="omnix_admin_wake_omni">«Omni» — täze hereketlendiriji</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — öňki model</string>
     <string name="omnix_ai_model_checking">Barlaýaryn…</string>
     <string name="omnix_ai_model_downloading">Ýüklenýär: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Ýüklenmedik — düwme aşakda</string>
@@ -328,9 +325,9 @@
     <string name="omnix_setup_turn_on_title">OMNIX-i açyň</string>
     <string name="omnix_setup_turn_on_hint">Logotipe basyň. OMNIX şeýdip açylýar we öçýär.</string>
     <string name="omnix_setup_on_title">OMNIX açyk</string>
-    <string name="omnix_setup_try_hint">Aýdyň: «Omni, sagat näçe?»</string>
+    <string name="omnix_setup_try_hint">Aýdyň: «Okeý, Omni, sagat näçe?»</string>
     <string name="omnix_setup_success">Başardy</string>
-    <string name="omnix_setup_success_body">Indi diňe «Omni» diýiň — gulaklykda ýa-da telefonyň ýanynda.</string>
+    <string name="omnix_setup_success_body">Indi diňe «Okeý, Omni» diýiň — gulaklykda ýa-da telefonyň ýanynda.</string>
     <string name="omnix_setup_done">Taýýar</string>
     <string name="omnix_setup_skip">Geç</string>
     <string name="omnix_setup_connect_headphones">Gulaklyklary birikdir</string>
@@ -416,7 +413,7 @@
     <string name="omnix_diagnostics_running">GEÇIRILÝÄR %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">HASABATY ÇYKAR</string>
     <string name="omnix_diagnostics_share_title">Diagnostika hasabatyny paýlaş</string>
-    <string name="omnix_diag_wake_word">«Omni» sözi</string>
+    <string name="omnix_diag_wake_word">«Okeý, Omni» sözi</string>
     <string name="omnix_diag_mic">Mikrofon</string>
     <string name="omnix_diag_stt">Sözi tanamak</string>
     <string name="omnix_diag_local_ai">Ýerli AI</string>
@@ -510,6 +507,19 @@
     <string name="omnix_privacy_allowed_apps">Rugsat berlen programmalar</string>
     <string name="omnix_privacy_allowed_empty">Aç-açan rugsat berlen zat ýok</string>
     <string name="omnix_privacy_package_hint">Programma paketi, meselem com.example.app</string>
+    <string name="omnix_privacy_advanced">Goşmaça</string>
+    <string name="omnix_privacy_advanced_body">Tassyklamalar, ynamdar kontaktlar, ekrany okamak, maglumatlar we ssenariýalar</string>
+    <string name="omnix_privacy_advanced_hide">Gizlemek üçin basyň</string>
+    <string name="omnix_fact_name">At</string>
+    <string name="omnix_fact_city">Şäher</string>
+    <string name="omnix_fact_car">Maşyn</string>
+    <string name="omnix_fact_wishlist">Isleýär</string>
+    <string name="omnix_fact_occupation">Iş</string>
+    <string name="omnix_fact_preference">Halaýar</string>
+    <string name="omnix_fact_mother">Eje</string>
+    <string name="omnix_fact_father">Kaka</string>
+    <string name="omnix_fact_wife">Aýaly</string>
+    <string name="omnix_fact_husband">Adamsy</string>
     <string name="omnix_privacy_section_memory">OMNIX näme ýatda saklaýar</string>
     <string name="omnix_privacy_memories_hint">Laýyk gelende jogaplarda ulanylýan ýatlar</string>
     <string name="omnix_privacy_memories_empty">Häzirlikçe ýatda hiç zat ýok</string>
@@ -525,8 +535,8 @@
     <string name="omnix_memory_type_episodic">Waka</string>
     <string name="omnix_memory_type_procedural">Senariýa</string>
     <string name="omnix_memory_type_other">Ýat</string>
-    <string name="omnix_voice_wake_word">«Omni» sözü</string>
-    <string name="omnix_voice_wake_word_body">«Omni» sözüne jogap berýär — diňlemek gerek bolmasa öçüriň</string>
+    <string name="omnix_voice_wake_word">«Okeý, Omni» sözü</string>
+    <string name="omnix_voice_wake_word_body">«Okeý, Omni» sözüne jogap berýär — diňlemek gerek bolmasa öçüriň</string>
     <string name="omnix_devices_on_this_phone">Bu telefonda</string>
     <string name="omnix_capability_bluetooth">Bluetooth</string>
     <string name="omnix_capability_wifi">Wi-Fi</string>
