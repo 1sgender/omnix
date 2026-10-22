@@ -4,7 +4,7 @@
 
 Микрофон в браузере разрешён только на localhost, поэтому страницу отдаёт этот
 скрипт. Записи кладутся в recordings/<язык>/wavs/<id>.wav, тексты — в
-recordings/<язык>/metadata.csv (формат LJSpeech: id|текст). Папка recordings
+recordings/<язык>/metadata.csv (`ru_0001.wav|текст`, как ждёт Piper). Папка recordings
 не попадает в git: это личные данные диктора.
 """
 import base64
@@ -51,7 +51,7 @@ def save_state(lang: str, state: dict) -> None:
     lines = []
     for row in phrases(lang):
         if (wavs / f"{row['id']}.wav").is_file():
-            lines.append(f"{row['id']}|{state['texts'].get(row['id'], row['text'])}")
+            lines.append(f"{row['id']}.wav|{state['texts'].get(row['id'], row['text'])}")
     (d / "metadata.csv").write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
 

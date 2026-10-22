@@ -9,7 +9,7 @@
 по паузам → сопоставление кусков с фразами (динамическое программирование:
 распознавание речи + ожидаемая длительность; кусок перед длинной паузой —
 отброшенный дубль) → громкость −20 dBFS, пики не выше −1 dBFS → 22 050 Гц моно.
-Пишет <out>/<язык>/wavs/*.wav, metadata.csv и report.csv для проверки на слух.
+Пишет <out>/<язык>/wavs/*.wav, metadata.csv (`ru_0001.wav|текст`) и report.csv для проверки на слух.
 """
 import argparse
 import csv
@@ -241,12 +241,13 @@ def main():
         existing = {}
         if meta.is_file():
             for line in meta.read_text(encoding="utf-8").splitlines():
-                pid, t = line.split("|", 1)
-                existing[pid] = t
+                name, t = line.split("|", 1)
+                existing[name.removesuffix(".wav")] = t
         for pid, text in phrases:
             if (out_dir / "wavs" / f"{pid}.wav").is_file():
                 existing[pid] = text
-        meta.write_text("".join(f"{p}|{t}\n" for p, t in sorted(existing.items())), encoding="utf-8")
+        # Piper: первая колонка — имя файла в audio_dir, с расширением.
+        meta.write_text("".join(f"{p}.wav|{t}\n" for p, t in sorted(existing.items())), encoding="utf-8")
         with open(out_dir / f"report-{lang}-{block:02d}.csv", "w", encoding="utf-8-sig", newline="") as fh:
             w = csv.writer(fh)
             w.writerow(["id", "сходство", "секунд", "куски", "пометки", "текст"])
