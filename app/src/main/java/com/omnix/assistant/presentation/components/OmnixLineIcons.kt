@@ -158,6 +158,23 @@ val OmnixCloudLineIcon: ImageVector = omnixLineIcon(
 
 val OmnixSendLineIcon: ImageVector = omnixLineIcon("Send", 2.2f, "M12 19V5", "M5 12l7-7 7 7")
 
+/** Поиск по чатам: лупа. */
+val OmnixSearchLineIcon: ImageVector = omnixLineIcon(
+    "Search",
+    "M11 4a7 7 0 1 1 0 14a7 7 0 1 1 0-14z",
+    "M20 20l-4-4"
+)
+
+/** Скопировать ответ: два листа. */
+val OmnixCopyLineIcon: ImageVector = omnixLineIcon(
+    "Copy",
+    "M10 8h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z",
+    "M5 16V5a1 1 0 0 1 1-1h10"
+)
+
+/** Скопировано: галочка. */
+val OmnixCheckLineIcon: ImageVector = omnixLineIcon("Check", 2.2f, "M5 12l5 5 9-10")
+
 // ---- Me ----
 
 val OmnixChevronLineIcon: ImageVector = omnixLineIcon("Chevron", "M9 18l6-6-6-6")
