@@ -31,7 +31,7 @@
     <string name="omnix_home_off_hint">Tap the logo to turn it on</string>
     <string name="omnix_home_starting">Turning on…</string>
     <string name="omnix_home_stopping">Turning off…</string>
-    <string name="omnix_home_on_hint">Say “Omni” or tap Speak</string>
+    <string name="omnix_home_on_hint">Say “Okay Omni” or tap Speak</string>
     <string name="omnix_home_talk">Speak</string>
     <string name="omnix_home_talk_stop">Stop</string>
     <string name="omnix_home_power_a11y">OMNIX assistant</string>
@@ -111,7 +111,7 @@
     <string name="omnix_error_user_action_action">Continue</string>
 
     <string name="omnix_error_not_understood_title">I didn’t catch that.</string>
-    <string name="omnix_error_not_understood_body">Say “Omni” and try again.</string>
+    <string name="omnix_error_not_understood_body">Say “Okay Omni” and try again.</string>
 
     <string name="omnix_error_generic_title">That didn’t work.</string>
     <string name="omnix_error_generic_body">Try again.</string>
@@ -153,7 +153,7 @@
     <string name="omnix_devices_title">Headphones</string>
     <string name="omnix_devices_clip_name">Omnix Buds</string>
     <string name="omnix_devices_battery">BATTERY</string>
-    <string name="omnix_devices_wake_title">The word “Omni”</string>
+    <string name="omnix_devices_wake_title">The phrase “Okay Omni”</string>
     <string name="omnix_devices_wake_sub">Hands-free call</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
@@ -162,9 +162,30 @@
 
     <!-- ===== Chat (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_new">New chat</string>
+    <string name="omnix_chat_history_open">Chat history</string>
+    <string name="omnix_chat_history_title">History</string>
+    <string name="omnix_chat_history_empty_title">No chats yet</string>
+    <string name="omnix_chat_history_empty_body">Past chats appear here. Each launch starts a new one.</string>
+    <string name="omnix_chat_untitled">Untitled</string>
+    <string name="omnix_chat_delete">Delete chat</string>
+    <string name="omnix_chat_delete_confirm_title">Delete this chat?</string>
+    <string name="omnix_chat_voice_mode">Voice mode</string>
+    <string name="omnix_voice_starting">Turning OMNIX on…</string>
+    <string name="omnix_voice_idle">Tap the microphone to talk</string>
+    <string name="omnix_voice_mode_listening">Listening…</string>
+    <string name="omnix_voice_thinking">Thinking…</string>
+    <string name="omnix_voice_speaking">Answering…</string>
+    <string name="omnix_voice_confirming">Say “yes” or “no”</string>
+    <string name="omnix_voice_mic_needed">OMNIX needs the microphone</string>
+    <string name="omnix_voice_mic_grant">Allow microphone</string>
+    <string name="omnix_voice_start_failed">Couldn’t turn OMNIX on</string>
+    <string name="omnix_voice_retry">Try again</string>
+    <string name="omnix_voice_talk">Talk</string>
+    <string name="omnix_voice_stop_listening">Stop listening</string>
+    <string name="omnix_voice_close">Leave voice mode</string>
     <string name="omnix_chat_subtitle_on_device">Answers on the device</string>
     <string name="omnix_chat_subtitle_online">Answers on the device and in the cloud</string>
-    <string name="omnix_chat_more">More</string>
     <string name="omnix_chat_today">TODAY</string>
     <string name="omnix_chat_yesterday">YESTERDAY</string>
     <string name="omnix_chat_from_cloud">Answer from the cloud</string>
@@ -208,18 +229,11 @@
     <string name="omnix_me_section_settings">Settings</string>
     <string name="omnix_me_row_language">Language</string>
     <string name="omnix_me_row_notifications">Notifications</string>
-    <string name="omnix_me_glyph_language">La</string>
-    <string name="omnix_me_glyph_notifications">No</string>
     <string name="omnix_me_license_active">License active</string>
+    <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
-    <string name="omnix_me_row_voice">Voice and the word “Omni”</string>
+    <string name="omnix_me_row_voice">Voice and “Okay Omni”</string>
     <string name="omnix_me_row_memory">Memory and privacy</string>
-    <string name="omnix_me_glyph_voice">Vo</string>
-    <string name="omnix_me_glyph_translator">Tr</string>
-    <string name="omnix_me_glyph_automations">Au</string>
-    <string name="omnix_me_glyph_model">AI</string>
-    <string name="omnix_me_glyph_memory">Me</string>
-    <string name="omnix_me_glyph_appearance">Ap</string>
     <string name="omnix_me_model_ready">Ready</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Appearance</string>
@@ -229,7 +243,7 @@
     <string name="omnix_voice_tone">Voice tone</string>
     <string name="omnix_voice_feedback">Voice feedback</string>
     <string name="omnix_voice_listening">Listening</string>
-    <string name="omnix_voice_listening_body">Keep OMNIX listening for “Omni” in the background.</string>
+    <string name="omnix_voice_listening_body">Keep OMNIX listening for “Okay Omni” in the background.</string>
     <string name="omnix_voice_headset_only">Only when the Clip is connected</string>
     <string name="omnix_voice_headset_only_body">Saves battery by listening only through your Clip.</string>
     <string name="omnix_voice_sensitivity">Wake sensitivity</string>
@@ -237,7 +251,7 @@
     <string name="omnix_voice_background_body">Allow OMNIX to keep working when the screen is off.</string>
     <string name="omnix_voice_background_action">Allow</string>
     <string name="omnix_voice_automations">Automations</string>
-    <string name="omnix_voice_automations_empty">No automations yet. Say: “Omni, when my Clip connects, play music.”</string>
+    <string name="omnix_voice_automations_empty">No automations yet. Say: “Okay Omni, when my Clip connects, play music.”</string>
 
     <string name="omnix_privacy_title">Privacy</string>
     <string name="omnix_privacy_microphone">Microphone</string>
@@ -256,9 +270,20 @@
     <string name="omnix_ai_model_auto">Auto</string>
     <string name="omnix_ai_model_auto_body">Short simple answers on the phone, the rest in the OMNIX cloud.</string>
     <string name="omnix_ai_model_on_device">On the phone</string>
-    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Works offline, requests never leave the phone. Simpler answers than the cloud.</string>
+    <string name="omnix_ai_model_on_device_body">%1$s. Works offline, requests never leave the phone. Simpler answers than the cloud.</string>
     <string name="omnix_ai_model_cloud">OMNIX cloud</string>
     <string name="omnix_ai_model_cloud_body">The model on the OMNIX server: fuller answers. Needs the internet.</string>
+    <string name="omnix_admin_models_title">Model testing (admin)</string>
+    <string name="omnix_admin_models_body">Only you see this. The chosen model answers every request, and each answer says who answered.</string>
+    <string name="omnix_admin_models_default">As for everyone</string>
+    <string name="omnix_admin_models_restart">The phone model changes after the app restarts. If it is not on the phone yet, download it on this screen.</string>
+    <string name="omnix_admin_answer_phone">Phone · %1$s</string>
+    <string name="omnix_admin_answer_cloud">Cloud</string>
+    <string name="omnix_admin_wake_title">Wake phrase testing (admin)</string>
+    <string name="omnix_admin_wake_body">Compare on your phone. Applies the next time OMNIX starts listening.</string>
+    <string name="omnix_admin_wake_okay_omni">“Okay Omni” — new engine</string>
+    <string name="omnix_admin_wake_omni">“Omni” — new engine</string>
+    <string name="omnix_admin_wake_legacy">“Omni” — previous model</string>
     <string name="omnix_ai_model_checking">Checking…</string>
     <string name="omnix_ai_model_downloading">Downloading: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Not downloaded — the button is below</string>
@@ -273,7 +298,7 @@
     <string name="omnix_ai_personality_body">Set the tone and instructions OMNIX follows.</string>
 
     <string name="omnix_local_model_title">On-device model</string>
-    <string name="omnix_local_model_not_installed">Not downloaded · 521 MB</string>
+    <string name="omnix_local_model_not_installed">Not downloaded · %1$s</string>
     <string name="omnix_local_model_not_installed_body">Answers without internet when the cloud is unreachable. Cloud answers while it downloads.</string>
     <string name="omnix_local_model_download_now">Download now</string>
     <string name="omnix_local_model_download_wifi">Download over Wi-Fi</string>
@@ -301,9 +326,9 @@
     <string name="omnix_setup_turn_on_title">Turn OMNIX on</string>
     <string name="omnix_setup_turn_on_hint">Tap the logo. This is how OMNIX turns on and off.</string>
     <string name="omnix_setup_on_title">OMNIX is on</string>
-    <string name="omnix_setup_try_hint">Say: “Omni, what time is it?”</string>
+    <string name="omnix_setup_try_hint">Say: “Okay Omni, what time is it?”</string>
     <string name="omnix_setup_success">It works</string>
-    <string name="omnix_setup_success_body">From now on just say “Omni” — in your headphones or near the phone.</string>
+    <string name="omnix_setup_success_body">From now on just say “Okay Omni” — in your headphones or near the phone.</string>
     <string name="omnix_setup_done">Done</string>
     <string name="omnix_setup_skip">Skip</string>
     <string name="omnix_setup_connect_headphones">Connect headphones</string>
@@ -315,7 +340,7 @@
     <string name="omnix_local_model_delete_redownload">Delete and re-download</string>
     <string name="omnix_local_fallback_notice">Offline model unavailable (%1$s). Answering from the cloud.</string>
     <string name="omnix_local_model_consent_title">Download the on-device model?</string>
-    <string name="omnix_local_model_consent_body">521 MB. It answers without internet when the cloud is unreachable. Cloud answers as usual while it downloads.</string>
+    <string name="omnix_local_model_consent_body">%1$s. It answers without internet when the cloud is unreachable. Cloud answers as usual while it downloads.</string>
     <string name="omnix_local_model_later">Later</string>
 
     <string name="omnix_language_title">Language</string>
@@ -378,7 +403,6 @@
 
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Not set up yet</string>
-    <string name="omnix_chat_clear">Clear</string>
     <!-- Human labels for continuous values (§42) -->
     <string name="omnix_level_lowest">Slowest</string>
     <string name="omnix_level_low">Slower</string>
@@ -391,7 +415,7 @@
     <string name="omnix_diagnostics_running">RUNNING %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">EXPORT REPORT</string>
     <string name="omnix_diagnostics_share_title">Share diagnostics report</string>
-    <string name="omnix_diag_wake_word">Wake word «Omni»</string>
+    <string name="omnix_diag_wake_word">Wake phrase «Okay Omni»</string>
     <string name="omnix_diag_mic">Microphone</string>
     <string name="omnix_diag_stt">Speech recognition</string>
     <string name="omnix_diag_local_ai">Local AI</string>
@@ -406,22 +430,24 @@
     <string name="omnix_diag_battery">Battery</string>
 
     <!-- In-app update (staging self-update) -->
-    <string name="omnix_update_available_title">Update available</string>
-    <string name="omnix_update_available_body">A new OMNIX build is ready: %1$d. Download and install?</string>
+    <string name="omnix_update_available_title">New OMNIX version</string>
+    <string name="omnix_update_available_body">Fixes and improvements. Your chats, memory and settings stay.</string>
     <string name="omnix_update_sources_hint">To install, allow “Install unknown apps” for OMNIX — the system will open the right screen.</string>
     <string name="omnix_update_action_update">Update</string>
     <string name="omnix_update_action_later">Later</string>
-    <string name="omnix_update_downloading_title">Downloading update</string>
-    <string name="omnix_update_downloading_body">Build %1$d is downloading. You can keep using the app.</string>
-    <string name="omnix_update_progress_caption">Downloaded %1$s of %2$s · %3$s</string>
+    <string name="omnix_update_downloading_title">Downloading the update</string>
+    <string name="omnix_update_downloading_body">Keep using OMNIX — the download runs in the background.</string>
+    <string name="omnix_update_progress_caption">%1$s of %2$s</string>
     <string name="omnix_update_progress_no_total">Downloaded %1$s</string>
     <string name="omnix_update_paused_body">Download paused — waiting for network or Wi-Fi.</string>
     <string name="omnix_update_unit_mb">MB</string>
     <string name="omnix_update_action_hide">Hide</string>
-    <string name="omnix_update_ready_title">Update downloaded</string>
-    <string name="omnix_update_ready_body">Build %1$d is ready to install.</string>
+    <string name="omnix_update_ready_title">Update is ready</string>
+    <string name="omnix_update_ready_body">Your chats, memory and settings stay.</string>
+    <string name="omnix_update_version_only">Version %1$d</string>
+    <string name="omnix_update_version_chip">Version %1$d · %2$s</string>
     <string name="omnix_update_action_install">Install</string>
-    <string name="omnix_update_failed_title">Update failed</string>
+    <string name="omnix_update_failed_title">Couldn’t download</string>
     <string name="omnix_update_failed_body">Download failed for build %1$d. Check your connection and try again.</string>
     <string name="omnix_update_action_retry">Retry</string>
     <string name="omnix_update_download_title">OMNIX: update</string>
@@ -483,6 +509,19 @@
     <string name="omnix_privacy_allowed_apps">Allowed apps</string>
     <string name="omnix_privacy_allowed_empty">Nothing is allowed explicitly</string>
     <string name="omnix_privacy_package_hint">App package, e.g. com.example.app</string>
+    <string name="omnix_privacy_advanced">Advanced</string>
+    <string name="omnix_privacy_advanced_body">Confirmations, trusted contacts, screen reading, facts and routines</string>
+    <string name="omnix_privacy_advanced_hide">Tap to hide</string>
+    <string name="omnix_fact_name">Name</string>
+    <string name="omnix_fact_city">City</string>
+    <string name="omnix_fact_car">Car</string>
+    <string name="omnix_fact_wishlist">Wants</string>
+    <string name="omnix_fact_occupation">Work</string>
+    <string name="omnix_fact_preference">Likes</string>
+    <string name="omnix_fact_mother">Mother</string>
+    <string name="omnix_fact_father">Father</string>
+    <string name="omnix_fact_wife">Wife</string>
+    <string name="omnix_fact_husband">Husband</string>
     <string name="omnix_privacy_section_memory">What OMNIX remembers</string>
     <string name="omnix_privacy_memories_hint">Memories used in answers when they are relevant</string>
     <string name="omnix_privacy_memories_empty">Nothing is remembered yet</string>
@@ -498,8 +537,8 @@
     <string name="omnix_memory_type_episodic">Event</string>
     <string name="omnix_memory_type_procedural">Scenario</string>
     <string name="omnix_memory_type_other">Memory</string>
-    <string name="omnix_voice_wake_word">Wake word «Omni»</string>
-    <string name="omnix_voice_wake_word_body">Respond to the word «Omni» — turn this off if you do not want it listening</string>
+    <string name="omnix_voice_wake_word">Wake phrase «Okay Omni»</string>
+    <string name="omnix_voice_wake_word_body">Respond to «Okay Omni» — turn this off if you do not want it listening</string>
     <string name="omnix_devices_on_this_phone">On this phone</string>
     <string name="omnix_capability_bluetooth">Bluetooth</string>
     <string name="omnix_capability_wifi">Wi-Fi</string>

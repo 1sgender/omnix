@@ -28,10 +28,10 @@ class LegacyDatabasePolicyInstrumentedTest {
         }
     }
 
-    @Test fun v1IsArchivedAndCleanV5IsCreated() = verifyUnsupportedVersion(1)
-    @Test fun v2IsArchivedAndCleanV5IsCreated() = verifyUnsupportedVersion(2)
-    @Test fun v3IsArchivedAndCleanV5IsCreated() = verifyUnsupportedVersion(3)
-    @Test fun v4IsArchivedAndCleanV5IsCreated() = verifyUnsupportedVersion(4)
+    @Test fun v1IsArchivedAndCleanCurrentIsCreated() = verifyUnsupportedVersion(1)
+    @Test fun v2IsArchivedAndCleanCurrentIsCreated() = verifyUnsupportedVersion(2)
+    @Test fun v3IsArchivedAndCleanCurrentIsCreated() = verifyUnsupportedVersion(3)
+    @Test fun v4IsArchivedAndCleanCurrentIsCreated() = verifyUnsupportedVersion(4)
 
     @Test
     fun v5IsNeverArchived() {
@@ -85,7 +85,7 @@ class LegacyDatabasePolicyInstrumentedTest {
         val current = OmnixDatabaseFactory.create(context, name)
         try {
             current.openHelper.writableDatabase
-            assertEquals(5, current.openHelper.readableDatabase.version)
+            assertEquals(OmnixMigrations.CURRENT_VERSION, current.openHelper.readableDatabase.version)
             current.openHelper.readableDatabase.query("SELECT COUNT(*) FROM messages").use { cursor ->
                 assertTrue(cursor.moveToFirst())
             }

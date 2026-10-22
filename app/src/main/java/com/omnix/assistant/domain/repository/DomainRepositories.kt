@@ -1,14 +1,26 @@
 package com.omnix.assistant.domain.repository
 
 import com.omnix.assistant.core.result.Resource
+import com.omnix.assistant.domain.models.ConversationSummary
 import com.omnix.assistant.domain.models.Message
 import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
+    /** Сообщения текущего разговора; переключается вместе с разговором. */
     fun getMessagesStream(): Flow<List<Message>>
+
+    /** Последние сообщения текущего разговора по порядку — контекст для ИИ. */
     suspend fun getRecentMessages(limit: Int = 10): List<Message>
     suspend fun getLastMessage(): Message?
+
+    /** Сообщение без разговора (conversationId = 0) записывается в текущий. */
     suspend fun insertMessage(message: Message): Long
+
+    /** Все прошлые разговоры, свежие первыми. */
+    fun getConversations(): Flow<List<ConversationSummary>>
+    suspend fun deleteConversation(conversationId: Long)
+
+    /** Стирает все разговоры. */
     suspend fun clearHistory()
     suspend fun deleteMessageById(id: Long)
 }

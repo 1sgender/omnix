@@ -15,6 +15,8 @@ import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
+import com.omnix.assistant.domain.chat.ChatConversationStore
+import com.omnix.assistant.domain.models.ConversationSummary
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
@@ -75,11 +77,18 @@ data class ChatUiState(
     val pendingCloudConsent: PendingCloudConsentUi? = null,
     /** id ответов ассистента из облачной модели: под ними «Ответ из облака». */
     val cloudMessageIds: Set<Long> = emptySet(),
+    /** Тест моделей (только админ): id ответа → кто ответил. */
+    val adminLabels: Map<Long, String> = emptyMap(),
     /**
      * Ответ, который нельзя хранить в истории (подтверждённое чтение экрана):
      * виден в ленте до следующего сообщения. Раньше его только озвучивали.
      */
-    val localOnlyAnswer: String? = null
+    val localOnlyAnswer: String? = null,
+    /** Открыт ли список «История» вместо ленты. */
+    val showHistory: Boolean = false,
+    /** Прошлые разговоры, свежие первыми. */
+    val conversations: List<ConversationSummary> = emptyList(),
+    val currentConversationId: Long = 0L
 )
 
 @HiltViewModel
@@ -92,7 +101,8 @@ class ChatViewModel @Inject constructor(
     private val speechRecognizerManager: SpeechRecognizerManager,
     private val toolExecutor: ToolExecutor,
     private val messageRepository: MessageRepository,
-    private val answerOriginStore: ChatAnswerOriginStore
+    private val answerOriginStore: ChatAnswerOriginStore,
+    private val conversationStore: ChatConversationStore
 ) : ViewModel() {
 
     companion object {
@@ -166,6 +176,52 @@ class ChatViewModel @Inject constructor(
             answerOriginStore.cloudMessageIds.collectLatest { ids ->
                 _uiState.update { it.copy(cloudMessageIds = ids) }
             }
+        }
+        viewModelScope.launch {
+            answerOriginStore.adminLabels.collectLatest { labels ->
+                _uiState.update { it.copy(adminLabels = labels) }
+            }
+        }
+        viewModelScope.launch {
+            conversationStore.currentId.collectLatest { id ->
+                _uiState.update { it.copy(currentConversationId = id) }
+            }
+        }
+        viewModelScope.launch {
+            messageRepository.getConversations().collectLatest { list ->
+                _uiState.update { it.copy(conversations = list) }
+            }
+        }
+    }
+
+    /** «Новый чат»: пустой разговор, прошлый остаётся в истории. */
+    fun startNewConversation() {
+        conversationStore.startNew()
+        _uiState.update { it.copy(localOnlyAnswer = null, showHistory = false) }
+    }
+
+    fun openHistory() {
+        _uiState.update { it.copy(showHistory = true) }
+    }
+
+    fun closeHistory() {
+        _uiState.update { it.copy(showHistory = false) }
+    }
+
+    /** Открыть прошлый разговор: его можно читать и продолжать. */
+    fun openConversation(conversationId: Long) {
+        conversationStore.open(conversationId)
+        _uiState.update { it.copy(localOnlyAnswer = null, showHistory = false) }
+    }
+
+    /** Удалить разговор из истории; если он открыт — начать новый. */
+    fun deleteConversation(conversationId: Long) {
+        if (conversationId == conversationStore.currentId.value) {
+            conversationStore.startNew()
+            _uiState.update { it.copy(localOnlyAnswer = null) }
+        }
+        viewModelScope.launch {
+            messageRepository.deleteConversation(conversationId)
         }
     }
 

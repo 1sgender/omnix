@@ -8,6 +8,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.components.OmnixAppearanceLineIcon
+import com.omnix.assistant.presentation.components.OmnixBellLineIcon
+import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
+import com.omnix.assistant.presentation.components.OmnixGlobeLineIcon
+import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
+import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
+import com.omnix.assistant.presentation.components.OmnixSparkLineIcon
+import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
+import com.omnix.assistant.presentation.components.OmnixVoiceLineIcon
 import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.presentation.design.OmnixAppearance
 import com.omnix.assistant.presentation.navigation.OmnixDestination
@@ -64,19 +73,19 @@ fun MeRoute(
                 title = stringResource(R.string.omnix_me_section_features),
                 rows = listOf(
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_translator),
+                        icon = OmnixTranslatorLineIcon,
                         label = stringResource(R.string.omnix_translator_title),
                         value = "",
                         destination = OmnixDestination.Translator
                     ),
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_automations),
+                        icon = OmnixBoltLineIcon,
                         label = stringResource(R.string.omnix_home_card_automations),
                         value = settings.automations.size.takeIf { it > 0 }?.toString().orEmpty(),
                         destination = OmnixDestination.Automations
                     ),
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_memory),
+                        icon = OmnixMemoryLineIcon,
                         label = stringResource(R.string.omnix_me_row_memory),
                         value = "",
                         destination = OmnixDestination.Privacy
@@ -86,32 +95,40 @@ fun MeRoute(
             MeGroup(
                 title = stringResource(R.string.omnix_me_section_settings),
                 rows = listOf(
+                    // Наушники — строкой здесь, а не вкладкой (решение владельца
+                    // 2026-10-21: три вкладки); их статус виден и на «Главной».
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_voice),
+                        icon = OmnixHeadphonesLineIcon,
+                        label = stringResource(R.string.omnix_nav_headphones),
+                        value = "",
+                        destination = OmnixDestination.Devices
+                    ),
+                    MeRow(
+                        icon = OmnixVoiceLineIcon,
                         label = stringResource(R.string.omnix_me_row_voice),
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_VOICE)
                     ),
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_model),
+                        icon = OmnixSparkLineIcon,
                         label = stringResource(R.string.omnix_ai_title),
                         value = aiValue,
                         destination = OmnixDestination.SettingsSection(SECTION_AI)
                     ),
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_appearance),
+                        icon = OmnixAppearanceLineIcon,
                         label = stringResource(R.string.omnix_settings_appearance),
                         value = appearanceValue,
                         destination = OmnixDestination.SettingsSection(SECTION_APPEARANCE)
                     ),
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_language),
+                        icon = OmnixGlobeLineIcon,
                         label = stringResource(R.string.omnix_me_row_language),
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
                     ),
                     MeRow(
-                        glyph = stringResource(R.string.omnix_me_glyph_notifications),
+                        icon = OmnixBellLineIcon,
                         label = stringResource(R.string.omnix_me_row_notifications),
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_NOTIFICATIONS)

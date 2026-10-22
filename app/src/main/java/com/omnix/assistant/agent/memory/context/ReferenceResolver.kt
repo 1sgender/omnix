@@ -64,7 +64,7 @@ class ReferenceResolver(
                             rewrittenQuery = substitute(query, RECIPIENT_PRONOUNS, "в $channel")
                         )
                     } else {
-                        ReferenceResolution.NeedsClarification(kind, "Кому именно, сэр?")
+                        ReferenceResolution.NeedsClarification(kind, "Кому именно?")
                     }
                 }
             }
@@ -78,7 +78,7 @@ class ReferenceResolver(
                         rewrittenQuery = substitute(query, SUBJECT_PRONOUNS + RECIPIENT_PRONOUNS, subject)
                     )
                 } else {
-                    ReferenceResolution.NeedsClarification(kind, "О ком именно речь, сэр?")
+                    ReferenceResolution.NeedsClarification(kind, "О ком именно речь?")
                 }
             }
 
@@ -91,7 +91,7 @@ class ReferenceResolver(
                         rewrittenQuery = substitute(query, PLACE_PRONOUNS, "в $place")
                     )
                 } else {
-                    ReferenceResolution.NeedsClarification(kind, "Какое место вы имеете в виду, сэр?")
+                    ReferenceResolution.NeedsClarification(kind, "Какое место вы имеете в виду?")
                 }
             }
 
@@ -108,7 +108,7 @@ class ReferenceResolver(
                         rewrittenQuery = substitute(query, OBJECT_PRONOUNS, obj)
                     )
                 } else {
-                    ReferenceResolution.NeedsClarification(kind, "Что именно вы имеете в виду, сэр?")
+                    ReferenceResolution.NeedsClarification(kind, "Что именно вы имеете в виду?")
                 }
             }
         }

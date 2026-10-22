@@ -161,6 +161,8 @@ sealed class LocalModelState {
  */
 data class LocalModelSpec(
     val modelId: String,
+    /** Как модель называется в настройках: «Qwen 2.5 · 1.5B». */
+    val displayName: String,
     val fileName: String,
     val approxSizeMb: Int,
     val contextTokens: Int,
@@ -193,6 +195,7 @@ data class LocalModelSpec(
          */
         val QWEN2_5_0_5B_INSTRUCT_Q8 = LocalModelSpec(
             modelId = "qwen2.5-0.5b-instruct-q8",
+            displayName = "Qwen 2.5 · 0.5B",
             fileName = "Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
             approxSizeMb = 521,
             contextTokens = 1280,
@@ -202,6 +205,42 @@ data class LocalModelSpec(
             expectedSizeBytes = 546660344L,
             expectedSha256 = "e608953f169aeb1bd7b9155fec2559825e08453fc209b84eda3a781ed0452fd2"
         )
+
+        /**
+         * Qwen2.5-1.5B-Instruct, тот же формат (dynamic-int8, multi-prefill,
+         * ekv1280, MediaPipe `.task`) и тот же ChatML — для телефонов с ~8 ГБ
+         * RAM и больше (решение владельца 2026-10-21: 0.5B отвечала бессвязно).
+         * Apache 2.0, без click-through, автозагрузка разрешена.
+         *
+         * Размер и SHA-256 сверены с Hugging Face API (siblings, lfs.sha256,
+         * 2026-10-21): 1597913616 байт, 8d867a7c…4b42e0. RSS больше, чем у
+         * 0.5B (~2.5 ГБ против ~1.4 ГБ) — отсюда минимум свободной памяти.
+         */
+        val QWEN2_5_1_5B_INSTRUCT_Q8 = LocalModelSpec(
+            modelId = "qwen2.5-1.5b-instruct-q8",
+            displayName = "Qwen 2.5 · 1.5B",
+            fileName = "Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
+            approxSizeMb = 1524,
+            contextTokens = 1280,
+            minRuntimeMemoryMb = 3072,
+            downloadUrl = "https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct/" +
+                "resolve/main/Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv1280.task",
+            expectedSizeBytes = 1597913616L,
+            expectedSha256 = "8d867a7c93a6acf2892f08e0174e2f6f351ad256b7e3cfb6d6cd9c89794b42e0"
+        )
+
+        /**
+         * Телефоны с 8 ГБ отдают ~7.3–7.6 ГБ totalMem — порог чуть ниже, чтобы
+         * они получили 1.5B; на 6 ГБ и меньше остаётся 0.5B.
+         */
+        const val LARGE_MODEL_MIN_TOTAL_RAM_MB = 7_000L
+
+        /** Какая модель подходит телефону с [totalRamMb] памяти. */
+        fun forTotalRam(totalRamMb: Long): LocalModelSpec =
+            if (totalRamMb >= LARGE_MODEL_MIN_TOTAL_RAM_MB) QWEN2_5_1_5B_INSTRUCT_Q8 else QWEN2_5_0_5B_INSTRUCT_Q8
+
+        /** Все модели, которые приложение когда-либо ставило (для уборки старых файлов). */
+        val ALL: List<LocalModelSpec> get() = listOf(QWEN2_5_0_5B_INSTRUCT_Q8, QWEN2_5_1_5B_INSTRUCT_Q8)
     }
 }
 

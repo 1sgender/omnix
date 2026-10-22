@@ -93,7 +93,7 @@ class ExecutionDecisionEngineTest {
         private val plan: ExecutionPlan? = null,
         private val planForLlmOutput: ExecutionPlan? = null,
         private val result: ExecutionResult = ExecutionResult.Success(
-            text = "План выполнен, сэр.",
+            text = "План выполнен.",
             executionType = ExecutionType.AGENT
         )
     ) : AgentExecutor {
@@ -226,7 +226,7 @@ class ExecutionDecisionEngineTest {
     /** Test 2: роутер не уверен → Local AI обрабатывает → LOCAL_AI. */
     @Test
     fun `uncertain router falls back to local ai`() = runBlocking {
-        val local = FakeLocalAi(LocalAiOutcome.Handled("Сценарий 'сон' выполнен, сэр."))
+        val local = FakeLocalAi(LocalAiOutcome.Handled("Сценарий 'сон' выполнен."))
         val cloud = FakeCloudAi()
         val engine = buildEngine(localAi = local, cloudAi = cloud)
 
@@ -488,19 +488,42 @@ class ExecutionDecisionEngineTest {
         )
     }
 
-    /** Дополнительно: локальный ответ роутера без инструмента («привет»). */
+    /** Владелец 2026-10-21: «привет» отвечает ИИ, а не шаблон роутера «Приветствую». */
     @Test
-    fun `router direct response is handled without ai`() = runBlocking {
-        val local = FakeLocalAi(LocalAiOutcome.Handled("нет"))
+    fun `greeting is answered by the ai, not by a router template`() = runBlocking {
+        val local = FakeLocalAi(LocalAiOutcome.Uncertain)
         val cloud = FakeCloudAi()
         val engine = buildEngine(localAi = local, cloudAi = cloud)
 
         val result = engine.execute(request("привет"))
 
         assertTrue(result is ExecutionResult.Success)
-        assertEquals(ExecutionType.DEVICE_TOOL, (result as ExecutionResult.Success).executionType)
-        assertEquals(0, local.calls)
-        assertEquals(0, cloud.calls)
+        assertEquals(ExecutionType.CLOUD_AI, (result as ExecutionResult.Success).executionType)
+        assertEquals(1, cloud.calls)
+    }
+
+    /** «Авто» с сетью и не приватный запрос: локальный слой просят уступить облаку. */
+    @Test
+    fun `auto online marks a normal request as cloud preferred`() = runBlocking {
+        val local = RecordingLocalAi(LocalAiOutcome.Uncertain)
+        val engine = buildEngine(localAi = local, cloudAi = FakeCloudAi(), choice = AiModelChoice.AUTO)
+
+        engine.execute(request("как дела"))
+
+        assertEquals(true, local.lastRequest?.preferCloud)
+    }
+
+    @Test
+    fun `auto keeps the phone first when offline or private`() = runBlocking {
+        val offline = RecordingLocalAi(LocalAiOutcome.Uncertain)
+        buildEngine(localAi = offline, cloudAi = FakeCloudAi(available = false), choice = AiModelChoice.AUTO)
+            .execute(request("как дела"))
+        assertEquals(false, offline.lastRequest?.preferCloud)
+
+        val privateLocal = RecordingLocalAi(LocalAiOutcome.Uncertain)
+        buildEngine(localAi = privateLocal, cloudAi = FakeCloudAi(), choice = AiModelChoice.AUTO)
+            .execute(request("мой диагноз и анализы", privacy = PrivacyLevel.PRIVATE))
+        assertEquals(false, privateLocal.lastRequest?.preferCloud)
     }
 
     /** Дополнительно: МНОГОшаговый план из tool_calls облачной модели исполняет агент. */
@@ -718,7 +741,7 @@ class ExecutionDecisionEngineTest {
 
     @Test
     fun `local handled counts as local execution`() = runBlocking {
-        val local = FakeLocalAi(LocalAiOutcome.Handled("Сценарий выполнен, сэр."))
+        val local = FakeLocalAi(LocalAiOutcome.Handled("Сценарий выполнен."))
         val cloud = FakeCloudAi()
         val metrics = ExecutionRouterMetrics()
         val engine = buildEngine(localAi = local, cloudAi = cloud, metrics = metrics)

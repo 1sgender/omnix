@@ -193,7 +193,7 @@ class OmniMemoryManager @Inject constructor(
                 isSuccess = true,
                 deletedCount = all.size,
                 deletedSummaries = listOf("Вся память очищена"),
-                confirmationMessage = "Хорошо, сэр. Я полностью очистил память о вас."
+                confirmationMessage = "Хорошо. Я полностью очистил память о вас."
             )
         }
 
@@ -227,7 +227,7 @@ class OmniMemoryManager @Inject constructor(
                 isSuccess = true,
                 deletedCount = toDelete.size,
                 deletedSummaries = deletedSummaries,
-                confirmationMessage = "Хорошо, сэр. Я стёр информацию о \"$cleanTarget\" из памяти."
+                confirmationMessage = "Хорошо. Я стёр информацию о \"$cleanTarget\" из памяти."
             )
         } else {
             ForgetResult(

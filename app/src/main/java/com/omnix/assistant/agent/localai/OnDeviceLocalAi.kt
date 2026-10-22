@@ -71,6 +71,13 @@ class OnDeviceLocalAi @Inject constructor(
             return LocalAiResult.Unsupported("Empty request")
         }
 
+        // «Авто» с сетью и не приватный запрос: разговор отвечает облако — 0.5B
+        // на телефоне отвечала бессвязно (скриншот владельца 2026-10-21).
+        if (request.preferCloud) {
+            Log.d(TAG, "unsupported: cloud preferred for conversation (auto, online, not private)")
+            return LocalAiResult.Unsupported("Cloud model preferred while online")
+        }
+
         if (request.text.length > MAX_LOCAL_INPUT_CHARS) {
             Log.d(TAG, "unsupported: слишком длинный вход (${request.text.length} символов)")
             return LocalAiResult.Unsupported("Request too long for local model")

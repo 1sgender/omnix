@@ -13,6 +13,7 @@ import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.omnix.assistant.core.license.LicenseManager
 import com.omnix.assistant.data.preferences.SettingsDataStore
+import com.omnix.assistant.domain.chat.ChatConversationStore
 import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.localmodel.LocalModelConsentDialog
 import com.omnix.assistant.presentation.launch.LaunchStatus
@@ -50,12 +51,19 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var otaDownloadMonitor: OtaDownloadMonitor
 
+    @Inject
+    lateinit var chatConversations: ChatConversationStore
+
     /** Guards the first frame while stored preferences are read. */
     private var splashHeld: Boolean by mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Each fresh open of the app starts a new chat; the process may have
+        // stayed alive for the voice service. A recreated activity (rotation,
+        // theme) keeps the open conversation.
+        if (savedInstanceState == null) chatConversations.startNew()
 
         // Cheaper and more reliable than drawing a placeholder: the window
         // simply does not draw until the theme is known.

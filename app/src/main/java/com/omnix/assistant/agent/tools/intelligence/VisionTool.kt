@@ -47,7 +47,7 @@ class VisionTool @Inject constructor() : CapabilityAwareTool {
     override suspend fun execute(arguments: JsonObject): ToolExecutionResult =
         ToolExecutionResult.unsupported(
             summary = "Описание изображений недоступно: модель компьютерного зрения не включена в текущую версию. " +
-                "Я могу прочитать содержимое экрана текстом (accessibility.screen_reader), сэр.",
+                "Я могу прочитать содержимое экрана текстом (accessibility.screen_reader).",
             reason = "VISION_MODEL_UNAVAILABLE"
         )
 }

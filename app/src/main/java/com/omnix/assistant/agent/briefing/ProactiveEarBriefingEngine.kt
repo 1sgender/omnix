@@ -23,7 +23,7 @@ import javax.inject.Singleton
  * Proactive Ear Briefing Engine (OMNIX Clip)
  * 
  * Автоматически генерирует структурированный 15-секундный аудио-брифинг прямо в ухо при надевании наушника:
- * 1. Персональное приветствие («Доброе утро/день, сэр»)
+ * 1. Персональное приветствие («Доброе утро/день»)
  * 2. Точное время и день недели
  * 3. Заряд батареи и статус питания
  * 4. Статус сети (Wi-Fi / LTE)
@@ -40,7 +40,7 @@ class ProactiveEarBriefingEngine @Inject constructor(
     private val TAG = "EarBriefing"
 
     suspend fun generateBriefing(): String = withContext(Dispatchers.IO) {
-        val userName = settingsRepository.userNameFlow.first().ifBlank { "сэр" }
+        val userName = settingsRepository.userNameFlow.first().trim()
         val locale = Locale("ru", "RU")
         val now = Date()
 
@@ -63,7 +63,7 @@ class ProactiveEarBriefingEngine @Inject constructor(
         val isOnline = networkMonitor.isCurrentlyOnline()
 
         val sb = StringBuilder()
-        sb.append("$greeting, $userName. ")
+        sb.append(if (userName.isBlank()) "$greeting. " else "$greeting, $userName. ")
         sb.append("Сейчас $timeStr, $dayStr. ")
         // Если система не отдала уровень заряда — не подставляем выдуманное число.
         if (batteryPercent >= 0) {

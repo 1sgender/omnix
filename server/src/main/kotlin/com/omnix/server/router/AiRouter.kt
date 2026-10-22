@@ -1,5 +1,6 @@
 package com.omnix.server.router
 
+import com.omnix.server.admin.AdminModelAccess
 import com.omnix.server.api.AiExecutionRequest
 import com.omnix.server.api.ApiErrorCode
 import com.omnix.server.api.ApiPrivacyLevel
@@ -15,6 +16,7 @@ import com.omnix.server.observability.Metrics
 import com.omnix.server.observability.StructuredLogger
 import com.omnix.server.provider.ManagerOutcome
 import com.omnix.server.provider.ProviderFailureKind
+import com.omnix.server.provider.ProviderId
 import com.omnix.server.provider.ProviderManager
 import com.omnix.server.provider.ProviderRequest
 import com.omnix.server.provider.ProviderRequirements
@@ -32,7 +34,13 @@ private const val APPROX_CHARS_PER_TOKEN = 4
 
 /** Результат работы роутера — уже нормализован для отдачи клиенту. */
 sealed class RouterResult {
-    data class Success(val text: String, val requestId: String) : RouterResult()
+    data class Success(
+        val text: String,
+        val requestId: String,
+        /** Только для админа (тест моделей); обычному клиенту — null. */
+        val provider: String? = null,
+        val model: String? = null
+    ) : RouterResult()
     data class Failure(val code: ApiErrorCode, val requestId: String) : RouterResult()
 }
 
@@ -63,7 +71,9 @@ class AiRouter(
     private val privacyClassifier: ServerPrivacyClassifier = PromptPrivacyClassifier,
     private val clock: () -> Long = System::currentTimeMillis,
     /** Дневные квоты тарифа; null = гейт отключён (тесты без квот). */
-    private val planQuotaGate: PlanQuotaGate? = null
+    private val planQuotaGate: PlanQuotaGate? = null,
+    /** Тест моделей админом; null = админов нет, поле запроса игнорируется. */
+    private val adminAccess: AdminModelAccess? = null
 ) {
     init {
         require(usageRepository != null || usageTracker != null) {
@@ -199,9 +209,11 @@ class AiRouter(
                 request.text.length, historyChars, request.systemContext?.length ?: 0
             ).toString()
         )
+        val isAdmin = adminAccess?.isAdmin(client.accountId) == true
         val requirements = ProviderRequirements(
             requiresWeb = request.requiresWeb,
-            costClass = costClass
+            costClass = costClass,
+            pinnedProvider = pinnedProvider(request, client, requestId)
         )
 
         logger.info(
@@ -284,7 +296,12 @@ class AiRouter(
                     "totalTokens" to (outcome.totalTokens?.toString() ?: "-"),
                     "status" to "success"
                 )
-                RouterResult.Success(outcome.text, requestId)
+                RouterResult.Success(
+                    text = outcome.text,
+                    requestId = requestId,
+                    provider = if (isAdmin) outcome.providerId.name else null,
+                    model = if (isAdmin) outcome.model else null
+                )
             }
 
             is ManagerOutcome.Failure -> {
@@ -312,6 +329,46 @@ class AiRouter(
                 )
                 RouterResult.Failure(code, requestId)
             }
+        }
+    }
+
+    /**
+     * Провайдер, закреплённый админом за запросом (тест моделей); null — обычный
+     * выбор сервера. Просьба не-админа логируется и игнорируется.
+     */
+    private fun pinnedProvider(
+        request: AiExecutionRequest,
+        client: AuthenticatedClient,
+        requestId: String
+    ): ProviderId? = when (val pin = adminAccess?.pin(request.adminProvider, client.accountId)) {
+        is AdminModelAccess.Pin.Pinned -> {
+            logger.info(
+                "admin pinned provider",
+                "requestId" to requestId,
+                "clientId" to client.clientId,
+                "provider" to pin.provider.name
+            )
+            pin.provider
+        }
+        is AdminModelAccess.Pin.Ignored -> {
+            logger.warn(
+                "admin provider request ignored",
+                "requestId" to requestId,
+                "clientId" to client.clientId,
+                "reason" to pin.reason
+            )
+            null
+        }
+        AdminModelAccess.Pin.None, null -> {
+            if (adminAccess == null && request.adminProvider != null) {
+                logger.warn(
+                    "admin provider request ignored",
+                    "requestId" to requestId,
+                    "clientId" to client.clientId,
+                    "reason" to "admin access not configured"
+                )
+            }
+            null
         }
     }
 

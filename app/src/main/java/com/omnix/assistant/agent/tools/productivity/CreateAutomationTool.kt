@@ -75,7 +75,7 @@ class CreateAutomationTool @Inject constructor(
         val toolAction = arguments["tool_action"]?.jsonPrimitive?.contentOrNull ?: "media.control"
         val actionParams = arguments["action_params"]?.jsonObject ?: buildJsonObject { put("action", "next") }
         val name = arguments["name"]?.jsonPrimitive?.contentOrNull ?: "Автоматизация для ${triggerType.name}"
-        val announcement = arguments["voice_announcement"]?.jsonPrimitive?.contentOrNull ?: "Автоматизация '$name' выполнена, сэр."
+        val announcement = arguments["voice_announcement"]?.jsonPrimitive?.contentOrNull ?: "Автоматизация '$name' выполнена."
 
         return try {
             val call = ToolCall(toolId = toolAction, arguments = actionParams)
@@ -99,7 +99,7 @@ class CreateAutomationTool @Inject constructor(
         } catch (e: AutomationLimitReachedException) {
             ToolExecutionResult.failure(
                 "Лимит автоматизаций тарифа исчерпан (максимум ${e.max}). " +
-                    "Удалите лишние или обновите план, сэр.",
+                    "Удалите лишние или обновите план.",
                 ClientPlanGate.ERROR_PLAN_LIMIT
             )
         } catch (e: Exception) {

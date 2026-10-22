@@ -1,5 +1,7 @@
 import java.net.URI
+import java.security.MessageDigest
 import java.util.Properties
+import javax.inject.Inject
 
 plugins {
     alias(libs.plugins.android.application)
@@ -244,6 +246,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs {
+            // x86 в APK не попадает (abiFilters выше), а sherpa-onnx и
+            // onnxruntime-android оба кладут lib/x86/libonnxruntime.so —
+            // слияние нативных библиотек падало на дубле.
+            excludes += "lib/x86/**"
+        }
     }
 }
 
@@ -406,6 +414,130 @@ configurations.configureEach {
     }
 }
 
+/**
+ * Скачивает файл и сверяет SHA-256. Бинарники движка фразы вызова (AAR
+ * sherpa-onnx, русская модель) не хранятся в публичном репозитории; файловые
+ * зависимости не проходят Gradle dependency verification, поэтому хэш
+ * проверяется здесь: подменённый файл валит сборку.
+ */
+abstract class DownloadVerified : DefaultTask() {
+    @get:Input
+    abstract val url: Property<String>
+
+    @get:Input
+    abstract val sha256: Property<String>
+
+    @get:OutputFile
+    abstract val output: RegularFileProperty
+
+    @TaskAction
+    fun download() {
+        val dest = output.get().asFile
+        if (dest.isFile && sha256Of(dest) == sha256.get()) return
+        dest.parentFile.mkdirs()
+        val part = File(dest.path + ".part")
+        var lastError: Exception? = null
+        repeat(DOWNLOAD_ATTEMPTS) { attempt ->
+            try {
+                URI(url.get()).toURL().openStream().use { input ->
+                    part.outputStream().use { input.copyTo(it) }
+                }
+                val actual = sha256Of(part)
+                if (actual != sha256.get()) {
+                    part.delete()
+                    throw GradleException("SHA-256 mismatch for ${url.get()}: got $actual, want ${sha256.get()}")
+                }
+                dest.delete()
+                if (!part.renameTo(dest)) throw GradleException("cannot move download into $dest")
+                return
+            } catch (e: GradleException) {
+                throw e
+            } catch (e: Exception) {
+                lastError = e
+                logger.warn("download attempt ${attempt + 1} failed: ${url.get()}: ${e.message}")
+                Thread.sleep(RETRY_PAUSE_MS * (attempt + 1))
+            }
+        }
+        throw GradleException("download failed: ${url.get()}", lastError)
+    }
+
+    private fun sha256Of(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(1 shl 16)
+            while (true) {
+                val n = input.read(buffer)
+                if (n < 0) break
+                digest.update(buffer, 0, n)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private companion object {
+        const val DOWNLOAD_ATTEMPTS = 4
+        const val RETRY_PAUSE_MS = 3_000L
+    }
+}
+
+/** Достаёт из архива модели только то, что нужно приложению, в assets/wakeword/phrase. */
+abstract class ExtractWakePhraseModel : DefaultTask() {
+    @get:InputFile
+    abstract val archive: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val fs: FileSystemOperations
+
+    @get:Inject
+    abstract val archives: ArchiveOperations
+
+    @TaskAction
+    fun extract() {
+        fs.sync {
+            from(archives.tarTree(archives.bzip2(archive.get().asFile))) {
+                include("*/encoder.int8.onnx", "*/decoder.onnx", "*/joiner.int8.onnx", "*/tokens.txt")
+                eachFile { path = "wakeword/phrase/$name" }
+            }
+            includeEmptyDirs = false
+            into(outputDir)
+        }
+    }
+}
+
+// Фраза вызова «Окей, Омни» (решение 2026-10-22): sherpa-onnx keyword spotter
+// (k2-fsa/sherpa-onnx, Apache-2.0; onnxruntime влинкован статически, поэтому
+// не конфликтует с onnxruntime-android) и русская потоковая модель Vosk
+// small-streaming-ru (alphacep, Apache-2.0). Хэши — из GitHub release API.
+val sherpaOnnxVersion = "1.13.8"
+val downloadSherpaOnnx = tasks.register<DownloadVerified>("downloadSherpaOnnx") {
+    url.set(
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/v$sherpaOnnxVersion/" +
+            "sherpa-onnx-static-link-onnxruntime-$sherpaOnnxVersion.aar"
+    )
+    sha256.set("b22c3fc1b6a45666d28892bb2f7694beeb77a8362d7ebd77c1a5431ec9435471")
+    output.set(layout.buildDirectory.file("third-party/sherpa-onnx-static-link-onnxruntime-$sherpaOnnxVersion.aar"))
+}
+val downloadWakePhraseModel = tasks.register<DownloadVerified>("downloadWakePhraseModel") {
+    url.set(
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/" +
+            "sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16.tar.bz2"
+    )
+    sha256.set("6ba68a01ff3c5445aaf2d61e9b97b026f1149dcc9049d11af3f44f55176341d8")
+    output.set(layout.buildDirectory.file("third-party/wake-phrase-ru-vosk-int8-2025-08-16.tar.bz2"))
+}
+
+androidComponents {
+    onVariants { variant ->
+        val extract = tasks.register<ExtractWakePhraseModel>("extract${variant.name.replaceFirstChar(Char::uppercase)}WakePhraseModel") {
+            archive.set(downloadWakePhraseModel.flatMap { it.output })
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(extract, ExtractWakePhraseModel::outputDir)
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -450,6 +582,10 @@ dependencies {
     // Neural wake word: ONNX Runtime для openWakeWord-моделей (assets/wakeword).
     // AAR ~28.5 МБ; POM без транзитивных зависимостей. Модели ~3.7 МБ в APK.
     implementation(libs.onnxruntime.android)
+
+    // Фраза вызова «Окей, Омни»: sherpa-onnx keyword spotter (см. downloadSherpaOnnx).
+    // Нативная библиотека со встроенным onnxruntime: ~24 МБ на arm64-v8a.
+    implementation(files(downloadSherpaOnnx.flatMap { it.output }).builtBy(downloadSherpaOnnx))
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -88,14 +88,14 @@ class TelegramTool @Inject constructor(
             val intent = context.packageManager.getLaunchIntentForPackage(packageName)
             if (intent == null) {
                 ToolExecutionResult.failure(
-                    summary = "Telegram не установлен на этом устройстве, сэр.",
+                    summary = "Telegram не установлен на этом устройстве.",
                     error = "TELEGRAM_NOT_INSTALLED"
                 )
             } else {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
                 ToolExecutionResult.success(
-                    summary = "Открываю Telegram, сэр.",
+                    summary = "Открываю Telegram.",
                     data = buildJsonObject { put("action", "open") }
                 )
             }
@@ -121,13 +121,13 @@ class TelegramTool @Inject constructor(
             }
             if (shareIntent.resolveActivity(context.packageManager) == null) {
                 ToolExecutionResult.failure(
-                    summary = "Telegram не установлен или не поддерживает отправку текста, сэр.",
+                    summary = "Telegram не установлен или не поддерживает отправку текста.",
                     error = "TELEGRAM_SHARE_UNAVAILABLE"
                 )
             } else {
                 context.startActivity(shareIntent)
                 ToolExecutionResult.userActionRequired(
-                    summary = "Открыл окно отправки в Telegram с вашим текстом. Выберите чат и отправьте, сэр.",
+                    summary = "Открыл окно отправки в Telegram с вашим текстом. Выберите чат и отправьте.",
                     reason = "TELEGRAM_SEND_REQUIRES_USER",
                     data = buildJsonObject {
                         put("action", "send")

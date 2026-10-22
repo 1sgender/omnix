@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +82,8 @@ fun SettingsSectionRoute(
             val aiChoice by aiModelViewModel.choice.collectAsState()
             val aiApplying by aiModelViewModel.applying.collectAsState()
             val aiFailure by aiModelViewModel.failure.collectAsState()
+            val adminModels by aiModelViewModel.admin.collectAsState()
+            val wakeListening by aiModelViewModel.wakeListening.collectAsState()
             AiSettingsScreen(
                 modifier = modifier,
                 onBack = onBack,
@@ -92,6 +95,18 @@ fun SettingsSectionRoute(
                         localModelState = modelState,
                         onSelect = aiModelViewModel::select
                     )
+                    if (adminModels.isAdmin) {
+                        AdminModelSection(
+                            state = adminModels,
+                            onPin = aiModelViewModel::pinAdminModel,
+                            modifier = Modifier.padding(top = 20.dp)
+                        )
+                        AdminWakeSection(
+                            current = wakeListening,
+                            onSelect = aiModelViewModel::setWakeListening,
+                            modifier = Modifier.padding(top = 20.dp)
+                        )
+                    }
                 },
                 systemPrompt = state.systemPrompt,
                 onSystemPromptChange = viewModel::onSystemPromptChanged,

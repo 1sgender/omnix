@@ -1,6 +1,8 @@
 package com.omnix.assistant.data.remote
 
 import android.util.Log
+import com.omnix.assistant.core.admin.AdminModelPin
+import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.ResponseBodyTooLargeException
@@ -60,7 +62,9 @@ data class OmniAiRequestDto(
     @SerialName("cloudExplicitlyAllowed") val cloudExplicitlyAllowed: Boolean = false,
     @SerialName("requestId") val requestId: String,
     @SerialName("systemContext") val systemContext: String? = null,
-    @SerialName("history") val history: List<MessageDto> = emptyList()
+    @SerialName("history") val history: List<MessageDto> = emptyList(),
+    /** Тест моделей: провайдер, закреплённый админом; сервер учтёт его только для админа. */
+    @SerialName("adminProvider") val adminProvider: String? = null
 )
 
 @Serializable
@@ -68,7 +72,10 @@ data class OmniAiResponseDto(
     @SerialName("success") val success: Boolean = false,
     @SerialName("text") val text: String = "",
     @SerialName("executionType") val executionType: String = "CLOUD_AI",
-    @SerialName("requestId") val requestId: String = ""
+    @SerialName("requestId") val requestId: String = "",
+    /** Кто ответил — сервер называет только админу (тест моделей). */
+    @SerialName("provider") val provider: String? = null,
+    @SerialName("model") val model: String? = null
 )
 
 @Serializable
@@ -96,7 +103,8 @@ class OmnixApiClient @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val securityManager: SecurityManager,
     private val json: Json,
-    private val cloudMonitor: CloudProcessingMonitor
+    private val cloudMonitor: CloudProcessingMonitor,
+    private val adminModels: AdminModelTesting = AdminModelTesting.OFF
 ) {
     companion object {
         private const val TAG = "OmnixApiClient"
@@ -177,7 +185,8 @@ class OmnixApiClient @Inject constructor(
                 systemContext = systemContext?.takeIf { it.isNotBlank() },
                 // CR-03: отсылаем только непустые сообщения. Роли подгоняем под
                 // OpenAI-каноничный вид (user/assistant/system).
-                history = history.filter { it.content.isNotBlank() }
+                history = history.filter { it.content.isNotBlank() },
+                adminProvider = (adminModels.pin() as? AdminModelPin.Cloud)?.provider
             )
         )
 
@@ -254,6 +263,7 @@ class OmnixApiClient @Inject constructor(
             val parsed = json.decodeFromString(OmniAiResponseDto.serializer(), body)
             if (parsed.success && parsed.text.isNotBlank()) {
                 Log.d(TAG, "ai request ok | requestId=${parsed.requestId}")
+                adminModels.onCloudAnswer(parsed.provider, parsed.model)
                 return Resource.Success(parsed.text)
             }
             return Resource.Error(
@@ -293,8 +303,8 @@ class OmnixApiClient @Inject constructor(
     private fun userMessageFor(code: String): String = when (code) {
         "UNAUTHORIZED" -> "Требуется активация. Проверьте код в настройках."
         "FORBIDDEN" -> "Операция недоступна для вашего тарифа."
-        "RATE_LIMITED" -> "Слишком много запросов. Подождите немного, сэр."
-        "QUOTA_EXCEEDED" -> "Дневной лимит тарифа исчерпан. Продолжим завтра, сэр."
+        "RATE_LIMITED" -> "Слишком много запросов. Подождите немного."
+        "QUOTA_EXCEEDED" -> "Дневной лимит тарифа исчерпан. Продолжим завтра."
         "PRIVACY_POLICY_VIOLATION" ->
             "Этот запрос помечен как приватный и не может быть обработан в облаке."
         "PROVIDER_TIMEOUT" -> "Сервер AI не ответил вовремя. Попробуйте ещё раз."

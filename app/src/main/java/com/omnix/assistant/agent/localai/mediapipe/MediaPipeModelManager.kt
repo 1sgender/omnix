@@ -10,6 +10,7 @@ import com.omnix.assistant.agent.localai.LocalModelRuntime
 import com.omnix.assistant.agent.localai.LocalModelSpec
 import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
+import com.omnix.assistant.core.admin.AdminModelStore
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadStatus
 import com.omnix.assistant.agent.localai.downloader.ModelDownloader
 import com.omnix.assistant.agent.localai.downloader.ModelFileIntegrity
@@ -169,8 +170,50 @@ class MediaPipeModelManager @Inject constructor(
     init {
         registerTrimMemoryCallback()
         // Загрузка принадлежит системе и переживает смерть процесса:
-        // при старте переподключаемся к уже идущей очереди.
-        lifecycleScope.launch { runCatching { reattachDownload() } }
+        // при старте переподключаемся к уже идущей очереди — но сперва
+        // забываем загрузку и файлы прежней модели, если модель сменилась.
+        lifecycleScope.launch {
+            runCatching { lifecycleMutex.withLock { forgetPreviousModelIfChanged() } }
+                .onFailure { Log.e(TAG, "previous model cleanup failed", it) }
+            runCatching { reattachDownload() }
+        }
+    }
+
+    /**
+     * Модель сменилась (0.5B → 1.5B на телефонах с ~8 ГБ RAM, решение
+     * владельца 2026-10-21): незаконченная загрузка прежней модели не
+     * подходит новой (иная длина и SHA-256), а её файлы занимают ~550 МБ.
+     * Отменяем загрузку, удаляем файлы прежних моделей, запоминаем текущую.
+     * До этой версии модель не запоминалась — тогда это была 0.5B.
+     */
+    private suspend fun forgetPreviousModelIfChanged() {
+        val previous = settings.localModelSpecIdFlow.first()
+            ?: LocalModelSpec.QWEN2_5_0_5B_INSTRUCT_Q8.modelId
+        if (previous == spec.modelId) return
+        val storedId = settings.localModelDownloadIdFlow.first()
+        if (storedId != ModelDownloadPolicy.NO_DOWNLOAD_ID) {
+            runCatching { downloader.cancel(storedId) }
+            settings.setLocalModelDownloadId(ModelDownloadPolicy.NO_DOWNLOAD_ID)
+        }
+        // Админ переключает модели для теста: файлы обеих остаются, иначе
+        // каждое переключение — новая загрузка 0.5–1.6 ГБ.
+        if (AdminModelStore.isAdmin(context)) {
+            settings.setLocalModelSpecId(spec.modelId)
+            Log.i(TAG, "local model changed by admin: $previous -> ${spec.modelId}; files kept")
+            return
+        }
+        val dir = File(context.filesDir, MODEL_DIR)
+        LocalModelSpec.ALL.filter { it.fileName != spec.fileName }.forEach { old ->
+            val oldFile = File(dir, old.fileName)
+            ModelFileIntegrity.deleteWithMarker(oldFile)
+            File(dir, old.fileName + ".init_crash").delete()
+            File(dir, old.fileName + ".inference_crash").delete()
+            filesDirRelativePath(oldFile, context.filesDir)?.let { relPath ->
+                externalFallbackFile(context, relPath)?.let { mirror -> ModelFileIntegrity.deleteWithMarker(mirror) }
+            }
+        }
+        settings.setLocalModelSpecId(spec.modelId)
+        Log.i(TAG, "local model changed: $previous -> ${spec.modelId}; previous download and files removed")
     }
 
     /**
@@ -379,6 +422,8 @@ class MediaPipeModelManager @Inject constructor(
      */
     private suspend fun ensureModelLocked(): LocalModelState {
         if (currentState is LocalModelState.Downloading) return currentState
+        // Если стартовая уборка ещё не прошла — не подцепить загрузку прежней модели.
+        forgetPreviousModelIfChanged()
 
         val file = modelFile
         if (isModelFileValid(file)) {

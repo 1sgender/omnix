@@ -141,7 +141,7 @@ class WifiTool @Inject constructor(
                 val wantsEnable = action == "enable" || (action == "toggle" && !isWifiEnabled)
                 if (action != "toggle" && wantsEnable == isWifiEnabled) {
                     return ToolExecutionResult.success(
-                        summary = if (isWifiEnabled) "Wi-Fi уже включён, сэр." else "Wi-Fi уже выключен, сэр.",
+                        summary = if (isWifiEnabled) "Wi-Fi уже включён." else "Wi-Fi уже выключен.",
                         data = buildJsonObject { put("wifi_enabled", isWifiEnabled) }
                     )
                 }
@@ -156,9 +156,9 @@ class WifiTool @Inject constructor(
                 }
                 ToolExecutionResult.userActionRequired(
                     summary = if (opened) {
-                        "$statePhrase Открываю панель Wi-Fi — переключите его там, сэр."
+                        "$statePhrase Открываю панель Wi-Fi — переключите его там."
                     } else {
-                        "$statePhrase Панель Wi-Fi открыть не удалось — переключите Wi-Fi вручную, сэр."
+                        "$statePhrase Панель Wi-Fi открыть не удалось — переключите Wi-Fi вручную."
                     },
                     reason = "WIFI_TOGGLE_REQUIRES_USER",
                     data = buildJsonObject {

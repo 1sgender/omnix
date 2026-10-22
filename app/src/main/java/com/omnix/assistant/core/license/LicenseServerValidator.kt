@@ -1,6 +1,7 @@
 package com.omnix.assistant.core.license
 
 import androidx.annotation.VisibleForTesting
+import com.omnix.assistant.core.admin.AdminCloudModel
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.network.readUtf8Bounded
 import com.omnix.assistant.core.security.AccessTokenPolicy
@@ -32,7 +33,9 @@ data class ServerLicenseRecord(
     val expiresAt: Instant,
     val billingStatus: String,
     val entitlements: PlanEntitlements = PlanEntitlements.FREE,
-    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN
+    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN,
+    /** Тест моделей: облачные модели админа; null — аккаунт не админ. */
+    val adminCloudModels: List<AdminCloudModel>? = null
 )
 
 sealed interface ServerRedemptionResult {
@@ -94,7 +97,10 @@ private data class ValidateResponse(
     @SerialName("billing_status") val billingStatus: String,
     /** null = старый сервер → FREE (fail-closed, см. ClientPlanGate). */
     @SerialName("entitlements") val entitlements: PlanEntitlements? = null,
-    @SerialName("clip") val clip: ClipBindingState? = null
+    @SerialName("clip") val clip: ClipBindingState? = null,
+    /** Тест моделей: true только для аккаунтов из ADMIN_ACCOUNT_IDS сервера. */
+    @SerialName("admin") val admin: Boolean = false,
+    @SerialName("admin_models") val adminModels: List<AdminCloudModel>? = null
 )
 
 @Serializable
@@ -229,7 +235,7 @@ class HttpLicenseServerValidator @Inject constructor(
                 parsed.billingStatus, null,
                 parsed.entitlements ?: PlanEntitlements.FREE,
                 parsed.clip ?: ClipBindingState.UNKNOWN
-            )
+            ).copy(adminCloudModels = if (parsed.admin) parsed.adminModels.orEmpty() else null)
         )
     }.getOrElse { ServerLicenseValidationResult.ServiceUnavailable }
 

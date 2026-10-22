@@ -30,7 +30,7 @@
     <string name="omnix_home_off_hint">Нажмите на логотип, чтобы включить</string>
     <string name="omnix_home_starting">Включаю…</string>
     <string name="omnix_home_stopping">Выключаю…</string>
-    <string name="omnix_home_on_hint">Скажите «Omni» или нажмите «Говорить»</string>
+    <string name="omnix_home_on_hint">Скажите «Окей, Омни» или нажмите «Говорить»</string>
     <string name="omnix_home_talk">Говорить</string>
     <string name="omnix_home_talk_stop">Стоп</string>
     <string name="omnix_home_power_a11y">Ассистент OMNIX</string>
@@ -109,7 +109,7 @@
     <string name="omnix_error_user_action_action">Продолжить</string>
 
     <string name="omnix_error_not_understood_title">Не расслышал.</string>
-    <string name="omnix_error_not_understood_body">Скажите «Omni» и повторите.</string>
+    <string name="omnix_error_not_understood_body">Скажите «Окей, Омни» и повторите.</string>
 
     <string name="omnix_error_generic_title">Не получилось.</string>
     <string name="omnix_error_generic_body">Попробуйте ещё раз.</string>
@@ -151,7 +151,7 @@
     <string name="omnix_devices_title">Наушники</string>
     <string name="omnix_devices_clip_name">Omnix Buds</string>
     <string name="omnix_devices_battery">ЗАРЯД</string>
-    <string name="omnix_devices_wake_title">Слово «Omni»</string>
+    <string name="omnix_devices_wake_title">Фраза «Окей, Омни»</string>
     <string name="omnix_devices_wake_sub">Вызов без рук</string>
     <string name="omnix_devices_translate_title">Перевод в наушники</string>
     <string name="omnix_devices_translate_sub">Собеседник звучит на вашем языке</string>
@@ -160,9 +160,30 @@
 
     <!-- ===== Чат ===== -->
     <string name="omnix_chat_title">Omnix</string>
+    <string name="omnix_chat_new">Новый чат</string>
+    <string name="omnix_chat_history_open">История чатов</string>
+    <string name="omnix_chat_history_title">История</string>
+    <string name="omnix_chat_history_empty_title">Пока нет разговоров</string>
+    <string name="omnix_chat_history_empty_body">Здесь появятся прошлые чаты. Каждый запуск начинает новый.</string>
+    <string name="omnix_chat_untitled">Без названия</string>
+    <string name="omnix_chat_delete">Удалить чат</string>
+    <string name="omnix_chat_delete_confirm_title">Удалить этот чат?</string>
+    <string name="omnix_chat_voice_mode">Голосовой режим</string>
+    <string name="omnix_voice_starting">Включаю OMNIX…</string>
+    <string name="omnix_voice_idle">Нажмите на микрофон, чтобы говорить</string>
+    <string name="omnix_voice_mode_listening">Слушаю…</string>
+    <string name="omnix_voice_thinking">Думаю…</string>
+    <string name="omnix_voice_speaking">Отвечаю…</string>
+    <string name="omnix_voice_confirming">Скажите «да» или «нет»</string>
+    <string name="omnix_voice_mic_needed">Нужен доступ к микрофону</string>
+    <string name="omnix_voice_mic_grant">Разрешить микрофон</string>
+    <string name="omnix_voice_start_failed">Не получилось включить OMNIX</string>
+    <string name="omnix_voice_retry">Повторить</string>
+    <string name="omnix_voice_talk">Говорить</string>
+    <string name="omnix_voice_stop_listening">Перестать слушать</string>
+    <string name="omnix_voice_close">Выйти из голосового режима</string>
     <string name="omnix_chat_subtitle_on_device">Отвечает на устройстве</string>
     <string name="omnix_chat_subtitle_online">Отвечает на устройстве и в облаке</string>
-    <string name="omnix_chat_more">Ещё</string>
     <string name="omnix_chat_today">СЕГОДНЯ</string>
     <string name="omnix_chat_yesterday">ВЧЕРА</string>
     <string name="omnix_chat_from_cloud">Ответ из облака</string>
@@ -206,18 +227,11 @@
     <string name="omnix_me_section_settings">Настройки</string>
     <string name="omnix_me_row_language">Язык</string>
     <string name="omnix_me_row_notifications">Уведомления</string>
-    <string name="omnix_me_glyph_language">Яз</string>
-    <string name="omnix_me_glyph_notifications">Ув</string>
     <string name="omnix_me_license_active">Лицензия активна</string>
+    <string name="omnix_me_no_name">Ваш профиль</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
-    <string name="omnix_me_row_voice">Голос и слово «Omni»</string>
+    <string name="omnix_me_row_voice">Голос и фраза «Окей, Омни»</string>
     <string name="omnix_me_row_memory">Память и приватность</string>
-    <string name="omnix_me_glyph_voice">Гл</string>
-    <string name="omnix_me_glyph_translator">Пр</string>
-    <string name="omnix_me_glyph_automations">Ав</string>
-    <string name="omnix_me_glyph_model">ИИ</string>
-    <string name="omnix_me_glyph_memory">Пм</string>
-    <string name="omnix_me_glyph_appearance">Вд</string>
     <string name="omnix_me_model_ready">Готова</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Оформление</string>
@@ -227,7 +241,7 @@
     <string name="omnix_voice_tone">Тембр</string>
     <string name="omnix_voice_feedback">Голосовые ответы</string>
     <string name="omnix_voice_listening">Прослушивание</string>
-    <string name="omnix_voice_listening_body">OMNIX ждёт слово «Omni» в фоне.</string>
+    <string name="omnix_voice_listening_body">OMNIX ждёт слово «Окей, Омни» в фоне.</string>
     <string name="omnix_voice_headset_only">Только с подключённым Clip</string>
     <string name="omnix_voice_headset_only_body">Экономит батарею: OMNIX слушает только через Clip.</string>
     <string name="omnix_voice_sensitivity">Чувствительность</string>
@@ -235,7 +249,7 @@
     <string name="omnix_voice_background_body">Разрешите OMNIX работать при выключенном экране.</string>
     <string name="omnix_voice_background_action">Разрешить</string>
     <string name="omnix_voice_automations">Автоматизации</string>
-    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Скажите: «Omni, когда подключится Clip — включи музыку».</string>
+    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Скажите: «Окей, Омни, когда подключится Clip — включи музыку».</string>
 
     <string name="omnix_privacy_title">Приватность</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
@@ -254,9 +268,20 @@
     <string name="omnix_ai_model_auto">Авто</string>
     <string name="omnix_ai_model_auto_body">Короткие простые ответы — на телефоне, остальное — в облаке OMNIX.</string>
     <string name="omnix_ai_model_on_device">На телефоне</string>
-    <string name="omnix_ai_model_on_device_body">Qwen 2.5 · 0.5B. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
+    <string name="omnix_ai_model_on_device_body">%1$s. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
     <string name="omnix_ai_model_cloud">Облако OMNIX</string>
     <string name="omnix_ai_model_cloud_body">Модель на сервере OMNIX: отвечает подробнее. Нужен интернет.</string>
+    <string name="omnix_admin_models_title">Тест моделей (админ)</string>
+    <string name="omnix_admin_models_body">Видно только вам. Выбранная модель отвечает на все запросы, под ответом подписано, кто ответил.</string>
+    <string name="omnix_admin_models_default">Как у всех</string>
+    <string name="omnix_admin_models_restart">Модель на телефоне сменится после перезапуска приложения. Если её ещё нет на телефоне, скачайте её на этом экране.</string>
+    <string name="omnix_admin_answer_phone">Телефон · %1$s</string>
+    <string name="omnix_admin_answer_cloud">Облако</string>
+    <string name="omnix_admin_wake_title">Тест фразы вызова (админ)</string>
+    <string name="omnix_admin_wake_body">Сравните на своём телефоне. Сменится при следующем запуске прослушивания.</string>
+    <string name="omnix_admin_wake_okay_omni">«Окей, Омни» — новый движок</string>
+    <string name="omnix_admin_wake_omni">«Омни» — новый движок</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — прежняя модель</string>
     <string name="omnix_ai_model_checking">Проверяю…</string>
     <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>
@@ -271,7 +296,7 @@
     <string name="omnix_ai_personality_body">Задайте тон и указания, которым следует OMNIX.</string>
 
     <string name="omnix_local_model_title">Локальная модель</string>
-    <string name="omnix_local_model_not_installed">Не скачана · 521 МБ</string>
+    <string name="omnix_local_model_not_installed">Не скачана · %1$s</string>
     <string name="omnix_local_model_not_installed_body">Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако.</string>
     <string name="omnix_local_model_download_now">Скачать сейчас</string>
     <string name="omnix_local_model_download_wifi">Скачать по Wi-Fi</string>
@@ -299,9 +324,9 @@
     <string name="omnix_setup_turn_on_title">Включите OMNIX</string>
     <string name="omnix_setup_turn_on_hint">Нажмите на логотип. Так OMNIX включается и выключается.</string>
     <string name="omnix_setup_on_title">OMNIX включён</string>
-    <string name="omnix_setup_try_hint">Скажите: «Omni, который час?»</string>
+    <string name="omnix_setup_try_hint">Скажите: «Окей, Омни, который час?»</string>
     <string name="omnix_setup_success">Получилось</string>
-    <string name="omnix_setup_success_body">Теперь просто говорите «Omni» — в наушниках или рядом с телефоном.</string>
+    <string name="omnix_setup_success_body">Теперь просто говорите «Окей, Омни» — в наушниках или рядом с телефоном.</string>
     <string name="omnix_setup_done">Готово</string>
     <string name="omnix_setup_skip">Пропустить</string>
     <string name="omnix_setup_connect_headphones">Подключить наушники</string>
@@ -313,7 +338,7 @@
     <string name="omnix_local_model_delete_redownload">Удалить и скачать заново</string>
     <string name="omnix_local_fallback_notice">Офлайн-модель недоступна (%1$s). Отвечаю из облака.</string>
     <string name="omnix_local_model_consent_title">Скачать локальную модель?</string>
-    <string name="omnix_local_model_consent_body">521 МБ. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
+    <string name="omnix_local_model_consent_body">%1$s. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
     <string name="omnix_local_model_later">Позже</string>
 
     <string name="omnix_language_title">Язык</string>
@@ -375,7 +400,6 @@
 
     <!-- Honest capability states (§3, §33) -->
     <string name="omnix_not_configured">Ещё не настроено</string>
-    <string name="omnix_chat_clear">Очистить</string>
     <!-- Human labels for continuous values (§42) -->
     <string name="omnix_level_lowest">Самая медленная</string>
     <string name="omnix_level_low">Медленнее</string>
@@ -388,7 +412,7 @@
     <string name="omnix_diagnostics_running">ТЕСТ %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">ЭКСПОРТ ОТЧЁТА</string>
     <string name="omnix_diagnostics_share_title">Отправить отчёт диагностики</string>
-    <string name="omnix_diag_wake_word">Слово «Omni»</string>
+    <string name="omnix_diag_wake_word">Фраза «Окей, Омни»</string>
     <string name="omnix_diag_mic">Микрофон</string>
     <string name="omnix_diag_stt">Распознавание речи</string>
     <string name="omnix_diag_local_ai">Локальный ИИ</string>
@@ -403,22 +427,24 @@
     <string name="omnix_diag_battery">Батарея</string>
 
     <!-- In-app update (staging self-update) -->
-    <string name="omnix_update_available_title">Доступно обновление</string>
-    <string name="omnix_update_available_body">Новая сборка OMNIX готова: %1$d. Скачать и установить?</string>
+    <string name="omnix_update_available_title">Новая версия OMNIX</string>
+    <string name="omnix_update_available_body">Исправления и улучшения. Чаты, память и настройки сохранятся.</string>
     <string name="omnix_update_sources_hint">Для установки разрешите «Установку из неизвестных источников» для OMNIX — система откроет нужный экран.</string>
     <string name="omnix_update_action_update">Обновить</string>
     <string name="omnix_update_action_later">Позже</string>
-    <string name="omnix_update_downloading_title">Загрузка обновления</string>
-    <string name="omnix_update_downloading_body">Сборка %1$d загружается. Можно продолжать пользоваться приложением.</string>
-    <string name="omnix_update_progress_caption">Загружено %1$s из %2$s · %3$s</string>
+    <string name="omnix_update_downloading_title">Скачиваю обновление</string>
+    <string name="omnix_update_downloading_body">Можно пользоваться OMNIX — загрузка идёт в фоне.</string>
+    <string name="omnix_update_progress_caption">%1$s из %2$s</string>
     <string name="omnix_update_progress_no_total">Загружено %1$s</string>
     <string name="omnix_update_paused_body">Загрузка приостановлена — ждёт сеть или Wi-Fi.</string>
     <string name="omnix_update_unit_mb">МБ</string>
     <string name="omnix_update_action_hide">Скрыть</string>
-    <string name="omnix_update_ready_title">Обновление загружено</string>
-    <string name="omnix_update_ready_body">Сборка %1$d готова к установке.</string>
+    <string name="omnix_update_ready_title">Обновление готово</string>
+    <string name="omnix_update_ready_body">Чаты, память и настройки сохранятся.</string>
+    <string name="omnix_update_version_only">Версия %1$d</string>
+    <string name="omnix_update_version_chip">Версия %1$d · %2$s</string>
     <string name="omnix_update_action_install">Установить</string>
-    <string name="omnix_update_failed_title">Не удалось обновить</string>
+    <string name="omnix_update_failed_title">Не получилось скачать</string>
     <string name="omnix_update_failed_body">Не удалось загрузить сборку %1$d. Проверьте соединение и попробуйте ещё раз.</string>
     <string name="omnix_update_action_retry">Повторить</string>
     <string name="omnix_update_download_title">OMNIX: обновление</string>
@@ -482,6 +508,19 @@
     <string name="omnix_privacy_allowed_apps">Разрешённые приложения</string>
     <string name="omnix_privacy_allowed_empty">Явно не разрешено ничего</string>
     <string name="omnix_privacy_package_hint">Пакет приложения, например com.example.app</string>
+    <string name="omnix_privacy_advanced">Дополнительно</string>
+    <string name="omnix_privacy_advanced_body">Подтверждения, доверенные контакты, чтение экрана, факты и сценарии</string>
+    <string name="omnix_privacy_advanced_hide">Нажмите, чтобы скрыть</string>
+    <string name="omnix_fact_name">Имя</string>
+    <string name="omnix_fact_city">Город</string>
+    <string name="omnix_fact_car">Машина</string>
+    <string name="omnix_fact_wishlist">Хочет</string>
+    <string name="omnix_fact_occupation">Работа</string>
+    <string name="omnix_fact_preference">Нравится</string>
+    <string name="omnix_fact_mother">Мама</string>
+    <string name="omnix_fact_father">Папа</string>
+    <string name="omnix_fact_wife">Жена</string>
+    <string name="omnix_fact_husband">Муж</string>
     <string name="omnix_privacy_section_memory">Что помнит OMNIX</string>
     <string name="omnix_privacy_memories_hint">Воспоминания, которые используются в ответах, когда уместны</string>
     <string name="omnix_privacy_memories_empty">Пока ничего не запомнено</string>
@@ -497,8 +536,8 @@
     <string name="omnix_memory_type_episodic">Событие</string>
     <string name="omnix_memory_type_procedural">Сценарий</string>
     <string name="omnix_memory_type_other">Воспоминание</string>
-    <string name="omnix_voice_wake_word">Ключевое слово «Omni»</string>
-    <string name="omnix_voice_wake_word_body">Откликаться на слово «Omni» — выключите, если прослушивание не нужно</string>
+    <string name="omnix_voice_wake_word">Фраза «Окей, Омни»</string>
+    <string name="omnix_voice_wake_word_body">Откликаться на «Окей, Омни» — выключите, если прослушивание не нужно</string>
     <string name="omnix_devices_on_this_phone">На этом телефоне</string>
     <string name="omnix_capability_bluetooth">Bluetooth</string>
     <string name="omnix_capability_wifi">Wi-Fi</string>
