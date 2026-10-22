@@ -65,7 +65,8 @@ class ChatComposerInputTest {
                     onDeleteConversation = {},
                     onAllowCloud = {},
                     onKeepLocal = {},
-                    onToggleDictation = {}
+                    onToggleDictation = {},
+                    onOpenVoiceMode = {}
                 )
             }
         }
