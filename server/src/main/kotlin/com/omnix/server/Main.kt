@@ -329,6 +329,10 @@ object ServerBootstrap {
             metrics = metrics
         ).also { it.start() }
 
+        // Тест моделей админом (ADMIN_ACCOUNT_IDS): выбор провайдера и подпись
+        // модели только для этих аккаунтов.
+        val adminAccess = com.omnix.server.admin.AdminModelAccess(config.adminAccountIds, config.providers)
+
         val router = AiRouter(
             providerManager = providerManager,
             usageRepository = usageRepository,
@@ -339,7 +343,8 @@ object ServerBootstrap {
             logger = logger,
             metrics = metrics,
             // Дневные квоты тарифа поверх Postgres (authoritative подсчёт).
-            planQuotaGate = PlanQuotaGate(usageRepository)
+            planQuotaGate = PlanQuotaGate(usageRepository),
+            adminAccess = adminAccess
         )
 
         val licenseCrypto = LicenseCrypto(licenseConfig.codePepper)
@@ -434,7 +439,8 @@ object ServerBootstrap {
             validation = config.validation,
             logger = logger,
             json = json,
-            clipDevices = clipDevices
+            clipDevices = clipDevices,
+            adminAccess = adminAccess
         )
 
         // CR-15: health-лямбда и metrics-лямбда вынесены в явные функции для

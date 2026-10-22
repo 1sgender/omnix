@@ -1,5 +1,6 @@
 package com.omnix.server.http
 
+import com.omnix.server.admin.AdminModelAccess
 import com.omnix.server.api.ApiErrorCode
 import com.omnix.server.api.BillingCheckoutRequest
 import com.omnix.server.api.BillingCheckoutResponse
@@ -63,7 +64,9 @@ class LicenseBillingHttpHandler(
      * Репозиторий Clip для soft-привязки в validate-ответе.
      * null = не подключён (юнит-тесты) → поле clip=null (unknown).
      */
-    private val clipDevices: JdbcClipDeviceRepository? = null
+    private val clipDevices: JdbcClipDeviceRepository? = null,
+    /** Тест моделей админом: validate сообщает админу, какие модели доступны. */
+    private val adminAccess: AdminModelAccess? = null
 ) {
     /**
      * Admin-сессии Control Plane для issue/revoke (см. authenticate).
@@ -274,7 +277,9 @@ class LicenseBillingHttpHandler(
                             billingStatus = result.billingStatus.name,
                             requestId = requestId,
                             entitlements = entitlements,
-                            clip = clip
+                            clip = clip,
+                            admin = adminAccess?.isAdmin(accountId) == true,
+                            adminModels = adminAccess?.takeIf { it.isAdmin(accountId) }?.models()
                         )
                     ),
                     headers = mapOf("Cache-Control" to "no-store")

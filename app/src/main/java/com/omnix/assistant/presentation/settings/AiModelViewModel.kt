@@ -7,6 +7,9 @@ import com.omnix.assistant.agent.decision.AiModelActivator
 import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelState
+import com.omnix.assistant.core.admin.AdminModelPin
+import com.omnix.assistant.core.admin.AdminModelState
+import com.omnix.assistant.core.admin.AdminModelStore
 import com.omnix.assistant.core.network.ServerHealthProbe
 import com.omnix.assistant.data.preferences.AiModelChoiceStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +29,8 @@ import javax.inject.Inject
 class AiModelViewModel @Inject constructor(
     private val store: AiModelChoiceStore,
     private val localModelManager: LocalModelManager,
-    private val serverHealth: ServerHealthProbe
+    private val serverHealth: ServerHealthProbe,
+    private val adminModels: AdminModelStore
 ) : ViewModel() {
 
     val choice: StateFlow<AiModelChoice> = store.choice
@@ -61,6 +65,11 @@ class AiModelViewModel @Inject constructor(
             _applying.value = null
         }
     }
+
+    /** Тест моделей: меню видно только админу (флаг из validate лицензии). */
+    val admin: StateFlow<AdminModelState> = adminModels.state
+
+    fun pinAdminModel(pin: AdminModelPin) = adminModels.setPin(pin)
 
     fun dismissFailure() {
         _failure.value = null

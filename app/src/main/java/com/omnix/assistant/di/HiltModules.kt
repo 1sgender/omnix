@@ -148,6 +148,12 @@ abstract class SecurityAndNetworkBindingModule {
 
     @Binds
     @Singleton
+    abstract fun bindAdminModelTesting(
+        impl: com.omnix.assistant.core.admin.AdminModelStore
+    ): com.omnix.assistant.core.admin.AdminModelTesting
+
+    @Binds
+    @Singleton
     abstract fun bindNetworkMonitor(impl: LiveNetworkMonitor): NetworkMonitor
 
     @Binds

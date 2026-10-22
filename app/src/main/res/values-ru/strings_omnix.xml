@@ -271,6 +271,12 @@
     <string name="omnix_ai_model_on_device_body">%1$s. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
     <string name="omnix_ai_model_cloud">Облако OMNIX</string>
     <string name="omnix_ai_model_cloud_body">Модель на сервере OMNIX: отвечает подробнее. Нужен интернет.</string>
+    <string name="omnix_admin_models_title">Тест моделей (админ)</string>
+    <string name="omnix_admin_models_body">Видно только вам. Выбранная модель отвечает на все запросы, под ответом подписано, кто ответил.</string>
+    <string name="omnix_admin_models_default">Как у всех</string>
+    <string name="omnix_admin_models_restart">Модель на телефоне сменится после перезапуска приложения. Если её ещё нет на телефоне, скачайте её на этом экране.</string>
+    <string name="omnix_admin_answer_phone">Телефон · %1$s</string>
+    <string name="omnix_admin_answer_cloud">Облако</string>
     <string name="omnix_ai_model_checking">Проверяю…</string>
     <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>

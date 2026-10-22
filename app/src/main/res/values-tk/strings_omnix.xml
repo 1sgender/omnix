@@ -272,6 +272,12 @@
     <string name="omnix_ai_model_on_device_body">%1$s. Internetsiz işleýär, soraglar telefondan çykmaýar. Bulutdan ýönekeý jogap berýär.</string>
     <string name="omnix_ai_model_cloud">OMNIX buluty</string>
     <string name="omnix_ai_model_cloud_body">OMNIX serwerindäki model: has doly jogap berýär. Internet gerek.</string>
+    <string name="omnix_admin_models_title">Modelleri synag (admin)</string>
+    <string name="omnix_admin_models_body">Diňe size görünýär. Saýlanan model ähli soraglara jogap berýär, jogabyň aşagynda kimiň jogap berendigi ýazylýar.</string>
+    <string name="omnix_admin_models_default">Hemmeler ýaly</string>
+    <string name="omnix_admin_models_restart">Telefondaky model programma täzeden açylandan soň üýtgär. Ol entek telefonda ýok bolsa, şu ekranda ýükläp alyň.</string>
+    <string name="omnix_admin_answer_phone">Telefon · %1$s</string>
+    <string name="omnix_admin_answer_cloud">Bulut</string>
     <string name="omnix_ai_model_checking">Barlaýaryn…</string>
     <string name="omnix_ai_model_downloading">Ýüklenýär: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Ýüklenmedik — düwme aşakda</string>

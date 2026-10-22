@@ -2,6 +2,7 @@ package com.omnix.assistant.agent.localai
 
 import android.app.ActivityManager
 import android.content.Context
+import com.omnix.assistant.core.admin.AdminModelStore
 
 /**
  * Модель на телефоне по объёму памяти: 1.5B на телефонах с ~8 ГБ и больше,
@@ -11,6 +12,8 @@ import android.content.Context
 object LocalModelSelection {
 
     fun forDevice(context: Context): LocalModelSpec {
+        // Админ тестирует модели: закреплённая модель вместо выбора по памяти.
+        AdminModelStore.pinnedPhoneSpec(context)?.let { return it }
         val activityManager = context.getSystemService(ActivityManager::class.java)
             ?: return LocalModelSpec.QWEN2_5_0_5B_INSTRUCT_Q8
         val info = ActivityManager.MemoryInfo()

@@ -19,7 +19,13 @@ import kotlinx.coroutines.withTimeout
 data class ProviderRequirements(
     val requiresWeb: Boolean = false,
     val requiresToolCalling: Boolean = false,
-    val costClass: com.omnix.server.cost.CostClass = com.omnix.server.cost.CostClass.MEDIUM
+    val costClass: com.omnix.server.cost.CostClass = com.omnix.server.cost.CostClass.MEDIUM,
+    /**
+     * Тест моделей админом: только этот провайдер, без fallback на другие —
+     * иначе ответ «модели X» мог бы прийти от модели Y. Политика отбора
+     * по-прежнему решает, доступен ли он (выключен/нездоров → нет кандидатов).
+     */
+    val pinnedProvider: ProviderId? = null
 )
 
 /**
@@ -145,7 +151,10 @@ class ProviderManager(
         request: ProviderRequest,
         requirements: ProviderRequirements
     ): ManagerOutcome {
-        val candidates = selectionPolicy.select(providers, requirements)
+        val candidates = selectionPolicy.select(providers, requirements).let { selected ->
+            val pinned = requirements.pinnedProvider
+            if (pinned == null) selected else selected.filter { it.id == pinned }
+        }
 
         if (candidates.isEmpty()) {
             logger.warn(
