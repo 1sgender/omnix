@@ -249,14 +249,16 @@ class ChatViewModel @Inject constructor(
                     is SpeechRecognitionEvent.PartialResult -> {
                         // CR-17: голосовой промежуточный текст тоже идёт через debounce
                         // классификацию (тот же pipeline, что и клавиатурный ввод).
-                        if (_uiState.value.inputText != event.partialText) {
-                            _uiState.update { it.copy(inputText = event.partialText) }
-                            _inputClassificationRequests.tryEmit(event.partialText)
+                        val text = withDictationPrefix(event.partialText)
+                        if (_uiState.value.inputText != text) {
+                            _uiState.update { it.copy(inputText = text) }
+                            _inputClassificationRequests.tryEmit(text)
                         }
                     }
                     is SpeechRecognitionEvent.FinalResult -> {
-                        _uiState.update { it.copy(inputText = event.recognizedText, isVoiceDictating = false) }
-                        _inputClassificationRequests.tryEmit(event.recognizedText)
+                        val text = withDictationPrefix(event.recognizedText)
+                        _uiState.update { it.copy(inputText = text, isVoiceDictating = false) }
+                        _inputClassificationRequests.tryEmit(text)
                     }
                     is SpeechRecognitionEvent.RecognitionError -> {
                         _uiState.update { it.copy(isVoiceDictating = false) }
@@ -554,11 +556,24 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Текст, который был в поле до нажатия микрофона: диктовка дописывает
+     * к нему, а не стирает набранное (как в ChatGPT).
+     */
+    private var dictationPrefix = ""
+
+    private fun withDictationPrefix(spoken: String): String = when {
+        dictationPrefix.isBlank() -> spoken
+        spoken.isBlank() -> dictationPrefix
+        else -> dictationPrefix.trimEnd() + " " + spoken.trimStart()
+    }
+
     fun toggleVoiceDictation() {
         if (_uiState.value.isVoiceDictating) {
             speechRecognizerManager.stopListening()
             _uiState.update { it.copy(isVoiceDictating = false) }
         } else {
+            dictationPrefix = _uiState.value.inputText
             _uiState.update { it.copy(isVoiceDictating = true) }
             speechRecognizerManager.startListening()
         }
