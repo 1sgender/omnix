@@ -77,6 +77,8 @@ data class ChatUiState(
     val pendingCloudConsent: PendingCloudConsentUi? = null,
     /** id ответов ассистента из облачной модели: под ними «Ответ из облака». */
     val cloudMessageIds: Set<Long> = emptySet(),
+    /** Тест моделей (только админ): id ответа → кто ответил. */
+    val adminLabels: Map<Long, String> = emptyMap(),
     /**
      * Ответ, который нельзя хранить в истории (подтверждённое чтение экрана):
      * виден в ленте до следующего сообщения. Раньше его только озвучивали.
@@ -173,6 +175,11 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             answerOriginStore.cloudMessageIds.collectLatest { ids ->
                 _uiState.update { it.copy(cloudMessageIds = ids) }
+            }
+        }
+        viewModelScope.launch {
+            answerOriginStore.adminLabels.collectLatest { labels ->
+                _uiState.update { it.copy(adminLabels = labels) }
             }
         }
         viewModelScope.launch {

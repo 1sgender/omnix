@@ -2,6 +2,7 @@ package com.omnix.assistant.data.preferences
 
 import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.agent.decision.AiModelChoiceSource
+import com.omnix.assistant.core.admin.AdminModelTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,7 +23,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class AiModelChoiceStore @Inject constructor(
-    private val settings: SettingsDataStore
+    private val settings: SettingsDataStore,
+    private val adminModels: AdminModelTesting
 ) : AiModelChoiceSource {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -31,7 +33,8 @@ class AiModelChoiceStore @Inject constructor(
         .map(AiModelChoice::fromStorageKey)
         .stateIn(scope, SharingStarted.Eagerly, AiModelChoice.AUTO)
 
-    override fun current(): AiModelChoice = choice.value
+    /** Модель, закреплённая админом для теста, требует своего маршрута. */
+    override fun current(): AiModelChoice = adminModels.pin().routing ?: choice.value
 
     suspend fun set(choice: AiModelChoice) {
         settings.setAiModelChoice(choice.storageKey)

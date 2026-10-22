@@ -1,5 +1,9 @@
 package com.omnix.assistant.domain.chat
 
+import com.omnix.assistant.agent.decision.ExecutionType
+import com.omnix.assistant.core.admin.AdminCloudModel
+import com.omnix.assistant.core.admin.AdminModelPin
+import com.omnix.assistant.core.admin.AdminModelTesting
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -59,5 +63,32 @@ class ChatAnswerOriginStoreTest {
             listOf(emptySet<Long>(), setOf(42L), setOf(42L, 43L)),
             emissions
         )
+    }
+
+    @Test
+    fun `admin labels are recorded only when testing names the answer`() = runTest {
+        val admin = object : AdminModelTesting {
+            override fun pin(): AdminModelPin = AdminModelPin.None
+            override fun onLicenseChecked(adminCloudModels: List<AdminCloudModel>?) = Unit
+            override fun onCloudAnswer(provider: String?, model: String?) = Unit
+            override fun answerLabel(executionType: ExecutionType?): String? =
+                if (executionType == ExecutionType.CLOUD_AI) "Groq · m" else null
+        }
+        val store = ChatAnswerOriginStore(admin)
+
+        store.markAdminLabel(7L, ExecutionType.CLOUD_AI)
+        store.markAdminLabel(8L, ExecutionType.DEVICE_TOOL)
+        store.markAdminLabel(0L, ExecutionType.CLOUD_AI)
+
+        assertEquals(mapOf(7L to "Groq · m"), store.adminLabels.first())
+    }
+
+    @Test
+    fun `no admin labels for ordinary users`() = runTest {
+        val store = ChatAnswerOriginStore()
+
+        store.markAdminLabel(7L, ExecutionType.CLOUD_AI)
+
+        assertTrue(store.adminLabels.first().isEmpty())
     }
 }

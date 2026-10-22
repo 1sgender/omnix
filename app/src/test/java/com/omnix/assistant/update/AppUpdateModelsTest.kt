@@ -72,6 +72,18 @@ class AppUpdateModelsTest {
         assertEquals("https://x/y.apk", parsed.url)
         assertEquals("abc1234", parsed.sha)
         assertFalse(parsed.stale)
+        // Сервер без «что нового» — пустой список, экран показывает общую строку.
+        assertTrue(parsed.notes.isEmpty())
+    }
+
+    @Test
+    fun `what's new lines are read when the server sends them`() {
+        val parsed = parseAppLatest(
+            """{"channel":"staging","versionCode":312,"url":"https://x/y.apk","sizeBytes":1,
+               |"notes":["Новый чат при каждом запуске","Голосовой режим"]}""".trimMargin()
+        )!!
+
+        assertEquals(listOf("Новый чат при каждом запуске", "Голосовой режим"), parsed.notes)
     }
 
     @Test
