@@ -347,8 +347,9 @@ class OmnixApiClient @Inject constructor(
             } finally {
                 cloudMonitor.requestFinished()
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Log.e(TAG, "stt failure | requestId=$requestId | type=${e.javaClass.simpleName}")
             Resource.Error(e, "Не удалось распознать речь.")
         }
