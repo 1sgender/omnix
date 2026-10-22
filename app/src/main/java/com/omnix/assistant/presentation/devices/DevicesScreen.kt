@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.agent.capability.CapabilityStatus
 import com.omnix.assistant.presentation.components.OmnixDivider
 import com.omnix.assistant.presentation.components.OmnixPanel
@@ -75,7 +76,8 @@ fun DevicesScreen(
     onTranslatorToHeadphonesChange: (Boolean) -> Unit = {},
     onFind: () -> Unit = {},
     onOpenSystemBluetooth: () -> Unit = {},
-    onRequestPermissions: (List<String>) -> Unit = {}
+    onRequestPermissions: (List<String>) -> Unit = {},
+    onBack: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -83,11 +85,11 @@ fun DevicesScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
     ) {
-        Text(
-            text = stringResource(R.string.omnix_devices_title),
-            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 20.sp),
-            color = OmnixTheme.colors.textPrimary,
-            modifier = Modifier.padding(top = 24.dp)
+        // Подэкран «Я» и плашки на «Главной» (с 2026-10-21 не вкладка): со стрелкой назад.
+        OmnixScreenHeader(
+            title = stringResource(R.string.omnix_devices_title),
+            onBack = onBack,
+            modifier = Modifier.padding(top = 8.dp)
         )
 
         StatusCard(clip = clip, modifier = Modifier.padding(top = 16.dp))
@@ -122,7 +124,10 @@ fun DevicesScreen(
             )
         }
 
-        if (capabilities.isNotEmpty()) {
+        // Только то, что ждёт действия: «Доступно» человеку ничего не говорит
+        // (замечание владельца 2026-10-21), а серое «нельзя» — тем более.
+        val needAction = capabilities.filter { capabilityDot(it.status) == CapabilityDotToken.ATTENTION }
+        if (needAction.isNotEmpty()) {
             Spacer(Modifier.height(32.dp))
             Text(
                 text = stringResource(R.string.omnix_devices_on_this_phone),
@@ -131,7 +136,7 @@ fun DevicesScreen(
             )
             Spacer(Modifier.height(10.dp))
             OmnixPanel {
-                capabilities.forEachIndexed { index, group ->
+                needAction.forEachIndexed { index, group ->
                     if (index > 0) OmnixDivider()
                     CapabilityGroupRow(group = group, onRequestPermissions = onRequestPermissions)
                 }

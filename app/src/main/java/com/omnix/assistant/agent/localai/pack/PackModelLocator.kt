@@ -42,6 +42,9 @@ class AssetManagerPackModelLocator @Inject constructor(
     override suspend fun installFromPackIfPresent(dest: File, expectedBytes: Long): Boolean {
         // Быстрый путь: файл уже на месте (прошлая установка или докачка).
         if (dest.isFile && dest.length() == expectedBytes) return true
+        // Пак везёт только 0.5B. Телефону, которому выбрана другая модель
+        // (1.5B при ~8 ГБ RAM), копировать её бессмысленно — она качается.
+        if (dest.name != PACK_MODEL_PATH) return false
         // Проба пака: в sideload-APK open() бросает IOException — это норма.
         try {
             context.assets.open(PACK_MODEL_PATH).use { /* probe only */ }

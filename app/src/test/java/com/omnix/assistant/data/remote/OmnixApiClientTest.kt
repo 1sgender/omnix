@@ -1,5 +1,9 @@
 package com.omnix.assistant.data.remote
 
+import com.omnix.assistant.agent.decision.ExecutionType
+import com.omnix.assistant.core.admin.AdminCloudModel
+import com.omnix.assistant.core.admin.AdminModelPin
+import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.ResponseBodyTooLargeException
 import com.omnix.assistant.core.result.Resource
@@ -98,6 +102,57 @@ class OmnixApiClientTest {
         assertTrue(body.contains("\"requiresWeb\":true"))
         assertTrue(body.contains("\"systemContext\":\"safe context\""))
         assertFalse(body.contains("modelOverride"))
+    }
+
+    /** Тест моделей: закреплённый админом провайдер уходит на сервер, ответ называет модель. */
+    @Test
+    fun `admin pin is sent and the answering model is reported`() = runBlocking {
+        val reported = mutableListOf<Pair<String?, String?>>()
+        val admin = object : AdminModelTesting {
+            override fun pin(): AdminModelPin = AdminModelPin.Cloud("GEMINI")
+            override fun onLicenseChecked(adminCloudModels: List<AdminCloudModel>?) = Unit
+            override fun onCloudAnswer(provider: String?, model: String?) {
+                reported += provider to model
+            }
+            override fun answerLabel(executionType: ExecutionType?): String? = null
+        }
+        val adminClient = OmnixApiClient(
+            OkHttpClient.Builder()
+                .addInterceptor { chain ->
+                    val original = chain.request()
+                    chain.proceed(original.newBuilder().url(server.url(original.url.encodedPath)).build())
+                }
+                .build(),
+            security,
+            Json { ignoreUnknownKeys = true; isLenient = false },
+            cloudMonitor,
+            admin
+        )
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"success":true,"text":"ok","executionType":"CLOUD_AI","requestId":"r",""" +
+                    """"provider":"GEMINI","model":"gemini-2.5-flash"}"""
+            )
+        )
+
+        val result = adminClient.execute("вопрос", "CHAT", "NORMAL", requiresWeb = false)
+
+        assertEquals(Resource.Success("ok"), result)
+        assertTrue(server.takeRequest().body.readUtf8().contains("\"adminProvider\":\"GEMINI\""))
+        assertEquals(listOf<Pair<String?, String?>>("GEMINI" to "gemini-2.5-flash"), reported)
+    }
+
+    @Test
+    fun `ordinary client sends no admin provider`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"success":true,"text":"ok","executionType":"CLOUD_AI","requestId":"r"}"""
+            )
+        )
+
+        client.execute("вопрос", "CHAT", "NORMAL", requiresWeb = false)
+
+        assertFalse(server.takeRequest().body.readUtf8().contains("adminProvider"))
     }
 
     /** CR-03: при передаче истории диалога она попадает в JSON как массив сообщений. */

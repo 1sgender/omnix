@@ -84,6 +84,34 @@ class ProviderManagerTest {
         assertEquals("fallback не нужен", 0, gemini.calls.get())
     }
 
+    /** Тест моделей админом: закреплён Gemini — отвечает Gemini, хотя Groq выше по приоритету. */
+    @Test
+    fun `admin pinned provider answers instead of the priority one`() = runBlocking {
+        val groq = FakeAiProvider.ok(ProviderId.GROQ, "от groq")
+        val gemini = FakeAiProvider.ok(ProviderId.GEMINI, "от gemini")
+
+        val outcome = manager(listOf(groq, gemini))
+            .execute(request(), ProviderRequirements(pinnedProvider = ProviderId.GEMINI))
+
+        assertTrue(outcome is ManagerOutcome.Success)
+        assertEquals(ProviderId.GEMINI, (outcome as ManagerOutcome.Success).providerId)
+        assertEquals(0, groq.calls.get())
+    }
+
+    /** Закреплённый провайдер упал — без fallback: ответ «модели X» не придёт от модели Y. */
+    @Test
+    fun `admin pinned provider never falls back to another`() = runBlocking {
+        val groq = FakeAiProvider.ok(ProviderId.GROQ, "от groq")
+        val gemini = FakeAiProvider.failing(ProviderId.GEMINI, ProviderFailureKind.SERVER_ERROR, 500)
+
+        val outcome = manager(listOf(groq, gemini))
+            .execute(request(), ProviderRequirements(pinnedProvider = ProviderId.GEMINI))
+
+        assertTrue(outcome is ManagerOutcome.Failure)
+        assertEquals(0, groq.calls.get())
+        assertEquals(1, gemini.calls.get())
+    }
+
     /** Primary недоступен → идём во вторичный. */
     @Test
     fun `primary failure falls back to secondary`() = runBlocking {

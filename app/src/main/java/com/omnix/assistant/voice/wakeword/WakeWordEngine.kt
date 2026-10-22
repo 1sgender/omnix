@@ -1,5 +1,7 @@
 package com.omnix.assistant.voice.wakeword
 
+import com.omnix.assistant.voice.wakeword.phrase.WakeEngineKind
+import com.omnix.assistant.voice.wakeword.phrase.WakePhrase
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
@@ -38,6 +40,13 @@ data class WakeWordConfig(
     val nearMissCapture: Boolean = false,
     /** Минимальный скор кадра для near-miss захвата (ниже — чистый шум). */
     val nearMissMinScore: Float = 0.25f,
+    /**
+     * Чем слушать (2026-10-22): фраза на sherpa-onnx по умолчанию; прежняя
+     * модель «Omni» — только для сравнения админом. Поля выше (порог, шумовой
+     * буст, near-miss, пути моделей) относятся к прежней модели.
+     */
+    val engine: WakeEngineKind = WakeEngineKind.PHRASE,
+    val phrase: WakePhrase = WakePhrase.OKAY_OMNI,
 )
 
 /**

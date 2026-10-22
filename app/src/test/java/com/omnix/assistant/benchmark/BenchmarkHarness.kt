@@ -338,7 +338,7 @@ object BenchmarkHarness {
             localAi = localExecutor,
             cloudAi = cloud,
             workingMemory = workingMemory,
-            config = ExecutionDecisionConfig()
+            config = ExecutionDecisionConfig(autoPrefersCloud = false)
         )
 
         return Rig(engine, runtime, localExecutor, cloud, agent, tools)

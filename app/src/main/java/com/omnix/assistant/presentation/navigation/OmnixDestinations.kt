@@ -3,14 +3,14 @@ package com.omnix.assistant.presentation.navigation
 /**
  * The OMNIX destination map (§20, §44, §66).
  *
- * Four primary tabs (design v2 canvas):
+ * Three primary tabs (owner decision 2026-10-21):
  *
  * ```
- * Home  |  Chat  |  Headphones  |  Me
+ * Home  |  Chat  |  Me
  * ```
  *
- * Everything else — Translator, Privacy, Automations, the settings pages,
- * the first-run flow — is reached from one of those four. Secondary sections
+ * Everything else — Headphones, Translator, Privacy, Automations, the
+ * settings pages, the first-run flow — is reached from one of those three. Secondary sections
  * never compete with the Core for attention (§45).
  */
 sealed class OmnixDestination(val route: String) {
@@ -23,6 +23,12 @@ sealed class OmnixDestination(val route: String) {
 
     /** Secondary: text conversation, deliberately not the main surface (§41). */
     data object Chat : OmnixDestination("omnix/chat")
+
+    /**
+     * Secondary: voice mode, full screen with its own controls and no tab bar
+     * (owner mock 2026-10-21). Opened from the chat composer.
+     */
+    data object Voice : OmnixDestination("omnix/voice")
 
     /** Secondary: translation as a mode, not a separate app (§43). */
     data object Translator : OmnixDestination("omnix/translator")
@@ -55,16 +61,16 @@ sealed class OmnixDestination(val route: String) {
 
     companion object {
         /**
-         * The four destinations that appear in the navigation bar (design
-         * v2, 2026-10-13): Home · Chat · Headphones · Me. The headphones are
-         * the product, so their screen is a tab, not a settings row.
+         * The three destinations in the navigation bar (owner decision
+         * 2026-10-21): Home · Chat · Me. Headphones moved to a Me row; their
+         * status stays on Home, and the Home pill opens the same screen.
          *
          * A getter, not a stored value: the objects are subclasses of this
          * sealed class, so a list built during class initialisation can pick
          * up a still-null object when one of them is the first to be touched.
          */
         val primary: List<OmnixDestination>
-            get() = listOf(Home, Chat, Devices, Me)
+            get() = listOf(Home, Chat, Me)
     }
 }
 
@@ -80,9 +86,10 @@ sealed class OmnixDestination(val route: String) {
 fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Home.route,
     OmnixDestination.Translator.route -> OmnixDestination.Home
-    OmnixDestination.Chat.route -> OmnixDestination.Chat
-    OmnixDestination.Devices.route -> OmnixDestination.Devices
+    OmnixDestination.Chat.route,
+    OmnixDestination.Voice.route -> OmnixDestination.Chat
     OmnixDestination.Me.route,
+    OmnixDestination.Devices.route,
     OmnixDestination.Privacy.route,
     OmnixDestination.Automations.route -> OmnixDestination.Me
     else -> route

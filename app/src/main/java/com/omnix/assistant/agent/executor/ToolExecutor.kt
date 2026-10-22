@@ -290,7 +290,7 @@ class ToolExecutor @Inject constructor(
         // перепроверяем (тариф могли понизить между validate).
         if (planGate?.isToolAllowed(tool.toolId) == false) {
             ToolExecutionResult.failure(
-                summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план, сэр.",
+                summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план.",
                 error = ClientPlanGate.ERROR_PLAN_LIMIT
             )
         } else {
@@ -353,7 +353,7 @@ class ToolExecutor @Inject constructor(
         if (planGate?.isToolAllowed(tool.toolId) == false) {
             Log.i(TAG, "tool blocked by plan gate | tool=${tool.toolId}")
             return@withContext ToolExecutionResult.failure(
-                summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план, сэр.",
+                summary = "«${tool.name}» недоступен на вашем тарифе. Обновите план.",
                 error = ClientPlanGate.ERROR_PLAN_LIMIT
             )
         }
@@ -379,7 +379,7 @@ class ToolExecutor @Inject constructor(
                 // Если очередь переполнена или вызов уже в ней — честный отказ.
                 if (!enqueuePendingConfirmation(call, preflight.prompt)) {
                     return@withContext ToolExecutionResult.failure(
-                        summary = "Слишком много действий ожидают подтверждения. Сначала подтвердите или отмените предыдущие, сэр.",
+                        summary = "Слишком много действий ожидают подтверждения. Сначала подтвердите или отмените предыдущие.",
                         error = "CONFIRMATION_QUEUE_FULL"
                     )
                 }
@@ -418,7 +418,7 @@ class ToolExecutor @Inject constructor(
         //    подтверждения НЕ выполняется.
         if (!tokenValid) {
             return@withContext ToolExecutionResult.failure(
-                summary = "Действие не подтверждено: выполнение без валидного подтверждения запрещено, сэр.",
+                summary = "Действие не подтверждено: выполнение без валидного подтверждения запрещено.",
                 error = "CONFIRMATION_TOKEN_INVALID"
             )
         }

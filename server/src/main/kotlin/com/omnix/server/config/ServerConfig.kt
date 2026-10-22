@@ -179,6 +179,11 @@ data class ServerConfig(
     /** Persistent licensing/billing; null is accepted only by isolated legacy tests. */
     val licenseSubsystem: LicenseSubsystemConfig? = null,
     /**
+     * Аккаунты-админы для теста моделей (`ADMIN_ACCOUNT_IDS`, UUID через
+     * запятую). Пусто — админов нет. См. AdminModelAccess.
+     */
+    val adminAccountIds: Set<java.util.UUID> = emptySet(),
+    /**
      * Токены клиентов: token → clientId.
      * В проде заменяется на БД/Secret Manager (см. AuthService).
      */
@@ -430,6 +435,7 @@ data class ServerConfig(
                 ),
                 deployment = deployment,
                 licenseSubsystem = licenseSubsystem,
+                adminAccountIds = com.omnix.server.admin.AdminModelAccess.parseAccountIds(str("ADMIN_ACCOUNT_IDS")),
                 staticClientTokens = tokens
             )
         }

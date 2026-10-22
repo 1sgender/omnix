@@ -27,7 +27,7 @@ class ConversationContextTest {
         val resolution = resolver.resolve("напиши ему", context)
 
         assertTrue("Expected clarification, got $resolution", resolution is ReferenceResolution.NeedsClarification)
-        assertEquals("Кому именно, сэр?", (resolution as ReferenceResolution.NeedsClarification).question)
+        assertEquals("Кому именно?", (resolution as ReferenceResolution.NeedsClarification).question)
     }
 
     @Test

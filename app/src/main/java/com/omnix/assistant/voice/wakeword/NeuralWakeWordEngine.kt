@@ -14,6 +14,9 @@ import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.voice.wakeword.oww.ModelDigestMismatch
 import com.omnix.assistant.voice.wakeword.oww.OpenWakeWordPipeline
 import com.omnix.assistant.voice.wakeword.oww.OrtOwwSessions
+import com.omnix.assistant.voice.wakeword.phrase.PhraseFrameDetector
+import com.omnix.assistant.voice.wakeword.phrase.WakeEngineKind
+import com.omnix.assistant.voice.wakeword.phrase.WakePhrase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
@@ -38,8 +41,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Neural wake-word движок (§4 ТЗ): AudioRecord 16 кГц -> OpenWakeWordPipeline
+ * Neural wake-word движок (§4 ТЗ): AudioRecord 16 кГц -> [FrameDetector]
  * -> DetectionPolicy (+ NoiseAdaptiveThreshold, owner review 2026-09-26).
+ * Детектор по умолчанию — фраза «Окей, Омни» на sherpa-onnx
+ * ([PhraseFrameDetector]); прежняя модель «Omni» ([OwwFrameDetector])
+ * осталась для сравнения админом.
  *
  * Владение микрофоном: AudioRecord создаётся в [start] и освобождается в
  * [stop]. Оркестратор держит движок запущенным ТОЛЬКО в STANDBY — перед
@@ -72,6 +78,8 @@ class NeuralWakeWordEngine @Inject constructor(
         /** Ошибок чтения микрофона подряд до остановки (~1 с с паузами). */
         private const val MAX_READ_ERRORS_IN_ROW = 50
         private const val READ_ERROR_PAUSE_MS = 20L
+        /** Порог для фразы: детектор отдаёт скор 0 или 1. */
+        private const val PHRASE_THRESHOLD = 0.5f
     }
 
     // Любая ошибка движка (ONNX Runtime, нативная библиотека, AudioRecord)
@@ -109,15 +117,13 @@ class NeuralWakeWordEngine @Inject constructor(
     private val ring = AudioRingBuffer(RING_SAMPLES)
     private val metrics = WakeWordMetrics()
 
-    // Живут на уровне движка: переиспользуются между start/stop (owner
-    // review п.3). Создаются в ensureSessions (worker-поток), закрываются в
+    // Живёт на уровне движка: переиспользуется между start/stop (owner
+    // review п.3). Создаётся в ensureDetector (worker-поток), закрывается в
     // [destroy] (произвольный поток) — volatile-видимость обязательна.
     @Volatile
-    private var sessions: OrtOwwSessions? = null
+    private var detector: FrameDetector? = null
     @Volatile
-    private var pipeline: OpenWakeWordPipeline? = null
-    @Volatile
-    private var sessionAssetPaths: AssetPaths? = null
+    private var detectorKey: DetectorKey? = null
 
     /** Near-miss (owner review п.1): кольцо 2.5 с + рекордер, живут между запусками. */
     private val nearMissRing = AudioRingBuffer(
@@ -129,8 +135,10 @@ class NeuralWakeWordEngine @Inject constructor(
     @Volatile
     private var debugLogging = false
 
+    /** Что слушает текущий запуск: «Окей, Омни» или «Omni» прежней модели (для «Диагностики»). */
     @Volatile
-    private var activeWakeWord = "Omni"
+    var activeWakeWord = WakePhrase.OKAY_OMNI.displayName
+        private set
 
     /**
      * Почему движок последний раз остановился сам (ошибка или выключен в
@@ -195,10 +203,9 @@ class NeuralWakeWordEngine @Inject constructor(
         scope.launch {
             loopMutex.withLock {
                 if (running.get()) return@withLock
-                sessions?.close()
-                sessions = null
-                pipeline = null
-                sessionAssetPaths = null
+                detector?.close()
+                detector = null
+                detectorKey = null
             }
         }
     }
@@ -221,8 +228,14 @@ class NeuralWakeWordEngine @Inject constructor(
     /** Снапшот метрик для device-validation (§12 ТЗ). */
     fun metricsSnapshot(): WakeWordMetrics.Snapshot = metrics.snapshot()
 
-    /** Пути моделей — то, от чего зависят сессии (остальной конфиг сессий не меняет). */
-    private data class AssetPaths(val model: String, val mel: String, val embedding: String)
+    /** То, от чего зависит детектор (остальной конфиг его не меняет). */
+    private data class DetectorKey(
+        val engine: WakeEngineKind,
+        val phrase: WakePhrase,
+        val model: String,
+        val mel: String,
+        val embedding: String,
+    )
 
     private suspend fun runLoop(run: Int) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) !=
@@ -247,8 +260,8 @@ class NeuralWakeWordEngine @Inject constructor(
         }
         applyConfig(config)
 
-        val s = try {
-            ensureSessions(config)
+        val p = try {
+            ensureDetector(config)
         } catch (e: ModelDigestMismatch) {
             Log.e(TAG, "wakeword model digest mismatch", e)
             report(
@@ -280,7 +293,6 @@ class NeuralWakeWordEngine @Inject constructor(
             return
         }
 
-        val p = pipeline ?: OpenWakeWordPipeline(s, s, s).also { pipeline = it }
         val record = createAudioRecord()
         if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
             record?.release()
@@ -294,7 +306,7 @@ class NeuralWakeWordEngine @Inject constructor(
         // сменить комнату/устройство).
         val noise = NoiseAdaptiveThreshold()
         val dead = DeadSignalDetector()
-        val nearMiss = if (config.nearMissCapture) {
+        val nearMiss = if (config.nearMissCapture && config.engine == WakeEngineKind.LEGACY_OMNI) {
             (recorder ?: NearMissRecorder(config.nearMissMinScore).also { recorder = it })
         } else {
             null
@@ -365,10 +377,11 @@ class NeuralWakeWordEngine @Inject constructor(
                 if (result == null) continue
 
                 // Динамический порог: базовый + буст по SNR (owner review п.2b).
-                val threshold = if (config.noiseAdaptiveThreshold) {
+                // Фраза даёт скор 0 или 1 — поправка на шум ей не нужна.
+                val threshold = if (config.noiseAdaptiveThreshold && config.engine == WakeEngineKind.LEGACY_OMNI) {
                     noise.effectiveThreshold(config.threshold, rms)
                 } else {
-                    config.threshold
+                    baseThreshold
                 }
                 effectiveThreshold = threshold
                 val fired = policy.observe(result.score, threshold)
@@ -404,8 +417,8 @@ class NeuralWakeWordEngine @Inject constructor(
             } catch (_: Exception) {
             }
             record.release()
-            // Сессии НЕ закрываем (переиспользуются в следующем start);
-            // контекст пайплайна сбрасываем — без stale-фич после STT.
+            // Детектор НЕ закрываем (переиспользуется в следующем start);
+            // накопленный звук сбрасываем — без stale-фич после STT.
             p.reset()
             ring.clear()
             nearMissRing.clear()
@@ -414,29 +427,38 @@ class NeuralWakeWordEngine @Inject constructor(
     }
 
     private fun applyConfig(config: WakeWordConfig) {
-        baseThreshold = config.threshold
-        effectiveThreshold = config.threshold
-        policy.threshold = config.threshold
-        policy.patienceFrames = config.patienceFrames
+        val phrase = config.engine == WakeEngineKind.PHRASE
+        // Фраза: скор кадра 0/1, одного кадра достаточно.
+        val threshold = if (phrase) PHRASE_THRESHOLD else config.threshold
+        baseThreshold = threshold
+        effectiveThreshold = threshold
+        policy.threshold = threshold
+        policy.patienceFrames = if (phrase) 1 else config.patienceFrames
         policy.cooldownMs = config.cooldownMs
         policy.reset()
         debugLogging = config.debugLogging
-        activeWakeWord = config.wakeWord
+        activeWakeWord = if (phrase) config.phrase.displayName else config.wakeWord
     }
 
     /**
-     * Сессии ONNX по путям текущего конфига: переиспользуются, пока пути не
-     * поменялись; при смене — закрытые старые уходят, открываются новые.
+     * Детектор текущего конфига: переиспользуется, пока движок, фраза и пути
+     * моделей не поменялись; при смене старый закрывается, создаётся новый.
      */
-    private fun ensureSessions(config: WakeWordConfig): OrtOwwSessions {
-        val paths = AssetPaths(config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath)
-        val current = sessions
-        if (current != null && sessionAssetPaths == paths) return current
+    private fun ensureDetector(config: WakeWordConfig): FrameDetector {
+        val key = DetectorKey(
+            config.engine, config.phrase,
+            config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath,
+        )
+        val current = detector
+        if (current != null && detectorKey == key) return current
         current?.close()
-        val fresh = OrtOwwSessions(context.assets, config).also { it.open() }
-        sessions = fresh
-        pipeline = null
-        sessionAssetPaths = paths
+        detector = null
+        val fresh = when (config.engine) {
+            WakeEngineKind.PHRASE -> PhraseFrameDetector(context.assets, config.phrase)
+            WakeEngineKind.LEGACY_OMNI -> OwwFrameDetector(OrtOwwSessions(context.assets, config).also { it.open() })
+        }
+        detector = fresh
+        detectorKey = key
         return fresh
     }
 
@@ -510,7 +532,10 @@ class NeuralWakeWordEngine @Inject constructor(
 
     private fun missingAssetPath(config: WakeWordConfig, e: IOException): String? {
         val msg = e.message ?: return null
-        return listOf(config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath)
-            .firstOrNull { msg.contains(it) }
+        val paths = when (config.engine) {
+            WakeEngineKind.PHRASE -> PhraseFrameDetector.ASSETS
+            WakeEngineKind.LEGACY_OMNI -> listOf(config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath)
+        }
+        return paths.firstOrNull { msg.contains(it) }
     }
 }

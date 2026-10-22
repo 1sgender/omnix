@@ -18,6 +18,10 @@ Runtime dependencies (Android app)
 - Kotlinx Serialization — JetBrains — Apache License 2.0
 - MediaPipe LLM Inference (tasks-genai) — Google — Apache License 2.0
 - ONNX Runtime (onnxruntime-android) — Microsoft — MIT License
+- sherpa-onnx 1.13.8 (static-link AAR, wake phrase «Окей, Омни») — k2-fsa (Xiaomi
+  Corporation and contributors) — Apache License 2.0; bundles ONNX Runtime
+  (Microsoft, MIT). Downloaded by the build (SHA-256 pinned), not stored in
+  the repository.
 - Onest (variable, res/font/onest_variable.ttf) — The Onest Project Authors —
   SIL Open Font License 1.1
 - IBM Plex Mono (Regular/Medium, res/font/ibm_plex_mono_*.ttf) — IBM Corp.,
@@ -26,6 +30,10 @@ Runtime dependencies (Android app)
 
 On-device model
 ---------------
+- Wake phrase model: sherpa-onnx-streaming-zipformer-small-ru-vosk-int8-2025-08-16
+  (converted from alphacep/vosk-model-small-streaming-ru) — Alpha Cephei and
+  k2-fsa — Apache License 2.0. Downloaded by the build (SHA-256 pinned) into
+  assets/wakeword/phrase/.
 - omni_v0.1.onnx (wake word «Omni») — trained for this project with the
   openWakeWord v0.6.0 training stack (dscripka/openWakeWord, MIT) on
   synthetic speech from Piper voices (rhasspy/piper-voices; voices under

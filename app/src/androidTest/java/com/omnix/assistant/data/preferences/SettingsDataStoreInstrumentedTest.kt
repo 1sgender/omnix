@@ -23,7 +23,7 @@ class SettingsDataStoreInstrumentedTest {
     fun defaultsMatchProductionContract() = runBlocking {
         val store = SettingsDataStore(context)
 
-        assertEquals("Сэр", store.userNameFlow.first())
+        assertEquals("", store.userNameFlow.first())
         assertEquals(AppConstants.DEFAULT_SYSTEM_PROMPT, store.systemPromptFlow.first())
         assertEquals(AppConstants.DEFAULT_SPEECH_RATE, store.speechRateFlow.first())
         assertEquals(AppConstants.DEFAULT_SPEECH_PITCH, store.speechPitchFlow.first())
@@ -66,7 +66,7 @@ class SettingsDataStoreInstrumentedTest {
 
         store.resetDefaults()
 
-        assertEquals("Сэр", store.userNameFlow.first())
+        assertEquals("", store.userNameFlow.first())
         assertEquals(AppConstants.DEFAULT_SYSTEM_PROMPT, store.systemPromptFlow.first())
         assertEquals(AppConstants.DEFAULT_SPEECH_RATE, store.speechRateFlow.first())
         assertEquals(AppConstants.DEFAULT_SPEECH_PITCH, store.speechPitchFlow.first())

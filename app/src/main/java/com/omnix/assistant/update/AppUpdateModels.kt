@@ -18,7 +18,12 @@ data class AppLatestInfo(
     @SerialName("sizeBytes") val sizeBytes: Long = 0L,
     @SerialName("sha") val sha: String = "",
     @SerialName("publishedAt") val publishedAt: String = "",
-    @SerialName("stale") val stale: Boolean = false
+    @SerialName("stale") val stale: Boolean = false,
+    /**
+     * «Что нового» — короткие строки для экрана обновления. Необязательно:
+     * сервер, который их не отдаёт, просто оставляет список пустым.
+     */
+    @SerialName("notes") val notes: List<String> = emptyList()
 )
 
 private val appLatestJson = Json { ignoreUnknownKeys = true }

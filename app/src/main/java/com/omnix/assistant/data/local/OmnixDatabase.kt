@@ -18,7 +18,7 @@ import com.omnix.assistant.data.local.entity.MessageEntity
         ProcedureEntity::class,
         AutomationEntity::class
     ],
-    version = 5,
+    version = OmnixMigrations.CURRENT_VERSION,
     // Пункт аудита #7: схема экспортируется в app/schemas/ — обязательное
     // условие для миграций и MigrationTestHelper. ЛЮБОЕ изменение схемы
     // обязано сопровождаться миграцией в OmnixMigrations (см. документацию там).
