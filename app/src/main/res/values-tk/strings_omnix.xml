@@ -476,7 +476,7 @@
     <string name="omnix_automations_new_app_hint">Programmanyň ady, meselem YouTube</string>
     <string name="omnix_automations_new_create">Döret</string>
     <string name="omnix_automations_limit_title">Awtomatlaşdyrma çägi doldy</string>
-    <string name="omnix_automations_limit_body">Siziň tarifiňizde %1$d sany öz düzgüniňizi döredip bilersiňiz. Gereksizini pozuň.</string>
+    <string name="omnix_automations_limit_body">Tarifiňizde öz düzgünleriňiziň çägi: %1$d. Gereksizini pozuň.</string>
     <string name="omnix_automations_limit_ok">Düşnükli</string>
     <string name="omnix_automations_default_morning">Sagat 07:00-da irki brifing</string>
     <string name="omnix_automations_default_morning_headphones">Gulaklykda irki ses</string>

@@ -478,7 +478,7 @@
     <string name="omnix_automations_new_app_hint">App name, e.g. YouTube</string>
     <string name="omnix_automations_new_create">Create</string>
     <string name="omnix_automations_limit_title">Automation limit reached</string>
-    <string name="omnix_automations_limit_body">Your plan allows up to %1$d automations of your own. Delete one you no longer need.</string>
+    <string name="omnix_automations_limit_body">Limit of your own automations on your plan: %1$d. Delete one you no longer need.</string>
     <string name="omnix_automations_limit_ok">OK</string>
     <string name="omnix_automations_default_morning">Morning briefing at 07:00</string>
     <string name="omnix_automations_default_morning_headphones">Morning volume in headphones</string>
