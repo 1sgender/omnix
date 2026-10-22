@@ -690,13 +690,30 @@ class ApiIntegrationTest {
         assertTrue(groq.lastRequest!!.history.isEmpty())
     }
 
-    /** CR-03: невалидная роль в истории → 400. */
+    /**
+     * Неизвестная роль и пустой текст в истории не валят запрос: такие
+     * сообщения отбрасываются. В v344 клиентская роль "error" (красный пузырь
+     * ошибки) превращала каждый следующий ответ в INVALID_REQUEST.
+     */
     @Test
-    fun `invalid history role returns INVALID_REQUEST`() = runBlocking {
-        val h = harness()
+    fun `unknown history roles and blank messages are dropped, not rejected`() = runBlocking {
+        val groq = FakeAiProvider.ok(ProviderId.GROQ, "ok")
+        val h = harness(providers = listOf(groq))
         val body = requestBody(
-            history = """[{"role":"potato","content":"test"}]"""
+            history = """[{"role":"user","content":"открой ютуб"},{"role":"error","content":"Приложение не установлено"},""" +
+                """{"role":"assistant","content":" "},{"role":"potato","content":"test"},{"role":"assistant","content":"Открываю"}]"""
         )
+        val response = h.handler.handle(post(body))
+        assertEquals(200, response.status)
+        assertEquals(listOf("user", "assistant"), groq.lastRequest!!.history.map { it.role })
+        assertEquals("Открываю", groq.lastRequest!!.history[1].content)
+    }
+
+    /** CR-03: гигантское сообщение истории по-прежнему отклоняется. */
+    @Test
+    fun `overlong history message returns INVALID_REQUEST`() = runBlocking {
+        val h = harness()
+        val body = requestBody(history = """[{"role":"user","content":"${"x".repeat(20_000)}"}]""")
         val response = h.handler.handle(post(body))
         assertEquals(400, response.status)
     }

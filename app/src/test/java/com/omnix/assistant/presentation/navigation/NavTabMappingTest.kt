@@ -36,11 +36,6 @@ class NavTabMappingTest {
     }
 
     @Test
-    fun `voice mode keeps chat lit`() {
-        assertEquals(OmnixDestination.Chat, tabForRoute(OmnixDestination.Voice.route))
-    }
-
-    @Test
     fun `me sub screens keep me lit`() {
         assertEquals(OmnixDestination.Me, tabForRoute(OmnixDestination.Privacy.route))
         assertEquals(OmnixDestination.Me, tabForRoute(OmnixDestination.Devices.route))

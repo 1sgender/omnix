@@ -36,7 +36,8 @@ class PhraseFrameDetectorInstrumentedTest {
         }
         WakePhrase.entries.forEach { phrase ->
             phrase.keywords.split("/").forEach { keyword ->
-                keyword.trim().split(" ").dropLast(1).forEach { token ->
+                // «:буст» и «#порог» — параметры слова, а не токены.
+                keyword.trim().split(" ").dropLast(1).filterNot { it.startsWith(":") || it.startsWith("#") }.forEach { token ->
                     assertTrue("$phrase: token '$token' is not in tokens.txt", token in vocabulary)
                 }
             }

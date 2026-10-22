@@ -93,6 +93,11 @@ class OmnixVoiceService : Service() {
         const val ACTION_PAUSE = "com.omnix.action.PAUSE_SERVICE"
         const val ACTION_RESUME = "com.omnix.action.RESUME_SERVICE"
 
+        /** Служба сейчас жива (для восстановления после перезагрузки). */
+        @Volatile
+        var isRunning: Boolean = false
+            private set
+
         /**
          * CR-11: Единая точка входа на запуск foreground service с проверкой
          * разрешений и защитой от краша на платформенных ограничениях.
@@ -101,7 +106,7 @@ class OmnixVoiceService : Service() {
          * система отвергла startForegroundService — в этом случае вызывающий
          * должен уведомить пользователя, а не считать сервис поднявшимся).
          */
-        fun start(context: Context): Boolean {
+        fun start(context: Context, rememberEnabled: Boolean = true): Boolean {
             if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) !=
                 PackageManager.PERMISSION_GRANTED
             ) {
@@ -115,6 +120,7 @@ class OmnixVoiceService : Service() {
                 // startForegroundService доступен с API 26, minSdk = 29 —
                 // проверка версии избыточна (lint: ObsoleteSdkInt).
                 context.startForegroundService(intent)
+                if (rememberEnabled) AssistantAutoStart.setEnabled(context, true)
                 true
             } catch (failure: RuntimeException) {
                 Log.e(
@@ -126,6 +132,7 @@ class OmnixVoiceService : Service() {
         }
 
         fun stop(context: Context) {
+            AssistantAutoStart.setEnabled(context, false)
             val intent = Intent(context, OmnixVoiceService::class.java).apply {
                 action = ACTION_STOP
             }
@@ -177,6 +184,7 @@ class OmnixVoiceService : Service() {
         initWorkingMemoryDefaults()
         observeOrchestrator()
         started.set(true)
+        isRunning = true
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -227,6 +235,8 @@ class OmnixVoiceService : Service() {
                 updateNotification(getString(R.string.omnix_na_pauze))
             }
             ACTION_STOP -> {
+                // «Остановить» в уведомлении — осознанное выключение пользователем.
+                AssistantAutoStart.setEnabled(this, false)
                 startGuard.cleared()
                 orchestrator.stopServicePipeline()
                 stopForeground(STOP_FOREGROUND_REMOVE)
@@ -459,6 +469,7 @@ class OmnixVoiceService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         started.set(false)
         // Штатная остановка — не сбой запуска.
         startGuard.cleared()

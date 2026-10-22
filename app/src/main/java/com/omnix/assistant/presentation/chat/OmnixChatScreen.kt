@@ -86,7 +86,6 @@ import com.omnix.assistant.presentation.components.OmnixTrashLineIcon
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
 import com.omnix.assistant.presentation.components.OmnixSendLineIcon
-import com.omnix.assistant.presentation.components.OmnixVoiceWaveLineIcon
 import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.LocalReducedMotion
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
@@ -132,8 +131,7 @@ fun OmnixChatScreen(
     onDeleteConversation: (Long) -> Unit,
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
-    onToggleDictation: () -> Unit,
-    onOpenVoiceMode: () -> Unit
+    onToggleDictation: () -> Unit
 ) {
     if (state.showHistory) {
         BackHandler(onBack = onCloseHistory)
@@ -242,8 +240,7 @@ fun OmnixChatScreen(
             isDictating = state.isVoiceDictating,
             onTextChange = onInputChange,
             onSend = onSend,
-            onToggleDictation = onToggleDictation,
-            onOpenVoiceMode = onOpenVoiceMode
+            onToggleDictation = onToggleDictation
         )
     }
 
@@ -770,12 +767,11 @@ private fun ChatComposer(
     isDictating: Boolean,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
-    onToggleDictation: () -> Unit,
-    onOpenVoiceMode: () -> Unit
+    onToggleDictation: () -> Unit
 ) {
     val colors = OmnixTheme.colors
     val hasText = text.isNotBlank()
-    val buttonLabel = stringResource(if (hasText) R.string.omnix_chat_send else R.string.omnix_chat_voice_mode)
+    val buttonLabel = stringResource(R.string.omnix_chat_send)
     val dictationLabel = stringResource(
         if (isDictating) R.string.omnix_chat_dictation_stop else R.string.omnix_chat_dictation_start
     )
@@ -854,12 +850,14 @@ private fun ChatComposer(
                 .size(48.dp)
                 .omnixPressScale(interaction)
                 .clip(CircleShape)
-                .background(colors.accentBrand)
+                .background(if (hasText) colors.accentBrand else colors.surfaceElevated)
                 .clickable(
                     interactionSource = interaction,
                     indication = null,
-                    enabled = !hasText || !isSending,
-                    onClick = if (hasText) onSend else onOpenVoiceMode
+                    // Голос — это сам OMNIX («Омни» и главный экран), отдельного
+                    // голосового режима в чате нет (решение владельца 2026-10-22).
+                    enabled = hasText && !isSending,
+                    onClick = onSend
                 )
                 .clearAndSetSemantics {
                     contentDescription = buttonLabel
@@ -868,9 +866,9 @@ private fun ChatComposer(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (hasText) OmnixSendLineIcon else OmnixVoiceWaveLineIcon,
+                imageVector = OmnixSendLineIcon,
                 contentDescription = null,
-                tint = colors.background,
+                tint = if (hasText) colors.background else colors.textTertiary,
                 modifier = Modifier.size(22.dp)
             )
         }

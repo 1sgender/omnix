@@ -137,7 +137,7 @@ class NeuralWakeWordEngine @Inject constructor(
 
     /** Что слушает текущий запуск: «Окей, Омни» или «Omni» прежней модели (для «Диагностики»). */
     @Volatile
-    var activeWakeWord = WakePhrase.OKAY_OMNI.displayName
+    var activeWakeWord = WakePhrase.ALL.displayName
         private set
 
     /**
