@@ -1,0 +1,600 @@
+tk_0001|Agşamyňyz haýyrly bolsun. Ähli ulgamlar kadaly işleýär.
+tk_0002|Ertiriňiz haýyrly bolsun! Şu gün gün şöhle saçar, ýeňil şemal bolar.
+tk_0003|Günüňiz haýyrly bolsun. Size nähili kömek edip bilerin?
+tk_0004|Diňleýärin.
+tk_0005|Taýýar.
+tk_0006|Ýatlatma ýatda saklandy.
+tk_0007|Bir sekunt, anyklaýaryn.
+tk_0008|Düşündim, başlaýaryn.
+tk_0009|Bolýar, ýatyrýaryn.
+tk_0010|Bagyşlaň, eşidip bilmedim. Gaýtalaň, haýyş edýärin.
+tk_0011|Internet birikmesi ýok. Tor peýda bolanda jogap bererin.
+tk_0012|Bu birneme wagt alar.
+tk_0013|Oýardyjy irden sagat ýedä goýuldy.
+tk_0014|On bäş minutdan Serdar bilen duşuşygyňyz bar.
+tk_0015|Ýatladýaryn: şu gün ejeňiziň doglan güni.
+tk_0016|Aýna jaň edýärin.
+tk_0017|Habary kime ibermeli?
+tk_0018|Näme ýazmaly?
+tk_0019|«On minutdan barýaryn» diýen habary ibermelimi?
+tk_0020|Habar iberildi.
+tk_0021|Aýdym goýýaryn.
+tk_0022|Arakesme edýärin.
+tk_0023|Ses güýçlendirildi.
+tk_0024|Häzir sagat dokuza on bäş minut bar.
+tk_0025|Şu gün sişenbe, oktýabryň ýigrimi ikisi.
+tk_0026|Daşarda on sekiz gradus ýylylyk, bulutly.
+tk_0027|Ertir ýagyş garaşylýar, saýawanyňyzy alyň.
+tk_0028|Ýollarda dyky az, ýol takmynan ýigrimi minut alar.
+tk_0029|Batareýa kyrk göterim zarýadly.
+tk_0030|Gulakçynlar birikdirildi.
+tk_0031|Gulakçynlar aýryldy, telefonyň dinamiginden gürleýärin.
+tk_0032|Terjime tertibini açýaryn.
+tk_0033|Sözlemi aýdyň, men ony iňlis diline terjime ederin.
+tk_0034|Ine, tapan zatlarym.
+tk_0035|Doly ynamym ýok, ýöne belli zatlar şeýle.
+tk_0036|Hünärmenden soramak has gowy bolar.
+tk_0037|Muny ýatda saklamagymy isleýärsiňizmi?
+tk_0038|Ýatda sakladym.
+tk_0039|Haýyşyňyz boýunça ýatdan çykardym.
+tk_0040|Çörek we süýt satyn almagy ýatlatmagymy haýyş etdiňiz.
+tk_0041|On minutlyk taýmer başlandy.
+tk_0042|Wagt doldy.
+tk_0043|Duşuşyga ýarym sagat galdy.
+tk_0044|Ugur düzüldi.
+tk_0045|Iki ýüz metrden saga öwrüliň.
+tk_0046|Siz bardyňyz.
+tk_0047|Men OMNIX, siziň sesli kömekçiňiz.
+tk_0048|Meni OMNIX topary döretdi.
+tk_0049|Men internetsiz hem işleýärin, ýöne gysgaça jogap berýärin.
+tk_0050|Gijäňiz rahat bolsun. Oýardyjy sagat alta ýarym galanda.
+tk_0051|Ir bilen howa ümsümdi, derýanyň üstünde goýy duman ýaýrapdy.
+tk_0052|Garry ussa gurallaryny agaç sandyga tertipli ýerleşdirdi.
+tk_0053|Biz uzak jedelleşdik, ýöne ahyrsoňy otly bilen gitmegi karar etdik.
+tk_0054|Onuň sesi ynamly ýaňlanýardy, emma elleri birneme titreýärdi.
+tk_0055|Bagda almalar, armytlar we agyr üzüm salkymlary ýetişdi.
+tk_0056|Bu mesele üns bilen we asuda ara alyp maslahatlaşmagy talap edýär.
+tk_0057|Şemal asmanda ýyrtyk çal bulutlary kowalaýardy.
+tk_0058|Ol penjiräni açdy, otaga ýagşyň ysy dolup girdi.
+tk_0059|Ol her säher kenarýaka boýunça bäş kilometr ylgaýar.
+tk_0060|Gijäniň üçünji sagadydy, emma şäher entek ukusyzdy.
+tk_0061|Kitap stoluň üstünde, soňky bapda açyk ýatyrdy.
+tk_0062|Çagalar howluda gardan gala gurýardylar.
+tk_0063|Mesele başga tarapdan seredip görüň.
+tk_0064|Biz gürleşip oturyşymyza çaý sowady.
+tk_0065|Uzakda bir ýerde it üýrdi.
+tk_0066|Otly tertip boýunça wagtynda geldi.
+tk_0067|Jogap bermezden öň oýlanmaly.
+tk_0068|Miweleriň bahasy iki esse diýen ýaly ýokarlandy.
+tk_0069|Ýaz ýagyşlaryndan soň derýa joşdy.
+tk_0070|Mugallym okuwçylardan kitaplaryny açmagy haýyş etdi.
+tk_0071|Gözýetimde uly şäheriň çyralary göründi.
+tk_0072|Küşt oýny dört sagatdan gowrak dowam etdi.
+tk_0073|Haýyş edýärin, birneme haýal gürläň.
+tk_0074|Düýnki gürrüň henizem kellämden çykanok.
+tk_0075|Sowadyjy boş diýen ýaly, dükana gitmeli.
+tk_0076|Uçar beýiklige galyp, deňleşdi.
+tk_0077|Güjük guýrugyny şatlyk bilen bulaýardy.
+tk_0078|Ýük maşynynyň yzyndan ýolda tozan galýardy.
+tk_0079|Sary ýapraklar aýagyň astynda şaňňyrdaýardy.
+tk_0080|Bagt asudalygy söýýär.
+tk_0081|Penjiräniň öňündäki ellikler kimiňki?
+tk_0082|Bildiriş podýezdiň gapysynda asylgydy.
+tk_0083|Asman näme üçin gök, gün ýaşanda bolsa näme üçin gyzyl?
+tk_0084|Mara çenli bilet näçe durýar?
+tk_0085|Merkezi bazara nädip barmaly?
+tk_0086|Nobatda iň soňky kim?
+tk_0087|Eýýäm anna günümi?
+tk_0088|Ajaýyp iş, sag boluň!
+tk_0089|Seresap boluň, gapylar ýapylýar.
+tk_0090|Ýuwaş, bäbek ýatyr.
+tk_0091|Şu günki howa näme beýle!
+tk_0092|Gaýtadan başlalyň.
+tk_0093|Bu uzak we kyn ýoldy.
+tk_0094|Öňümizde daglar, çöl we çäksiz asman garaşýardy.
+tk_0095|Çöregi obanyň çetindäki tamdyrda bişirýärdiler.
+tk_0096|Çölüň üstündäki ýyldyzlar has-da ýagty görünýär.
+tk_0097|Kartada iki günlük ýolda guýy görkezilýärdi.
+tk_0098|Kerwen haýal-haýal gündogara tarap ýöreýärdi.
+tk_0099|Olar agşam gijä galyp, ýadaw, emma kanagatly öýe dolandylar.
+tk_0100|Meniň doganym zawodda inžener bolup işleýär.
+tk_0101|Uýam lukmançylyk uniwersitetinde okaýar.
+tk_0102|Enem dünýäde iň tagamly kökeleri bişirýär.
+tk_0103|Atam bize uruş hakda hekaýalar gürrüň berýärdi.
+tk_0104|Goňşular bizi toýa çagyrdylar.
+tk_0105|Baýramçylyk saçagy tagamlardan doludy.
+tk_0106|Aýdym-saz daň atýança dowam etdi.
+tk_0107|Biz suwçüwdürimiň ýanynda surata düşdük.
+tk_0108|Seýilgähde täze çagalar meýdançasy açyldy.
+tk_0109|Kitaphana sagat dokuzdan alta çenli işleýär.
+tk_0110|Dermanhana burçda, bankyň gapdalynda ýerleşýär.
+tk_0111|Maňa iki kofe we bir käse gök çaý beriň.
+tk_0112|Kart ýa-da nagt pul bilen tölemek bolýar.
+tk_0113|Sargydyňyz bäş minutdan taýýar bolar.
+tk_0114|Bukja penşenbe güni geler.
+tk_0115|Ýüz manatdan köp sargytda eltip bermek mugt.
+tk_0116|Dollaryň hümmeti şu gün üýtgemedi.
+tk_0117|Ýygnak duşenbe gününe geçirildi.
+tk_0118|Hasabaty hepdäniň ahyryna çenli tabşyrmaly.
+tk_0119|Hatdaky goşundyny barlaň.
+tk_0120|Parol azyndan sekiz nyşandan ybarat bolmaly.
+tk_0121|Täzelenme gijesine awtomatik gurnalar.
+tk_0122|Telefon bir minutdan täzeden işe girizilýär.
+tk_0123|Çykmazdan öň üýtgeşmeleri ýatda saklaň.
+tk_0124|Faýl ibermek üçin gaty uly.
+tk_0125|Aragatnaşyk kesilýär, men sizi gowy eşidemok.
+tk_0126|Size ýarym sagatdan jaň ederin.
+tk_0127|Signaldan soň habar galdyryň.
+tk_0128|Abonent wagtlaýyn elýeterli däl.
+tk_0129|Boşanyňyzda maňa ýazyň.
+tk_0130|Gijä galýaryn, mensiz başlaberiň.
+tk_0131|Resminamalary almagy ýatdan çykarma.
+tk_0132|Açarlar ýokarky çekmeçede ýatyr.
+tk_0133|Koridordaky çyra öçürilmändir.
+tk_0134|Kondisioner iň pes derejede işleýär.
+tk_0135|Penjireler ýapyk, duýduryş ulgamy açyk.
+tk_0136|Otagdaky temperatura ýigrimi iki gradus.
+tk_0137|Howanyň çyglylygy altmyş göterim.
+tk_0138|Basyş kadaly.
+tk_0139|Ýürek urgusy minutda ýetmiş iki.
+tk_0140|Siz şu gün dokuz müň ädim ätdiňiz.
+tk_0141|Maksada ýetmäge az galdy.
+tk_0142|Gutlaýaryn, siz başardyňyz!
+tk_0143|Ruhdan düşmäň, hemme zat bolar.
+tk_0144|Birneme dynç alyň, köp işlediňiz.
+tk_0145|Suw içmegiň wagty boldy.
+tk_0146|Derman içmegiň wagty boldy.
+tk_0147|Bir sagatdan garaňky düşer.
+tk_0148|Gün on sekiz kyrkda ýaşar.
+tk_0149|Şu gün aý doly diýen ýaly.
+tk_0150|Demirgazyk-günbatar şemaly, sekuntda bäş metr.
+tk_0151|Gijesine aýaz bolmagy mümkin.
+tk_0152|Güýçli yssy garaşylýar, kyrk iki gradusa çenli.
+tk_0153|Tozan tupany görünijiligi peseldýär.
+tk_0154|Üç ýylda ilkinji gezek gar ýagdy.
+tk_0155|Ýyldyrym çakýan tupan bu ýerden geçmez.
+tk_0156|Ýagyşdan soň asmanda älemgoşar peýda boldy.
+tk_0157|Köl kenarynyň ýanynda doňdy.
+tk_0158|Atlar ýaşyl çemenlikde otlaýardy.
+tk_0159|Düýe barhanlaryň üstünden howlukman ýöreýärdi.
+tk_0160|Ahalteke bedewi günde altyn reňkli tüýi bilen ýalpyldaýardy.
+tk_0161|Haly bir ýyl diýen ýaly elde dokaldy.
+tk_0162|Halynyň nagşy gadymy göli gaýtalaýardy.
+tk_0163|Gawun bal we tomus ysyny berýärdi.
+tk_0164|Palawy uly gazanda bişirdiler.
+tk_0165|Çörek entek ýyly, tamdyrdan täze çykdy.
+tk_0166|Myhmanlar pes saçagyň başynda oturdylar.
+tk_0167|Öý eýesi hemmelere gök çaý guýdy.
+tk_0168|Gürrüň derýa ýaly haýal akýardy.
+tk_0169|Birden telefon jyňňyrdady.
+tk_0170|Hiç kim beýle öwrülişige garaşmaýardy.
+tk_0171|Hemme zat gowy gutardy.
+tk_0172|Size bir sorag berip bilermi?
+tk_0173|Elbetde, soraň.
+tk_0174|Meniň pikirimçe, siz haklysyňyz.
+tk_0175|Edil beýle däl, düşündirmäge rugsat beriň.
+tk_0176|Birinjiden, bu arzan. Ikinjiden, has çalt.
+tk_0177|Mysal üçin, kiçijikden başlap bolar.
+tk_0178|Bir tarapdan, töwekgelçilik bar. Beýleki tarapdan, peýdasy düşnükli.
+tk_0179|Şeýlelik bilen, jemläliň.
+tk_0180|Aýtmaýmy, täzelikleri eşitdiňizmi?
+tk_0181|Gynansak-da, bilet galmady.
+tk_0182|Bagtymyza, hiç kim ýaralanmady.
+tk_0183|Dogrusy, men bilemok.
+tk_0184|Görnüşine görä, olar eýýäm gidipdirler.
+tk_0185|Aýtmaýmy, ertir dynç güni.
+tk_0186|Ahyry öýe geldik!
+tk_0187|Wah, zarýad beriji enjamy ýatdan çykardym.
+tk_0188|Hä, indi düşnükli.
+tk_0189|Ura, başartdyk!
+tk_0190|Üns beriň, möhüm habar.
+tk_0191|Gaýtalaýaryn: duşuşyk sagat altyda.
+tk_0192|Salgyny ýazyň: Magtymguly köçesi, kyrk bäşinji jaý.
+tk_0193|Telefon belgisi: plýus dokuz ýüz togsan üç, altmyş bäş, bir ýüz ýigrimi üç, kyrk bäş, altmyş ýedi.
+tk_0194|Tassyklama kody: dört, sekiz, bir, dokuz.
+tk_0195|Tölenmeli mukdar: iki ýüz otuz bäş manat elli teňňe.
+tk_0196|Uçaryňyz on dört ýigrimide uçýar.
+tk_0197|Hasaba alyş uçuşdan kyrk minut öň tamamlanýar.
+tk_0198|Uçara münmek ýedinji çykalgadan.
+tk_0199|Goş-golamy üçünji lentadan alyp bilersiňiz.
+tk_0200|Myhmanhana howa menzilinden on minutlyk aralykda.
+tk_0201|Otag üç gijelik bronlandy.
+tk_0202|Ertirlik naharyny sagat ýediden ona çenli.
+tk_0203|Taksi girelgede garaşýar.
+tk_0204|Hasaby getiriň, haýyş edýärin.
+tk_0205|Galanyny gerek däl.
+tk_0206|Bu näçe bolar?
+tk_0207|Bu gaty gymmat.
+tk_0208|Arzanrak bir zat barmy?
+tk_0209|Alýaryn, dolap beriň.
+tk_0210|Bagyşlaň, sagat näçe boldy, aýdyp bilmersiňizmi?
+tk_0211|Biynjalyk edenim üçin bagyşlaň.
+tk_0212|Sag boluň, köp kömek etdiňiz.
+tk_0213|Hiç zat däl, ýene geliň.
+tk_0214|Tanyşanyma şat.
+tk_0215|Hoş, gowy galyň!
+tk_0216|Ertir görüşeris.
+tk_0217|Özüňe seresap bol.
+tk_0218|Baýramyňyz gutly bolsun!
+tk_0219|Doglan günüň gutly bolsun, bagt we jan saglygy arzuw edýärin!
+tk_0220|Täze ýylyňyz gutly bolsun!
+tk_0221|Synagda üstünlik arzuw edýärin!
+tk_0222|Işdäňiz açyk bolsun!
+tk_0223|Gijäňiz rahat bolsun, süýji düýşler.
+tk_0224|Zarýadyň iki göterimi galdy.
+tk_0225|Gijesine on alty gradus aýaz.
+tk_0226|Zarýadyň segsen bäş göterimi galdy.
+tk_0227|Şu gün çarşenbe, ýanwaryň ony.
+tk_0228|Oýardyjy sagat on ikä goýuldy.
+tk_0229|Üç kilometrden çepe öwrüliň.
+tk_0230|On bäş minutdan ýatladaryn.
+tk_0231|Zarýadyň kyrk göterimi galdy.
+tk_0232|Häzir sagat alty, elli minut.
+tk_0233|Tölenmeli mukdar: ýedi ýüz otuz iki manat ýetmiş bäş teňňe.
+tk_0234|Sekiz kilometrden çepe öwrüliň.
+tk_0235|Ylgamak üçin sazy goýýaryn.
+tk_0236|Gijesine bäş gradus aýaz.
+tk_0237|Zarýadyň altmyş iki göterimi galdy.
+tk_0238|Şu gün şenbe, iýunyň on ýedisi.
+tk_0239|Häzir sagat on bir, ýigrimi bäş minut.
+tk_0240|Siz bir hepdede ýedi kilometr ýöräpsiňiz.
+tk_0241|Bolýar, sagat dokuzda maşyna ýangyç guýmagy ýatladaryn.
+tk_0242|Işe barýan ýol kyrk ýedi minut alar.
+tk_0243|Zarýadyň elli alty göterimi galdy.
+tk_0244|Häzir sagat sekiz, kyrk minut.
+tk_0245|Batareýa otuz bir göterim zarýadly.
+tk_0246|Tölenmeli mukdar: ýedi ýüz ýetmiş bäş manat elli teňňe.
+tk_0247|Häzir sagat dokuz, on bäş minut.
+tk_0248|Tölenmeli mukdar: alty ýüz elli ýedi manat on teňňe.
+tk_0249|Jerene habar iberýärin.
+tk_0250|Bolýar, sagat sekizde maşyna ýangyç guýmagy ýatladaryn.
+tk_0251|Gülşat täze habar iberdi.
+tk_0252|Jerene duşuşyk hakda ýatlatmalymy?
+tk_0253|Gijesine ýigrimi gradus aýaz.
+tk_0254|Siz bir hepdede otuz kilometr ýöräpsiňiz.
+tk_0255|Maýsa jaň edýärin.
+tk_0256|Gijesine on sekiz gradus aýaz.
+tk_0257|Batareýa altmyş ýedi göterim zarýadly.
+tk_0258|Ýigrimi iki minutdan ýatladaryn.
+tk_0259|Siz bir hepdede ýetmiş kilometr ýöräpsiňiz.
+tk_0260|Oýardyjy sagat ikä goýuldy.
+tk_0261|Şu gün ýekşenbe, martyň biri.
+tk_0262|Zarýadyň segsen dört göterimi galdy.
+tk_0263|Täzelikleri goýýaryn.
+tk_0264|Mährä habar iberýärin.
+tk_0265|Işe barýan ýol otuz bäş minut alar.
+tk_0266|Dört kilometrden çepe öwrüliň.
+tk_0267|Uýama habar iberýärin.
+tk_0268|Häzir Maryda howa ýyldyrymly.
+tk_0269|Ogulja bilen duşuşyk sagat dörtde.
+tk_0270|On kilometrden çepe öwrüliň.
+tk_0271|Daşarda kyrk gradus ýylylyk, ýyldyrymly.
+tk_0272|Döwlet bilen duşuşyk sagat onda.
+tk_0273|Şu gün şenbe, awgustyň ýigrimi ikisi.
+tk_0274|Başlyga habar iberýärin.
+tk_0275|Häzir Moskwada howa ýyldyrymly.
+tk_0276|Ýatladýaryn: çagalary mekdepden almagy unutmaň.
+tk_0277|Duşuşygyňyz iýulyň ýigrimi dokuzy bellenildi.
+tk_0278|Bolýar, sagat ýedide poçtany barlamagy ýatladaryn.
+tk_0279|Ýatladýaryn: bukjany almagy unutmaň.
+tk_0280|Häzir Türkmenabatda howa ýyldyrymly.
+tk_0281|Batareýa otuz üç göterim zarýadly.
+tk_0282|Alty kilometrden çepe öwrüliň.
+tk_0283|Tölenmeli mukdar: ýedi ýüz ýigrimi ýedi manat ýigrimi teňňe.
+tk_0284|Zarýadyň ýigrimi göterimi galdy.
+tk_0285|Daşarda alty gradus ýylylyk, ýagyşly.
+tk_0286|Radiony goýýaryn.
+tk_0287|Şu gün çarşenbe, fewralyň on dördi.
+tk_0288|Häzir sagat üç, elli bäş minut.
+tk_0289|Ogulja täze habar iberdi.
+tk_0290|Serdara duşuşyk hakda ýatlatmalymy?
+tk_0291|Tölenmeli mukdar: ýigrimi dört manat on teňňe.
+tk_0292|Bolýar, sagat dörtde güllere suw bermegi ýatladaryn.
+tk_0293|Işe barýan ýol kyrk minut alar.
+tk_0294|Duşuşygyňyz maýyň biri bellenildi.
+tk_0295|Otuz minutlyk taýmer başlandy.
+tk_0296|Kyrk sekiz minutdan ýatladaryn.
+tk_0297|On bir minutdan ýatladaryn.
+tk_0298|Ertir Daşkentde ýagyşly, iki gradus.
+tk_0299|Işe barýan ýol elli minut alar.
+tk_0300|Merdan bilen duşuşyk sagat dörtde.
+tk_0301|Uýam bilen duşuşyk sagat on ikide.
+tk_0302|On ýedi minutdan ýatladaryn.
+tk_0303|Oýardyjy sagat on bire goýuldy.
+tk_0304|Ýigrimi bäş minutdan ýatladaryn.
+tk_0305|Işe barýan ýol elli üç minut alar.
+tk_0306|Başlyga jaň edýärin.
+tk_0307|Duşuşygyňyz dekabryň otuzy bellenildi.
+tk_0308|Bolýar, sagat dokuzda bukjany almagy ýatladaryn.
+tk_0309|Daşarda ýigrimi bir gradus ýylylyk, şemally.
+tk_0310|Zarýadyň ýetmiş göterimi galdy.
+tk_0311|Işe barýan ýol ýigrimi dört minut alar.
+tk_0312|Işe barýan ýol elli sekiz minut alar.
+tk_0313|Otuz bir minutdan ýatladaryn.
+tk_0314|Batareýa ýetmiş ýedi göterim zarýadly.
+tk_0315|Aýgüle habar iberýärin.
+tk_0316|Ýatladýaryn: hasabaty ibermegi unutmaň.
+tk_0317|Daşarda on bir gradus ýylylyk, şemally.
+tk_0318|Ertir Tährande tutuk, ýigrimi sekiz gradus.
+tk_0319|Ýigrimi ýedi minutdan ýatladaryn.
+tk_0320|Batareýa elli sekiz göterim zarýadly.
+tk_0321|Siz bir hepdede ýigrimi üç kilometr ýöräpsiňiz.
+tk_0322|Dokuz kilometrden çepe öwrüliň.
+tk_0323|Daşarda otuz üç gradus ýylylyk, bulutly.
+tk_0324|Kemala jaň edýärin.
+tk_0325|Siz bir hepdede alty kilometr ýöräpsiňiz.
+tk_0326|Ertir Moskwada dumanly, ýedi gradus.
+tk_0327|Batareýa dokuz göterim zarýadly.
+tk_0328|Sesiň güýji elli bäş göterim.
+tk_0329|Oýardyjy sagat bäşe goýuldy.
+tk_0330|Ýedi kilometrden çepe öwrüliň.
+tk_0331|Maýsa bilen duşuşyk sagat birde.
+tk_0332|Tölenmeli mukdar: iki ýüz togsan üç manat ýetmiş bäş teňňe.
+tk_0333|Häzir sagat bäş, otuz minut.
+tk_0334|Ogulja duşuşyk hakda ýatlatmalymy?
+tk_0335|Jeren bilen duşuşyk sagat dörtde.
+tk_0336|Gijesine on bir gradus aýaz.
+tk_0337|Zarýadyň otuz göterimi galdy.
+tk_0338|Hüwdi aýdymyny goýýaryn.
+tk_0339|Batareýa on bäş göterim zarýadly.
+tk_0340|Daşarda on sekiz gradus ýylylyk, yssy we gurak.
+tk_0341|Sesiň güýji ýetmiş göterim.
+tk_0342|Duşuşygyňyz maýyň on ikisi bellenildi.
+tk_0343|Merdana jaň edýärin.
+tk_0344|On üç minutdan ýatladaryn.
+tk_0345|Döwlet täze habar iberdi.
+tk_0346|Häzir Almatyda howa ýyldyrymly.
+tk_0347|Ýigrimi alty minutlyk taýmer başlandy.
+tk_0348|Işe barýan ýol ýigrimi dokuz minut alar.
+tk_0349|Tölenmeli mukdar: sekiz ýüz on dört manat elli teňňe.
+tk_0350|Zarýadyň altmyş sekiz göterimi galdy.
+tk_0351|Häzir Daşoguzda howa yssy we gurak.
+tk_0352|Häzir Türkmenabatda howa gün şöhleli.
+tk_0353|Ertir Almatyda açyk, otuz dört gradus.
+tk_0354|Ýatladýaryn: sport bilen meşgullanmagy unutmaň.
+tk_0355|Häzir sagat bäş, bäş minut.
+tk_0356|Daşarda on üç gradus ýylylyk, tutuk.
+tk_0357|Duşuşygyňyz iýulyň on sekizi bellenildi.
+tk_0358|Häzir sagat üç, bäş minut.
+tk_0359|Ertir Moskwada yssy we gurak, kyrk iki gradus.
+tk_0360|Oýardyjy sagat bire goýuldy.
+tk_0361|Kemala duşuşyk hakda ýatlatmalymy?
+tk_0362|Zarýadyň ýetmiş dört göterimi galdy.
+tk_0363|Tölenmeli mukdar: alty ýüz togsan dört manat.
+tk_0364|Tölenmeli mukdar: üç ýüz kyrk üç manat elli teňňe.
+tk_0365|Ertir Moskwada garly, on bir gradus.
+tk_0366|Şu gün penşenbe, ýanwaryň ýigrimi biri.
+tk_0367|Elli iki minutlyk taýmer başlandy.
+tk_0368|Daşarda on dokuz gradus ýylylyk, gyrmaýagyş.
+tk_0369|Leýlä habar iberýärin.
+tk_0370|Işe barýan ýol sekiz minut alar.
+tk_0371|Duşuşygyňyz fewralyň on ýedisi bellenildi.
+tk_0372|Sesiň güýji kyrk üç göterim.
+tk_0373|Gijesine alty gradus aýaz.
+tk_0374|Siz bir hepdede togsan alty kilometr ýöräpsiňiz.
+tk_0375|Ýigrimi dört minutdan ýatladaryn.
+tk_0376|On iki minutlyk taýmer başlandy.
+tk_0377|Merdan täze habar iberdi.
+tk_0378|Zarýadyň ýigrimi iki göterimi galdy.
+tk_0379|Siz bir hepdede altmyş bir kilometr ýöräpsiňiz.
+tk_0380|Daşarda ýigrimi dört gradus ýylylyk, bulutly.
+tk_0381|Şu gün şenbe, sentýabryň on ikisi.
+tk_0382|Bolýar, sagat birde enemi gutlamagy ýatladaryn.
+tk_0383|Gijesine on gradus aýaz.
+tk_0384|Häzir Stambulda howa ýagyşly.
+tk_0385|Ertir Türkmenabatda şemally, ýigrimi gradus.
+tk_0386|Jaz sazyny goýýaryn.
+tk_0387|Daşarda otuz ýedi gradus ýylylyk, ýagyşly.
+tk_0388|Sesiň güýji segsen iki göterim.
+tk_0389|Gijesine on iki gradus aýaz.
+tk_0390|Kakam täze habar iberdi.
+tk_0391|Iki minutlyk taýmer başlandy.
+tk_0392|Sesiň güýji altmyş bir göterim.
+tk_0393|Bolýar, sagat on ikide zibili çykarmagy ýatladaryn.
+tk_0394|Ýatladýaryn: zibili çykarmagy unutmaň.
+tk_0395|Şadyýan aýdym goýýaryn.
+tk_0396|Häzir Aşgabatda howa dumanly.
+tk_0397|Aýgüle jaň edýärin.
+tk_0398|Daşarda on dört gradus ýylylyk, açyk.
+tk_0399|Daşarda otuz ýedi gradus ýylylyk, gün şöhleli.
+tk_0400|Tölenmeli mukdar: dört ýüz elli bir manat on teňňe.
+tk_0401|Sesiň güýji segsen dört göterim.
+tk_0402|Tölenmeli mukdar: dört ýüz on dört manat elli teňňe.
+tk_0403|Batareýa togsan dokuz göterim zarýadly.
+tk_0404|Şu gün anna, apreliň on dördi.
+tk_0405|Zarýadyň kyrk üç göterimi galdy.
+tk_0406|Sesiň güýji altmyş ýedi göterim.
+tk_0407|Myrat täze habar iberdi.
+tk_0408|Zarýadyň togsan dokuz göterimi galdy.
+tk_0409|Aýna duşuşyk hakda ýatlatmalymy?
+tk_0410|Ertir Maryda bulutly, otuz gradus.
+tk_0411|Uýam bilen duşuşyk sagat sekizde.
+tk_0412|Sesiň güýji togsan iki göterim.
+tk_0413|Maýsa habar iberýärin.
+tk_0414|Ertir Daşkentde tutuk, sekiz gradus.
+tk_0415|Häzir Aşgabatda howa gün şöhleli.
+tk_0416|Sesiň güýji togsan göterim.
+tk_0417|Sesiň güýji altmyş dokuz göterim.
+tk_0418|Häzir Maryda howa tutuk.
+tk_0419|Tölenmeli mukdar: togsan sekiz manat elli teňňe.
+tk_0420|Sesiň güýji segsen dokuz göterim.
+tk_0421|Işe barýan ýol üç minut alar.
+tk_0422|Ýatladýaryn: sowgat almagy unutmaň.
+tk_0423|Ertir Maryda tutuk, ýigrimi dokuz gradus.
+tk_0424|Siz bir hepdede on sekiz kilometr ýöräpsiňiz.
+tk_0425|Sesiň güýji otuz iki göterim.
+tk_0426|On minutdan ýatladaryn.
+tk_0427|Häzir Balkanabatda howa gyrmaýagyş.
+tk_0428|Ertir Maryda gyrmaýagyş, on iki gradus.
+tk_0429|Siz bir hepdede ýetmiş dokuz kilometr ýöräpsiňiz.
+tk_0430|Duşuşygyňyz martyň ýedisi bellenildi.
+tk_0431|Sesiň güýji togsan ýedi göterim.
+tk_0432|Oýardyjy sagat alta goýuldy.
+tk_0433|Ejeme habar iberýärin.
+tk_0434|Uýama jaň edýärin.
+tk_0435|Ýigrimi minutlyk taýmer başlandy.
+tk_0436|Batyra jaň edýärin.
+tk_0437|Mähri bilen duşuşyk sagat üçde.
+tk_0438|Oýardyjy sagat dokuza goýuldy.
+tk_0439|Ýatladýaryn: maşyna ýangyç guýmagy unutmaň.
+tk_0440|Häzir sagat dokuz, elli bäş minut.
+tk_0441|Batyr täze habar iberdi.
+tk_0442|Kyrk bir minutlyk taýmer başlandy.
+tk_0443|Uýama duşuşyk hakda ýatlatmalymy?
+tk_0444|Batareýa altmyş iki göterim zarýadly.
+tk_0445|Zarýadyň ýetmiş alty göterimi galdy.
+tk_0446|Elli bir minutdan ýatladaryn.
+tk_0447|Myrada duşuşyk hakda ýatlatmalymy?
+tk_0448|Arslana habar iberýärin.
+tk_0449|Oýardyjy sagat dörde goýuldy.
+tk_0450|Mährä duşuşyk hakda ýatlatmalymy?
+tk_0451|Kakama habar iberýärin.
+tk_0452|Tölenmeli mukdar: ýüz togsan dokuz manat on teňňe.
+tk_0453|Bolýar, sagat bäşde derman içmegi ýatladaryn.
+tk_0454|Duşuşygyňyz awgustyň ýedisi bellenildi.
+tk_0455|Sesiň güýji otuz üç göterim.
+tk_0456|Şu gün ýekşenbe, ýanwaryň on altysy.
+tk_0457|Batareýa alty göterim zarýadly.
+tk_0458|Asuda aýdym goýýaryn.
+tk_0459|Häzir Daşoguzda howa tutuk.
+tk_0460|Maýsa täze habar iberdi.
+tk_0461|Bolýar, sagat on ikide bukjany almagy ýatladaryn.
+tk_0462|Duşuşygyňyz noýabryň otuzy bellenildi.
+tk_0463|Batareýa bir göterim zarýadly.
+tk_0464|Batareýa otuz iki göterim zarýadly.
+tk_0465|Mährä jaň edýärin.
+tk_0466|Häzir sagat dört, on bäş minut.
+tk_0467|Şu gün çarşenbe, dekabryň ýedisi.
+tk_0468|Duşuşygyňyz oktýabryň on üçi bellenildi.
+tk_0469|Işe barýan ýol on alty minut alar.
+tk_0470|Bolýar, sagat dokuzda çagalary mekdepden almagy ýatladaryn.
+tk_0471|Siz bir hepdede on dokuz kilometr ýöräpsiňiz.
+tk_0472|Bolýar, sagat on birde enemi gutlamagy ýatladaryn.
+tk_0473|Bolýar, sagat bäşde maşyna ýangyç guýmagy ýatladaryn.
+tk_0474|Siz bir hepdede ýetmiş dört kilometr ýöräpsiňiz.
+tk_0475|Bolýar, sagat dokuzda poçtany barlamagy ýatladaryn.
+tk_0476|Kyrk dört minutdan ýatladaryn.
+tk_0477|Ýatladýaryn: enemi gutlamagy unutmaň.
+tk_0478|Duşuşygyňyz oktýabryň bäşi bellenildi.
+tk_0479|Doganym täze habar iberdi.
+tk_0480|Aýgül täze habar iberdi.
+tk_0481|Gijesine sekiz gradus aýaz.
+tk_0482|Siz bir hepdede bäş kilometr ýöräpsiňiz.
+tk_0483|Zarýadyň elli dokuz göterimi galdy.
+tk_0484|Batareýa on göterim zarýadly.
+tk_0485|Ertir Balkanabatda şemally, alty gradus.
+tk_0486|Tölenmeli mukdar: alty ýüz togsan manat ýigrimi teňňe.
+tk_0487|Arslan täze habar iberdi.
+tk_0488|Duşuşygyňyz martyň on dördi bellenildi.
+tk_0489|Ertir Tährande gün şöhleli, ýigrimi üç gradus.
+tk_0490|Ertir Balkanabatda bulutly, kyrk gradus.
+tk_0491|Nusgawy sazy goýýaryn.
+tk_0492|Häzir Aşgabatda howa garly.
+tk_0493|Işe barýan ýol kyrk sekiz minut alar.
+tk_0494|Işe barýan ýol ýedi minut alar.
+tk_0495|Tölenmeli mukdar: kyrk bäş manat on teňňe.
+tk_0496|Otuz iki minutlyk taýmer başlandy.
+tk_0497|Ýatladýaryn: derman içmegi unutmaň.
+tk_0498|Aýna bilen duşuşyk sagat on birde.
+tk_0499|Şu gün ýekşenbe, apreliň ýigrimi dördi.
+tk_0500|Tölenmeli mukdar: ýüz altmyş sekiz manat elli teňňe.
+tk_0501|Duşuşygyňyz fewralyň ýigrimi üçi bellenildi.
+tk_0502|Ertir Tährande ýagyşly, üç gradus.
+tk_0503|Aýgüle duşuşyk hakda ýatlatmalymy?
+tk_0504|Işe barýan ýol otuz alty minut alar.
+tk_0505|Myrat bilen duşuşyk sagat birde.
+tk_0506|Häzir Dubaýda howa tutuk.
+tk_0507|On iki minutdan ýatladaryn.
+tk_0508|Duşuşygyňyz iýunyň ýedisi bellenildi.
+tk_0509|Batareýa on ýedi göterim zarýadly.
+tk_0510|Siz bir hepdede segsen dokuz kilometr ýöräpsiňiz.
+tk_0511|Işe barýan ýol otuz üç minut alar.
+tk_0512|Arslan bilen duşuşyk sagat dokuzda.
+tk_0513|Häzir sagat iki, on bäş minut.
+tk_0514|Başlyk täze habar iberdi.
+tk_0515|Tölenmeli mukdar: segsen iki manat ýetmiş bäş teňňe.
+tk_0516|Otuz alty minutlyk taýmer başlandy.
+tk_0517|Kakama duşuşyk hakda ýatlatmalymy?
+tk_0518|Batareýa ýetmiş dokuz göterim zarýadly.
+tk_0519|Bäş kilometrden çepe öwrüliň.
+tk_0520|On üç minutlyk taýmer başlandy.
+tk_0521|Ýatladýaryn: güllere suw bermegi unutmaň.
+tk_0522|Siz bir hepdede altmyş dokuz kilometr ýöräpsiňiz.
+tk_0523|Bolýar, sagat dokuzda güllere suw bermegi ýatladaryn.
+tk_0524|Tölenmeli mukdar: sekiz ýüz altmyş dokuz manat elli teňňe.
+tk_0525|Ogulja bilen duşuşyk sagat on ikide.
+tk_0526|Ertir Awazada bulutly, ýigrimi alty gradus.
+tk_0527|Elli dört minutlyk taýmer başlandy.
+tk_0528|Işe barýan ýol on bir minut alar.
+tk_0529|Maýsa duşuşyk hakda ýatlatmalymy?
+tk_0530|Batyr bilen duşuşyk sagat üçde.
+tk_0531|Häzir sagat bäş, ýigrimi minut.
+tk_0532|Tölenmeli mukdar: üç ýüz bir manat ýetmiş bäş teňňe.
+tk_0533|Daşarda on gradus ýylylyk, ýagyşly.
+tk_0534|Batareýa altmyş göterim zarýadly.
+tk_0535|On dokuz minutdan ýatladaryn.
+tk_0536|Siz bir hepdede togsan bäş kilometr ýöräpsiňiz.
+tk_0537|Işe barýan ýol ýigrimi alty minut alar.
+tk_0538|Işe barýan ýol on üç minut alar.
+tk_0539|Duşuşygyňyz noýabryň biri bellenildi.
+tk_0540|Häzir sagat iki, ýigrimi bäş minut.
+tk_0541|Ertir Balkanabatda yssy we gurak, kyrk üç gradus.
+tk_0542|Häzir sagat ýedi, on minut.
+tk_0543|Zarýadyň on bir göterimi galdy.
+tk_0544|Häzir sagat üç, ýigrimi minut.
+tk_0545|Sesiň güýji iki göterim.
+tk_0546|Zarýadyň otuz ýedi göterimi galdy.
+tk_0547|Häzir sagat bir, on bäş minut.
+tk_0548|Bolýar, sagat on birde sport bilen meşgullanmagy ýatladaryn.
+tk_0549|Bolýar, sagat ikide bukjany almagy ýatladaryn.
+tk_0550|Leýli bilen duşuşyk sagat dörtde.
+tk_0551|Doganyma habar iberýärin.
+tk_0552|Tölenmeli mukdar: bäş ýüz on bäş manat on teňňe.
+tk_0553|Zarýadyň ýigrimi sekiz göterimi galdy.
+tk_0554|Sekiz minutdan ýatladaryn.
+tk_0555|Şu gün ýekşenbe, maýyň ýigrimi dokuzy.
+tk_0556|Siz bir hepdede kyrk dokuz kilometr ýöräpsiňiz.
+tk_0557|Işe barýan ýol kyrk iki minut alar.
+tk_0558|Şu gün şenbe, noýabryň dördi.
+tk_0559|Kemal bilen duşuşyk sagat dokuzda.
+tk_0560|Serdar bilen duşuşyk sagat onda.
+tk_0561|Ertir Balkanabatda ýyldyrymly, kyrk dört gradus.
+tk_0562|Döwlet bilen duşuşyk sagat dokuzda.
+tk_0563|Batareýa ýigrimi bäş göterim zarýadly.
+tk_0564|Ertir Almatyda ýagyşly, ýigrimi bäş gradus.
+tk_0565|Ertir Stambulda tutuk, otuz dokuz gradus.
+tk_0566|Mähri täze habar iberdi.
+tk_0567|Döwlede habar iberýärin.
+tk_0568|Batareýa togsan ýedi göterim zarýadly.
+tk_0569|Häzir sagat üç, on bäş minut.
+tk_0570|Serdar täze habar iberdi.
+tk_0571|Bolýar, sagat on birde maşyna ýangyç guýmagy ýatladaryn.
+tk_0572|Daşarda sekiz gradus ýylylyk, yssy we gurak.
+tk_0573|Gülşada duşuşyk hakda ýatlatmalymy?
+tk_0574|Duşuşygyňyz maýyň on biri bellenildi.
+tk_0575|Siz bir hepdede elli bäş kilometr ýöräpsiňiz.
+tk_0576|Gülşada jaň edýärin.
+tk_0577|Bolýar, sagat ikide çörek satyn almagy ýatladaryn.
+tk_0578|Tölenmeli mukdar: ýedi ýüz segsen dört manat elli teňňe.
+tk_0579|Başlyga duşuşyk hakda ýatlatmalymy?
+tk_0580|Bolýar, sagat üçde maşyna ýangyç guýmagy ýatladaryn.
+tk_0581|Aýna bilen duşuşyk sagat ikide.
+tk_0582|Häzir Moskwada howa gyrmaýagyş.
+tk_0583|Sesiň güýji on iki göterim.
+tk_0584|Häzir sagat dokuz, bäş minut.
+tk_0585|Elli minutlyk taýmer başlandy.
+tk_0586|Ertir Moskwada garly, otuz alty gradus.
+tk_0587|Türkmen aýdymlaryny goýýaryn.
+tk_0588|Ertir Daşkentde yssy we gurak, on dört gradus.
+tk_0589|Siz bir hepdede otuz dört kilometr ýöräpsiňiz.
+tk_0590|Duşuşygyňyz iýunyň ýigrimi bäşi bellenildi.
+tk_0591|Işe barýan ýol otuz dört minut alar.
+tk_0592|Häzir sagat sekiz, otuz minut.
+tk_0593|Siz bir hepdede segsen ýedi kilometr ýöräpsiňiz.
+tk_0594|Daşarda dokuz gradus ýylylyk, garly.
+tk_0595|Duşuşygyňyz iýunyň üçi bellenildi.
+tk_0596|Daşarda otuz ýedi gradus ýylylyk, bulutly.
+tk_0597|Zarýadyň ýigrimi üç göterimi galdy.
+tk_0598|Ertir Daşkentde dumanly, otuz dokuz gradus.
+tk_0599|Sesiň güýji ýetmiş sekiz göterim.
+tk_0600|Batyra habar iberýärin.
