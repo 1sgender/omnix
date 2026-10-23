@@ -33,6 +33,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
+import com.omnix.assistant.agent.memory.model.MemoryType
 
 /**
  * Privacy-органы управления (блоки 3–4 плана пересборки фронта):
@@ -107,13 +109,26 @@ class PrivacyPolicyViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private val memoryManager: OmniMemoryManager = mockk(relaxed = true)
+
+    @Test
+    fun `adding a memory goes through the memory manager and ignores blank text`() = runTest {
+        val vm = createViewModel()
+        vm.addMemory("   ")
+        vm.addMemory("  Мой врач — доктор Аман  ")
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { memoryManager.remember(MemoryType.FACT, "Мой врач — доктор Аман", any(), any(), any(), any()) }
+    }
+
     private fun createViewModel() = PrivacyPolicyViewModel(
         policyProvider = provider,
         accessibilityStore = accessibilityStore,
         memoryDao = memoryDao,
         factDao = factDao,
         preferenceDao = preferenceDao,
-        procedureDao = procedureDao
+        procedureDao = procedureDao,
+        memoryManager = memoryManager
     )
 
     @Test

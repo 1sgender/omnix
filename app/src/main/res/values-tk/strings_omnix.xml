@@ -143,21 +143,21 @@
     <string name="omnix_nav_home">Baş sahypa</string>
     <string name="omnix_nav_me">Men</string>
     <string name="omnix_nav_chat">Söhbet</string>
-    <string name="omnix_nav_headphones">Gulakçynlar</string>
+    <string name="omnix_nav_headphones">Gulaklyklar</string>
     <string name="omnix_nav_back">Yza</string>
 
     <!-- ===== Taryh (§22, §39) ===== -->
 
     <!-- ===== Enjamlar (§23, §40, §41) ===== -->
     <string name="omnix_devices_title">Gulaklyklar</string>
-    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_clip_name">Gulaklyklar</string>
     <string name="omnix_devices_battery">ZARÝAD</string>
     <string name="omnix_devices_wake_title">«Omni» sözi</string>
     <string name="omnix_devices_wake_sub">Elsiz çagyryş</string>
     <string name="omnix_devices_translate_title">Gulaklyga terjime</string>
     <string name="omnix_devices_translate_sub">Gürrüňdeş siziň diliňizde eşidilýär</string>
-    <string name="omnix_devices_find">Gulaklyklary tap</string>
-    <string name="omnix_devices_disconnect">Aýyr</string>
+    <string name="omnix_devices_find">Gulaklyklary birikdir</string>
+    <string name="omnix_devices_disconnect">Bluetooth sazlamalary</string>
 
     <!-- ===== Söhbet (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
@@ -237,7 +237,7 @@
     <string name="omnix_me_no_name">Siziň profiliňiz</string>
     <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
     <string name="omnix_me_row_voice">Ses we «Omni» sözi</string>
-    <string name="omnix_me_row_memory">Ýat we gizlinlik</string>
+    <string name="omnix_me_row_memory">Ýat</string>
     <string name="omnix_me_model_ready">Taýýar</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Görnüş</string>
@@ -255,7 +255,7 @@
     <string name="omnix_voice_background_body">OMNIX-e ekran öçüli wagtynda-da işlemäge rugsat beriň.</string>
     <string name="omnix_voice_background_action">Rugsat ber</string>
     <string name="omnix_voice_automations">Awtomatiki işler</string>
-    <string name="omnix_voice_automations_empty">Entäk awtomatiki iş ýok. Aýdyň: «Omni, Clip birikdirilende saz goý.»</string>
+    <string name="omnix_voice_automations_empty">Heniz awtomatlaşdyrma ýok. «Täze awtomatlaşdyrma» basyň ýa-da aýdyň: «Omni, gulaklyk birikende aýdym goý».</string>
 
     <string name="omnix_privacy_title">Hususylyk</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
@@ -352,9 +352,12 @@
     <string name="omnix_language_system">Ulgam</string>
 
     <string name="omnix_notifications_settings_title">Bildirişler</string>
-    <string name="omnix_notifications_assistant">Kömekçiniň jogaplary</string>
-    <string name="omnix_notifications_device">Enjam ýagdaýy</string>
-    <string name="omnix_notifications_routines">Rutin ýatlatmalary</string>
+    <string name="omnix_notifications_routines">Awtomatlaşdyrmalary sesli aýt</string>
+    <string name="omnix_notifications_routines_body">OMNIX awtomatlaşdyrmanyň näme edendigini sesli aýdar.</string>
+    <string name="omnix_notifications_system">Telefondaky bildirişler</string>
+    <string name="omnix_notifications_system_body">Android OMNIX-iň fonda diňlemegini öçürmez ýaly gerek. Kanallar ulgam sazlamalarynda dolandyrylýar.</string>
+    <string name="omnix_notifications_on">Açyk</string>
+    <string name="omnix_notifications_off">Öçük</string>
 
     <string name="omnix_appearance_title">Görnüş</string>
     <string name="omnix_appearance_system">Ulgam</string>
@@ -461,7 +464,6 @@
     <string name="omnix_automations_briefing_body">Wagt, batareýa, howa we meýilnama — oflaýn, gulaga.</string>
     <string name="omnix_automations_briefing_running">Brifiňi taýýarlaýaryn…</string>
     <string name="omnix_automations_briefing_ok">Aýdylýar</string>
-    <string name="omnix_automations_delete">Düzgüni poz</string>
     <string name="omnix_automations_delete_title">Bu awtomatik işi pozýarysyzmy?</string>
     <string name="omnix_automations_delete_body">«%1$s» hemişelik pozular. Bu iş indiket çalışmaz.</string>
     <string name="omnix_automations_delete_confirm">Poz</string>
@@ -482,9 +484,28 @@
     <string name="omnix_automations_action_briefing">Brifiň</string>
     <string name="omnix_automations_action_other">Hereket</string>
     <string name="omnix_automations_never_fired">Hiç wagt çalışmady</string>
+    <string name="omnix_automations_new">Täze awtomatlaşdyrma</string>
+    <string name="omnix_automations_new_when">Haçan</string>
+    <string name="omnix_automations_new_do">Näme etmeli</string>
+    <string name="omnix_automations_new_time">Wagt: %1$s</string>
+    <string name="omnix_automations_new_action_pause">Aýdymy duruz</string>
+    <string name="omnix_automations_new_action_volume">Sesi üýtget</string>
+    <string name="omnix_automations_new_action_app">Programmany aç</string>
+    <string name="omnix_automations_new_volume_value">Ses %1$d%%</string>
+    <string name="omnix_automations_new_app_hint">Programmanyň ady, meselem YouTube</string>
+    <string name="omnix_automations_new_create">Döret</string>
+    <string name="omnix_automations_limit_title">Awtomatlaşdyrma çägi doldy</string>
+    <string name="omnix_automations_limit_body">Tarifiňizde öz düzgünleriňiziň çägi: %1$d. Gereksizini pozuň.</string>
+    <string name="omnix_automations_limit_ok">Düşnükli</string>
+    <string name="omnix_automations_default_morning">Sagat 07:00-da irki brifing</string>
+    <string name="omnix_automations_default_morning_headphones">Gulaklykda irki ses</string>
+    <string name="omnix_automations_default_home">Öý Wi-Fi-da ses</string>
+    <string name="omnix_automations_default_battery">Batareýany tygşytlamak</string>
+    <string name="omnix_automations_default_pause">Gulaklyk aýrylanda duruz</string>
+    <string name="omnix_automations_builtin">Gurlan</string>
     <plurals name="omnix_automations_fired">
-        <item quantity="one">Işledi: %1$d · iň soňky %1$s</item>
-        <item quantity="other">Işledi: %1$d · iň soňky %1$s</item>
+        <item quantity="one">Işledi: %1$d · iň soňky %2$s</item>
+        <item quantity="other">Işledi: %1$d · iň soňky %2$s</item>
     </plurals>
     <string name="omnix_privacy_section_confirmations">Hereketleri tassyklamak</string>
     <string name="omnix_privacy_calls">Jaňlar</string>
@@ -514,7 +535,7 @@
     <string name="omnix_privacy_allowed_empty">Aç-açan rugsat berlen zat ýok</string>
     <string name="omnix_privacy_package_hint">Programma paketi, meselem com.example.app</string>
     <string name="omnix_privacy_advanced">Goşmaça</string>
-    <string name="omnix_privacy_advanced_body">Tassyklamalar, ynamdar kontaktlar, ekrany okamak, maglumatlar we ssenariýalar</string>
+    <string name="omnix_privacy_advanced_body">Tassyklamalar, ynamdar kontaktlar, ekrany okamak</string>
     <string name="omnix_privacy_advanced_hide">Gizlemek üçin basyň</string>
     <string name="omnix_fact_name">At</string>
     <string name="omnix_fact_city">Şäher</string>
@@ -526,16 +547,17 @@
     <string name="omnix_fact_father">Kaka</string>
     <string name="omnix_fact_wife">Aýaly</string>
     <string name="omnix_fact_husband">Adamsy</string>
-    <string name="omnix_privacy_section_memory">OMNIX näme ýatda saklaýar</string>
-    <string name="omnix_privacy_memories_hint">Laýyk gelende jogaplarda ulanylýan ýatlar</string>
     <string name="omnix_privacy_memories_empty">Häzirlikçe ýatda hiç zat ýok</string>
     <string name="omnix_privacy_forget">Ýatdan çykar</string>
     <string name="omnix_privacy_forget_confirm_title">Buny ýatdan çykarmymy?</string>
     <string name="omnix_privacy_forget_confirm_body">OMNIX muny indi ýatda saklamaýar: %1$s</string>
-    <string name="omnix_privacy_facts_hint">Düzgünli faktlar: ad, şäher we ş.m.</string>
     <string name="omnix_privacy_facts_empty">Faktlar saklanmady</string>
-    <string name="omnix_privacy_procedures_hint">Öwrenilen işler, görkezijä görä ýerine ýetirilýär (meselem «ýatmak»)</string>
-    <string name="omnix_privacy_procedures_empty">Işler saklanmady</string>
+    <string name="omnix_memory_intro">OMNIX ýatda saklamagy haýyş eden zatlaryňyzy bilýär we jogaplarda ulanýar. «Omni, ýatda sakla: …» diýiň ýa-da şu ýerde goşuň.</string>
+    <string name="omnix_memory_add_hint">Meselem: lukmanym — doktor Aman</string>
+    <string name="omnix_memory_add">Ýatda sakla</string>
+    <string name="omnix_memory_section_about">Siz barada</string>
+    <string name="omnix_memory_section_saved">Ýatda saklananlar</string>
+    <string name="omnix_memory_section_habits">Ssenariýalar</string>
     <string name="omnix_memory_type_fact">Fakt</string>
     <string name="omnix_memory_type_preference">Halaýyş</string>
     <string name="omnix_memory_type_episodic">Waka</string>

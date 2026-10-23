@@ -11,8 +11,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import android.content.Intent
@@ -155,9 +163,14 @@ fun SettingsSectionRoute(
             modifier = modifier,
             onBack = onBack,
             state = appearanceState,
-            onAssistantChange = appearanceViewModel::setNotifyAssistant,
-            onDeviceChange = appearanceViewModel::setNotifyDevice,
-            onRoutinesChange = appearanceViewModel::setNotifyRoutines
+            onRoutinesChange = appearanceViewModel::setNotifyRoutines,
+            onOpenSystemSettings = {
+                context.startActivity(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
         )
 
         SECTION_ADVANCED -> AdvancedSettingsScreen(
@@ -235,33 +248,49 @@ private fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() ->
     }
 }
 
+/**
+ * Уведомления. В v344 здесь было три переключателя, которые сохранялись, но
+ * ничего не меняли. Теперь только правда: разрешены ли уведомления системой
+ * (без них Android может выключить прослушивание в фоне; каналы — в системных
+ * настройках) и озвучивать ли автоматизации — его читает движок правил.
+ */
 @Composable
 private fun NotificationsSettingsScreen(
     state: AppearanceUiState,
-    onAssistantChange: (Boolean) -> Unit,
-    onDeviceChange: (Boolean) -> Unit,
     onRoutinesChange: (Boolean) -> Unit,
+    onOpenSystemSettings: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
+    // Пересчитывается при возврате из системных настроек.
+    var systemEnabled by remember { mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                systemEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     SectionScaffold(stringResource(R.string.omnix_notifications_settings_title), modifier, onBack) {
         OmnixSettingsGroup {
-            OmnixToggleRow(
-                title = stringResource(R.string.omnix_notifications_assistant),
-                checked = state.notifyAssistant,
-                onCheckedChange = onAssistantChange,
-                inset = true
-            )
-            OmnixGroupDivider()
-            OmnixToggleRow(
-                title = stringResource(R.string.omnix_notifications_device),
-                checked = state.notifyDevice,
-                onCheckedChange = onDeviceChange,
-                inset = true
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_notifications_system),
+                subtitle = stringResource(R.string.omnix_notifications_system_body),
+                value = stringResource(if (systemEnabled) R.string.omnix_notifications_on else R.string.omnix_notifications_off),
+                titleColor = if (systemEnabled) null else OmnixTheme.colors.stateWarning,
+                inset = true,
+                chevron = true,
+                onClick = onOpenSystemSettings
             )
             OmnixGroupDivider()
             OmnixToggleRow(
                 title = stringResource(R.string.omnix_notifications_routines),
+                subtitle = stringResource(R.string.omnix_notifications_routines_body),
                 checked = state.notifyRoutines,
                 onCheckedChange = onRoutinesChange,
                 inset = true

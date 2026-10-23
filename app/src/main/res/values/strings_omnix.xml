@@ -151,14 +151,14 @@
 
     <!-- ===== Devices (§23, §40, §41) ===== -->
     <string name="omnix_devices_title">Headphones</string>
-    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_clip_name">Headphones</string>
     <string name="omnix_devices_battery">BATTERY</string>
     <string name="omnix_devices_wake_title">The word “Omni”</string>
     <string name="omnix_devices_wake_sub">Hands-free call</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
-    <string name="omnix_devices_find">Find headphones</string>
-    <string name="omnix_devices_disconnect">Disconnect</string>
+    <string name="omnix_devices_find">Connect headphones</string>
+    <string name="omnix_devices_disconnect">Bluetooth settings</string>
 
     <!-- ===== Chat (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
@@ -238,7 +238,7 @@
     <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
     <string name="omnix_me_row_voice">Voice and “Omni”</string>
-    <string name="omnix_me_row_memory">Memory and privacy</string>
+    <string name="omnix_me_row_memory">Memory</string>
     <string name="omnix_me_model_ready">Ready</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Appearance</string>
@@ -256,7 +256,7 @@
     <string name="omnix_voice_background_body">Allow OMNIX to keep working when the screen is off.</string>
     <string name="omnix_voice_background_action">Allow</string>
     <string name="omnix_voice_automations">Automations</string>
-    <string name="omnix_voice_automations_empty">No automations yet. Say: “Omni, when my Clip connects, play music.”</string>
+    <string name="omnix_voice_automations_empty">No automations yet. Tap “New automation” or say: “Omni, when my headphones connect, play music”.</string>
 
     <string name="omnix_privacy_title">Privacy</string>
     <string name="omnix_privacy_microphone">Microphone</string>
@@ -353,9 +353,12 @@
     <string name="omnix_language_system">System</string>
 
     <string name="omnix_notifications_settings_title">Notifications</string>
-    <string name="omnix_notifications_assistant">Assistant responses</string>
-    <string name="omnix_notifications_device">Device status</string>
-    <string name="omnix_notifications_routines">Routine reminders</string>
+    <string name="omnix_notifications_routines">Speak automations</string>
+    <string name="omnix_notifications_routines_body">OMNIX says out loud what an automation did.</string>
+    <string name="omnix_notifications_system">Phone notifications</string>
+    <string name="omnix_notifications_system_body">Needed so Android keeps OMNIX listening in the background. Channels are managed in system settings.</string>
+    <string name="omnix_notifications_on">On</string>
+    <string name="omnix_notifications_off">Off</string>
 
     <string name="omnix_appearance_title">Appearance</string>
     <string name="omnix_appearance_system">System</string>
@@ -463,7 +466,6 @@
     <string name="omnix_automations_briefing_body">Time, battery, weather and plans — offline, in your ear.</string>
     <string name="omnix_automations_briefing_running">Preparing the briefing…</string>
     <string name="omnix_automations_briefing_ok">Playing</string>
-    <string name="omnix_automations_delete">Delete rule</string>
     <string name="omnix_automations_delete_title">Delete this automation?</string>
     <string name="omnix_automations_delete_body">“%1$s” will be deleted permanently. The routine will stop firing.</string>
     <string name="omnix_automations_delete_confirm">Delete</string>
@@ -484,9 +486,28 @@
     <string name="omnix_automations_action_briefing">Briefing</string>
     <string name="omnix_automations_action_other">Action</string>
     <string name="omnix_automations_never_fired">Never fired</string>
+    <string name="omnix_automations_new">New automation</string>
+    <string name="omnix_automations_new_when">When</string>
+    <string name="omnix_automations_new_do">Do</string>
+    <string name="omnix_automations_new_time">Time: %1$s</string>
+    <string name="omnix_automations_new_action_pause">Pause music</string>
+    <string name="omnix_automations_new_action_volume">Set volume</string>
+    <string name="omnix_automations_new_action_app">Open an app</string>
+    <string name="omnix_automations_new_volume_value">Volume %1$d%%</string>
+    <string name="omnix_automations_new_app_hint">App name, e.g. YouTube</string>
+    <string name="omnix_automations_new_create">Create</string>
+    <string name="omnix_automations_limit_title">Automation limit reached</string>
+    <string name="omnix_automations_limit_body">Limit of your own automations on your plan: %1$d. Delete one you no longer need.</string>
+    <string name="omnix_automations_limit_ok">OK</string>
+    <string name="omnix_automations_default_morning">Morning briefing at 07:00</string>
+    <string name="omnix_automations_default_morning_headphones">Morning volume in headphones</string>
+    <string name="omnix_automations_default_home">Home Wi-Fi volume</string>
+    <string name="omnix_automations_default_battery">Battery saver</string>
+    <string name="omnix_automations_default_pause">Pause when headphones disconnect</string>
+    <string name="omnix_automations_builtin">Built-in</string>
     <plurals name="omnix_automations_fired">
-        <item quantity="one">Fired once · last %1$s</item>
-        <item quantity="other">Fired %1$d times · last %1$s</item>
+        <item quantity="one">Fired once · last %2$s</item>
+        <item quantity="other">Fired %1$d times · last %2$s</item>
     </plurals>
     <string name="omnix_privacy_section_confirmations">Action confirmations</string>
     <string name="omnix_privacy_calls">Calls</string>
@@ -516,7 +537,7 @@
     <string name="omnix_privacy_allowed_empty">Nothing is allowed explicitly</string>
     <string name="omnix_privacy_package_hint">App package, e.g. com.example.app</string>
     <string name="omnix_privacy_advanced">Advanced</string>
-    <string name="omnix_privacy_advanced_body">Confirmations, trusted contacts, screen reading, facts and routines</string>
+    <string name="omnix_privacy_advanced_body">Confirmations, trusted contacts, screen reading</string>
     <string name="omnix_privacy_advanced_hide">Tap to hide</string>
     <string name="omnix_fact_name">Name</string>
     <string name="omnix_fact_city">City</string>
@@ -528,16 +549,17 @@
     <string name="omnix_fact_father">Father</string>
     <string name="omnix_fact_wife">Wife</string>
     <string name="omnix_fact_husband">Husband</string>
-    <string name="omnix_privacy_section_memory">What OMNIX remembers</string>
-    <string name="omnix_privacy_memories_hint">Memories used in answers when they are relevant</string>
     <string name="omnix_privacy_memories_empty">Nothing is remembered yet</string>
     <string name="omnix_privacy_forget">Forget</string>
     <string name="omnix_privacy_forget_confirm_title">Forget this?</string>
     <string name="omnix_privacy_forget_confirm_body">OMNIX will no longer remember this: %1$s</string>
-    <string name="omnix_privacy_facts_hint">Structured facts, like your name or city</string>
     <string name="omnix_privacy_facts_empty">No facts are stored</string>
-    <string name="omnix_privacy_procedures_hint">Learned routines that run on a trigger (e.g. bedtime)</string>
-    <string name="omnix_privacy_procedures_empty">No routines are stored</string>
+    <string name="omnix_memory_intro">OMNIX remembers what you asked it to and uses it in answers. Say “Omni, remember that…” or add it here.</string>
+    <string name="omnix_memory_add_hint">E.g. my doctor is Dr. Aman</string>
+    <string name="omnix_memory_add">Remember</string>
+    <string name="omnix_memory_section_about">About you</string>
+    <string name="omnix_memory_section_saved">Remembered</string>
+    <string name="omnix_memory_section_habits">Routines</string>
     <string name="omnix_memory_type_fact">Fact</string>
     <string name="omnix_memory_type_preference">Preference</string>
     <string name="omnix_memory_type_episodic">Event</string>
