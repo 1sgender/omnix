@@ -36,6 +36,8 @@ services:
       OMNIX_ADMIN_CLIENTS: ${OMNIX_ADMIN_CLIENTS:?Set explicit admin client IDs}
       OMNIX_ADMIN_BOOTSTRAP_USERNAME: ${OMNIX_ADMIN_BOOTSTRAP_USERNAME:-}
       OMNIX_ADMIN_BOOTSTRAP_PASSWORD: ${OMNIX_ADMIN_BOOTSTRAP_PASSWORD:-}
+      # Тест моделей админом: UUID аккаунтов через запятую; пусто — админов нет.
+      ADMIN_ACCOUNT_IDS: ${ADMIN_ACCOUNT_IDS:-}
 
       DATABASE_URL: jdbc:postgresql://postgres:5432/omnix
       DATABASE_USER: ${DATABASE_USER:?Set DATABASE_USER}
