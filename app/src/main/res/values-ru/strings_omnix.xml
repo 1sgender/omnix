@@ -348,7 +348,9 @@
     <string name="omnix_local_model_later">Позже</string>
 
     <string name="omnix_language_title">Язык</string>
-    <string name="omnix_language_system">Системный</string>
+    <string name="omnix_language_system">Как на телефоне</string>
+    <string name="omnix_language_hint">OMNIX показывает, слушает и говорит на выбранном языке. Туркменский пока слушается и озвучивается по-русски — до собственного туркменского голоса OMNIX.</string>
+    <string name="omnix_language_old_android">Выбор языка в приложении есть с Android 13. OMNIX говорит на языке телефона.</string>
 
     <string name="omnix_notifications_settings_title">Уведомления</string>
     <string name="omnix_notifications_routines">Озвучивать автоматизации</string>

@@ -60,6 +60,8 @@ class RepositoryCloudAiExecutor @Inject constructor(
 
         val fullSystemPrompt = buildString {
             append(AppConstants.IDENTITY_PROMPT)
+            append("\n")
+            append(com.omnix.assistant.core.locale.SpeechLanguage.answerHint())
             append("\n\n")
             append(baseSystemPrompt)
             if (targetedToolsPrompt.isNotBlank()) {
