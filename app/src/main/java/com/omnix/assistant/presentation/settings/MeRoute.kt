@@ -13,6 +13,7 @@ import com.omnix.assistant.presentation.components.OmnixBellLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
 import com.omnix.assistant.presentation.components.OmnixGlobeLineIcon
 import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
+import com.omnix.assistant.presentation.components.OmnixLockLineIcon
 import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
 import com.omnix.assistant.presentation.components.OmnixSparkLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
@@ -87,6 +88,14 @@ fun MeRoute(
                     MeRow(
                         icon = OmnixMemoryLineIcon,
                         label = stringResource(R.string.omnix_me_row_memory),
+                        value = "",
+                        destination = OmnixDestination.Memory
+                    ),
+                    // Приватность снова своей строкой: в v344 «Память» вела в неё,
+                    // и память терялась среди политик звонков.
+                    MeRow(
+                        icon = OmnixLockLineIcon,
+                        label = stringResource(R.string.omnix_privacy_title),
                         value = "",
                         destination = OmnixDestination.Privacy
                     )

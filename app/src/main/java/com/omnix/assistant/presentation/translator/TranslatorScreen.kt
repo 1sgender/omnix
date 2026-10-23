@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 import com.omnix.assistant.agent.translator.SupportedLanguage
 import com.omnix.assistant.presentation.components.OmnixBackLineIcon
 import com.omnix.assistant.presentation.components.OmnixCloseLineIcon
@@ -56,67 +57,83 @@ import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.omnix.assistant.voice.conversation.ConversationLine
+import com.omnix.assistant.voice.conversation.ConversationProblem
+import com.omnix.assistant.voice.conversation.ConversationState
+import com.omnix.assistant.voice.conversation.Ear
+import com.omnix.assistant.voice.conversation.Speaker
 
 /**
- * Translator — design v2 canvas, artboard Translator.
+ * Переводчик «по наушнику на каждого» (отзыв владельца на v344).
  *
- * Top to bottom, as the canvas draws it: back, title and the network pill;
- * "I speak" / "The other person" with the swap button between them; the live
- * transcript (each phrase: a mono meta line, the original, the translation;
- * the phrase still being heard at the bottom in lime); where the translation
- * sounds; pause, speak and end.
+ * Сверху — язык владельца и язык собеседника («Определю сам» — по его первой
+ * фразе), под ними — чей наушник левый, чей правый. Ниже разговор: мои
+ * реплики справа, собеседника слева; у каждой — оригинал и перевод. Внизу —
+ * куда звучит перевод, «Начать/Пауза» и «Завершить».
  *
- * The pill tells the truth about the network: translation runs through the
- * online engine, so it reads ONLINE with the lime dot, or OFFLINE with a dim
- * one when there is no network.
+ * Плашка ONLINE/OFFLINE честная: распознавание и перевод идут через сервер.
  */
 @Composable
 fun TranslatorScreen(
-    state: LiveInterpreterUiState,
+    state: ConversationState,
     isOnline: Boolean,
+    outputToPhone: Boolean,
     languages: List<SupportedLanguage>,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    onSwap: () -> Unit = {},
-    onMyLanguage: (SupportedLanguage) -> Unit = {},
-    onPartnerLanguage: (SupportedLanguage) -> Unit = {},
+    onMyLanguage: (String) -> Unit = {},
+    onTheirLanguage: (String?) -> Unit = {},
+    onSwapEars: () -> Unit = {},
     onOutputToPhone: (Boolean) -> Unit = {},
-    onPause: () -> Unit = {},
-    onSpeak: () -> Unit = {},
+    onToggle: () -> Unit = {},
     onEnd: () -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         Header(isOnline = isOnline, onBack = onBack)
 
-        // The translation lands in "my" language: the target. The other
-        // person speaks the source (or what the detector heard in AUTO).
-        LanguageRow(
-            myLanguage = state.targetLanguage,
-            partnerLanguage = state.detectedSourceLanguage ?: state.sourceLanguage,
-            languages = languages,
-            onSwap = onSwap,
-            onMyLanguage = onMyLanguage,
-            onPartnerLanguage = onPartnerLanguage
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, top = 20.dp, end = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            LanguageButton(
+                label = stringResource(R.string.omnix_translator_i_speak),
+                selected = state.myLanguage,
+                languages = languages,
+                allowAuto = false,
+                onPick = { it?.let(onMyLanguage) },
+                modifier = Modifier.weight(1f)
+            )
+            LanguageButton(
+                label = stringResource(R.string.omnix_translator_partner),
+                selected = state.theirLanguage,
+                languages = languages.filter { it.code != state.myLanguage },
+                allowAuto = true,
+                onPick = onTheirLanguage,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-        Transcript(
-            history = state.history,
-            partial = state.partialRecognizedText.takeIf { state.isListening },
+        if (!outputToPhone) {
+            EarsRow(theirEar = state.theirEar, onSwap = onSwapEars)
+        }
+
+        Conversation(
+            state = state,
+            languages = languages,
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 20.dp, top = 20.dp, end = 20.dp)
+                .padding(start = 20.dp, top = 16.dp, end = 20.dp)
         )
 
         OutputRow(
-            toPhone = state.outputToPhone,
+            toPhone = outputToPhone,
             onOutputToPhone = onOutputToPhone,
             modifier = Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp)
         )
 
-        Controls(onPause = onPause, onSpeak = onSpeak, onEnd = onEnd)
+        Controls(running = state.running, onToggle = onToggle, onEnd = onEnd)
     }
 }
 
@@ -176,66 +193,22 @@ private fun Header(isOnline: Boolean, onBack: () -> Unit) {
     }
 }
 
-@Composable
-private fun LanguageRow(
-    myLanguage: SupportedLanguage,
-    partnerLanguage: SupportedLanguage,
-    languages: List<SupportedLanguage>,
-    onSwap: () -> Unit,
-    onMyLanguage: (SupportedLanguage) -> Unit,
-    onPartnerLanguage: (SupportedLanguage) -> Unit
-) {
-    val colors = OmnixTheme.colors
-    val swapLabel = stringResource(R.string.omnix_translator_swap)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, top = 20.dp, end = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        LanguageButton(
-            label = stringResource(R.string.omnix_translator_i_speak),
-            language = myLanguage,
-            languages = languages,
-            onPick = onMyLanguage,
-            modifier = Modifier.weight(1f)
-        )
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .border(BorderStroke(1.dp, colors.textPrimary.copy(alpha = 0.12f)), CircleShape)
-                .clickable(onClick = onSwap)
-                .clearAndSetSemantics {
-                    contentDescription = swapLabel
-                    role = Role.Button
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(OmnixSwapLineIcon, contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(18.dp))
-        }
-        LanguageButton(
-            label = stringResource(R.string.omnix_translator_partner),
-            language = partnerLanguage,
-            languages = languages,
-            onPick = onPartnerLanguage,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-/** One side of the pair; a tap opens the list of supported languages. */
+/** Язык одной стороны; у собеседника есть «Определю сам». */
 @Composable
 private fun LanguageButton(
     label: String,
-    language: SupportedLanguage,
+    selected: String?,
     languages: List<SupportedLanguage>,
-    onPick: (SupportedLanguage) -> Unit,
+    allowAuto: Boolean,
+    onPick: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = OmnixTheme.colors
     var expanded by remember { mutableStateOf(false) }
+    val autoLabel = stringResource(R.string.omnix_translator_auto_detect)
+    val name = languages.firstOrNull { it.code == selected }?.displayName
+        ?: LiveTranslatorEngine.SUPPORTED_LANGUAGES.firstOrNull { it.code == selected }?.displayName
+        ?: autoLabel
     Box(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -250,7 +223,7 @@ private fun LanguageButton(
         ) {
             Text(text = label, style = TextStyle(fontFamily = OmnixSans, fontSize = 11.sp), color = colors.textSecondary)
             Text(
-                text = language.displayName,
+                text = name,
                 style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
                 color = colors.textPrimary,
                 maxLines = 1
@@ -261,18 +234,33 @@ private fun LanguageButton(
             onDismissRequest = { expanded = false },
             modifier = Modifier.background(colors.surfaceElevated)
         ) {
+            if (allowAuto) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = autoLabel,
+                            style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
+                            color = if (selected == null) colors.accentBrand else colors.textPrimary
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onPick(null)
+                    }
+                )
+            }
             languages.forEach { option ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = option.displayName,
                             style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
-                            color = if (option == language) colors.accentBrand else colors.textPrimary
+                            color = if (option.code == selected) colors.accentBrand else colors.textPrimary
                         )
                     },
                     onClick = {
                         expanded = false
-                        onPick(option)
+                        onPick(option.code)
                     }
                 )
             }
@@ -280,69 +268,116 @@ private fun LanguageButton(
     }
 }
 
-/**
- * The live transcript, newest at the bottom. The phrase still being heard
- * sits under the finished ones with the lime "speaking" meta line.
- */
+/** «Ваш наушник: левый · собеседника: правый» и кнопка «Поменять». */
 @Composable
-private fun Transcript(history: List<TranslationItem>, partial: String?, modifier: Modifier = Modifier) {
-    val zone = remember { ZoneId.systemDefault() }
-    val showPartial = !partial.isNullOrBlank()
+private fun EarsRow(theirEar: Ear, onSwap: () -> Unit) {
+    val colors = OmnixTheme.colors
+    val left = stringResource(R.string.omnix_translator_ear_left)
+    val right = stringResource(R.string.omnix_translator_ear_right)
+    val mine = if (theirEar == Ear.RIGHT) left else right
+    val theirs = if (theirEar == Ear.RIGHT) right else left
+    val swapLabel = stringResource(R.string.omnix_translator_swap_ears)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, top = 10.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.omnix_translator_ears, mine, theirs),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+            color = colors.textSecondary,
+            modifier = Modifier.weight(1f)
+        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onSwap)
+                .clearAndSetSemantics {
+                    contentDescription = swapLabel
+                    role = Role.Button
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(OmnixSwapLineIcon, contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+/** Разговор: свежие реплики внизу, мои — справа, собеседника — слева. */
+@Composable
+private fun Conversation(state: ConversationState, languages: List<SupportedLanguage>, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         reverseLayout = true,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        if (showPartial) {
-            item(key = "partial") { PartialEntry(text = partial.orEmpty()) }
-        }
-        // No item keys: ids are wall-clock millis and two phrases can share one.
-        itemsIndexed(history) { index, item ->
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                FinishedEntry(item = item, time = TimeFormat.format(Instant.ofEpochMilli(item.id).atZone(zone)))
-                // A hairline between this phrase and the newer one below it.
-                if (index > 0 || showPartial) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(OmnixTheme.colors.textPrimary.copy(alpha = 0.06f))
-                    )
-                }
+        item(key = "status") { StatusLine(state) }
+        items(state.lines.asReversed(), key = { it.id }) { line -> LineEntry(line, languages) }
+        if (state.lines.isEmpty() && !state.running) {
+            item(key = "hint") {
+                Text(
+                    text = stringResource(R.string.omnix_translator_hint),
+                    style = OriginalStyle,
+                    color = colors.textSecondary
+                )
             }
         }
     }
 }
 
 @Composable
-private fun FinishedEntry(item: TranslationItem, time: String) {
+private fun StatusLine(state: ConversationState) {
     val colors = OmnixTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = stringResource(R.string.omnix_translator_meta_partner, time),
-            style = MonoMeta,
-            color = colors.textTertiary
-        )
-        Text(text = item.originalText, style = OriginalStyle, color = colors.textSecondary)
-        Text(
-            text = item.translatedText,
-            style = TranslationStyle,
-            // A failed translation carries the reason, not a translation.
-            color = if (item.isTranslated) colors.textPrimary else colors.textSecondary
-        )
-    }
+    val text = when {
+        state.problem == ConversationProblem.MICROPHONE -> stringResource(R.string.omnix_translator_problem_mic)
+        state.problem == ConversationProblem.RECOGNITION ->
+            stringResource(R.string.omnix_translator_problem_recognition, state.problemDetail.orEmpty())
+        !state.running -> null
+        state.working -> stringResource(R.string.omnix_translator_working)
+        state.hearing -> stringResource(R.string.omnix_translator_hearing)
+        state.theirLanguage == null -> stringResource(R.string.omnix_translator_waiting)
+        else -> null
+    } ?: return
+    Text(
+        text = text,
+        style = MonoMeta,
+        color = if (state.problem != null) colors.stateError else colors.accentBrand
+    )
 }
 
 @Composable
-private fun PartialEntry(text: String) {
+private fun LineEntry(line: ConversationLine, languages: List<SupportedLanguage>) {
     val colors = OmnixTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = stringResource(R.string.omnix_translator_meta_speaking),
-            style = MonoMeta,
-            color = colors.accentBrand
-        )
-        Text(text = text, style = TranslationStyle, color = colors.textPrimary)
+    val mine = line.speaker == Speaker.ME
+    val who = stringResource(if (mine) R.string.omnix_translator_me else R.string.omnix_translator_them)
+    val lang = languages.firstOrNull { it.code == line.sourceLang }?.displayName
+        ?: LiveTranslatorEngine.SUPPORTED_LANGUAGES.firstOrNull { it.code == line.sourceLang }?.displayName
+        ?: line.sourceLang
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(text = "$who · $lang", style = MonoMeta, color = colors.textTertiary)
+        Text(text = line.original, style = OriginalStyle, color = colors.textSecondary)
+        if (line.translated.isNotBlank()) {
+            Text(
+                text = line.translated,
+                style = TranslationStyle,
+                // Неудачный перевод несёт причину, а не перевод.
+                color = if (line.translatedOk) colors.textPrimary else colors.textSecondary
+            )
+        }
+        if (line.translatedOk && !line.spoken) {
+            Text(
+                text = stringResource(R.string.omnix_translator_no_voice),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                color = colors.textTertiary
+            )
+        }
     }
 }
 
@@ -393,7 +428,7 @@ private fun OutputButton(text: String, selected: Boolean, onClick: () -> Unit, m
 }
 
 @Composable
-private fun Controls(onPause: () -> Unit, onSpeak: () -> Unit, onEnd: () -> Unit) {
+private fun Controls(running: Boolean, onToggle: () -> Unit, onEnd: () -> Unit) {
     val colors = OmnixTheme.colors
     Row(
         modifier = Modifier
@@ -403,25 +438,16 @@ private fun Controls(onPause: () -> Unit, onSpeak: () -> Unit, onEnd: () -> Unit
         horizontalArrangement = Arrangement.spacedBy(28.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(Modifier.size(52.dp))
         RoundButton(
-            icon = OmnixPauseLineIcon,
-            label = stringResource(R.string.omnix_translator_pause),
-            size = 52.dp,
-            iconSize = 18.dp,
-            background = colors.surface,
-            iconTint = colors.textPrimary,
-            border = colors.border,
-            onClick = onPause
-        )
-        RoundButton(
-            icon = OmnixMicLineIcon,
-            label = stringResource(R.string.omnix_translator_speak),
+            icon = if (running) OmnixPauseLineIcon else OmnixMicLineIcon,
+            label = stringResource(if (running) R.string.omnix_translator_pause else R.string.omnix_translator_speak),
             size = 84.dp,
             iconSize = 30.dp,
-            background = colors.accentBrand,
-            iconTint = colors.background,
-            border = null,
-            onClick = onSpeak
+            background = if (running) colors.surface else colors.accentBrand,
+            iconTint = if (running) colors.textPrimary else colors.background,
+            border = if (running) colors.border else null,
+            onClick = onToggle
         )
         RoundButton(
             icon = OmnixCloseLineIcon,
@@ -476,4 +502,3 @@ private val TranslationStyle = TextStyle(
 )
 private val LanguageShape = RoundedCornerShape(16.dp)
 private val OutputShape = RoundedCornerShape(14.dp)
-private val TimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

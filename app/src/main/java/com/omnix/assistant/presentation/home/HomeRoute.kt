@@ -54,7 +54,7 @@ fun HomeRoute(
         onTalkTap = viewModel::onTalkTap,
         onClipTap = onClipTap,
         onTranslatorTap = { onOpen(OmnixDestination.Translator) },
-        onMemoryTap = { onOpen(OmnixDestination.Privacy) },
+        onMemoryTap = { onOpen(OmnixDestination.Memory) },
         onRemindersTap = { onOpen(OmnixDestination.Chat) },
         onAutomationsTap = { onOpen(OmnixDestination.Automations) },
         microphoneSettingsNeeded = settingsNeeded,

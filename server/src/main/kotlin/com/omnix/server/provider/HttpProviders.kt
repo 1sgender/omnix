@@ -23,6 +23,19 @@ interface HttpTransport {
         connectTimeoutMs: Long,
         requestTimeoutMs: Long
     ): HttpTransportResponse
+
+    /**
+     * Двоичное тело (multipart с аудио для распознавания речи). Транспорты,
+     * которым это не нужно (фейки в тестах провайдеров), его не реализуют.
+     */
+    suspend fun postBytes(
+        url: String,
+        headers: Map<String, String>,
+        body: ByteArray,
+        contentType: String,
+        connectTimeoutMs: Long,
+        requestTimeoutMs: Long
+    ): HttpTransportResponse = throw TransportException(ProviderFailureKind.UNKNOWN, "binary body not supported")
 }
 
 data class HttpTransportResponse(val status: Int, val body: String)

@@ -74,20 +74,11 @@ fun PrivacyScreen(
     onBlockPackage: (String) -> Unit = {},
     onUnblockPackage: (String) -> Unit = {},
     onAllowPackage: (String) -> Unit = {},
-    onRevokePackageAllowance: (String) -> Unit = {},
-    onForgetMemory: (Long, String?) -> Unit = { _, _ -> },
-    onRemoveFact: (String) -> Unit = {},
-    onRemoveProcedure: (String) -> Unit = {}
+    onRevokePackageAllowance: (String) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
     var advancedOpen by rememberSaveable { mutableStateOf(false) }
-    // Браузер памяти: удаление одного воспоминания/факта — деструктивное
-    // действие, через общий confirmation sheet (вес тот же, что у удаления
-    // истории: одно нажатие теряет данные безвозвратно).
-    var forgetArmedMemory by remember { mutableStateOf<MemoryEntryUi?>(null) }
-    var removeArmedFact by remember { mutableStateOf<FactEntryUi?>(null) }
-    var removeArmedProcedure by remember { mutableStateOf<ProcedureEntryUi?>(null) }
 
     SectionScaffold(
         stringResource(R.string.omnix_privacy_title),
@@ -138,29 +129,6 @@ fun PrivacyScreen(
                     onClick = onManagePermissions
                 )
             }
-
-        OmnixSettingsSectionHeader(
-            text = stringResource(R.string.omnix_privacy_section_memory)
-        )
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_privacy_memories_hint),
-                inset = true
-            )
-            // Подписи типов разрешаются в composable-контексте ДО входа
-            // в общий хелпер списка (stringResource вне его лямбд).
-            val memoriesWithType = policyState.memories.map { memory ->
-                memory to memoryTypeText(memory.typeLabel)
-            }
-            EntryListGroup(
-                entries = memoriesWithType,
-                emptyText = stringResource(R.string.omnix_privacy_memories_empty),
-                removeLabel = stringResource(R.string.omnix_privacy_forget),
-                onRemove = { (memory, _) -> forgetArmedMemory = memory },
-                rowTitle = { (memory, _) -> memory.content },
-                rowValue = { (_, typeText) -> typeText }
-            )
-        }
 
         // Всё остальное — для тех, кто хочет тонкой настройки (решение владельца
         // 2026-10-21: «Приватность» была экраном разработчика).
@@ -323,38 +291,6 @@ fun PrivacyScreen(
                     )
                 }
 
-            Spacer(Modifier.height(spacing.sm))
-            OmnixSettingsGroup {
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_privacy_facts_hint),
-                    inset = true
-                )
-                // Ключи вида user.name — внутренние; людям показываем «Имя».
-                val factsWithLabel = policyState.facts.map { fact -> fact to factKeyLabel(fact.key) }
-                EntryListGroup(
-                    entries = factsWithLabel,
-                    emptyText = stringResource(R.string.omnix_privacy_facts_empty),
-                    removeLabel = stringResource(R.string.omnix_privacy_remove),
-                    onRemove = { (fact, _) -> removeArmedFact = fact },
-                    rowTitle = { (_, label) -> label },
-                    rowValue = { (fact, _) -> fact.value }
-                )
-            }
-            Spacer(Modifier.height(spacing.sm))
-            OmnixSettingsGroup {
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_privacy_procedures_hint),
-                    inset = true
-                )
-                EntryListGroup(
-                    entries = policyState.procedures,
-                    emptyText = stringResource(R.string.omnix_privacy_procedures_empty),
-                    removeLabel = stringResource(R.string.omnix_privacy_remove),
-                    onRemove = { removeArmedProcedure = it },
-                    rowTitle = { it.trigger },
-                    rowValue = { it.executions.toString() }
-                )
-            }
         }
 
         if (onDeleteHistory != null) {
@@ -384,56 +320,6 @@ fun PrivacyScreen(
         )
     }
 
-    // Memory browser: one entry, one question — the row the user sees is the
-    // row that gets deleted (no semantic matching on the UI path).
-    forgetArmedMemory?.let { memory ->
-        ConfirmationSheet(
-            request = ConfirmationRequest(
-                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
-                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, memory.content),
-                confirmLabel = stringResource(R.string.omnix_privacy_forget),
-                cancelLabel = stringResource(R.string.omnix_cancel),
-                voiceEnabled = false
-            ),
-            onConfirm = {
-                onForgetMemory(memory.id, memory.keyName)
-                forgetArmedMemory = null
-            },
-            onCancel = { forgetArmedMemory = null }
-        )
-    }
-    removeArmedFact?.let { fact ->
-        ConfirmationSheet(
-            request = ConfirmationRequest(
-                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
-                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, "${factKeyLabel(fact.key)}: ${fact.value}"),
-                confirmLabel = stringResource(R.string.omnix_privacy_remove),
-                cancelLabel = stringResource(R.string.omnix_cancel),
-                voiceEnabled = false
-            ),
-            onConfirm = {
-                onRemoveFact(fact.key)
-                removeArmedFact = null
-            },
-            onCancel = { removeArmedFact = null }
-        )
-    }
-    removeArmedProcedure?.let { proc ->
-        ConfirmationSheet(
-            request = ConfirmationRequest(
-                title = stringResource(R.string.omnix_privacy_forget_confirm_title),
-                detail = stringResource(R.string.omnix_privacy_forget_confirm_body, proc.trigger),
-                confirmLabel = stringResource(R.string.omnix_privacy_remove),
-                cancelLabel = stringResource(R.string.omnix_cancel),
-                voiceEnabled = false
-            ),
-            onConfirm = {
-                onRemoveProcedure(proc.trigger)
-                removeArmedProcedure = null
-            },
-            onCancel = { removeArmedProcedure = null }
-        )
-    }
 }
 
 /**
@@ -442,7 +328,7 @@ fun PrivacyScreen(
  * один и тот же жест удаления везде.
  */
 @Composable
-private fun <T> EntryListGroup(
+internal fun <T> EntryListGroup(
     entries: List<T>,
     emptyText: String,
     removeLabel: String,
@@ -475,7 +361,7 @@ private fun <T> EntryListGroup(
  * enum-имена (FACT/PREFERENCE/…) пользователю не показываются.
  */
 @Composable
-private fun memoryTypeText(label: MemoryTypeLabel): String = when (label) {
+internal fun memoryTypeText(label: MemoryTypeLabel): String = when (label) {
     MemoryTypeLabel.FACT -> stringResource(R.string.omnix_memory_type_fact)
     MemoryTypeLabel.PREFERENCE -> stringResource(R.string.omnix_memory_type_preference)
     MemoryTypeLabel.EPISODIC -> stringResource(R.string.omnix_memory_type_episodic)
@@ -516,7 +402,7 @@ private fun PolicyOption(
  * in the list above immediately (immediate write, no batch save).
  */
 @Composable
-private fun AddRow(
+internal fun AddRow(
     fieldHint: String,
     addLabel: String,
     onAdd: (String) -> Unit
@@ -567,7 +453,7 @@ private fun AddRow(
 
 /** Подпись факта для людей: «Имя», а не внутренний ключ user.name. */
 @Composable
-private fun factKeyLabel(key: String): String = when (key) {
+internal fun factKeyLabel(key: String): String = when (key) {
     "user.name" -> stringResource(R.string.omnix_fact_name)
     "user.city" -> stringResource(R.string.omnix_fact_city)
     "user.car" -> stringResource(R.string.omnix_fact_car)

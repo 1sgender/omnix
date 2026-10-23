@@ -40,6 +40,7 @@ import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
 import com.omnix.assistant.presentation.home.HomeRoute
 import com.omnix.assistant.presentation.settings.SettingsViewModel
 import com.omnix.assistant.presentation.settings.MeRoute
+import com.omnix.assistant.presentation.settings.MemoryScreen
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
 import com.omnix.assistant.presentation.settings.SECTION_ABOUT
@@ -168,7 +169,7 @@ fun OmnixNavGraph(
                     capabilities = capabilities,
                     onWakeWordChange = headphoneSettings::onWakeWordEnabledChanged,
                     onTranslatorToHeadphonesChange = headphoneSettings::onTranslatorToHeadphonesChanged,
-                    onFind = { omnixViewModel.setSearching(true) },
+                    onFind = omnixViewModel::refreshHeadphones,
                     onOpenSystemBluetooth = {
                         devicesContext.startActivity(
                             Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -216,10 +217,20 @@ fun OmnixNavGraph(
                     onBlockPackage = policyViewModel::blockPackage,
                     onUnblockPackage = policyViewModel::unblockPackage,
                     onAllowPackage = policyViewModel::allowPackage,
-                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance,
-                    onForgetMemory = { id, key -> policyViewModel.forgetMemory(id, key) },
-                    onRemoveFact = policyViewModel::removeFact,
-                    onRemoveProcedure = policyViewModel::removeProcedure
+                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance
+                )
+            }
+
+            composable(OmnixDestination.Memory.route) {
+                val memoryViewModel: PrivacyPolicyViewModel = hiltViewModel()
+                val memoryState by memoryViewModel.uiState.collectAsStateWithLifecycle()
+                MemoryScreen(
+                    state = memoryState,
+                    onBack = navController::popBackStack,
+                    onAddMemory = memoryViewModel::addMemory,
+                    onForgetMemory = { id, key -> memoryViewModel.forgetMemory(id, key) },
+                    onRemoveFact = memoryViewModel::removeFact,
+                    onRemoveProcedure = memoryViewModel::removeProcedure
                 )
             }
 
