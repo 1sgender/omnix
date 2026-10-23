@@ -338,7 +338,9 @@
     <string name="omnix_local_model_later">Soňrak</string>
 
     <string name="omnix_language_title">Dil</string>
-    <string name="omnix_language_system">Ulgam</string>
+    <string name="omnix_language_system">Telefondaky ýaly</string>
+    <string name="omnix_language_hint">OMNIX saýlanan dilde görkezýär, diňleýär we gürleýär. Türkmençe häzirlikçe rusça diňlenýär we sesleşdirilýär — OMNIX-iň öz türkmen sesi peýda bolýança.</string>
+    <string name="omnix_language_old_android">Programmada dil saýlamak Android 13-den başlap bar. OMNIX telefonyň dilinde gürleýär.</string>
 
     <string name="omnix_notifications_settings_title">Bildirişler</string>
     <string name="omnix_notifications_assistant">Kömekçiniň jogaplary</string>

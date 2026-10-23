@@ -59,6 +59,7 @@ class OmniLocalPromptBuilder @Inject constructor() : LocalPromptBuilder {
         return buildString {
             append(IM_START).append("system\n")
             append(AppConstants.IDENTITY_PROMPT).append("\n")
+            append(com.omnix.assistant.core.locale.SpeechLanguage.answerHint()).append("\n")
             append(SYSTEM_PROMPT).append("\n")
             append(styleHint)
             val memory = request.memoryContext.trim()

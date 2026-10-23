@@ -1,5 +1,7 @@
 package com.omnix.assistant.voice.tts
 
+import com.omnix.assistant.core.locale.AppLanguage
+import com.omnix.assistant.core.locale.SpeechLanguage
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -186,15 +188,7 @@ class TextToSpeechManager @Inject constructor(
 
     private fun configureTts() {
         tts?.apply {
-            // Настройка русского языка
-            val russianLocale = Locale("ru", "RU")
-            val result = setLanguage(russianLocale)
-            
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                // Fallback на английский
-                setLanguage(Locale.US)
-                Log.w(TAG, "Russian TTS not available, using English")
-            }
+            applyAppLanguage(this)
             
             // Listener для отслеживания состояния
             setOnUtteranceProgressListener(object : UtteranceProgressListener() {
@@ -284,6 +278,26 @@ class TextToSpeechManager @Inject constructor(
     }
 
     /** Внутренний вызов speak, вызывается ТОЛЬКО когда движок гарантированно готов. */
+    /**
+     * Голос на языке приложения (6 языков); если движок его не знает —
+     * русский, затем английский. Язык можно сменить на ходу, поэтому он
+     * сверяется перед каждой фразой.
+     */
+    private var appliedLanguage: AppLanguage? = null
+
+    private fun applyAppLanguage(engine: TextToSpeech) {
+        val language = AppLanguage.current()
+        if (language == appliedLanguage) return
+        val locale = SpeechLanguage.ttsLocale(language) {
+            engine.isLanguageAvailable(it) >= TextToSpeech.LANG_AVAILABLE
+        }
+        engine.setLanguage(locale)
+        appliedLanguage = language
+        if (locale.language != language.code) {
+            Log.w(TAG, "no ${language.code} voice, speaking ${locale.language}")
+        }
+    }
+
     private fun speakInternal(
         text: String,
         speechRate: Float,
@@ -297,6 +311,7 @@ class TextToSpeechManager @Inject constructor(
             _ttsState.value = TtsState.Error
             return
         }
+        applyAppLanguage(engine)
         engine.setSpeechRate(speechRate.coerceIn(0.5f, 2.0f))
         engine.setPitch(pitch.coerceIn(0.5f, 2.0f))
 

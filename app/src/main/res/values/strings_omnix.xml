@@ -339,7 +339,9 @@
     <string name="omnix_local_model_later">Later</string>
 
     <string name="omnix_language_title">Language</string>
-    <string name="omnix_language_system">System</string>
+    <string name="omnix_language_system">As on the phone</string>
+    <string name="omnix_language_hint">OMNIX shows, hears and speaks the chosen language. Turkmen is heard and spoken in Russian for now, until OMNIX has its own Turkmen voice.</string>
+    <string name="omnix_language_old_android">Choosing a language inside the app needs Android 13 or newer. OMNIX follows the phone’s language.</string>
 
     <string name="omnix_notifications_settings_title">Notifications</string>
     <string name="omnix_notifications_assistant">Assistant responses</string>

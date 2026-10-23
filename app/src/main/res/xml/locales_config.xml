@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Supported locales (Android 13+ per-app language picker). The Language
-  settings row points users to the system choice; this file is what makes the
-  app appear in that picker with exactly these three options.
+  Supported locales (Android 13+ per-app language). The six languages of OMNIX
+  (owner decision 2026-10-22): they appear in the system per-app picker and in
+  Me → Language, which sets the same per-app choice.
 -->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
-    <locale android:name="en" />
-    <locale android:name="ru" />
     <locale android:name="tk" />
+    <locale android:name="ru" />
+    <locale android:name="en" />
+    <locale android:name="tr" />
+    <locale android:name="uz" />
+    <locale android:name="kk" />
 </locale-config>

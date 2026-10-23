@@ -1,5 +1,6 @@
 package com.omnix.assistant.voice.stt
 
+import com.omnix.assistant.core.locale.SpeechLanguage
 import com.omnix.assistant.R
 import android.content.Context
 import android.content.Intent
@@ -90,7 +91,7 @@ class SpeechRecognizerManager @Inject constructor(
 
     @Volatile
     private var isContinuousMode = false
-    private var currentLanguageTag = "ru-RU"
+    private var currentLanguageTag = SpeechLanguage.recognitionTag()
 
     private val exceptionHandler = CoroutineExceptionHandler { _, t ->
         if (t is CancellationException) throw t
@@ -118,7 +119,8 @@ class SpeechRecognizerManager @Inject constructor(
         }
     }
 
-    fun startListening(languageTag: String = "ru-RU", continuous: Boolean = false) {
+    /** Язык по умолчанию — язык приложения (решение владельца: 6 языков). */
+    fun startListening(languageTag: String = SpeechLanguage.recognitionTag(), continuous: Boolean = false) {
         synchronized(startMutex) {
             if (disposed.get()) return
 

@@ -216,25 +216,6 @@ internal fun SectionScaffold(
     }
 }
 
-/**
- * Language. The app follows the phone's language; there is no in-app picker
- * because Android already owns that choice per app (§42).
- */
-@Composable
-private fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -> Unit)? = null) {
-    val context = LocalContext.current
-    SectionScaffold(stringResource(R.string.omnix_language_title), modifier, onBack) {
-        OmnixSettingsGroup {
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_language_title),
-                value = context.resources.configuration.locales[0].displayLanguage,
-                subtitle = stringResource(R.string.omnix_language_system),
-                inset = true
-            )
-        }
-    }
-}
-
 @Composable
 private fun NotificationsSettingsScreen(
     state: AppearanceUiState,
