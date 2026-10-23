@@ -149,14 +149,14 @@
 
     <!-- ===== Устройства ===== -->
     <string name="omnix_devices_title">Наушники</string>
-    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_clip_name">Наушники</string>
     <string name="omnix_devices_battery">ЗАРЯД</string>
     <string name="omnix_devices_wake_title">Фраза «Омни»</string>
     <string name="omnix_devices_wake_sub">Вызов без рук</string>
     <string name="omnix_devices_translate_title">Перевод в наушники</string>
     <string name="omnix_devices_translate_sub">Собеседник звучит на вашем языке</string>
-    <string name="omnix_devices_find">Найти наушники</string>
-    <string name="omnix_devices_disconnect">Отключить</string>
+    <string name="omnix_devices_find">Подключить наушники</string>
+    <string name="omnix_devices_disconnect">Настройки Bluetooth</string>
 
     <!-- ===== Чат ===== -->
     <string name="omnix_chat_title">Omnix</string>
@@ -225,7 +225,7 @@
     <string name="omnix_me_no_name">Ваш профиль</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
     <string name="omnix_me_row_voice">Голос и фраза «Омни»</string>
-    <string name="omnix_me_row_memory">Память и приватность</string>
+    <string name="omnix_me_row_memory">Память</string>
     <string name="omnix_me_model_ready">Готова</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Оформление</string>
@@ -243,7 +243,7 @@
     <string name="omnix_voice_background_body">Разрешите OMNIX работать при выключенном экране.</string>
     <string name="omnix_voice_background_action">Разрешить</string>
     <string name="omnix_voice_automations">Автоматизации</string>
-    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Скажите: «Омни, когда подключится Clip — включи музыку».</string>
+    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Нажмите «Новая автоматизация» или скажите: «Омни, когда подключу наушники — включи музыку».</string>
 
     <string name="omnix_privacy_title">Приватность</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
@@ -340,9 +340,12 @@
     <string name="omnix_language_system">Системный</string>
 
     <string name="omnix_notifications_settings_title">Уведомления</string>
-    <string name="omnix_notifications_assistant">Ответы ассистента</string>
-    <string name="omnix_notifications_device">Состояние устройства</string>
-    <string name="omnix_notifications_routines">Напоминания сценариев</string>
+    <string name="omnix_notifications_routines">Озвучивать автоматизации</string>
+    <string name="omnix_notifications_routines_body">OMNIX вслух скажет, что сделала автоматизация.</string>
+    <string name="omnix_notifications_system">Уведомления на телефоне</string>
+    <string name="omnix_notifications_system_body">Нужны, чтобы Android не выключал прослушивание в фоне. Каналы настраиваются в системе.</string>
+    <string name="omnix_notifications_on">Включены</string>
+    <string name="omnix_notifications_off">Выключены</string>
 
     <string name="omnix_appearance_title">Оформление</string>
     <string name="omnix_appearance_system">Системное</string>
@@ -449,7 +452,6 @@
     <string name="omnix_automations_briefing_body">Время, заряд, погода и планы — офлайн, в наушник.</string>
     <string name="omnix_automations_briefing_running">Готовлю брифинг…</string>
     <string name="omnix_automations_briefing_ok">Озвучивается</string>
-    <string name="omnix_automations_delete">Удалить правило</string>
     <string name="omnix_automations_delete_title">Удалить эту автоматизацию?</string>
     <string name="omnix_automations_delete_body">«%1$s» будет удалена навсегда. Рутина перестанет срабатывать.</string>
     <string name="omnix_automations_delete_confirm">Удалить</string>
@@ -470,11 +472,30 @@
     <string name="omnix_automations_action_briefing">Брифинг</string>
     <string name="omnix_automations_action_other">Действие</string>
     <string name="omnix_automations_never_fired">Ни разу не срабатывало</string>
+    <string name="omnix_automations_new">Новая автоматизация</string>
+    <string name="omnix_automations_new_when">Когда</string>
+    <string name="omnix_automations_new_do">Что сделать</string>
+    <string name="omnix_automations_new_time">Время: %1$s</string>
+    <string name="omnix_automations_new_action_pause">Поставить музыку на паузу</string>
+    <string name="omnix_automations_new_action_volume">Изменить громкость</string>
+    <string name="omnix_automations_new_action_app">Открыть приложение</string>
+    <string name="omnix_automations_new_volume_value">Громкость %1$d%%</string>
+    <string name="omnix_automations_new_app_hint">Название приложения, например YouTube</string>
+    <string name="omnix_automations_new_create">Создать</string>
+    <string name="omnix_automations_limit_title">Достигнут лимит автоматизаций</string>
+    <string name="omnix_automations_limit_body">Лимит своих правил на вашем тарифе: %1$d. Удалите ненужное.</string>
+    <string name="omnix_automations_limit_ok">Понятно</string>
+    <string name="omnix_automations_default_morning">Утренний брифинг в 07:00</string>
+    <string name="omnix_automations_default_morning_headphones">Утренняя громкость в наушниках</string>
+    <string name="omnix_automations_default_home">Громкость дома по Wi-Fi</string>
+    <string name="omnix_automations_default_battery">Экономия батареи</string>
+    <string name="omnix_automations_default_pause">Пауза при отключении наушников</string>
+    <string name="omnix_automations_builtin">Встроенное</string>
     <plurals name="omnix_automations_fired">
-        <item quantity="one">Сработал 1 раз · последний %1$s</item>
-        <item quantity="few">Сработало %1$d раза · последний %1$s</item>
-        <item quantity="many">Сработало %1$d раз · последний %1$s</item>
-        <item quantity="other">Сработало %1$d раз · последний %1$s</item>
+        <item quantity="one">Сработал 1 раз · последний %2$s</item>
+        <item quantity="few">Сработало %1$d раза · последний %2$s</item>
+        <item quantity="many">Сработало %1$d раз · последний %2$s</item>
+        <item quantity="other">Сработало %1$d раз · последний %2$s</item>
     </plurals>
     <string name="omnix_privacy_section_confirmations">Подтверждения действий</string>
     <string name="omnix_privacy_calls">Звонки</string>
@@ -504,7 +525,7 @@
     <string name="omnix_privacy_allowed_empty">Явно не разрешено ничего</string>
     <string name="omnix_privacy_package_hint">Пакет приложения, например com.example.app</string>
     <string name="omnix_privacy_advanced">Дополнительно</string>
-    <string name="omnix_privacy_advanced_body">Подтверждения, доверенные контакты, чтение экрана, факты и сценарии</string>
+    <string name="omnix_privacy_advanced_body">Подтверждения, доверенные контакты, чтение экрана</string>
     <string name="omnix_privacy_advanced_hide">Нажмите, чтобы скрыть</string>
     <string name="omnix_fact_name">Имя</string>
     <string name="omnix_fact_city">Город</string>
@@ -516,16 +537,17 @@
     <string name="omnix_fact_father">Папа</string>
     <string name="omnix_fact_wife">Жена</string>
     <string name="omnix_fact_husband">Муж</string>
-    <string name="omnix_privacy_section_memory">Что помнит OMNIX</string>
-    <string name="omnix_privacy_memories_hint">Воспоминания, которые используются в ответах, когда уместны</string>
     <string name="omnix_privacy_memories_empty">Пока ничего не запомнено</string>
     <string name="omnix_privacy_forget">Забыть</string>
     <string name="omnix_privacy_forget_confirm_title">Забыть это?</string>
     <string name="omnix_privacy_forget_confirm_body">OMNIX больше не будет это помнить: %1$s</string>
-    <string name="omnix_privacy_facts_hint">Структурированные факты: имя, город и т.п.</string>
     <string name="omnix_privacy_facts_empty">Факты не сохранены</string>
-    <string name="omnix_privacy_procedures_hint">Записанные сценарии, запускаемые по триггеру (например «сон»)</string>
-    <string name="omnix_privacy_procedures_empty">Процедуры не сохранены</string>
+    <string name="omnix_memory_intro">OMNIX помнит то, что вы просили запомнить, и использует это в ответах. Скажите «Омни, запомни, что…» или добавьте здесь.</string>
+    <string name="omnix_memory_add_hint">Например: мой врач — доктор Аман</string>
+    <string name="omnix_memory_add">Запомнить</string>
+    <string name="omnix_memory_section_about">О вас</string>
+    <string name="omnix_memory_section_saved">Запомненное</string>
+    <string name="omnix_memory_section_habits">Сценарии</string>
     <string name="omnix_memory_type_fact">Факт</string>
     <string name="omnix_memory_type_preference">Предпочтение</string>
     <string name="omnix_memory_type_episodic">Событие</string>

@@ -1,8 +1,10 @@
 package com.omnix.assistant.agent.automation
 
+import com.omnix.assistant.agent.automation.engine.isDefaultRule
 import com.omnix.assistant.agent.automation.engine.survivingDefaults
 import com.omnix.assistant.agent.automation.entity.AutomationEntity
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -38,6 +40,12 @@ class DefaultRuleDeletionTest {
         val survivors = survivingDefaults(defaults, emptySet())
 
         assertEquals(defaults, survivors)
+    }
+
+    @Test
+    fun `only built-in rules count as default`() {
+        assertTrue(isDefaultRule("default_home_wifi"))
+        assertFalse(isDefaultRule("user_2f1c"))
     }
 
     @Test

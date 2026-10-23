@@ -219,3 +219,10 @@ val OmnixBellLineIcon: ImageVector = omnixLineIcon(
     "M10 21h4"
 )
 
+/** Приватность: замок. */
+val OmnixLockLineIcon: ImageVector = omnixLineIcon(
+    "Lock",
+    "M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z",
+    "M8 11V8a4 4 0 0 1 8 0v3"
+)
+

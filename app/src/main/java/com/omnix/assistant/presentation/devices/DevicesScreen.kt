@@ -102,27 +102,21 @@ fun DevicesScreen(
             modifier = Modifier.padding(top = 24.dp)
         )
 
-        Row(
+        // Android не даёт приложению ни подключить чужие наушники, ни разорвать
+        // связь: и то и другое делается на системной странице Bluetooth. В v344
+        // было две кнопки («Найти» и «Отключить») — обе вели туда же, а «Найти»
+        // ещё и навсегда оставляла статус «Поиск…».
+        val connected = clip is ClipState.Connected || clip is ClipState.BatteryLow
+        OutlineButton(
+            text = stringResource(if (connected) R.string.omnix_devices_disconnect else R.string.omnix_devices_find),
+            onClick = {
+                onFind()
+                onOpenSystemBluetooth()
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlineButton(
-                text = stringResource(R.string.omnix_devices_find),
-                // With Bluetooth off there is nothing to search with: the
-                // system switch comes first.
-                onClick = if (clip == ClipState.BluetoothOff) onOpenSystemBluetooth else onFind,
-                modifier = Modifier.weight(1f)
-            )
-            // Android gives apps no way to drop a headset connection; the
-            // system Bluetooth page is where it is done.
-            OutlineButton(
-                text = stringResource(R.string.omnix_devices_disconnect),
-                onClick = onOpenSystemBluetooth,
-                modifier = Modifier.weight(1f)
-            )
-        }
+                .padding(top = 24.dp)
+        )
 
         // Только то, что ждёт действия: «Доступно» человеку ничего не говорит
         // (замечание владельца 2026-10-21), а серое «нельзя» — тем более.

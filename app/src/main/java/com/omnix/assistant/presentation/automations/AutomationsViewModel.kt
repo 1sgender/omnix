@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.agent.automation.dao.AutomationDao
 import com.omnix.assistant.agent.automation.engine.AutomationDeletionStore
+import com.omnix.assistant.agent.automation.engine.AutomationLimitReachedException
+import com.omnix.assistant.agent.automation.engine.PersonalAutomationEngine
+import com.omnix.assistant.agent.automation.engine.isDefaultRule
 import com.omnix.assistant.agent.automation.entity.AutomationEntity
 import com.omnix.assistant.agent.automation.model.AutomationDescriptions
 import com.omnix.assistant.agent.automation.model.AutomationTriggerLabel
@@ -36,7 +39,9 @@ data class AutomationUiModel(
     val actions: List<LabeledAction>,
     val lastTriggeredAt: Long?,
     val triggerCount: Int,
-    val isEnabled: Boolean
+    val isEnabled: Boolean,
+    /** Встроенное правило: на экране — переведённое название, а не строка из БД. */
+    val isDefault: Boolean
 )
 
 data class AutomationsUiState(
@@ -44,7 +49,9 @@ data class AutomationsUiState(
     val briefingRunning: Boolean = false,
     /** Honest outcome of the last "run briefing now" tap; null = none yet. */
     val briefingOutcome: String? = null,
-    val briefingSucceeded: Boolean? = null
+    val briefingSucceeded: Boolean? = null,
+    /** Лимит тарифа на свои правила, если создать не удалось; null — ошибки нет. */
+    val limitReached: Int? = null
 )
 
 /**
@@ -63,7 +70,8 @@ class AutomationsViewModel @Inject constructor(
     private val scheduleManager: AutomationScheduleManager,
     private val deletionStore: AutomationDeletionStore,
     private val earBriefingTool: EarBriefingTool,
-    private val textToSpeechManager: TextToSpeechManager
+    private val textToSpeechManager: TextToSpeechManager,
+    private val automationEngine: PersonalAutomationEngine
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AutomationsUiState())
@@ -85,6 +93,33 @@ class AutomationsViewModel @Inject constructor(
             // Отключение/включение TIME_SCHEDULE меняет набор слотов будильника.
             scheduleManager.reconcile()
         }
+    }
+
+    /**
+     * Новое правило из формы экрана. [name] собирает экран из переведённых
+     * подписей («Наушники отключены → Пауза»). Лимит тарифа показывается
+     * честно, а не молча.
+     */
+    fun createRule(draft: AutomationDraft, name: String) {
+        if (!draft.isComplete) return
+        viewModelScope.launch {
+            try {
+                automationEngine.createAutomationRule(
+                    name = name,
+                    triggerType = draft.trigger.type,
+                    triggerParam = draft.triggerParam,
+                    actions = draft.toolCalls(),
+                    cooldownMs = draft.cooldownMs
+                )
+                _uiState.update { it.copy(limitReached = null) }
+            } catch (e: AutomationLimitReachedException) {
+                _uiState.update { it.copy(limitReached = e.max) }
+            }
+        }
+    }
+
+    fun dismissLimit() {
+        _uiState.update { it.copy(limitReached = null) }
     }
 
     fun deleteRule(ruleId: String) {
@@ -130,6 +165,7 @@ class AutomationsViewModel @Inject constructor(
             actions = AutomationDescriptions.actionLabels(actionsJson),
             lastTriggeredAt = lastTriggeredAt.takeIf { it > 0L },
             triggerCount = triggerCount,
-            isEnabled = isEnabled
+            isEnabled = isEnabled,
+            isDefault = isDefaultRule(ruleId)
         )
 }
