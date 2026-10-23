@@ -124,7 +124,7 @@ fun MeRoute(
                     MeRow(
                         icon = OmnixGlobeLineIcon,
                         label = stringResource(R.string.omnix_me_row_language),
-                        value = "",
+                        value = com.omnix.assistant.core.locale.AppLanguage.current().nativeName,
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
                     ),
                     MeRow(
