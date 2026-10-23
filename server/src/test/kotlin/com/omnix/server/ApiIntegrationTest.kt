@@ -76,7 +76,8 @@ class ApiIntegrationTest {
         validation: ValidationConfig = ValidationConfig(),
         entitlementAllowed: Boolean = true,
         privacyClassifier: ServerPrivacyClassifier =
-            com.omnix.server.privacy.PromptPrivacyClassifier
+            com.omnix.server.privacy.PromptPrivacyClassifier,
+        speechToText: com.omnix.server.stt.SpeechToText? = null
     ): Harness {
         val configs = providers.associate { it.id to cfg(it.id, it.id.ordinal + 1) }
         val health = ProviderHealthTracker(CircuitBreakerConfig())
@@ -117,7 +118,8 @@ class ApiIntegrationTest {
             logger = logger,
             metrics = metrics,
             json = json,
-            entitlementChecker = { entitlementAllowed }
+            entitlementChecker = { entitlementAllowed },
+            speechToText = speechToText
         )
 
         return Harness(handler, usage, metrics, providers)
@@ -679,6 +681,53 @@ class ApiIntegrationTest {
         val roles = req.history.map { it.role }
         assertEquals(listOf("user", "assistant", "assistant"), roles)
         assertEquals("здравствуйте", req.history[1].content)
+    }
+
+    private fun sttBody(audio: ByteArray, hint: String? = null): String {
+        val b64 = java.util.Base64.getEncoder().encodeToString(audio)
+        return if (hint == null) """{"audio":"$b64"}""" else """{"audio":"$b64","languageHint":"$hint"}"""
+    }
+
+    private fun shortWav(): ByteArray = ByteArray(44 + 16_000).also {
+        "RIFF".toByteArray().copyInto(it, 0)
+        "WAVE".toByteArray().copyInto(it, 8)
+    }
+
+    /** Переводчик «по наушнику на каждого»: фраза → текст и язык. */
+    @Test
+    fun `stt returns text and detected language`() = runBlocking {
+        var hint: String? = "unset"
+        val stt = object : com.omnix.server.stt.SpeechToText {
+            override suspend fun transcribe(wav: ByteArray, languageHint: String?): com.omnix.server.stt.SttOutcome {
+                hint = languageHint
+                return com.omnix.server.stt.SttOutcome.Success("Salam", "tk")
+            }
+        }
+        val h = harness(speechToText = stt)
+        val response = h.handler.handle(post(sttBody(shortWav()), path = OmnixApiHandler.PATH_STT))
+        assertEquals(200, response.status)
+        val body = json.decodeFromString(com.omnix.server.api.SttResponse.serializer(), response.body)
+        assertEquals("Salam", body.text)
+        assertEquals("tk", body.language)
+        assertEquals(null, hint)
+    }
+
+    @Test
+    fun `stt requires a token and valid audio`() = runBlocking {
+        val stt = object : com.omnix.server.stt.SpeechToText {
+            override suspend fun transcribe(wav: ByteArray, languageHint: String?) =
+                com.omnix.server.stt.SttOutcome.Success("x", "ru")
+        }
+        val h = harness(speechToText = stt)
+        assertEquals(401, h.handler.handle(post(sttBody(shortWav()), token = null, path = OmnixApiHandler.PATH_STT)).status)
+        assertEquals(400, h.handler.handle(post("""{"audio":"%%%"}""", path = OmnixApiHandler.PATH_STT)).status)
+        assertEquals(400, h.handler.handle(post(sttBody(ByteArray(200)), path = OmnixApiHandler.PATH_STT)).status)
+    }
+
+    @Test
+    fun `stt without a configured recogniser is unavailable, not a crash`() = runBlocking {
+        val response = harness().handler.handle(post(sttBody(shortWav()), path = OmnixApiHandler.PATH_STT))
+        assertEquals(503, response.status)
     }
 
     /** Чат получает свои правила (развёрнуто, markdown) и бюджет; голос — короткие. */

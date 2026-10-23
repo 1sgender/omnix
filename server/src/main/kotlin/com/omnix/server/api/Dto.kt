@@ -127,6 +127,24 @@ data class AiExecutionResponse(
     @SerialName("model") val model: String? = null
 )
 
+/** Одна фраза для распознавания: WAV PCM 16 кГц моно в base64. */
+@Serializable
+data class SttRequest(
+    @SerialName("audio") val audioBase64: String,
+    /** Подсказка языка (код ISO); null — Whisper определяет язык сам. */
+    @SerialName("languageHint") val languageHint: String? = null,
+    @SerialName("requestId") val requestId: String? = null
+)
+
+@Serializable
+data class SttResponse(
+    @SerialName("success") val success: Boolean = true,
+    @SerialName("text") val text: String,
+    /** Код языка ISO 639-1 (ru, tk, en…); null — Whisper не сказал. */
+    @SerialName("language") val language: String? = null,
+    @SerialName("requestId") val requestId: String
+)
+
 /** Облачная модель, доступная админу для теста (см. AdminModelAccess). */
 @Serializable
 data class AdminCloudModelDto(

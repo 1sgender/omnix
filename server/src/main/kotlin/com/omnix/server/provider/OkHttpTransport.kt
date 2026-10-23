@@ -6,6 +6,7 @@ import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
@@ -32,6 +33,25 @@ class OkHttpTransport(
         body: String,
         connectTimeoutMs: Long,
         requestTimeoutMs: Long
+    ): HttpTransportResponse =
+        execute(url, headers, body.toRequestBody(jsonMediaType), connectTimeoutMs, requestTimeoutMs)
+
+    override suspend fun postBytes(
+        url: String,
+        headers: Map<String, String>,
+        body: ByteArray,
+        contentType: String,
+        connectTimeoutMs: Long,
+        requestTimeoutMs: Long
+    ): HttpTransportResponse =
+        execute(url, headers, body.toRequestBody(contentType.toMediaType()), connectTimeoutMs, requestTimeoutMs)
+
+    private suspend fun execute(
+        url: String,
+        headers: Map<String, String>,
+        requestBody: RequestBody,
+        connectTimeoutMs: Long,
+        requestTimeoutMs: Long
     ): HttpTransportResponse {
         val client = baseClient.newBuilder()
             .connectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS)
@@ -43,7 +63,7 @@ class OkHttpTransport(
 
         val requestBuilder = Request.Builder()
             .url(url)
-            .post(body.toRequestBody(jsonMediaType))
+            .post(requestBody)
         headers.forEach { (name, value) -> requestBuilder.header(name, value) }
         val call = client.newCall(requestBuilder.build())
 

@@ -63,6 +63,8 @@ object TranslationLanguages {
         SupportedLanguage("en", "English", "en-US"),
         SupportedLanguage("tk", "Türkmençe", "tk-TM"),
         SupportedLanguage("tr", "Türkçe", "tr-TR"),
+        SupportedLanguage("uz", "Oʻzbekcha", "uz-UZ"),
+        SupportedLanguage("kk", "Қазақша", "kk-KZ"),
         SupportedLanguage("de", "Deutsch", "de-DE"),
         SupportedLanguage("zh", "中文 (Chinese)", "zh-CN"),
         SupportedLanguage("ar", "العربية (Arabic)", "ar-SA")
