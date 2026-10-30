@@ -407,8 +407,8 @@ configurations.configureEach {
                 because("fix CVE-2024-47554 in Android test tooling")
             }
             requested.group == "com.google.guava" && requested.name == "guava" -> {
-                useVersion("33.7.1-android")
-                because("remove CVE-2023-2976 and CVE-2020-8908 from Android tooling")
+                useVersion("33.7.2-android")
+                because("remove CVE-2023-2976, CVE-2020-8908 and CVE-2026-102554 from Android tooling")
             }
         }
     }
