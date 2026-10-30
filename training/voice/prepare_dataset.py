@@ -9,7 +9,8 @@
 по паузам → сопоставление кусков с фразами (динамическое программирование:
 распознавание речи + ожидаемая длительность; кусок перед длинной паузой —
 отброшенный дубль) → громкость −20 dBFS, пики не выше −1 dBFS → 22 050 Гц моно.
-Пишет <out>/<язык>/wavs/*.wav, metadata.csv и report.csv для проверки на слух.
+Пишет <out>/<язык>/wavs/*.wav, metadata.csv (`ru_0001.wav|текст`; фразы с пометками туда не входят)
+и report.csv для проверки на слух.
 """
 import argparse
 import csv
@@ -130,6 +131,11 @@ def align(segs, heard, phrases, lang, sr):
     n, m = len(phrases), len(segs)
     exp = [norm(t, lang) for _, t in phrases]
     gaps_after = [(segs[j + 1][0] - segs[j][1]) / sr if j + 1 < m else 99 for j in range(m)]
+    # Кусок повторяет начало следующего — неудачная попытка, перечитанная сразу.
+    repeats = [j + 1 < m and len(heard[j]) >= 2 and
+               similarity(heard[j], heard[j + 1][:len(heard[j]) + 3]) >= 0.5 for j in range(m)]
+    # Короткий кусок без слов — вдох, щелчок, шорох.
+    noise = [not heard[j] and (segs[j][1] - segs[j][0]) / sr < 0.9 for j in range(m)]
     INF = 1e9
     cost = np.full((n + 1, m + 1), INF)
     back = {}
@@ -139,18 +145,23 @@ def align(segs, heard, phrases, lang, sr):
             c = cost[i][j]
             if c >= INF:
                 continue
-            if j < m:  # отбросить кусок: дубль перед длинной паузой — дёшево
-                skip = 0.15 if gaps_after[j] >= RETAKE_GAP_S else 0.7
+            if j < m:  # отбросить кусок: дубль (длинная пауза или повтор следующего) или шум — дёшево
+                skip = 0.15 if (gaps_after[j] >= RETAKE_GAP_S or repeats[j] or noise[j]) else 0.7
                 if c + skip < cost[i][j + 1]:
                     cost[i][j + 1] = c + skip
                     back[(i, j + 1)] = ("skip", i, j)
             if i < n:
                 for k in range(j + 1, min(m, j + 3) + 1):
+                    # Длинная пауза внутри — это перечитывание, а не одна фраза.
+                    if any(gaps_after[g] >= RETAKE_GAP_S for g in range(j, k - 1)):
+                        break
                     text = "".join(heard[j:k])
                     dur = (segs[k - 1][1] - segs[j][0]) / sr
                     want = max(0.6, len(exp[i]) * SECONDS_PER_CHAR)
                     dpen = min(1.0, abs(np.log(dur / want))) * 0.5
                     step = (1 - similarity(text, exp[i])) + dpen + 0.1 * (k - j - 1)
+                    if any(repeats[g] for g in range(j, k - 1)):
+                        step += 0.6  # внутри «фразы» повтор — это дубли, а не продолжение
                     if c + step < cost[i + 1][k]:
                         cost[i + 1][k] = c + step
                         back[(i + 1, k)] = ("take", i, j)
@@ -225,8 +236,13 @@ def main():
             sim = similarity("".join(heard[j:k]), norm(text, lang))
             raw_peak = float(np.abs(clip).max())
             flags = []
-            if sim < (0.55 if lang == "ru" else 0.35):
+            # Туркменскую речь распознаёт русская модель — сходство там мало что значит,
+            # поэтому для неё полагаемся на длительность.
+            if lang == "ru" and sim < 0.55:
                 flags.append("проверить текст")
+            want = max(0.6, len(norm(text, lang)) * SECONDS_PER_CHAR)
+            if abs(np.log((len(y) / OUT_SR) / want)) > 0.7:
+                flags.append("проверить длину")
             if raw_peak > 0.98:
                 flags.append("перегруз")
             if raw_peak < 0.05:
@@ -236,12 +252,16 @@ def main():
         existing = {}
         if meta.is_file():
             for line in meta.read_text(encoding="utf-8").splitlines():
-                pid, t = line.split("|", 1)
-                existing[pid] = t
+                name, t = line.split("|", 1)
+                existing[name.removesuffix(".wav")] = t
+        # Сомнительные фразы (пометки в отчёте) в обучение не идут: файл остаётся для проверки на слух.
+        doubtful = {r[0] for r in report_rows if r[4]}
         for pid, text in phrases:
-            if (out_dir / "wavs" / f"{pid}.wav").is_file():
+            existing.pop(pid, None)
+            if pid not in doubtful and (out_dir / "wavs" / f"{pid}.wav").is_file():
                 existing[pid] = text
-        meta.write_text("".join(f"{p}|{t}\n" for p, t in sorted(existing.items())), encoding="utf-8")
+        # Piper: первая колонка — имя файла в audio_dir, с расширением.
+        meta.write_text("".join(f"{p}.wav|{t}\n" for p, t in sorted(existing.items())), encoding="utf-8")
         with open(out_dir / f"report-{lang}-{block:02d}.csv", "w", encoding="utf-8-sig", newline="") as fh:
             w = csv.writer(fh)
             w.writerow(["id", "сходство", "секунд", "куски", "пометки", "текст"])
