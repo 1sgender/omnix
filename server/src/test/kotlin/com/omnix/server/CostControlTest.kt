@@ -69,6 +69,14 @@ class CostControlTest {
         assertEquals(512, RequestCostEstimator.outputBudget(CostClass.HARD, configuredMaxTokens = 512))
     }
 
+    @Test
+    fun `chat budget lets short questions get a full answer`() {
+        assertEquals(800, RequestCostEstimator.chatOutputBudget(CostClass.SIMPLE, configuredChatMaxTokens = 1_500))
+        assertEquals(300, RequestCostEstimator.chatOutputBudget(CostClass.SIMPLE, configuredChatMaxTokens = 300))
+        assertEquals(1_500, RequestCostEstimator.chatOutputBudget(CostClass.MEDIUM, configuredChatMaxTokens = 1_500))
+        assertEquals(1_500, RequestCostEstimator.chatOutputBudget(CostClass.HARD, configuredChatMaxTokens = 1_500))
+    }
+
     /* ------------------------------- Budget policy → provider (weights flip) */
 
     private fun cfg(id: ProviderId, priority: Int) = ProviderConfig(

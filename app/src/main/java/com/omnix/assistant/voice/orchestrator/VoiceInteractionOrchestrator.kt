@@ -32,6 +32,7 @@ import com.omnix.assistant.voice.tts.TextToSpeechManager
 import com.omnix.assistant.voice.tts.TtsState
 import com.omnix.assistant.voice.wakeword.WakeWordDetection
 import com.omnix.assistant.voice.wakeword.WakeWordEngine
+import com.omnix.assistant.voice.wakeword.WakeWordEngineError
 import com.omnix.assistant.voice.wakeword.WakeWordExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -72,6 +73,9 @@ class VoiceInteractionOrchestrator @Inject constructor(
         private const val SILENCE_AFTER_PARTIAL_MS = 1200L
         private const val FOLLOW_UP_WINDOW_MS = 8000L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
+
+        /** Паузы перед повторным запуском движка фразы после его ошибки. */
+        private val WAKE_RETRY_DELAYS_MS = longArrayOf(1_000L, 2_000L, 5_000L, 15_000L, 60_000L)
 
         /**
          * CR-01: режимы, в которых FinalResult speech-распознавателя ДОЛЖЕН
@@ -239,6 +243,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
             observePipelines()
         }
 
+        if (toneGenerator == null) initToneGenerator()
         isServiceActive = true
         enterActivePipeline()
     }
@@ -318,6 +323,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun observeWakeEngine() {
         scope.launch {
             wakeWordEngine.detections.collectLatest { detection ->
+                wakeRetryAttempt = 0
                 // Единственная точка маршрутизации wake-детекта (чистая логика,
                 // JVM-тест): STANDBY — обычное слушание; AI_THINKING — барридж-ин.
                 when (resolveWakeDetectionAction(_currentMode.value)) {
@@ -342,6 +348,30 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 _assistantState.value = VoiceAssistantState.Error(
                     context.getString(R.string.wakeword_engine_unavailable),
                 )
+                // Занятый/«мёртвый» микрофон и сбой инференса часто проходят сами
+                // (закончился чужой звонок, вернули доступ к микрофону): пробуем
+                // снова, пока ассистент включён. Битая или отсутствующая модель
+                // сама не починится — её не перезапускаем.
+                if (error !is WakeWordEngineError.ModelMissing && error !is WakeWordEngineError.ModelCorrupted) {
+                    scheduleWakeRetry()
+                }
+            }
+        }
+    }
+
+    private var wakeRetryJob: Job? = null
+    private var wakeRetryAttempt = 0
+
+    private fun scheduleWakeRetry() {
+        val delayMs = WAKE_RETRY_DELAYS_MS[minOf(wakeRetryAttempt, WAKE_RETRY_DELAYS_MS.lastIndex)]
+        wakeRetryAttempt++
+        wakeRetryJob?.cancel()
+        wakeRetryJob = scope.launch {
+            delay(delayMs)
+            if (isServiceActive && _currentMode.value == OrchestratorMode.STANDBY_WAKE_WORD && !wakeWordEngine.isRunning()) {
+                Log.i(TAG, "wakeword engine retry #$wakeRetryAttempt after ${delayMs}ms")
+                _assistantState.value = VoiceAssistantState.Idle
+                wakeWordEngine.start()
             }
         }
     }
@@ -1284,21 +1314,22 @@ class VoiceInteractionOrchestrator @Inject constructor(
         textToSpeechManager.stop()
     }
 
+    /**
+     * Служба остановлена (ассистент выключен). Останавливаем всё, но общие
+     * компоненты НЕ уничтожаем: распознавание, озвучка и роутер наушников —
+     * синглтоны на весь процесс, и после destroy() восстановиться они не умели.
+     * Раньше ВЫКЛ→ВКЛ без перезапуска приложения оставлял OMNIX глухим: фраза
+     * срабатывала, а STT молча не стартовал (отзыв владельца на v344).
+     */
     fun destroy() {
         stopAll()
         isServiceActive = false
         orchestratorJob.cancel()
-        // CR-12: каскадный dispose. Порядок: сначала компоненты, которые могут
-        // порождать новые вызовы (wake/STT/TTS), потом аудио-маршрутизация,
-        // потом генератор тонов (самый низкоуровневый ресурс).
         runCatching { wakeWordEngine.destroy() }
             .onFailure { Log.e(TAG, "destroy: wakeWordEngine.destroy() failed", it) }
-        runCatching { speechRecognizerManager.destroy() }
-            .onFailure { Log.e(TAG, "destroy: speechRecognizerManager.destroy() failed", it) }
-        runCatching { textToSpeechManager.shutdown() }
-            .onFailure { Log.e(TAG, "destroy: textToSpeechManager.shutdown() failed", it) }
-        runCatching { bluetoothAudioRouter.dispose() }
-            .onFailure { Log.e(TAG, "destroy: bluetoothAudioRouter.dispose() failed", it) }
+        // Звонковый режим и SCO не должны пережить выключенного ассистента.
+        runCatching { bluetoothAudioRouter.routeAudioToSpeaker() }
+            .onFailure { Log.e(TAG, "destroy: routeAudioToSpeaker() failed", it) }
         try {
             toneGenerator?.release()
         } catch (e: Exception) {

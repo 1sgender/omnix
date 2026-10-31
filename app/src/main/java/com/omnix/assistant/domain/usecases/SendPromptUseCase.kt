@@ -103,7 +103,13 @@ class SendPromptUseCase @Inject constructor(
         // ChatViewModel / VoiceInteractionOrchestrator на том же payload.
         // Серверный AiRouter всё равно переклассифицирует запрос
         // (defense-in-depth — ему нельзя доверять клиенту); это оправдано.
-        val history = messageRepository.getRecentMessages(limit = 10)
+        // Реплика пользователя уже сохранена выше: последняя запись истории —
+        // она же, а prompt уходит модели отдельно. Без отсечения модель видела
+        // текущий вопрос дважды.
+        val history = messageRepository.getRecentMessages(limit = 11).let { recent ->
+            val last = recent.lastOrNull()
+            if (last != null && last.role == MessageRole.USER && last.text == trimmedPrompt) recent.dropLast(1) else recent.takeLast(10)
+        }
         val systemPrompt = settingsRepository.systemPromptFlow.first()
 
         // MEMORY: Query → Memory retrieval → Relevant memories only → AI.

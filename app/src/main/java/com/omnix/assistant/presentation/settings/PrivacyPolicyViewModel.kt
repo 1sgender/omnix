@@ -6,6 +6,8 @@ import com.omnix.assistant.agent.memory.dao.FactDao
 import com.omnix.assistant.agent.memory.dao.MemoryDao
 import com.omnix.assistant.agent.memory.dao.PreferenceDao
 import com.omnix.assistant.agent.memory.dao.ProcedureDao
+import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
+import com.omnix.assistant.agent.memory.model.MemoryType
 import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
 import com.omnix.assistant.agent.memory.model.memoryTypeLabel
 import com.omnix.assistant.agent.policy.ActionPolicySettingsProvider
@@ -76,7 +78,8 @@ class PrivacyPolicyViewModel @Inject constructor(
     private val memoryDao: MemoryDao,
     private val factDao: FactDao,
     private val preferenceDao: PreferenceDao,
-    private val procedureDao: ProcedureDao
+    private val procedureDao: ProcedureDao,
+    private val memoryManager: OmniMemoryManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrivacyPolicyUiState())
@@ -211,6 +214,18 @@ class PrivacyPolicyViewModel @Inject constructor(
                 factDao.deleteFact(keyName)
                 preferenceDao.deletePreference(keyName)
             }
+        }
+    }
+
+    /**
+     * «Запомнить» с экрана «Память» — тот же путь, что голосовое «запомни,
+     * что…»: дедупликация и поиск работают для записи так же.
+     */
+    fun addMemory(text: String) {
+        val clean = text.trim()
+        if (clean.isEmpty()) return
+        viewModelScope.launch {
+            memoryManager.remember(type = MemoryType.FACT, content = clean, importance = 0.8f)
         }
     }
 

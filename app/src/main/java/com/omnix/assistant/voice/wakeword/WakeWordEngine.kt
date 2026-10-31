@@ -46,7 +46,7 @@ data class WakeWordConfig(
      * буст, near-miss, пути моделей) относятся к прежней модели.
      */
     val engine: WakeEngineKind = WakeEngineKind.PHRASE,
-    val phrase: WakePhrase = WakePhrase.OKAY_OMNI,
+    val phrase: WakePhrase = WakePhrase.ALL,
 )
 
 /**

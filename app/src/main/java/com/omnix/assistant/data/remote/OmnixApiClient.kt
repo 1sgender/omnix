@@ -78,6 +78,21 @@ data class OmniAiResponseDto(
     @SerialName("model") val model: String? = null
 )
 
+/** Фраза для распознавания на сервере. Зеркалит server `SttRequest`. */
+@Serializable
+data class SttRequestDto(
+    @SerialName("audio") val audio: String,
+    @SerialName("languageHint") val languageHint: String? = null,
+    @SerialName("requestId") val requestId: String
+)
+
+/** Распознанная фраза: текст и код языка (ru, tk, en…). */
+@Serializable
+data class SttResultDto(
+    @SerialName("text") val text: String = "",
+    @SerialName("language") val language: String? = null
+)
+
 @Serializable
 data class OmnixApiErrorDto(
     @SerialName("code") val code: String = "INTERNAL_ERROR",
@@ -114,6 +129,7 @@ class OmnixApiClient @Inject constructor(
          */
         val BASE_URL: String = AppConstants.OMNIX_API_BASE_URL
         const val EXECUTE_PATH = "/v1/ai/execute"
+        const val STT_PATH = "/v1/stt/transcribe"
         private const val MAX_RESPONSE_BYTES = 1L * 1024 * 1024
 
         /**
@@ -254,6 +270,88 @@ class OmnixApiClient @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "unexpected failure | requestId=$effectiveRequestId | type=${e.javaClass.simpleName}")
             Resource.Error(e, "Не удалось выполнить запрос.")
+        }
+    }
+
+    /**
+     * Распознавание одной фразы на сервере (Whisper): текст и язык. Нужно
+     * переводчику «по наушнику на каждого»: Android-распознаватель не
+     * определяет язык сам и не знает туркменского.
+     *
+     * @param wav WAV PCM 16 кГц моно, не длиннее 30 с.
+     * @param languageHint код языка, если он известен заранее; null — Whisper определит.
+     */
+    suspend fun transcribe(wav: ByteArray, languageHint: String? = null): Resource<SttResultDto> = withContext(Dispatchers.IO) {
+        val token = securityManager.getAccessToken()
+        if (!AccessTokenPolicy.isValid(token)) {
+            return@withContext Resource.Error(
+                IllegalStateException("INVALID_ACCESS_TOKEN"),
+                "Токен доступа OMNIX отсутствует или имеет неверный формат."
+            )
+        }
+        val requestId = RequestIds.newId()
+        val payload = json.encodeToString(
+            SttRequestDto.serializer(),
+            SttRequestDto(
+                audio = android.util.Base64.encodeToString(wav, android.util.Base64.NO_WRAP),
+                languageHint = languageHint,
+                requestId = requestId
+            )
+        )
+        val request = Request.Builder()
+            .url("$BASE_URL$STT_PATH")
+            .header("Authorization", "Bearer $token")
+            .header("Content-Type", "application/json")
+            .post(payload.toRequestBody(mediaType))
+            .build()
+
+        try {
+            cloudMonitor.requestStarted()
+            try {
+                suspendCancellableCoroutine<Resource<SttResultDto>> { cont ->
+                    val call = apiHttpClient.newCall(request)
+                    cont.invokeOnCancellation { call.cancel() }
+                    call.enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            if (!cont.isActive) return
+                            val reason = NetworkErrorMessages.reasonFor(e)
+                            cont.resume(Resource.Error(e, "Ошибка сети при обращении к серверу OMNIX: $reason."))
+                        }
+
+                        override fun onResponse(call: Call, response: Response) {
+                            if (!cont.isActive) {
+                                response.close()
+                                return
+                            }
+                            try {
+                                response.use { resp ->
+                                    val body = resp.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
+                                    Log.i(TAG, "stt response | requestId=$requestId | http=${resp.code}")
+                                    cont.resume(
+                                        if (resp.isSuccessful) {
+                                            Resource.Success(json.decodeFromString(SttResultDto.serializer(), body))
+                                        } else {
+                                            val code = runCatching {
+                                                json.decodeFromString(OmnixApiErrorResponseDto.serializer(), body).error.code
+                                            }.getOrElse { "HTTP_${resp.code}" }
+                                            Resource.Error(OmnixApiException(code, requestId, code), userMessageFor(code))
+                                        }
+                                    )
+                                }
+                            } catch (t: Throwable) {
+                                if (cont.isActive) cont.resumeWithException(t) else throw t
+                            }
+                        }
+                    })
+                }
+            } finally {
+                cloudMonitor.requestFinished()
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "stt failure | requestId=$requestId | type=${e.javaClass.simpleName}")
+            Resource.Error(e, "Не удалось распознать речь.")
         }
     }
 

@@ -77,6 +77,22 @@ object RequestCostEstimator {
     const val SIMPLE_MAX_OUTPUT_TOKENS = 256
 
     /**
+     * Бюджет ответа в текстовом чате. Короткий вопрос в чате («объясни, как
+     * работает ИИ») часто ждёт развёрнутого ответа со списком, поэтому SIMPLE
+     * режется мягче, чем в голосе, где ответ всё равно озвучивается коротко.
+     */
+    fun chatOutputBudget(costClass: CostClass, configuredChatMaxTokens: Int): Int {
+        val configured = configuredChatMaxTokens.coerceAtLeast(1)
+        return when (costClass) {
+            CostClass.SIMPLE -> minOf(configured, CHAT_SIMPLE_MAX_OUTPUT_TOKENS)
+            CostClass.MEDIUM, CostClass.HARD -> configured
+        }
+    }
+
+    /** Капа ответа для SIMPLE-класса в чате. */
+    const val CHAT_SIMPLE_MAX_OUTPUT_TOKENS = 800
+
+    /**
      * Грубая оценка входных токенов (~4 символа/токен для смешанного текста).
      * Только для логов/диагностики — НЕ для биллинга (биллинг считает факту
      * от провайдера, см. CostModel).

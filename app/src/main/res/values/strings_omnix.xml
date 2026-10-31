@@ -31,7 +31,7 @@
     <string name="omnix_home_off_hint">Tap the logo to turn it on</string>
     <string name="omnix_home_starting">Turning on…</string>
     <string name="omnix_home_stopping">Turning off…</string>
-    <string name="omnix_home_on_hint">Say “Okay Omni” or tap Speak</string>
+    <string name="omnix_home_on_hint">Say “Omni” or tap Speak</string>
     <string name="omnix_home_talk">Speak</string>
     <string name="omnix_home_talk_stop">Stop</string>
     <string name="omnix_home_power_a11y">OMNIX assistant</string>
@@ -111,7 +111,7 @@
     <string name="omnix_error_user_action_action">Continue</string>
 
     <string name="omnix_error_not_understood_title">I didn’t catch that.</string>
-    <string name="omnix_error_not_understood_body">Say “Okay Omni” and try again.</string>
+    <string name="omnix_error_not_understood_body">Say “Omni” and try again.</string>
 
     <string name="omnix_error_generic_title">That didn’t work.</string>
     <string name="omnix_error_generic_body">Try again.</string>
@@ -151,50 +151,44 @@
 
     <!-- ===== Devices (§23, §40, §41) ===== -->
     <string name="omnix_devices_title">Headphones</string>
-    <string name="omnix_devices_clip_name">Omnix Buds</string>
+    <string name="omnix_devices_clip_name">Headphones</string>
     <string name="omnix_devices_battery">BATTERY</string>
-    <string name="omnix_devices_wake_title">The phrase “Okay Omni”</string>
+    <string name="omnix_devices_wake_title">The word “Omni”</string>
     <string name="omnix_devices_wake_sub">Hands-free call</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
-    <string name="omnix_devices_find">Find headphones</string>
-    <string name="omnix_devices_disconnect">Disconnect</string>
+    <string name="omnix_devices_find">Connect headphones</string>
+    <string name="omnix_devices_disconnect">Bluetooth settings</string>
 
     <!-- ===== Chat (§21, §38) ===== -->
     <string name="omnix_chat_title">Omnix</string>
     <string name="omnix_chat_new">New chat</string>
     <string name="omnix_chat_history_open">Chat history</string>
-    <string name="omnix_chat_history_title">History</string>
-    <string name="omnix_chat_history_empty_title">No chats yet</string>
-    <string name="omnix_chat_history_empty_body">Past chats appear here. Each launch starts a new one.</string>
+    <string name="omnix_chat_history_empty_body">Your chats will appear here.</string>
     <string name="omnix_chat_untitled">Untitled</string>
     <string name="omnix_chat_delete">Delete chat</string>
     <string name="omnix_chat_delete_confirm_title">Delete this chat?</string>
-    <string name="omnix_chat_voice_mode">Voice mode</string>
-    <string name="omnix_voice_starting">Turning OMNIX on…</string>
-    <string name="omnix_voice_idle">Tap the microphone to talk</string>
-    <string name="omnix_voice_mode_listening">Listening…</string>
-    <string name="omnix_voice_thinking">Thinking…</string>
-    <string name="omnix_voice_speaking">Answering…</string>
-    <string name="omnix_voice_confirming">Say “yes” or “no”</string>
-    <string name="omnix_voice_mic_needed">OMNIX needs the microphone</string>
-    <string name="omnix_voice_mic_grant">Allow microphone</string>
-    <string name="omnix_voice_start_failed">Couldn’t turn OMNIX on</string>
-    <string name="omnix_voice_retry">Try again</string>
-    <string name="omnix_voice_talk">Talk</string>
-    <string name="omnix_voice_stop_listening">Stop listening</string>
-    <string name="omnix_voice_close">Leave voice mode</string>
     <string name="omnix_chat_subtitle_on_device">Answers on the device</string>
     <string name="omnix_chat_subtitle_online">Answers on the device and in the cloud</string>
-    <string name="omnix_chat_today">TODAY</string>
-    <string name="omnix_chat_yesterday">YESTERDAY</string>
+    <string name="omnix_chat_today">Today</string>
+    <string name="omnix_chat_yesterday">Yesterday</string>
     <string name="omnix_chat_from_cloud">Answer from the cloud</string>
     <string name="omnix_chat_you">You</string>
     <string name="omnix_chat_omnix">OMNIX</string>
-    <string name="omnix_chat_input_hint">Message</string>
+    <string name="omnix_chat_input_hint">Ask OMNIX</string>
     <string name="omnix_chat_send">Send</string>
-    <string name="omnix_chat_empty_title">Nothing here yet</string>
-    <string name="omnix_chat_empty_body">Use chat when you can’t speak out loud.</string>
+    <string name="omnix_chat_search_hint">Search chats</string>
+    <string name="omnix_chat_search_empty">Nothing found</string>
+    <string name="omnix_chat_group_week">Previous 7 days</string>
+    <string name="omnix_chat_group_month">Previous 30 days</string>
+    <string name="omnix_chat_group_older">Older</string>
+    <string name="omnix_chat_copy">Copy</string>
+    <string name="omnix_chat_copied">Copied</string>
+    <string name="omnix_chat_delete_hint">Hold a chat to delete it</string>
+    <string name="omnix_chat_suggestion_1">Plan my day for tomorrow</string>
+    <string name="omnix_chat_suggestion_2">Explain simply how AI works</string>
+    <string name="omnix_chat_suggestion_3">Help me write a short greeting to a friend</string>
+    <string name="omnix_chat_empty_title">What can I help with?</string>
     <string name="omnix_chat_clear_confirm_title">Clear this conversation?</string>
     <string name="omnix_chat_clear_confirm_body">All messages will be deleted from this device.</string>
     <string name="omnix_chat_thinking">OMNIX is thinking…</string>
@@ -209,18 +203,29 @@
 
     <!-- ===== Translator (§24, §42) ===== -->
     <string name="omnix_translator_title">Translator</string>
-    <string name="omnix_translator_swap">Swap languages</string>
     <string name="omnix_translator_i_speak">I speak</string>
     <string name="omnix_translator_partner">The other person</string>
     <string name="omnix_translator_status_online">ONLINE</string>
     <string name="omnix_translator_status_offline">OFFLINE</string>
-    <string name="omnix_translator_meta_partner">R · OTHER PERSON · %1$s</string>
-    <string name="omnix_translator_meta_speaking">R · SPEAKING…</string>
     <string name="omnix_translator_to_ears">To headphones</string>
     <string name="omnix_translator_to_phone">Aloud on the phone</string>
     <string name="omnix_translator_pause">Pause</string>
-    <string name="omnix_translator_speak">Speak</string>
-    <string name="omnix_translator_end">End conversation</string>
+    <string name="omnix_translator_speak">Start</string>
+    <string name="omnix_translator_end">End and clear</string>
+    <string name="omnix_translator_auto_detect">I’ll detect it</string>
+    <string name="omnix_translator_ears">Your earbud: %1$s · theirs: %2$s</string>
+    <string name="omnix_translator_ear_left">left</string>
+    <string name="omnix_translator_ear_right">right</string>
+    <string name="omnix_translator_swap_ears">Swap earbuds</string>
+    <string name="omnix_translator_hint">Give the other person your second earbud, put the phone between you and take turns. OMNIX works out who speaks which language and translates into the other ear.</string>
+    <string name="omnix_translator_hearing">Listening…</string>
+    <string name="omnix_translator_working">Translating…</string>
+    <string name="omnix_translator_waiting">Waiting for the other person’s first phrase to learn their language</string>
+    <string name="omnix_translator_problem_mic">The microphone is busy in another app.</string>
+    <string name="omnix_translator_problem_recognition">Could not recognise speech: %1$s</string>
+    <string name="omnix_translator_no_voice">No voice for this language yet — translation is on screen only</string>
+    <string name="omnix_translator_me">You</string>
+    <string name="omnix_translator_them">Other person</string>
 
     <!-- ===== Settings (§25, §43–§47) ===== -->
     <string name="omnix_settings_title">Settings</string>
@@ -232,8 +237,8 @@
     <string name="omnix_me_license_active">License active</string>
     <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
-    <string name="omnix_me_row_voice">Voice and “Okay Omni”</string>
-    <string name="omnix_me_row_memory">Memory and privacy</string>
+    <string name="omnix_me_row_voice">Voice and “Omni”</string>
+    <string name="omnix_me_row_memory">Memory</string>
     <string name="omnix_me_model_ready">Ready</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
     <string name="omnix_settings_appearance">Appearance</string>
@@ -243,7 +248,7 @@
     <string name="omnix_voice_tone">Voice tone</string>
     <string name="omnix_voice_feedback">Voice feedback</string>
     <string name="omnix_voice_listening">Listening</string>
-    <string name="omnix_voice_listening_body">Keep OMNIX listening for “Okay Omni” in the background.</string>
+    <string name="omnix_voice_listening_body">Keep OMNIX listening for “Omni” in the background.</string>
     <string name="omnix_voice_headset_only">Only when the Clip is connected</string>
     <string name="omnix_voice_headset_only_body">Saves battery by listening only through your Clip.</string>
     <string name="omnix_voice_sensitivity">Wake sensitivity</string>
@@ -251,7 +256,7 @@
     <string name="omnix_voice_background_body">Allow OMNIX to keep working when the screen is off.</string>
     <string name="omnix_voice_background_action">Allow</string>
     <string name="omnix_voice_automations">Automations</string>
-    <string name="omnix_voice_automations_empty">No automations yet. Say: “Okay Omni, when my Clip connects, play music.”</string>
+    <string name="omnix_voice_automations_empty">No automations yet. Tap “New automation” or say: “Omni, when my headphones connect, play music”.</string>
 
     <string name="omnix_privacy_title">Privacy</string>
     <string name="omnix_privacy_microphone">Microphone</string>
@@ -281,6 +286,7 @@
     <string name="omnix_admin_answer_cloud">Cloud</string>
     <string name="omnix_admin_wake_title">Wake phrase testing (admin)</string>
     <string name="omnix_admin_wake_body">Compare on your phone. Applies the next time OMNIX starts listening.</string>
+    <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okay Omni” — default</string>
     <string name="omnix_admin_wake_okay_omni">“Okay Omni” — new engine</string>
     <string name="omnix_admin_wake_omni">“Omni” — new engine</string>
     <string name="omnix_admin_wake_legacy">“Omni” — previous model</string>
@@ -326,9 +332,9 @@
     <string name="omnix_setup_turn_on_title">Turn OMNIX on</string>
     <string name="omnix_setup_turn_on_hint">Tap the logo. This is how OMNIX turns on and off.</string>
     <string name="omnix_setup_on_title">OMNIX is on</string>
-    <string name="omnix_setup_try_hint">Say: “Okay Omni, what time is it?”</string>
+    <string name="omnix_setup_try_hint">Say: “Omni, what time is it?”</string>
     <string name="omnix_setup_success">It works</string>
-    <string name="omnix_setup_success_body">From now on just say “Okay Omni” — in your headphones or near the phone.</string>
+    <string name="omnix_setup_success_body">From now on just say “Omni” — in your headphones or near the phone.</string>
     <string name="omnix_setup_done">Done</string>
     <string name="omnix_setup_skip">Skip</string>
     <string name="omnix_setup_connect_headphones">Connect headphones</string>
@@ -344,12 +350,17 @@
     <string name="omnix_local_model_later">Later</string>
 
     <string name="omnix_language_title">Language</string>
-    <string name="omnix_language_system">System</string>
+    <string name="omnix_language_system">As on the phone</string>
+    <string name="omnix_language_hint">OMNIX shows, hears and speaks the chosen language. Turkmen is heard and spoken in Russian for now, until OMNIX has its own Turkmen voice.</string>
+    <string name="omnix_language_old_android">Choosing a language inside the app needs Android 13 or newer. OMNIX follows the phone’s language.</string>
 
     <string name="omnix_notifications_settings_title">Notifications</string>
-    <string name="omnix_notifications_assistant">Assistant responses</string>
-    <string name="omnix_notifications_device">Device status</string>
-    <string name="omnix_notifications_routines">Routine reminders</string>
+    <string name="omnix_notifications_routines">Speak automations</string>
+    <string name="omnix_notifications_routines_body">OMNIX says out loud what an automation did.</string>
+    <string name="omnix_notifications_system">Phone notifications</string>
+    <string name="omnix_notifications_system_body">Needed so Android keeps OMNIX listening in the background. Channels are managed in system settings.</string>
+    <string name="omnix_notifications_on">On</string>
+    <string name="omnix_notifications_off">Off</string>
 
     <string name="omnix_appearance_title">Appearance</string>
     <string name="omnix_appearance_system">System</string>
@@ -415,7 +426,7 @@
     <string name="omnix_diagnostics_running">RUNNING %1$d/%2$d</string>
     <string name="omnix_diagnostics_export">EXPORT REPORT</string>
     <string name="omnix_diagnostics_share_title">Share diagnostics report</string>
-    <string name="omnix_diag_wake_word">Wake phrase «Okay Omni»</string>
+    <string name="omnix_diag_wake_word">Wake word «Omni»</string>
     <string name="omnix_diag_mic">Microphone</string>
     <string name="omnix_diag_stt">Speech recognition</string>
     <string name="omnix_diag_local_ai">Local AI</string>
@@ -457,7 +468,6 @@
     <string name="omnix_automations_briefing_body">Time, battery, weather and plans — offline, in your ear.</string>
     <string name="omnix_automations_briefing_running">Preparing the briefing…</string>
     <string name="omnix_automations_briefing_ok">Playing</string>
-    <string name="omnix_automations_delete">Delete rule</string>
     <string name="omnix_automations_delete_title">Delete this automation?</string>
     <string name="omnix_automations_delete_body">“%1$s” will be deleted permanently. The routine will stop firing.</string>
     <string name="omnix_automations_delete_confirm">Delete</string>
@@ -478,9 +488,28 @@
     <string name="omnix_automations_action_briefing">Briefing</string>
     <string name="omnix_automations_action_other">Action</string>
     <string name="omnix_automations_never_fired">Never fired</string>
+    <string name="omnix_automations_new">New automation</string>
+    <string name="omnix_automations_new_when">When</string>
+    <string name="omnix_automations_new_do">Do</string>
+    <string name="omnix_automations_new_time">Time: %1$s</string>
+    <string name="omnix_automations_new_action_pause">Pause music</string>
+    <string name="omnix_automations_new_action_volume">Set volume</string>
+    <string name="omnix_automations_new_action_app">Open an app</string>
+    <string name="omnix_automations_new_volume_value">Volume %1$d%%</string>
+    <string name="omnix_automations_new_app_hint">App name, e.g. YouTube</string>
+    <string name="omnix_automations_new_create">Create</string>
+    <string name="omnix_automations_limit_title">Automation limit reached</string>
+    <string name="omnix_automations_limit_body">Limit of your own automations on your plan: %1$d. Delete one you no longer need.</string>
+    <string name="omnix_automations_limit_ok">OK</string>
+    <string name="omnix_automations_default_morning">Morning briefing at 07:00</string>
+    <string name="omnix_automations_default_morning_headphones">Morning volume in headphones</string>
+    <string name="omnix_automations_default_home">Home Wi-Fi volume</string>
+    <string name="omnix_automations_default_battery">Battery saver</string>
+    <string name="omnix_automations_default_pause">Pause when headphones disconnect</string>
+    <string name="omnix_automations_builtin">Built-in</string>
     <plurals name="omnix_automations_fired">
-        <item quantity="one">Fired once · last %1$s</item>
-        <item quantity="other">Fired %1$d times · last %1$s</item>
+        <item quantity="one">Fired once · last %2$s</item>
+        <item quantity="other">Fired %1$d times · last %2$s</item>
     </plurals>
     <string name="omnix_privacy_section_confirmations">Action confirmations</string>
     <string name="omnix_privacy_calls">Calls</string>
@@ -510,7 +539,7 @@
     <string name="omnix_privacy_allowed_empty">Nothing is allowed explicitly</string>
     <string name="omnix_privacy_package_hint">App package, e.g. com.example.app</string>
     <string name="omnix_privacy_advanced">Advanced</string>
-    <string name="omnix_privacy_advanced_body">Confirmations, trusted contacts, screen reading, facts and routines</string>
+    <string name="omnix_privacy_advanced_body">Confirmations, trusted contacts, screen reading</string>
     <string name="omnix_privacy_advanced_hide">Tap to hide</string>
     <string name="omnix_fact_name">Name</string>
     <string name="omnix_fact_city">City</string>
@@ -522,23 +551,24 @@
     <string name="omnix_fact_father">Father</string>
     <string name="omnix_fact_wife">Wife</string>
     <string name="omnix_fact_husband">Husband</string>
-    <string name="omnix_privacy_section_memory">What OMNIX remembers</string>
-    <string name="omnix_privacy_memories_hint">Memories used in answers when they are relevant</string>
     <string name="omnix_privacy_memories_empty">Nothing is remembered yet</string>
     <string name="omnix_privacy_forget">Forget</string>
     <string name="omnix_privacy_forget_confirm_title">Forget this?</string>
     <string name="omnix_privacy_forget_confirm_body">OMNIX will no longer remember this: %1$s</string>
-    <string name="omnix_privacy_facts_hint">Structured facts, like your name or city</string>
     <string name="omnix_privacy_facts_empty">No facts are stored</string>
-    <string name="omnix_privacy_procedures_hint">Learned routines that run on a trigger (e.g. bedtime)</string>
-    <string name="omnix_privacy_procedures_empty">No routines are stored</string>
+    <string name="omnix_memory_intro">OMNIX remembers what you asked it to and uses it in answers. Say “Omni, remember that…” or add it here.</string>
+    <string name="omnix_memory_add_hint">E.g. my doctor is Dr. Aman</string>
+    <string name="omnix_memory_add">Remember</string>
+    <string name="omnix_memory_section_about">About you</string>
+    <string name="omnix_memory_section_saved">Remembered</string>
+    <string name="omnix_memory_section_habits">Routines</string>
     <string name="omnix_memory_type_fact">Fact</string>
     <string name="omnix_memory_type_preference">Preference</string>
     <string name="omnix_memory_type_episodic">Event</string>
     <string name="omnix_memory_type_procedural">Scenario</string>
     <string name="omnix_memory_type_other">Memory</string>
-    <string name="omnix_voice_wake_word">Wake phrase «Okay Omni»</string>
-    <string name="omnix_voice_wake_word_body">Respond to «Okay Omni» — turn this off if you do not want it listening</string>
+    <string name="omnix_voice_wake_word">Wake word «Omni»</string>
+    <string name="omnix_voice_wake_word_body">Respond to «Omni» and «Omnix» — turn this off if you do not want it listening</string>
     <string name="omnix_devices_on_this_phone">On this phone</string>
     <string name="omnix_capability_bluetooth">Bluetooth</string>
     <string name="omnix_capability_wifi">Wi-Fi</string>
@@ -564,4 +594,7 @@
     <string name="omnix_metrics_ai_cloud">AI in cloud</string>
     <string name="omnix_metrics_percentiles">P50 / P95 / P99, ms</string>
     <string name="omnix_metrics_no_data">no data yet</string>
+    <string name="omnix_rearm_channel">Listening after restart</string>
+    <string name="omnix_rearm_title">OMNIX is not listening</string>
+    <string name="omnix_rearm_body">The phone restarted or OMNIX was updated. Tap to turn listening for “Omni” back on.</string>
 </resources>

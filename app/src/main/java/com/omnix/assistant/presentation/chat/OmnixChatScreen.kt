@@ -15,6 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,84 +39,85 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.decision.PrivacyLevel
-import com.omnix.assistant.domain.models.ConversationSummary
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.components.OmnixAlertIcon
+import com.omnix.assistant.presentation.components.OmnixCheckLineIcon
 import com.omnix.assistant.presentation.components.OmnixCloudLineIcon
-import com.omnix.assistant.presentation.components.OmnixEmptyState
+import com.omnix.assistant.presentation.components.OmnixCopyLineIcon
 import com.omnix.assistant.presentation.components.OmnixHairline
 import com.omnix.assistant.presentation.components.OmnixLockIcon
-import com.omnix.assistant.presentation.components.OmnixBackLineIcon
 import com.omnix.assistant.presentation.components.OmnixMenuLineIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
 import com.omnix.assistant.presentation.components.OmnixNewChatLineIcon
-import com.omnix.assistant.presentation.components.OmnixTrashLineIcon
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
 import com.omnix.assistant.presentation.components.OmnixSendLineIcon
-import com.omnix.assistant.presentation.components.OmnixVoiceWaveLineIcon
 import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.LocalReducedMotion
-import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.state.ConfirmationRequest
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Chat — design v2 canvas, artboard Chat.
+ * Чат в духе ChatGPT (отзыв владельца на v344, скриншоты ChatGPT):
  *
- * The header names OMNIX and says where it answers; "More" holds clearing.
- * The thread is grouped by day under a mono day label: the user's words in a
- * paper bubble on the right, OMNIX's answers in a card bubble on the left, an
- * answer that came from the cloud signed "Answer from the cloud" under it.
- * The composer is one field and one lime button: the microphone while the
- * field is empty, send once there is text.
+ * - слева выезжает меню: поиск, «Новый чат», прошлые разговоры по датам;
+ * - пустой чат спрашивает «Чем могу помочь?» и предлагает три готовые просьбы;
+ * - слова пользователя — в пузыре справа, ответ OMNIX — обычный текст на всю
+ *   ширину с разметкой, его можно выделить и скопировать;
+ * - поле ввода — «пилюля» с диктовкой и кнопкой отправки внутри.
  *
- * States the canvas does not draw keep working in the same language: the
- * thinking dots, a failed round trip (a red-tinted bubble), the cloud consent
- * question (C-02), the privacy badge while typing (CR-17) and the shared
- * confirmation sheet.
+ * Отдельного голосового режима нет: голос — это сам OMNIX («Омни»).
+ * Состояния, которые макет не рисует, работают как раньше: «думает», ошибка
+ * (красный пузырь), вопрос о согласии на облако (C-02), метка приватности при
+ * вводе (CR-17) и общий лист подтверждения.
  */
 @Composable
 fun OmnixChatScreen(
@@ -132,22 +135,87 @@ fun OmnixChatScreen(
     onDeleteConversation: (Long) -> Unit,
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
-    onToggleDictation: () -> Unit,
-    onOpenVoiceMode: () -> Unit
+    onToggleDictation: () -> Unit
 ) {
-    if (state.showHistory) {
-        BackHandler(onBack = onCloseHistory)
-        ChatHistory(
-            conversations = state.conversations,
-            currentConversationId = state.currentConversationId,
-            modifier = modifier,
-            onBack = onCloseHistory,
-            onOpen = onOpenConversation,
-            onDelete = onDeleteConversation
+    val colors = OmnixTheme.colors
+    val drawerState = rememberDrawerState(if (state.showHistory) DrawerValue.Open else DrawerValue.Closed)
+    val historyOpen by rememberUpdatedState(state.showHistory)
+    val closeHistory by rememberUpdatedState(onCloseHistory)
+
+    // Меню открывает и закрывает ViewModel (кнопка, выбор чата); свайп
+    // пользователя сообщаем обратно, чтобы состояние не разошлось.
+    LaunchedEffect(state.showHistory) {
+        if (state.showHistory) drawerState.open() else drawerState.close()
+    }
+    LaunchedEffect(drawerState) {
+        snapshotFlow { drawerState.currentValue }.collect { value ->
+            if (value == DrawerValue.Closed && historyOpen) closeHistory()
+        }
+    }
+    BackHandler(enabled = state.showHistory, onBack = onCloseHistory)
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        modifier = modifier,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = colors.background,
+                drawerShape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp),
+                modifier = Modifier.width(304.dp)
+            ) {
+                ChatDrawerContent(
+                    conversations = state.conversations,
+                    currentConversationId = state.currentConversationId,
+                    onNewChat = onNewChat,
+                    onOpen = onOpenConversation,
+                    onDelete = onDeleteConversation
+                )
+            }
+        }
+    ) {
+        ChatThread(
+            state = state,
+            isOnline = isOnline,
+            onInputChange = onInputChange,
+            onSend = onSend,
+            onNewChat = onNewChat,
+            onOpenHistory = onOpenHistory,
+            onAllowCloud = onAllowCloud,
+            onKeepLocal = onKeepLocal,
+            onToggleDictation = onToggleDictation
         )
-        return
     }
 
+    // Confirmation reuses the one shared sheet: the tap path and the voice
+    // path resolve the same pending call in the executor (§17).
+    state.pendingConfirmation?.let { pending ->
+        ConfirmationSheet(
+            request = ConfirmationRequest(
+                title = pending.promptMessage,
+                detail = null,
+                confirmLabel = stringResource(R.string.omnix_confirm_confirm),
+                cancelLabel = stringResource(R.string.omnix_cancel),
+                voiceEnabled = false
+            ),
+            onConfirm = onConfirm,
+            onCancel = onCancel
+        )
+    }
+}
+
+@Composable
+private fun ChatThread(
+    state: ChatUiState,
+    isOnline: Boolean,
+    onInputChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onNewChat: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onAllowCloud: () -> Unit,
+    onKeepLocal: () -> Unit,
+    onToggleDictation: () -> Unit
+) {
+    val colors = OmnixTheme.colors
     val listState = rememberLazyListState()
 
     // The thinking row closes the list while a round trip is in flight; the
@@ -155,39 +223,29 @@ fun OmnixChatScreen(
     val showThinking = state.isSending &&
         state.pendingConfirmation == null &&
         state.pendingCloudConsent == null
-    val rows = remember(state.messages) { chatRows(state.messages) }
     val localOnly = state.localOnlyAnswer
-    val rowCount = rows.size + (if (showThinking) 1 else 0) + (if (localOnly != null) 1 else 0)
+    val rowCount = state.messages.size + (if (showThinking) 1 else 0) + (if (localOnly != null) 1 else 0)
 
     LaunchedEffect(rowCount) {
         if (rowCount > 0) listState.animateScrollToItem(rowCount - 1)
     }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
+            .background(colors.background)
             .imePadding()
     ) {
-        ChatHeader(
-            isOnline = isOnline,
-            onOpenHistory = onOpenHistory,
-            onNewChat = onNewChat
-        )
-        Hairline()
+        ChatHeader(isOnline = isOnline, onOpenHistory = onOpenHistory, onNewChat = onNewChat)
 
         if (rowCount == 0) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                OmnixEmptyState(
-                    title = stringResource(R.string.omnix_chat_empty_title),
-                    description = stringResource(R.string.omnix_chat_empty_body)
-                )
-            }
+            EmptyChat(
+                modifier = Modifier.weight(1f),
+                onSuggestion = { text ->
+                    onInputChange(text)
+                    onSend()
+                }
+            )
         } else {
             BoxWithConstraints(
                 modifier = Modifier
@@ -198,19 +256,16 @@ fun OmnixChatScreen(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    items(rows, key = { it.key }) { row ->
-                        when (row) {
-                            is ChatRow.Day -> DayLabel(row.date)
-                            is ChatRow.Bubble -> MessageRow(
-                                message = row.message,
-                                fromCloud = row.message.id in state.cloudMessageIds,
-                                adminLabel = state.adminLabels[row.message.id],
-                                threadWidth = threadWidth
-                            )
-                        }
+                    items(state.messages, key = { "msg-${it.id}" }) { message ->
+                        MessageRow(
+                            message = message,
+                            fromCloud = message.id in state.cloudMessageIds,
+                            adminLabel = state.adminLabels[message.id],
+                            threadWidth = threadWidth
+                        )
                     }
                     // Не хранится в истории (чтение экрана): только в ленте.
                     if (localOnly != null) {
@@ -235,61 +290,15 @@ fun OmnixChatScreen(
 
         ConsentAndBadge(state = state, onAllowCloud = onAllowCloud, onKeepLocal = onKeepLocal)
 
-        Hairline()
         ChatComposer(
             text = state.inputText,
             isSending = state.isSending,
             isDictating = state.isVoiceDictating,
             onTextChange = onInputChange,
             onSend = onSend,
-            onToggleDictation = onToggleDictation,
-            onOpenVoiceMode = onOpenVoiceMode
+            onToggleDictation = onToggleDictation
         )
     }
-
-    // Confirmation reuses the one shared sheet: the tap path and the voice
-    // path resolve the same pending call in the executor (§17).
-    state.pendingConfirmation?.let { pending ->
-        ConfirmationSheet(
-            request = ConfirmationRequest(
-                title = pending.promptMessage,
-                detail = null,
-                confirmLabel = stringResource(R.string.omnix_confirm_confirm),
-                cancelLabel = stringResource(R.string.omnix_cancel),
-                voiceEnabled = false
-            ),
-            onConfirm = onConfirm,
-            onCancel = onCancel
-        )
-    }
-}
-
-/** One row of the thread: a day label or a message. */
-internal sealed interface ChatRow {
-    val key: String
-
-    data class Day(val date: LocalDate) : ChatRow {
-        override val key: String = "day-$date"
-    }
-
-    data class Bubble(val message: Message) : ChatRow {
-        override val key: String = "msg-${message.id}"
-    }
-}
-
-/** The messages in order, a day label before the first message of each day. */
-internal fun chatRows(messages: List<Message>, zone: ZoneId = ZoneId.systemDefault()): List<ChatRow> {
-    val rows = ArrayList<ChatRow>(messages.size + 4)
-    var day: LocalDate? = null
-    for (message in messages) {
-        val date = Instant.ofEpochMilli(message.timestamp).atZone(zone).toLocalDate()
-        if (date != day) {
-            rows += ChatRow.Day(date)
-            day = date
-        }
-        rows += ChatRow.Bubble(message)
-    }
-    return rows
 }
 
 @Composable
@@ -298,7 +307,7 @@ private fun ChatHeader(isOnline: Boolean, onOpenHistory: () -> Unit, onNewChat: 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         HeaderIconButton(
@@ -307,13 +316,14 @@ private fun ChatHeader(isOnline: Boolean, onOpenHistory: () -> Unit, onNewChat: 
             onClick = onOpenHistory
         )
         Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             Text(
                 text = stringResource(R.string.omnix_chat_title),
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 17.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
                 color = colors.textPrimary
             )
             Text(
@@ -321,7 +331,9 @@ private fun ChatHeader(isOnline: Boolean, onOpenHistory: () -> Unit, onNewChat: 
                     if (isOnline) R.string.omnix_chat_subtitle_online else R.string.omnix_chat_subtitle_on_device
                 ),
                 style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
-                color = colors.textSecondary
+                color = colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         HeaderIconButton(
@@ -349,174 +361,60 @@ private fun HeaderIconButton(icon: ImageVector, label: String, onClick: () -> Un
     }
 }
 
-/**
- * «История»: прошлые разговоры, свежие первыми. Нажатие открывает разговор
- * (его можно продолжить), корзина удаляет его после подтверждения.
- */
+/** «Чем могу помочь?» по центру и три готовые просьбы над полем ввода. */
 @Composable
-private fun ChatHistory(
-    conversations: List<ConversationSummary>,
-    currentConversationId: Long,
-    modifier: Modifier,
-    onBack: () -> Unit,
-    onOpen: (Long) -> Unit,
-    onDelete: (Long) -> Unit
-) {
+private fun EmptyChat(modifier: Modifier, onSuggestion: (String) -> Unit) {
     val colors = OmnixTheme.colors
-    var deleteArmed by remember { mutableStateOf<ConversationSummary?>(null) }
-    val untitled = stringResource(R.string.omnix_chat_untitled)
-
-    Column(modifier = modifier.fillMaxSize()) {
+    val suggestions = listOf(
+        stringResource(R.string.omnix_chat_suggestion_1),
+        stringResource(R.string.omnix_chat_suggestion_2),
+        stringResource(R.string.omnix_chat_suggestion_3)
+    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.omnix_chat_empty_title),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 24.sp, lineHeight = 31.sp),
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            HeaderIconButton(
-                icon = OmnixBackLineIcon,
-                label = stringResource(R.string.omnix_nav_back),
-                onClick = onBack
-            )
-            Text(
-                text = stringResource(R.string.omnix_chat_history_title),
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 17.sp),
-                color = colors.textPrimary,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-        Hairline()
-
-        if (conversations.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                OmnixEmptyState(
-                    title = stringResource(R.string.omnix_chat_history_empty_title),
-                    description = stringResource(R.string.omnix_chat_history_empty_body)
+            suggestions.forEach { text ->
+                Text(
+                    text = text,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 14.sp, lineHeight = 19.sp),
+                    color = colors.textPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .widthIn(max = 220.dp)
+                        .clip(SuggestionShape)
+                        .border(BorderStroke(1.dp, colors.border), SuggestionShape)
+                        .clickable { onSuggestion(text) }
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(vertical = 8.dp)
-            ) {
-                items(conversations, key = { it.id }) { conversation ->
-                    ConversationRow(
-                        title = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
-                        lastMessageAt = conversation.lastMessageAt,
-                        isOpen = conversation.id == currentConversationId,
-                        onOpen = { onOpen(conversation.id) },
-                        onDelete = { deleteArmed = conversation }
-                    )
-                }
-            }
         }
-    }
-
-    deleteArmed?.let { conversation ->
-        ConfirmationSheet(
-            request = ConfirmationRequest(
-                title = stringResource(R.string.omnix_chat_delete_confirm_title),
-                detail = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
-                confirmLabel = stringResource(R.string.omnix_chat_delete),
-                cancelLabel = stringResource(R.string.omnix_cancel),
-                voiceEnabled = false
-            ),
-            onConfirm = {
-                deleteArmed = null
-                onDelete(conversation.id)
-            },
-            onCancel = { deleteArmed = null }
-        )
-    }
-}
-
-@Composable
-private fun ConversationRow(
-    title: String,
-    lastMessageAt: Long,
-    isOpen: Boolean,
-    onOpen: () -> Unit,
-    onDelete: () -> Unit
-) {
-    val colors = OmnixTheme.colors
-    val whenText = remember(lastMessageAt) {
-        DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.getDefault())
-            .format(Instant.ofEpochMilli(lastMessageAt).atZone(ZoneId.systemDefault()))
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onOpen)
-            .padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = title,
-                style = TextStyle(
-                    fontFamily = OmnixSans,
-                    fontWeight = if (isOpen) FontWeight.Medium else FontWeight.Normal,
-                    fontSize = 15.sp
-                ),
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = whenText,
-                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
-                color = colors.textSecondary
-            )
-        }
-        HeaderIconButton(
-            icon = OmnixTrashLineIcon,
-            label = stringResource(R.string.omnix_chat_delete),
-            onClick = onDelete
-        )
-    }
-}
-
-@Composable
-private fun Hairline() {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(OmnixTheme.colors.textPrimary.copy(alpha = 0.06f))
-    )
-}
-
-/** "TODAY", "YESTERDAY" or the date, centred in mono. */
-@Composable
-private fun DayLabel(date: LocalDate) {
-    val today = remember { LocalDate.now() }
-    val text = when (date) {
-        today -> stringResource(R.string.omnix_chat_today)
-        today.minusDays(1) -> stringResource(R.string.omnix_chat_yesterday)
-        else -> remember(date) {
-            DateTimeFormatter.ofPattern("d MMMM", Locale.getDefault()).format(date).uppercase(Locale.getDefault())
-        }
-    }
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Text(
-            text = text,
-            style = OmnixMonoLabelStyle.copy(fontSize = 11.sp, letterSpacing = 0.04.em),
-            color = OmnixTheme.colors.textTertiary
-        )
     }
 }
 
 /**
- * One message. The user's words: a paper bubble on the right, up to 78 % of
- * the thread. OMNIX: a card bubble on the left, up to 82 %, signed when the
- * answer came from the cloud. A failed round trip: a red-tinted bubble with a
- * warning mark. Each message is one accessibility node ("You: …").
+ * Одно сообщение. Пользователь — пузырь справа, до 78 % ширины. OMNIX —
+ * текст на всю ширину с разметкой, под ним «Скопировать» и, если ответ из
+ * облака, подпись. Ошибка — красноватый пузырь со значком.
  */
 @Composable
 private fun MessageRow(
@@ -537,52 +435,60 @@ private fun MessageRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clearAndSetSemantics { contentDescription = description },
+                .semantics { contentDescription = description },
             contentAlignment = Alignment.CenterEnd
         ) {
-            Text(
-                text = message.text,
-                style = BubbleText,
-                color = colors.textPrimary,
-                modifier = Modifier
-                    .widthIn(max = threadWidth * 0.78f)
-                    .clip(UserBubbleShape)
-                    .background(colors.surfaceElevated)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            )
+            SelectionContainer {
+                Text(
+                    text = message.text,
+                    style = BubbleText,
+                    color = colors.textPrimary,
+                    modifier = Modifier
+                        .widthIn(max = threadWidth * 0.78f)
+                        .clip(UserBubbleShape)
+                        .background(colors.surfaceElevated)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+            }
+        }
+        return
+    }
+
+    if (isError) {
+        Row(
+            modifier = Modifier
+                .widthIn(max = threadWidth * 0.9f)
+                .clip(ErrorShape)
+                .background(colors.errorBubble)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .clearAndSetSemantics { contentDescription = description },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OmnixAlertIcon(color = colors.stateError, size = 16.dp)
+            Text(text = message.text, style = BubbleText, color = colors.stateError)
         }
         return
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clearAndSetSemantics { contentDescription = description },
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        if (isError) {
-            Row(
-                modifier = Modifier
-                    .widthIn(max = threadWidth * 0.82f)
-                    .clip(AiBubbleShape)
-                    .background(colors.errorBubble)
-                    .border(BorderStroke(1.dp, colors.border), AiBubbleShape)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OmnixAlertIcon(color = colors.stateError, size = 16.dp)
-                Text(text = message.text, style = BubbleText, color = colors.stateError)
-            }
-        } else {
-            // Ответ OMNIX — обычный текст на всю ширину, без пузыря (как в ChatGPT).
-            Text(text = message.text, style = BubbleText, color = colors.textPrimary)
+        SelectionContainer(modifier = Modifier.semantics { contentDescription = description }) {
+            ChatMarkdown(
+                text = message.text,
+                style = BubbleText,
+                color = colors.textPrimary,
+                codeBackground = colors.surfaceElevated
+            )
         }
-        if (caption != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            CopyButton(text = message.text)
+            if (caption != null) {
                 if (fromCloud) {
                     Icon(OmnixCloudLineIcon, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(12.dp))
                 }
@@ -596,10 +502,42 @@ private fun MessageRow(
     }
 }
 
-/**
- * The pause between send and answer: three dots breathe inside the card
- * bubble OMNIX answers in. Static under reduced motion (§29).
- */
+@Composable
+private fun CopyButton(text: String) {
+    val colors = OmnixTheme.colors
+    val clipboard = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1_500)
+            copied = false
+        }
+    }
+    val label = stringResource(if (copied) R.string.omnix_chat_copied else R.string.omnix_chat_copy)
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .clickable {
+                clipboard.setText(AnnotatedString(text))
+                copied = true
+            }
+            .clearAndSetSemantics {
+                contentDescription = label
+                role = Role.Button
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (copied) OmnixCheckLineIcon else OmnixCopyLineIcon,
+            contentDescription = null,
+            tint = colors.textSecondary,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+/** Пауза между отправкой и ответом: одна мягко пульсирующая точка, без пузыря. */
 @Composable
 private fun ThinkingRow() {
     val colors = OmnixTheme.colors
@@ -615,30 +553,16 @@ private fun ThinkingRow() {
         ),
         label = "omnixThinkingPhase"
     )
+    val pulse = if (reduced) 0.8f else 0.55f + 0.45f * sin(phase * PI).toFloat()
 
-    Row(
+    Box(
         modifier = Modifier
+            .padding(vertical = 6.dp)
             .clearAndSetSemantics { contentDescription = label }
-            .clip(AiBubbleShape)
-            .background(colors.surface)
-            .border(BorderStroke(1.dp, colors.border), AiBubbleShape)
-            .padding(horizontal = 16.dp, vertical = 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        repeat(3) { index ->
-            val pulse = if (reduced) {
-                0.45f
-            } else {
-                0.25f + 0.75f * sin(((phase + index / 3f) % 1f) * PI).toFloat()
-            }
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(colors.accentBrand.copy(alpha = pulse))
-            )
-        }
-    }
+            .size(12.dp * pulse)
+            .clip(CircleShape)
+            .background(colors.textPrimary)
+    )
 }
 
 /**
@@ -757,11 +681,11 @@ private fun PrivacyBadge(level: PrivacyLevel) {
 }
 
 /**
- * The composer (owner mock 2026-10-21, like ChatGPT): the field with the
- * dictation microphone inside it, and one lime button — voice mode while the
- * field is empty, send once there is text. Dictation fills the field; the
- * user sends. The field grows while the user types and stays editable while
- * a request is in flight; the ViewModel guards double sends.
+ * Поле ввода как в ChatGPT: одна «пилюля», внутри — текст, микрофон диктовки
+ * и круглая кнопка отправки (появляется, когда есть текст). Enter переносит
+ * строку, отправляет кнопка. Диктовка дописывает текст в поле; отправляет
+ * пользователь. Поле растёт до шести строк и остаётся редактируемым, пока
+ * идёт запрос; двойную отправку отсекает ViewModel.
  */
 @Composable
 private fun ChatComposer(
@@ -770,12 +694,11 @@ private fun ChatComposer(
     isDictating: Boolean,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
-    onToggleDictation: () -> Unit,
-    onOpenVoiceMode: () -> Unit
+    onToggleDictation: () -> Unit
 ) {
     val colors = OmnixTheme.colors
     val hasText = text.isNotBlank()
-    val buttonLabel = stringResource(if (hasText) R.string.omnix_chat_send else R.string.omnix_chat_voice_mode)
+    val sendLabel = stringResource(R.string.omnix_chat_send)
     val dictationLabel = stringResource(
         if (isDictating) R.string.omnix_chat_dictation_stop else R.string.omnix_chat_dictation_start
     )
@@ -784,102 +707,107 @@ private fun ChatComposer(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp)
+            .heightIn(min = 52.dp)
+            .clip(ComposerShape)
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), ComposerShape)
+            .padding(start = 18.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 48.dp)
-                .clip(FieldShape)
-                .background(colors.surface)
-                .border(BorderStroke(1.dp, colors.border), FieldShape)
-                .padding(start = 18.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 13.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                if (text.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.omnix_chat_input_hint),
-                        style = FieldText,
-                        color = colors.textTertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                BasicTextField(
-                    value = text,
-                    onValueChange = onTextChange,
-                    singleLine = false,
-                    maxLines = 6,
-                    textStyle = FieldText.copy(color = colors.textPrimary),
-                    cursorBrush = SolidColor(colors.textPrimary),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { onSend() }),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 132.dp)
-                        .verticalScroll(rememberScrollState())
-                )
-            }
-            // Диктовка: текст попадает в поле, отправляет пользователь.
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onToggleDictation)
-                    .clearAndSetSemantics {
-                        contentDescription = dictationLabel
-                        role = Role.Button
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = OmnixMicLineIcon,
-                    contentDescription = null,
-                    tint = if (isDictating) colors.accentBrand else colors.textSecondary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
         Box(
             modifier = Modifier
-                .size(48.dp)
-                .omnixPressScale(interaction)
-                .clip(CircleShape)
-                .background(colors.accentBrand)
-                .clickable(
-                    interactionSource = interaction,
-                    indication = null,
-                    enabled = !hasText || !isSending,
-                    onClick = if (hasText) onSend else onOpenVoiceMode
+                .weight(1f)
+                .padding(top = 8.dp, bottom = 8.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            if (text.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.omnix_chat_input_hint),
+                    style = FieldText,
+                    color = colors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+            }
+            BasicTextField(
+                value = text,
+                onValueChange = onTextChange,
+                singleLine = false,
+                maxLines = 6,
+                textStyle = FieldText.copy(color = colors.textPrimary),
+                cursorBrush = SolidColor(colors.textPrimary),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Default
+                ),
+                modifier = Modifier
+                    .testTag(CHAT_COMPOSER_FIELD_TAG)
+                    .fillMaxWidth()
+                    .heightIn(max = 140.dp)
+                    .verticalScroll(rememberScrollState())
+            )
+        }
+
+        // Диктовка: текст дописывается в поле, отправляет пользователь.
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(if (isDictating) colors.accentBrandSoft else colors.surface)
+                .clickable(onClick = onToggleDictation)
                 .clearAndSetSemantics {
-                    contentDescription = buttonLabel
+                    contentDescription = dictationLabel
                     role = Role.Button
                 },
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (hasText) OmnixSendLineIcon else OmnixVoiceWaveLineIcon,
+                imageVector = OmnixMicLineIcon,
                 contentDescription = null,
-                tint = colors.background,
-                modifier = Modifier.size(22.dp)
+                tint = if (isDictating) colors.accentBrand else colors.textSecondary,
+                modifier = Modifier.size(20.dp)
             )
+        }
+
+        AnimatedVisibility(visible = hasText || isSending, enter = fadeIn(), exit = fadeOut()) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .size(40.dp)
+                    .omnixPressScale(interaction)
+                    .clip(CircleShape)
+                    .background(if (hasText && !isSending) colors.textPrimary else colors.surfaceElevated)
+                    .clickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        enabled = hasText && !isSending,
+                        onClick = onSend
+                    )
+                    .clearAndSetSemantics {
+                        contentDescription = sendLabel
+                        role = Role.Button
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = OmnixSendLineIcon,
+                    contentDescription = null,
+                    tint = if (hasText && !isSending) colors.background else colors.textTertiary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
 
-private val BubbleText = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp)
-private val FieldText = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 22.sp)
-private val UserBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 6.dp, bottomStart = 20.dp)
-private val AiBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 6.dp)
-private val FieldShape = RoundedCornerShape(24.dp)
-private val CardShape = RoundedCornerShape(18.dp)
+/** Поле ввода чата; в боковом меню есть второе поле — поиск. */
+internal const val CHAT_COMPOSER_FIELD_TAG = "chat-composer-field"
+
+private val BubbleText = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 24.sp)
+private val FieldText = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 22.sp)
+private val UserBubbleShape = RoundedCornerShape(22.dp)
+private val ErrorShape = RoundedCornerShape(16.dp)
+private val SuggestionShape = RoundedCornerShape(16.dp)
+private val ComposerShape = RoundedCornerShape(28.dp)
+private val CardShape = RoundedCornerShape(20.dp)

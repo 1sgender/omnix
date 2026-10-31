@@ -36,6 +36,8 @@ services:
       OMNIX_ADMIN_CLIENTS: ${OMNIX_ADMIN_CLIENTS:?Set explicit admin client IDs}
       OMNIX_ADMIN_BOOTSTRAP_USERNAME: ${OMNIX_ADMIN_BOOTSTRAP_USERNAME:-}
       OMNIX_ADMIN_BOOTSTRAP_PASSWORD: ${OMNIX_ADMIN_BOOTSTRAP_PASSWORD:-}
+      # Тест моделей админом: UUID аккаунтов через запятую; пусто — админов нет.
+      ADMIN_ACCOUNT_IDS: ${ADMIN_ACCOUNT_IDS:-}
 
       DATABASE_URL: jdbc:postgresql://postgres:5432/omnix
       DATABASE_USER: ${DATABASE_USER:?Set DATABASE_USER}
@@ -69,6 +71,8 @@ services:
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       # Groq retires models regularly; override when the default 404s.
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      # Speech recognition for the two-earbud translator (/v1/stt/transcribe).
+      GROQ_STT_MODEL: ${GROQ_STT_MODEL:-whisper-large-v3}
       GEMINI_ENABLED: ${GEMINI_ENABLED:-true}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENROUTER_ENABLED: ${OPENROUTER_ENABLED:-true}

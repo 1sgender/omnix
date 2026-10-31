@@ -55,33 +55,58 @@ class AppMatchCascade(
      */
     val aliases: Map<String, List<String>> = mapOf(
         "telegram" to listOf("telegram", "телеграм", "телеграмм", "телега", "телегу", "телеге", "тг", "tg"),
-        "youtube" to listOf("youtube", "ютуб", "ютюб", "ю туб", "ют"),
-        "whatsapp" to listOf("whatsapp", "ватсап", "вацап", "воцап", "вотсап", "вассап"),
-        "chrome" to listOf("chrome", "хром", "браузер", "гугл хром"),
+        "youtube" to listOf("youtube", "ютуб", "ютюб", "ю туб", "ют", "ýutub", "yutub"),
+        "whatsapp" to listOf("whatsapp", "ватсап", "вацап", "воцап", "вотсап", "вассап", "watsap"),
+        "chrome" to listOf("chrome", "хром", "браузер", "гугл хром", "brauzer"),
         "spotify" to listOf("spotify", "спотифай", "спотик"),
         "instagram" to listOf("instagram", "инстаграм", "инста", "инстаграмм"),
         "viber" to listOf("viber", "вайбер"),
-        "maps" to listOf("maps", "карты", "гугл карты", "навигатор"),
-        "calculator" to listOf("calculator", "калькулятор", "кальк"),
-        "camera" to listOf("camera", "камера", "камеру", "фотоаппарат"),
-        "gallery" to listOf("gallery", "галерея", "галерею", "фото", "фотки"),
-        "settings" to listOf("settings", "настройки", "настройка"),
-        "calendar" to listOf("calendar", "календарь", "календарю")
+        "imo" to listOf("imo", "имо"),
+        "tiktok" to listOf("tiktok", "тикток", "тик ток"),
+        "maps" to listOf("maps", "карты", "гугл карты", "навигатор", "kartalar"),
+        "calculator" to listOf("calculator", "калькулятор", "кальк", "kalkulýator", "kalkulyator"),
+        "camera" to listOf("camera", "камера", "камеру", "фотоаппарат", "kamera"),
+        "gallery" to listOf("gallery", "галерея", "галерею", "фото", "фотки", "galereýa", "galereya", "suratlar"),
+        "settings" to listOf("settings", "настройки", "настройка", "sazlamalar"),
+        "calendar" to listOf("calendar", "календарь", "календарю", "senenama"),
+        "clock" to listOf("clock", "часы", "будильник", "alarm", "sagat", "oýardyjy"),
+        "phone" to listOf("phone", "телефон", "звонилка", "звонки", "jaňlar"),
+        "messages" to listOf("messages", "сообщения", "смс", "sms", "habarlar"),
+        "contacts" to listOf("contacts", "контакты", "kontaktlar"),
+        "notes" to listOf("notes", "заметки", "bellikler"),
+        "files" to listOf("files", "файлы", "мои файлы", "faýllar"),
+        "music" to listOf("music", "музыка", "плеер", "aýdymlar", "saz"),
+        "playstore" to listOf("play store", "плей маркет", "плеймаркет", "плей стор", "маркет", "google play")
     )
 
-    /** Известные пакеты для алиасов. Проверяются на установленность. */
+    /**
+     * Известные пакеты для алиасов (Google, AOSP и Samsung One UI). Проверяются
+     * на установленность; русские подписи на телефоне Samsung («Калькулятор»)
+     * дополнительно ловит сверка всех написаний алиаса с подписями приложений.
+     */
     val knownPackages: Map<String, List<String>> = mapOf(
-        "telegram" to listOf("org.telegram.messenger", "org.thunderdog.challegram", "org.telegram.plus"),
+        "telegram" to listOf("org.telegram.messenger", "org.thunderdog.challegram", "org.telegram.plus", "org.telegram.messenger.web"),
         "youtube" to listOf("com.google.android.youtube", "com.google.android.apps.youtube.music"),
         "whatsapp" to listOf("com.whatsapp", "com.whatsapp.w4b"),
-        "chrome" to listOf("com.android.chrome"),
+        "chrome" to listOf("com.android.chrome", "com.sec.android.app.sbrowser"),
         "spotify" to listOf("com.spotify.music"),
         "instagram" to listOf("com.instagram.android"),
         "viber" to listOf("com.viber.voip"),
-        "maps" to listOf("com.google.android.apps.maps", "ru.yandex.yandexmaps"),
-        "calculator" to listOf("com.google.android.calculator", "com.android.calculator2"),
-        "gallery" to listOf("com.google.android.apps.photos", "com.android.gallery3d"),
-        "calendar" to listOf("com.google.android.calendar", "com.android.calendar")
+        "imo" to listOf("com.imo.android.imoim", "com.imo.android.imoimbeta"),
+        "tiktok" to listOf("com.zhiliaoapp.musically", "com.ss.android.ugc.trill"),
+        "maps" to listOf("com.google.android.apps.maps", "ru.yandex.yandexmaps", "ru.dublgis.dgismobile"),
+        "calculator" to listOf("com.sec.android.app.popupcalculator", "com.google.android.calculator", "com.android.calculator2"),
+        "camera" to listOf("com.sec.android.app.camera", "com.google.android.GoogleCamera", "com.android.camera2"),
+        "gallery" to listOf("com.sec.android.gallery3d", "com.google.android.apps.photos", "com.android.gallery3d"),
+        "calendar" to listOf("com.samsung.android.calendar", "com.google.android.calendar", "com.android.calendar"),
+        "clock" to listOf("com.sec.android.app.clockpackage", "com.google.android.deskclock", "com.android.deskclock"),
+        "phone" to listOf("com.samsung.android.dialer", "com.google.android.dialer", "com.android.dialer"),
+        "messages" to listOf("com.samsung.android.messaging", "com.google.android.apps.messaging"),
+        "contacts" to listOf("com.samsung.android.app.contacts", "com.google.android.contacts", "com.android.contacts"),
+        "notes" to listOf("com.samsung.android.app.notes", "com.google.android.keep"),
+        "files" to listOf("com.sec.android.app.myfiles", "com.google.android.apps.nbu.files", "com.google.android.documentsui"),
+        "music" to listOf("com.sec.android.app.music", "com.google.android.apps.youtube.music", "com.spotify.music"),
+        "playstore" to listOf("com.android.vending")
     )
 
     /**
@@ -90,7 +115,9 @@ class AppMatchCascade(
      */
     val systemActions: Map<String, String> = mapOf(
         "settings" to android.provider.Settings.ACTION_SETTINGS,
-        "camera" to android.provider.MediaStore.ACTION_IMAGE_CAPTURE
+        // «Открой камеру» — обычный режим съёмки. ACTION_IMAGE_CAPTURE — это
+        // «сделай снимок и верни его приложению», камера открывалась не так.
+        "camera" to android.provider.MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA
     )
 
     fun resolve(installed: List<InstalledApp>, rawQuery: String): AppResolution {
@@ -130,8 +157,26 @@ class AppMatchCascade(
                     return AppResolution.Resolved(it.packageName, it.label, AppResolution.MatchKind.ALIAS)
                 }
             }
-            installed.firstOrNull { compact(it.label) == compact(aliasKey) }?.let {
+            // Подписи приложений бывают на любом языке телефона («Калькулятор»,
+            // «Kalkulýator»): сверяем с ними все написания алиаса, а не только ключ.
+            val spellings = (aliases[aliasKey].orEmpty() + aliasKey).map(::compact).toSet()
+            installed.firstOrNull { compact(it.label) in spellings }?.let {
                 return AppResolution.Resolved(it.packageName, it.label, AppResolution.MatchKind.ALIAS)
+            }
+            // Нечётко — только длинные написания и только по Левенштейну, без
+            // «подстроки»: иначе «saz» (музыка) цеплял бы «Sazlamalar» (настройки).
+            val longSpellings = spellings.filter { it.length >= 4 }
+            if (longSpellings.isNotEmpty()) {
+                installed
+                    .map { app ->
+                        val label = compact(app.label)
+                        app to longSpellings.maxOf { 1.0 - levenshtein(it, label).toDouble() / max(it.length, label.length) }
+                    }
+                    .filter { it.second >= ALIAS_LABEL_THRESHOLD }
+                    .maxByOrNull { it.second }
+                    ?.let { (app, _) ->
+                        return AppResolution.Resolved(app.packageName, app.label, AppResolution.MatchKind.ALIAS)
+                    }
             }
             if (systemActions.containsKey(aliasKey)) {
                 return AppResolution.Resolved(aliasKey, aliasKey, AppResolution.MatchKind.ALIAS)
@@ -190,6 +235,7 @@ class AppMatchCascade(
     companion object {
         private const val FUZZY_THRESHOLD = 0.72
         private const val AMBIGUITY_MARGIN = 0.06
+        private const val ALIAS_LABEL_THRESHOLD = 0.8
         private const val SEMANTIC_THRESHOLD = 0.5f
 
         fun normalize(value: String): String = value

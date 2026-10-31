@@ -13,6 +13,7 @@ import com.omnix.server.config.PrivacyPolicyConfig
 import com.omnix.server.config.ProviderConfig
 import com.omnix.server.config.RateLimitConfig
 import com.omnix.server.config.ValidationConfig
+import com.omnix.server.cost.RequestCostEstimator
 import com.omnix.server.http.HttpRequestContext
 import com.omnix.server.http.OmnixApiHandler
 import com.omnix.server.observability.ConsoleStructuredLogger
@@ -75,7 +76,8 @@ class ApiIntegrationTest {
         validation: ValidationConfig = ValidationConfig(),
         entitlementAllowed: Boolean = true,
         privacyClassifier: ServerPrivacyClassifier =
-            com.omnix.server.privacy.PromptPrivacyClassifier
+            com.omnix.server.privacy.PromptPrivacyClassifier,
+        speechToText: com.omnix.server.stt.SpeechToText? = null
     ): Harness {
         val configs = providers.associate { it.id to cfg(it.id, it.id.ordinal + 1) }
         val health = ProviderHealthTracker(CircuitBreakerConfig())
@@ -116,7 +118,8 @@ class ApiIntegrationTest {
             logger = logger,
             metrics = metrics,
             json = json,
-            entitlementChecker = { entitlementAllowed }
+            entitlementChecker = { entitlementAllowed },
+            speechToText = speechToText
         )
 
         return Harness(handler, usage, metrics, providers)
@@ -680,6 +683,70 @@ class ApiIntegrationTest {
         assertEquals("здравствуйте", req.history[1].content)
     }
 
+    private fun sttBody(audio: ByteArray, hint: String? = null): String {
+        val b64 = java.util.Base64.getEncoder().encodeToString(audio)
+        return if (hint == null) """{"audio":"$b64"}""" else """{"audio":"$b64","languageHint":"$hint"}"""
+    }
+
+    private fun shortWav(): ByteArray = ByteArray(44 + 16_000).also {
+        "RIFF".toByteArray().copyInto(it, 0)
+        "WAVE".toByteArray().copyInto(it, 8)
+    }
+
+    /** Переводчик «по наушнику на каждого»: фраза → текст и язык. */
+    @Test
+    fun `stt returns text and detected language`() = runBlocking {
+        var hint: String? = "unset"
+        val stt = object : com.omnix.server.stt.SpeechToText {
+            override suspend fun transcribe(wav: ByteArray, languageHint: String?): com.omnix.server.stt.SttOutcome {
+                hint = languageHint
+                return com.omnix.server.stt.SttOutcome.Success("Salam", "tk")
+            }
+        }
+        val h = harness(speechToText = stt)
+        val response = h.handler.handle(post(sttBody(shortWav()), path = OmnixApiHandler.PATH_STT))
+        assertEquals(200, response.status)
+        val body = json.decodeFromString(com.omnix.server.api.SttResponse.serializer(), response.body)
+        assertEquals("Salam", body.text)
+        assertEquals("tk", body.language)
+        assertEquals(null, hint)
+    }
+
+    @Test
+    fun `stt requires a token and valid audio`() = runBlocking {
+        val stt = object : com.omnix.server.stt.SpeechToText {
+            override suspend fun transcribe(wav: ByteArray, languageHint: String?) =
+                com.omnix.server.stt.SttOutcome.Success("x", "ru")
+        }
+        val h = harness(speechToText = stt)
+        assertEquals(401, h.handler.handle(post(sttBody(shortWav()), token = null, path = OmnixApiHandler.PATH_STT)).status)
+        assertEquals(400, h.handler.handle(post("""{"audio":"%%%"}""", path = OmnixApiHandler.PATH_STT)).status)
+        assertEquals(400, h.handler.handle(post(sttBody(ByteArray(200)), path = OmnixApiHandler.PATH_STT)).status)
+    }
+
+    @Test
+    fun `stt without a configured recogniser is unavailable, not a crash`() = runBlocking {
+        val response = harness().handler.handle(post(sttBody(shortWav()), path = OmnixApiHandler.PATH_STT))
+        assertEquals(503, response.status)
+    }
+
+    /** Чат получает свои правила (развёрнуто, markdown) и бюджет; голос — короткие. */
+    @Test
+    fun `chat and voice get their own answer rules`() = runBlocking {
+        val groq = FakeAiProvider.ok(ProviderId.GROQ, "ok")
+        val h = harness(providers = listOf(groq))
+
+        assertEquals(200, h.handler.handle(post("""{"text":"Объясни, как работает ИИ","source":"CHAT"}""")).status)
+        val chat = groq.lastRequest!!
+        assertTrue(chat.systemPrompt.startsWith(AiGenerationConfig.DEFAULT_CHAT_SYSTEM_PROMPT))
+        assertEquals(RequestCostEstimator.CHAT_SIMPLE_MAX_OUTPUT_TOKENS, chat.maxTokens)
+
+        assertEquals(200, h.handler.handle(post(requestBody(text = "Объясни, как работает память"))).status)
+        val voice = groq.lastRequest!!
+        assertTrue(voice.systemPrompt.startsWith(AiGenerationConfig.DEFAULT_SYSTEM_PROMPT))
+        assertEquals(RequestCostEstimator.SIMPLE_MAX_OUTPUT_TOKENS, voice.maxTokens)
+    }
+
     /** CR-03: пустая история работает как раньше — в ProviderRequest.history пусто. */
     @Test
     fun `empty history behaves like pre-CR-03`() = runBlocking {
@@ -690,13 +757,30 @@ class ApiIntegrationTest {
         assertTrue(groq.lastRequest!!.history.isEmpty())
     }
 
-    /** CR-03: невалидная роль в истории → 400. */
+    /**
+     * Неизвестная роль и пустой текст в истории не валят запрос: такие
+     * сообщения отбрасываются. В v344 клиентская роль "error" (красный пузырь
+     * ошибки) превращала каждый следующий ответ в INVALID_REQUEST.
+     */
     @Test
-    fun `invalid history role returns INVALID_REQUEST`() = runBlocking {
-        val h = harness()
+    fun `unknown history roles and blank messages are dropped, not rejected`() = runBlocking {
+        val groq = FakeAiProvider.ok(ProviderId.GROQ, "ok")
+        val h = harness(providers = listOf(groq))
         val body = requestBody(
-            history = """[{"role":"potato","content":"test"}]"""
+            history = """[{"role":"user","content":"открой ютуб"},{"role":"error","content":"Приложение не установлено"},""" +
+                """{"role":"assistant","content":" "},{"role":"potato","content":"test"},{"role":"assistant","content":"Открываю"}]"""
         )
+        val response = h.handler.handle(post(body))
+        assertEquals(200, response.status)
+        assertEquals(listOf("user", "assistant"), groq.lastRequest!!.history.map { it.role })
+        assertEquals("Открываю", groq.lastRequest!!.history[1].content)
+    }
+
+    /** CR-03: гигантское сообщение истории по-прежнему отклоняется. */
+    @Test
+    fun `overlong history message returns INVALID_REQUEST`() = runBlocking {
+        val h = harness()
+        val body = requestBody(history = """[{"role":"user","content":"${"x".repeat(20_000)}"}]""")
         val response = h.handler.handle(post(body))
         assertEquals(400, response.status)
     }

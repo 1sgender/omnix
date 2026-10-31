@@ -128,7 +128,8 @@ class MemoryRetrievalInjectionTest {
         }
         // Только «кто такой OMNIX» и базовый промпт — блока памяти нет.
         assertEquals(
-            com.omnix.assistant.core.constants.AppConstants.IDENTITY_PROMPT + "\n\nBASE-SYS",
+            com.omnix.assistant.core.constants.AppConstants.IDENTITY_PROMPT + "\n" +
+                com.omnix.assistant.core.locale.SpeechLanguage.answerHint() + "\n\nBASE-SYS",
             sysSlot.captured
         )
     }

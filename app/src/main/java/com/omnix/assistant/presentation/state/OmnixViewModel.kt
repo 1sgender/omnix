@@ -16,6 +16,8 @@ import com.omnix.assistant.update.otaArcFraction
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.orchestrator.OrchestratorMode
 import com.omnix.assistant.voice.orchestrator.VoiceInteractionOrchestrator
+import com.omnix.assistant.core.battery.BatteryOptimizationHelper
+import com.omnix.assistant.voice.service.AssistantAutoStart
 import com.omnix.assistant.voice.service.OmnixVoiceService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -266,6 +268,13 @@ class OmnixViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OmnixUiState())
 
     init {
+        // Ассистент был включён и не выключался пользователем, но служба не
+        // идёт (перезагрузка, обновление, система убила процесс) — приложение
+        // на экране, поднимать микрофонную службу сейчас можно.
+        if (AssistantAutoStart.isEnabled(context) && !orchestrator.serviceActive.value) {
+            startAssistant(userInitiated = false)
+        }
+
         // A real, persisted signal for progressive disclosure: one increment
         // per successfully completed action, never a fabricated counter (§10).
         orchestrator.lastToolResult
@@ -339,10 +348,14 @@ class OmnixViewModel @Inject constructor(
         viewModelScope.launch { experienceStore.setMicrophonePrompted(true) }
     }
 
-    /** Driven by the pairing screen (§40). */
-    fun setSearching(active: Boolean) {
-        searching.value = active
-        if (active) clipRepository.refresh()
+    /**
+     * «Подключить наушники»: перепроверить соединение, пока пользователь
+     * подключает их в системных настройках. Статус «Поиск…» здесь больше не
+     * включается: в v344 его никто не выключал, и он висел до подключения.
+     */
+    fun refreshHeadphones() {
+        searching.value = false
+        clipRepository.refresh()
     }
 
     /**
@@ -356,7 +369,7 @@ class OmnixViewModel @Inject constructor(
         if (orchestrator.serviceActive.value) stopAssistant() else startAssistant()
     }
 
-    private fun startAssistant() {
+    private fun startAssistant(userInitiated: Boolean = true) {
         powerError.value = null
         refreshPermissions()
         if (!hasMicrophonePermission()) {
@@ -376,6 +389,12 @@ class OmnixViewModel @Inject constructor(
             } != null
             if (!started) powerError.value = AssistantPowerError.START_TIMEOUT
             powerTransition.value = null
+            // Один раз при первом включении: без исключения из оптимизации
+            // батареи One UI усыпляет OMNIX в фоне, и «Омни» перестаёт работать.
+            if (started && userInitiated && AssistantAutoStart.shouldAskBatteryExemption(context)) {
+                AssistantAutoStart.markBatteryExemptionAsked(context)
+                BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context)
+            }
         }
     }
 

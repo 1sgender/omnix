@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performClick
@@ -65,16 +66,15 @@ class ChatComposerInputTest {
                     onDeleteConversation = {},
                     onAllowCloud = {},
                     onKeepLocal = {},
-                    onToggleDictation = {},
-                    onOpenVoiceMode = {}
+                    onToggleDictation = {}
                 )
             }
         }
-        val field = compose.onNode(hasSetTextAction())
+        val field = compose.onNode(hasSetTextAction() and hasTestTag(CHAT_COMPOSER_FIELD_TAG))
         field.performClick()
         field.performTextInput("Привет")
         compose.waitForIdle()
-        compose.onNode(hasSetTextAction()).assert(hasText("Привет"))
+        compose.onNode(hasSetTextAction() and hasTestTag(CHAT_COMPOSER_FIELD_TAG)).assert(hasText("Привет"))
     }
 
     @Test

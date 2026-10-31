@@ -108,17 +108,6 @@ val OmnixNewChatLineIcon: ImageVector = omnixLineIcon(
     "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
 )
 
-/** Голосовой режим: звуковая волна. */
-val OmnixVoiceWaveLineIcon: ImageVector = omnixLineIcon(
-    "VoiceWave",
-    2.2f,
-    "M4 10v4",
-    "M8 7v10",
-    "M12 4v16",
-    "M16 7v10",
-    "M20 10v4"
-)
-
 /** Удалить: корзина. */
 val OmnixTrashLineIcon: ImageVector = omnixLineIcon(
     "Trash",
@@ -169,6 +158,23 @@ val OmnixCloudLineIcon: ImageVector = omnixLineIcon(
 
 val OmnixSendLineIcon: ImageVector = omnixLineIcon("Send", 2.2f, "M12 19V5", "M5 12l7-7 7 7")
 
+/** Поиск по чатам: лупа. */
+val OmnixSearchLineIcon: ImageVector = omnixLineIcon(
+    "Search",
+    "M11 4a7 7 0 1 1 0 14a7 7 0 1 1 0-14z",
+    "M20 20l-4-4"
+)
+
+/** Скопировать ответ: два листа. */
+val OmnixCopyLineIcon: ImageVector = omnixLineIcon(
+    "Copy",
+    "M10 8h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z",
+    "M5 16V5a1 1 0 0 1 1-1h10"
+)
+
+/** Скопировано: галочка. */
+val OmnixCheckLineIcon: ImageVector = omnixLineIcon("Check", 2.2f, "M5 12l5 5 9-10")
+
 // ---- Me ----
 
 val OmnixChevronLineIcon: ImageVector = omnixLineIcon("Chevron", "M9 18l6-6-6-6")
@@ -211,5 +217,12 @@ val OmnixBellLineIcon: ImageVector = omnixLineIcon(
     "Bell",
     "M6 16V11a6 6 0 0 1 12 0v5l2 2H4z",
     "M10 21h4"
+)
+
+/** Приватность: замок. */
+val OmnixLockLineIcon: ImageVector = omnixLineIcon(
+    "Lock",
+    "M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z",
+    "M8 11V8a4 4 0 0 1 8 0v3"
 )
 

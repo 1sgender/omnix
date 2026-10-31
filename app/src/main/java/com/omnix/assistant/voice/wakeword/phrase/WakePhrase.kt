@@ -28,6 +28,17 @@ enum class WakeEngineKind(val storageKey: String) {
  * завершается), поэтому строки проверяет инструментальный тест.
  */
 enum class WakePhrase(val storageKey: String, val displayName: String, val keywords: String) {
+    /**
+     * По умолчанию (2026-10-22): владелец зовёт просто «Омни», ещё нужно «Омникс».
+     * Одиночному «Омни» — свой порог строже (`:буст #порог`): на синтетике
+     * единственное ложное — «Амнистия»; на 5 минутах речи ложных ноль.
+     */
+    ALL(
+        "all",
+        "Омни",
+        "▁о к ей ▁о м ни @OKAY_OMNI/▁о к ей ▁у м ный @OKAY_OMNI/▁о м ни :1.0 #0.25 @OMNI/▁о м ник с @OMNIX"
+    ),
+
     /** «Окей, Омни»; английское «Okay Omni» модель слышит как «окей умный». */
     OKAY_OMNI(
         "okay_omni",
@@ -39,6 +50,6 @@ enum class WakePhrase(val storageKey: String, val displayName: String, val keywo
     OMNI("omni", "Омни", "▁о м ни @OMNI");
 
     companion object {
-        fun fromStorageKey(raw: String?): WakePhrase = entries.firstOrNull { it.storageKey == raw } ?: OKAY_OMNI
+        fun fromStorageKey(raw: String?): WakePhrase = entries.firstOrNull { it.storageKey == raw } ?: ALL
     }
 }

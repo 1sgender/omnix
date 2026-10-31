@@ -40,6 +40,7 @@ import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
 import com.omnix.assistant.presentation.home.HomeRoute
 import com.omnix.assistant.presentation.settings.SettingsViewModel
 import com.omnix.assistant.presentation.settings.MeRoute
+import com.omnix.assistant.presentation.settings.MemoryScreen
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
 import com.omnix.assistant.presentation.settings.SECTION_ABOUT
@@ -53,7 +54,6 @@ import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.presentation.state.SystemStateType
 import com.omnix.assistant.presentation.translator.TranslatorRoute
-import com.omnix.assistant.presentation.voice.VoiceModeRoute
 
 /**
  * The OMNIX navigation graph (§20, §44).
@@ -126,13 +126,8 @@ fun OmnixNavGraph(
                     onDeleteConversation = chatViewModel::deleteConversation,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
-                    onToggleDictation = chatViewModel::toggleVoiceDictation,
-                    onOpenVoiceMode = { navController.navigate(OmnixDestination.Voice.route) }
+                    onToggleDictation = chatViewModel::toggleVoiceDictation
                 )
-            }
-
-            composable(OmnixDestination.Voice.route) {
-                VoiceModeRoute(onClose = navController::popBackStack)
             }
 
             composable(OmnixDestination.Translator.route) {
@@ -174,7 +169,7 @@ fun OmnixNavGraph(
                     capabilities = capabilities,
                     onWakeWordChange = headphoneSettings::onWakeWordEnabledChanged,
                     onTranslatorToHeadphonesChange = headphoneSettings::onTranslatorToHeadphonesChanged,
-                    onFind = { omnixViewModel.setSearching(true) },
+                    onFind = omnixViewModel::refreshHeadphones,
                     onOpenSystemBluetooth = {
                         devicesContext.startActivity(
                             Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -222,10 +217,20 @@ fun OmnixNavGraph(
                     onBlockPackage = policyViewModel::blockPackage,
                     onUnblockPackage = policyViewModel::unblockPackage,
                     onAllowPackage = policyViewModel::allowPackage,
-                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance,
-                    onForgetMemory = { id, key -> policyViewModel.forgetMemory(id, key) },
-                    onRemoveFact = policyViewModel::removeFact,
-                    onRemoveProcedure = policyViewModel::removeProcedure
+                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance
+                )
+            }
+
+            composable(OmnixDestination.Memory.route) {
+                val memoryViewModel: PrivacyPolicyViewModel = hiltViewModel()
+                val memoryState by memoryViewModel.uiState.collectAsStateWithLifecycle()
+                MemoryScreen(
+                    state = memoryState,
+                    onBack = navController::popBackStack,
+                    onAddMemory = memoryViewModel::addMemory,
+                    onForgetMemory = { id, key -> memoryViewModel.forgetMemory(id, key) },
+                    onRemoveFact = memoryViewModel::removeFact,
+                    onRemoveProcedure = memoryViewModel::removeProcedure
                 )
             }
 
@@ -262,7 +267,7 @@ fun OmnixNavGraph(
         // their parent tab lit (mock 2026-09-25).
         // Full-screen modes draw their own controls and have no tab bar
         // (design v2 canvas: the Translator artboard).
-        if (currentRoute != OmnixDestination.Translator.route && currentRoute != OmnixDestination.Voice.route) {
+        if (currentRoute != OmnixDestination.Translator.route) {
             OmnixNavigationBar(
                 currentTab = tabForRoute(currentRoute),
                 onNavigate = { navController.navigateSingleTop(it) }
