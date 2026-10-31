@@ -24,6 +24,7 @@ data class AppearanceUiState(
     val nightDimming: Boolean = false,
     val reduceMotionOverride: String = REDUCE_MOTION_SYSTEM,
     val voiceFeedback: Boolean = true,
+    val haptics: Boolean = true,
     val notifyAssistant: Boolean = true,
     val notifyDevice: Boolean = true,
     val notifyRoutines: Boolean = true,
@@ -57,9 +58,11 @@ class AppearanceViewModel @Inject constructor(
         store.appearance,
         store.nightDimming,
         store.reduceMotionOverride,
-        store.voiceFeedback
-    ) { appearance, nightDimming, reduceMotion, voiceFeedback ->
+        store.voiceFeedback,
+        store.haptics
+    ) { appearance, nightDimming, reduceMotion, voiceFeedback, haptics ->
         AppearanceUiState(
+            haptics = haptics,
             appearance = appearanceOf(appearance),
             nightDimming = nightDimming,
             reduceMotionOverride = reduceMotion,
@@ -101,6 +104,10 @@ class AppearanceViewModel @Inject constructor(
 
     fun setVoiceFeedback(enabled: Boolean) {
         viewModelScope.launch { store.setVoiceFeedback(enabled) }
+    }
+
+    fun setHaptics(enabled: Boolean) {
+        viewModelScope.launch { store.setHaptics(enabled) }
     }
 
     fun setNotifyAssistant(enabled: Boolean) {

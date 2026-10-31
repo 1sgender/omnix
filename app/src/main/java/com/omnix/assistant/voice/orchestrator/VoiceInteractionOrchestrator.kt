@@ -3,6 +3,7 @@ package com.omnix.assistant.voice.orchestrator
 import com.omnix.assistant.R
 import android.content.Context
 import android.media.ToneGenerator
+import com.omnix.assistant.voice.audio.Haptics
 import com.omnix.assistant.voice.audio.SoftChime
 import android.media.AudioManager
 import android.util.Log
@@ -1257,6 +1258,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun playWakeChime() {
         try {
             SoftChime.play(wakeChime)
+            Haptics.tick(context)
         } catch (e: Exception) {
             Log.e(TAG, "playWakeChime: не удалось проиграть звук", e)
         }

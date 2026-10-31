@@ -255,6 +255,8 @@
     <string name="omnix_voice_speaking_speed">Скорость речи</string>
     <string name="omnix_voice_tone">Тембр</string>
     <string name="omnix_voice_feedback">Голосовые ответы</string>
+    <string name="omnix_voice_haptics">Вибро-отклик</string>
+    <string name="omnix_voice_haptics_body">Лёгкий «тик» на «Омни» и при отправке</string>
     <string name="omnix_voice_listening">Прослушивание</string>
     <string name="omnix_voice_listening_body">OMNIX ждёт слово «Омни» в фоне.</string>
     <string name="omnix_voice_headset_only">Только с подключённым Clip</string>
