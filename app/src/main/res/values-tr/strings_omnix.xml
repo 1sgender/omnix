@@ -135,7 +135,10 @@
     <string name="omnix_chat_group_older">Daha eski</string>
     <string name="omnix_chat_copy">Kopyala</string>
     <string name="omnix_chat_copied">Kopyalandı</string>
-    <string name="omnix_chat_delete_hint">Silmek için bir sohbete basılı tutun</string>
+    <string name="omnix_chat_delete_hint">Sabitlemek veya silmek için sohbete basılı tutun</string>
+    <string name="omnix_chat_pin">Sohbeti sabitle</string>
+    <string name="omnix_chat_unpin">Sabitlemeyi kaldır</string>
+    <string name="omnix_chat_group_pinned">Sabitlenenler</string>
     <string name="omnix_chat_suggestion_1">Yarın için günümü planla</string>
     <string name="omnix_chat_suggestion_2">Yapay zekânın nasıl çalıştığını basitçe anlat</string>
     <string name="omnix_chat_suggestion_3">Bir arkadaşa kısa bir tebrik yazmama yardım et</string>

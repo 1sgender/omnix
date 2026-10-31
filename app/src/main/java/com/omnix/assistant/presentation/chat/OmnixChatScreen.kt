@@ -135,7 +135,9 @@ fun OmnixChatScreen(
     onDeleteConversation: (Long) -> Unit,
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
-    onToggleDictation: () -> Unit
+    onToggleDictation: () -> Unit,
+    pinnedIds: Set<Long> = emptySet(),
+    onTogglePin: (Long) -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
     val drawerState = rememberDrawerState(if (state.showHistory) DrawerValue.Open else DrawerValue.Closed)
@@ -168,7 +170,9 @@ fun OmnixChatScreen(
                     currentConversationId = state.currentConversationId,
                     onNewChat = onNewChat,
                     onOpen = onOpenConversation,
-                    onDelete = onDeleteConversation
+                    onDelete = onDeleteConversation,
+                    pinnedIds = pinnedIds,
+                    onTogglePin = onTogglePin
                 )
             }
         }

@@ -135,7 +135,10 @@
     <string name="omnix_chat_group_older">Avvalroq</string>
     <string name="omnix_chat_copy">Nusxalash</string>
     <string name="omnix_chat_copied">Nusxalandi</string>
-    <string name="omnix_chat_delete_hint">Oʻchirish uchun chatni bosib turing</string>
+    <string name="omnix_chat_delete_hint">Chatni mahkamlash yoki o‘chirish uchun bosib turing</string>
+    <string name="omnix_chat_pin">Chatni mahkamlash</string>
+    <string name="omnix_chat_unpin">Mahkamlashni olib tashlash</string>
+    <string name="omnix_chat_group_pinned">Mahkamlanganlar</string>
     <string name="omnix_chat_suggestion_1">Ertangi kunimni rejalashtir</string>
     <string name="omnix_chat_suggestion_2">Sunʼiy intellekt qanday ishlashini oddiy tushuntir</string>
     <string name="omnix_chat_suggestion_3">Doʻstimga qisqa tabrik yozishga yordam ber</string>

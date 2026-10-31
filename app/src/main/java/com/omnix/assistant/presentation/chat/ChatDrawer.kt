@@ -19,7 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,19 +54,21 @@ import java.time.ZoneId
 import java.util.Locale
 
 /** Группы списка чатов, как в ChatGPT: по дате последнего сообщения. */
-internal enum class ConversationGroup { TODAY, YESTERDAY, WEEK, MONTH, OLDER }
+internal enum class ConversationGroup { PINNED, TODAY, YESTERDAY, WEEK, MONTH, OLDER }
 
 internal fun conversationGroups(
     conversations: List<ConversationSummary>,
     query: String,
     today: LocalDate = LocalDate.now(),
-    zone: ZoneId = ZoneId.systemDefault()
+    zone: ZoneId = ZoneId.systemDefault(),
+    pinned: Set<Long> = emptySet()
 ): List<Pair<ConversationGroup, List<ConversationSummary>>> {
     val needle = query.trim().lowercase(Locale.getDefault())
     return conversations
         .filter { needle.isEmpty() || it.title.orEmpty().lowercase(Locale.getDefault()).contains(needle) }
         .sortedByDescending { it.lastMessageAt }
         .groupBy { conversation ->
+            if (conversation.id in pinned) return@groupBy ConversationGroup.PINNED
             val day = Instant.ofEpochMilli(conversation.lastMessageAt).atZone(zone).toLocalDate()
             when {
                 !day.isBefore(today) -> ConversationGroup.TODAY
@@ -81,7 +85,7 @@ internal fun conversationGroups(
 /**
  * Боковое меню чата (отзыв владельца на v344: «как в ChatGPT»): поиск, новый
  * чат, прошлые разговоры по датам. Нажатие открывает разговор, удержание —
- * удаляет его после подтверждения.
+ * закрепляет или удаляет его.
  */
 @Composable
 internal fun ChatDrawerContent(
@@ -89,13 +93,16 @@ internal fun ChatDrawerContent(
     currentConversationId: Long,
     onNewChat: () -> Unit,
     onOpen: (Long) -> Unit,
-    onDelete: (Long) -> Unit
+    onDelete: (Long) -> Unit,
+    pinnedIds: Set<Long> = emptySet(),
+    onTogglePin: (Long) -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
     var query by rememberSaveable { mutableStateOf("") }
+    var actionsFor by remember { mutableStateOf<ConversationSummary?>(null) }
     var deleteArmed by remember { mutableStateOf<ConversationSummary?>(null) }
     val untitled = stringResource(R.string.omnix_chat_untitled)
-    val groups = remember(conversations, query) { conversationGroups(conversations, query) }
+    val groups = remember(conversations, query, pinnedIds) { conversationGroups(conversations, query, pinned = pinnedIds) }
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 12.dp)) {
         SearchField(query = query, onQueryChange = { query = it })
@@ -131,7 +138,7 @@ internal fun ChatDrawerContent(
                             text = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
                             selected = conversation.id == currentConversationId,
                             onClick = { onOpen(conversation.id) },
-                            onLongClick = { deleteArmed = conversation }
+                            onLongClick = { actionsFor = conversation }
                         )
                     }
                 }
@@ -143,6 +150,39 @@ internal fun ChatDrawerContent(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
             )
         }
+    }
+
+    actionsFor?.let { conversation ->
+        val pinned = conversation.id in pinnedIds
+        AlertDialog(
+            onDismissRequest = { actionsFor = null },
+            title = {
+                Text(
+                    text = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            text = {
+                Column {
+                    TextButton(onClick = {
+                        actionsFor = null
+                        onTogglePin(conversation.id)
+                    }) {
+                        Text(stringResource(if (pinned) R.string.omnix_chat_unpin else R.string.omnix_chat_pin))
+                    }
+                    TextButton(onClick = {
+                        actionsFor = null
+                        deleteArmed = conversation
+                    }) {
+                        Text(stringResource(R.string.omnix_chat_delete))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { actionsFor = null }) { Text(stringResource(R.string.omnix_cancel)) }
+            }
+        )
     }
 
     deleteArmed?.let { conversation ->
@@ -204,6 +244,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
 private fun GroupLabel(group: ConversationGroup) {
     val text = stringResource(
         when (group) {
+            ConversationGroup.PINNED -> R.string.omnix_chat_group_pinned
             ConversationGroup.TODAY -> R.string.omnix_chat_today
             ConversationGroup.YESTERDAY -> R.string.omnix_chat_yesterday
             ConversationGroup.WEEK -> R.string.omnix_chat_group_week

@@ -182,7 +182,10 @@
     <string name="omnix_chat_group_older">Ранее</string>
     <string name="omnix_chat_copy">Скопировать</string>
     <string name="omnix_chat_copied">Скопировано</string>
-    <string name="omnix_chat_delete_hint">Удерживайте чат, чтобы удалить его</string>
+    <string name="omnix_chat_delete_hint">Удерживайте чат, чтобы закрепить или удалить</string>
+    <string name="omnix_chat_pin">Закрепить чат</string>
+    <string name="omnix_chat_unpin">Открепить чат</string>
+    <string name="omnix_chat_group_pinned">Закреплённые</string>
     <string name="omnix_chat_suggestion_1">Составь план на завтра</string>
     <string name="omnix_chat_suggestion_2">Объясни просто, как работает ИИ</string>
     <string name="omnix_chat_suggestion_3">Помоги написать короткое поздравление другу</string>

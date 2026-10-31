@@ -184,7 +184,10 @@
     <string name="omnix_chat_group_older">Older</string>
     <string name="omnix_chat_copy">Copy</string>
     <string name="omnix_chat_copied">Copied</string>
-    <string name="omnix_chat_delete_hint">Hold a chat to delete it</string>
+    <string name="omnix_chat_delete_hint">Hold a chat to pin or delete it</string>
+    <string name="omnix_chat_pin">Pin chat</string>
+    <string name="omnix_chat_unpin">Unpin chat</string>
+    <string name="omnix_chat_group_pinned">Pinned</string>
     <string name="omnix_chat_suggestion_1">Plan my day for tomorrow</string>
     <string name="omnix_chat_suggestion_2">Explain simply how AI works</string>
     <string name="omnix_chat_suggestion_3">Help me write a short greeting to a friend</string>

@@ -135,7 +135,10 @@
     <string name="omnix_chat_group_older">Ертеректе</string>
     <string name="omnix_chat_copy">Көшіру</string>
     <string name="omnix_chat_copied">Көшірілді</string>
-    <string name="omnix_chat_delete_hint">Жою үшін чатты басып тұрыңыз</string>
+    <string name="omnix_chat_delete_hint">Чатты бекіту немесе жою үшін басып тұрыңыз</string>
+    <string name="omnix_chat_pin">Чатты бекіту</string>
+    <string name="omnix_chat_unpin">Бекітуді алу</string>
+    <string name="omnix_chat_group_pinned">Бекітілгендер</string>
     <string name="omnix_chat_suggestion_1">Ертеңгі күнімді жоспарла</string>
     <string name="omnix_chat_suggestion_2">Жасанды интеллект қалай жұмыс істейтінін қарапайым түсіндір</string>
     <string name="omnix_chat_suggestion_3">Досыма қысқа құттықтау жазуға көмектес</string>
