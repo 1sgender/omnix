@@ -33,6 +33,7 @@ import androidx.navigation.navArgument
 import com.omnix.assistant.presentation.automations.AutomationsScreen
 import com.omnix.assistant.presentation.chat.ChatViewModel
 import com.omnix.assistant.presentation.chat.OmnixChatScreen
+import com.omnix.assistant.presentation.chat.PinnedChatsViewModel
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
@@ -112,6 +113,9 @@ fun OmnixNavGraph(
             composable(OmnixDestination.Chat.route) {
                 val chatViewModel: ChatViewModel = hiltViewModel()
                 val chatState by chatViewModel.uiState.collectAsState()
+                val pinnedViewModel: PinnedChatsViewModel = hiltViewModel()
+                val pinnedChats by pinnedViewModel.pinned.collectAsState()
+                val chatTitles by pinnedViewModel.titles.collectAsState()
                 OmnixChatScreen(
                     state = chatState,
                     isOnline = uiState.isOnline,
@@ -123,7 +127,14 @@ fun OmnixNavGraph(
                     onOpenHistory = chatViewModel::openHistory,
                     onCloseHistory = chatViewModel::closeHistory,
                     onOpenConversation = chatViewModel::openConversation,
-                    onDeleteConversation = chatViewModel::deleteConversation,
+                    onDeleteConversation = {
+                        chatViewModel.deleteConversation(it)
+                        pinnedViewModel.forget(it)
+                    },
+                    pinnedIds = pinnedChats,
+                    onTogglePin = pinnedViewModel::toggle,
+                    customTitles = chatTitles,
+                    onRename = pinnedViewModel::rename,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
                     onToggleDictation = chatViewModel::toggleVoiceDictation

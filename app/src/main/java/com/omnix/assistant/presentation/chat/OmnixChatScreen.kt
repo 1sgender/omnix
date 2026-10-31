@@ -135,7 +135,11 @@ fun OmnixChatScreen(
     onDeleteConversation: (Long) -> Unit,
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
-    onToggleDictation: () -> Unit
+    onToggleDictation: () -> Unit,
+    pinnedIds: Set<Long> = emptySet(),
+    onTogglePin: (Long) -> Unit = {},
+    customTitles: Map<Long, String> = emptyMap(),
+    onRename: (Long, String) -> Unit = { _, _ -> }
 ) {
     val colors = OmnixTheme.colors
     val drawerState = rememberDrawerState(if (state.showHistory) DrawerValue.Open else DrawerValue.Closed)
@@ -168,7 +172,11 @@ fun OmnixChatScreen(
                     currentConversationId = state.currentConversationId,
                     onNewChat = onNewChat,
                     onOpen = onOpenConversation,
-                    onDelete = onDeleteConversation
+                    onDelete = onDeleteConversation,
+                    pinnedIds = pinnedIds,
+                    onTogglePin = onTogglePin,
+                    customTitles = customTitles,
+                    onRename = onRename
                 )
             }
         }
@@ -230,6 +238,20 @@ private fun ChatThread(
         if (rowCount > 0) listState.animateScrollToItem(rowCount - 1)
     }
 
+    // Для «Ещё раз»: к каждому ответу — последний вопрос пользователя перед ним.
+    val repeatTargets = remember(state.messages) {
+        val targets = HashMap<Long, String>()
+        var lastQuestion: String? = null
+        for (m in state.messages) {
+            when (m.role) {
+                MessageRole.USER -> lastQuestion = m.text
+                MessageRole.ASSISTANT -> lastQuestion?.let { targets[m.id] = it }
+                else -> Unit
+            }
+        }
+        targets
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -260,11 +282,20 @@ private fun ChatThread(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     items(state.messages, key = { "msg-${it.id}" }) { message ->
+                        val question = repeatTargets[message.id]
                         MessageRow(
                             message = message,
                             fromCloud = message.id in state.cloudMessageIds,
                             adminLabel = state.adminLabels[message.id],
-                            threadWidth = threadWidth
+                            threadWidth = threadWidth,
+                            onRepeat = if (question != null && !state.isSending) {
+                                {
+                                    onInputChange(question)
+                                    onSend()
+                                }
+                            } else {
+                                null
+                            }
                         )
                     }
                     // Не хранится в истории (чтение экрана): только в ленте.
@@ -368,7 +399,9 @@ private fun EmptyChat(modifier: Modifier, onSuggestion: (String) -> Unit) {
     val suggestions = listOf(
         stringResource(R.string.omnix_chat_suggestion_1),
         stringResource(R.string.omnix_chat_suggestion_2),
-        stringResource(R.string.omnix_chat_suggestion_3)
+        stringResource(R.string.omnix_chat_suggestion_3),
+        stringResource(R.string.omnix_chat_suggestion_4),
+        stringResource(R.string.omnix_chat_suggestion_5)
     )
     Column(modifier = modifier.fillMaxWidth()) {
         Box(
@@ -378,12 +411,21 @@ private fun EmptyChat(modifier: Modifier, onSuggestion: (String) -> Unit) {
                 .padding(horizontal = 32.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = stringResource(R.string.omnix_chat_empty_title),
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 24.sp, lineHeight = 31.sp),
-                color = colors.textPrimary,
-                textAlign = TextAlign.Center
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = stringResource(R.string.omnix_chat_empty_title),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 24.sp, lineHeight = 31.sp),
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = stringResource(R.string.omnix_chat_empty_hint),
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 14.sp, lineHeight = 20.sp),
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
         }
         Row(
             modifier = Modifier
@@ -421,7 +463,8 @@ private fun MessageRow(
     message: Message,
     fromCloud: Boolean,
     threadWidth: Dp,
-    adminLabel: String? = null
+    adminLabel: String? = null,
+    onRepeat: (() -> Unit)? = null
 ) {
     val colors = OmnixTheme.colors
     val isUser = message.role == MessageRole.USER
@@ -488,6 +531,17 @@ private fun MessageRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             CopyButton(text = message.text)
+            if (onRepeat != null) {
+                Text(
+                    text = stringResource(R.string.omnix_chat_repeat),
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                    color = colors.textSecondary,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable(onClick = onRepeat)
+                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                )
+            }
             if (caption != null) {
                 if (fromCloud) {
                     Icon(OmnixCloudLineIcon, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(12.dp))
