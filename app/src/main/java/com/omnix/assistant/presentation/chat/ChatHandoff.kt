@@ -19,7 +19,7 @@ class ChatHandoff @Inject constructor() {
     }
 
     /** Забирает фразу один раз. */
-    fun take(): String? = pending.getAndUpdate { null }
+    fun take(): String? = pending.value.also { pending.value = null }
 }
 
 @HiltViewModel
