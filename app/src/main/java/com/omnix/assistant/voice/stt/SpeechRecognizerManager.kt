@@ -50,7 +50,8 @@ sealed interface SpeechRecognitionEvent {
  */
 @Singleton
 class SpeechRecognizerManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val serverCapture: ServerSpeechCapture
 ) : RecognitionListener {
 
     companion object {
@@ -102,6 +103,7 @@ class SpeechRecognizerManager @Inject constructor(
         Dispatchers.Main.immediate + sttJob + exceptionHandler
     )
     private var restartJob: Job? = null
+    private var serverJob: Job? = null
     private var startMutex = Any() // грубая синхронизация start/stop.
 
     /** Убеждаемся, что recognizer существует и слушатель назначен. */
@@ -137,6 +139,12 @@ class SpeechRecognizerManager @Inject constructor(
             isContinuousMode = continuous
             currentLanguageTag = languageTag
 
+            // Туркменского у распознавателя Android нет: фраза уходит на сервер (Whisper).
+            if (SpeechLanguage.usesServerRecognition()) {
+                startServerListening(continuous)
+                return
+            }
+
             val rec = ensureRecognizer()
             if (rec == null) {
                 isListening = false
@@ -169,6 +177,47 @@ class SpeechRecognizerManager @Inject constructor(
                 _speechState.value = SpeechRecognitionEvent.RecognitionError(
                     context.getString(R.string.ne_udalos_otkryt_mikrofon), -1
                 )
+            }
+        }
+    }
+
+    /** Одна фраза через сервер: слушаем сами, отправляем в Whisper, отдаём как обычный результат. */
+    private fun startServerListening(continuous: Boolean) {
+        val session = generation.incrementAndGet()
+        isListening = true
+        _speechState.value = SpeechRecognitionEvent.ReadyForSpeech
+        serverJob = scope.launch {
+            val outcome = serverCapture.listen(SpeechLanguage.SERVER_HINT_TK, onLevel = {
+                if (isCurrentSession(session)) _audioLevel.value = it
+            })
+            if (!isCurrentSession(session)) return@launch
+            isListening = false
+            _audioLevel.value = 0f
+            when (outcome) {
+                is ServerSpeechCapture.Outcome.Heard -> {
+                    _speechState.value = SpeechRecognitionEvent.FinalResult(outcome.text)
+                    if (isContinuousMode) scheduleContinuousRestart(30)
+                }
+                ServerSpeechCapture.Outcome.Silence -> {
+                    if (continuous && isContinuousMode) {
+                        scheduleContinuousRestart(50)
+                    } else {
+                        _speechState.value = SpeechRecognitionEvent.RecognitionError(
+                            context.getString(R.string.vy_nichego_ne_skazali), SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+                        )
+                    }
+                }
+                ServerSpeechCapture.Outcome.MicrophoneBusy -> {
+                    _speechState.value = SpeechRecognitionEvent.RecognitionError(
+                        context.getString(R.string.ne_udalos_otkryt_mikrofon), -1
+                    )
+                }
+                is ServerSpeechCapture.Outcome.Failed -> {
+                    _speechState.value = SpeechRecognitionEvent.RecognitionError(
+                        outcome.message.ifBlank { context.getString(R.string.net_podklyucheniya_k_internetu) },
+                        SpeechRecognizer.ERROR_NETWORK
+                    )
+                }
             }
         }
     }
@@ -213,6 +262,8 @@ class SpeechRecognizerManager @Inject constructor(
      * под [startMutex].
      */
     private fun cancelCurrentRecognitionLocked() {
+        serverJob?.cancel()
+        serverJob = null
         isListening = false
         _audioLevel.value = 0f
         // Инкремент поколения: все долетевшие callbacks от текущей сессии
