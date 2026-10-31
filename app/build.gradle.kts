@@ -124,8 +124,16 @@ android {
         // (arm64-v8a 26 МБ, armeabi-v7a 19 МБ, x86 32 МБ, x86_64 29 МБ).
         // Исключаем x86 — 32-битных x86-устройств и эмуляторов практически
         // не осталось; x86_64 оставляем ради эмулятора на CI/разработке.
+        // Релизная сборка (APK для телефонов) — только arm64-v8a: так APK
+        // заметно меньше. Отладочная и тестовая сборки (эмулятор x86_64 на CI)
+        // остаются с тремя ABI.
+        val releaseOnly = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+            abiFilters += if (releaseOnly) {
+                listOf("arm64-v8a")
+            } else {
+                listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+            }
         }
     }
 
