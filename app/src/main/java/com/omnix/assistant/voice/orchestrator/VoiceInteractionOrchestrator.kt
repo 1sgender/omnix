@@ -3,6 +3,7 @@ package com.omnix.assistant.voice.orchestrator
 import com.omnix.assistant.R
 import android.content.Context
 import android.media.ToneGenerator
+import com.omnix.assistant.voice.audio.SoftChime
 import android.media.AudioManager
 import android.util.Log
 import com.omnix.assistant.core.request.RequestIds
@@ -1250,9 +1251,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
         switchToSpeechRecognition()
     }
 
+    private val wakeChime by lazy { SoftChime.wake() }
+    private val cancelChime by lazy { SoftChime.cancel() }
+
     private fun playWakeChime() {
         try {
-            toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 80)
+            SoftChime.play(wakeChime)
         } catch (e: Exception) {
             Log.e(TAG, "playWakeChime: не удалось проиграть звук", e)
         }
@@ -1260,7 +1264,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
     private fun playCancelChime() {
         try {
-            toneGenerator?.startTone(ToneGenerator.TONE_PROP_NACK, 70)
+            SoftChime.play(cancelChime)
         } catch (e: Exception) {
             Log.e(TAG, "playCancelChime: не удалось проиграть звук", e)
         }
