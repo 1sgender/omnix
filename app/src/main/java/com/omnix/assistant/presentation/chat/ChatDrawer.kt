@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -85,7 +86,7 @@ internal fun conversationGroups(
 /**
  * Боковое меню чата (отзыв владельца на v344: «как в ChatGPT»): поиск, новый
  * чат, прошлые разговоры по датам. Нажатие открывает разговор, удержание —
- * закрепляет или удаляет его.
+ * закрепляет, переименовывает или удаляет его.
  */
 @Composable
 internal fun ChatDrawerContent(
@@ -95,14 +96,21 @@ internal fun ChatDrawerContent(
     onOpen: (Long) -> Unit,
     onDelete: (Long) -> Unit,
     pinnedIds: Set<Long> = emptySet(),
-    onTogglePin: (Long) -> Unit = {}
+    onTogglePin: (Long) -> Unit = {},
+    customTitles: Map<Long, String> = emptyMap(),
+    onRename: (Long, String) -> Unit = { _, _ -> }
 ) {
     val colors = OmnixTheme.colors
     var query by rememberSaveable { mutableStateOf("") }
     var actionsFor by remember { mutableStateOf<ConversationSummary?>(null) }
     var deleteArmed by remember { mutableStateOf<ConversationSummary?>(null) }
     val untitled = stringResource(R.string.omnix_chat_untitled)
-    val groups = remember(conversations, query, pinnedIds) { conversationGroups(conversations, query, pinned = pinnedIds) }
+    val shown = remember(conversations, customTitles) {
+        conversations.map { chat -> customTitles[chat.id]?.let { chat.copy(title = it) } ?: chat }
+    }
+    val groups = remember(shown, query, pinnedIds) { conversationGroups(shown, query, pinned = pinnedIds) }
+    var renaming by remember { mutableStateOf<ConversationSummary?>(null) }
+    var renameText by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize().padding(top = 12.dp)) {
         SearchField(query = query, onQueryChange = { query = it })
@@ -173,6 +181,13 @@ internal fun ChatDrawerContent(
                     }
                     TextButton(onClick = {
                         actionsFor = null
+                        renameText = conversation.title.orEmpty()
+                        renaming = conversation
+                    }) {
+                        Text(stringResource(R.string.omnix_chat_rename))
+                    }
+                    TextButton(onClick = {
+                        actionsFor = null
                         deleteArmed = conversation
                     }) {
                         Text(stringResource(R.string.omnix_chat_delete))
@@ -181,6 +196,30 @@ internal fun ChatDrawerContent(
             },
             confirmButton = {
                 TextButton(onClick = { actionsFor = null }) { Text(stringResource(R.string.omnix_cancel)) }
+            }
+        )
+    }
+
+    renaming?.let { conversation ->
+        AlertDialog(
+            onDismissRequest = { renaming = null },
+            title = { Text(stringResource(R.string.omnix_chat_rename)) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it.take(80) },
+                    singleLine = true,
+                    placeholder = { Text(stringResource(R.string.omnix_chat_rename_hint)) }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onRename(conversation.id, renameText)
+                    renaming = null
+                }) { Text(stringResource(R.string.omnix_chat_save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { renaming = null }) { Text(stringResource(R.string.omnix_cancel)) }
             }
         )
     }

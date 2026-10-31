@@ -135,7 +135,14 @@
     <string name="omnix_chat_group_older">Daha eski</string>
     <string name="omnix_chat_copy">Kopyala</string>
     <string name="omnix_chat_copied">Kopyalandı</string>
-    <string name="omnix_chat_delete_hint">Sabitlemek veya silmek için sohbete basılı tutun</string>
+    <string name="omnix_chat_delete_hint">Sabitlemek, adlandırmak veya silmek için sohbete basılı tutun</string>
+    <string name="omnix_chat_empty_hint">“Omni” deyin veya yazın. Örneğin: “YouTube’u aç”, “bir saat sonra hatırlat”, “Türkmenceye çevir”.</string>
+    <string name="omnix_chat_suggestion_4">YouTube’u aç</string>
+    <string name="omnix_chat_suggestion_5">Bir saat sonra hatırlat</string>
+    <string name="omnix_chat_repeat">Tekrar sor</string>
+    <string name="omnix_chat_rename">Sohbeti yeniden adlandır</string>
+    <string name="omnix_chat_rename_hint">Sohbet adı</string>
+    <string name="omnix_chat_save">Kaydet</string>
     <string name="omnix_chat_pin">Sohbeti sabitle</string>
     <string name="omnix_chat_unpin">Sabitlemeyi kaldır</string>
     <string name="omnix_chat_group_pinned">Sabitlenenler</string>

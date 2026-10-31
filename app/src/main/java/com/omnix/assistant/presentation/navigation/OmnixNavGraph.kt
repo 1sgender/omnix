@@ -115,6 +115,7 @@ fun OmnixNavGraph(
                 val chatState by chatViewModel.uiState.collectAsState()
                 val pinnedViewModel: PinnedChatsViewModel = hiltViewModel()
                 val pinnedChats by pinnedViewModel.pinned.collectAsState()
+                val chatTitles by pinnedViewModel.titles.collectAsState()
                 OmnixChatScreen(
                     state = chatState,
                     isOnline = uiState.isOnline,
@@ -132,6 +133,8 @@ fun OmnixNavGraph(
                     },
                     pinnedIds = pinnedChats,
                     onTogglePin = pinnedViewModel::toggle,
+                    customTitles = chatTitles,
+                    onRename = pinnedViewModel::rename,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
                     onToggleDictation = chatViewModel::toggleVoiceDictation

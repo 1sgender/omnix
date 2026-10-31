@@ -135,7 +135,14 @@
     <string name="omnix_chat_group_older">Ертеректе</string>
     <string name="omnix_chat_copy">Көшіру</string>
     <string name="omnix_chat_copied">Көшірілді</string>
-    <string name="omnix_chat_delete_hint">Чатты бекіту немесе жою үшін басып тұрыңыз</string>
+    <string name="omnix_chat_delete_hint">Бекіту, атын өзгерту немесе жою үшін чатты басып тұрыңыз</string>
+    <string name="omnix_chat_empty_hint">“Omni” деңіз немесе жазыңыз. Мысалы: “YouTube-ты аш”, “бір сағаттан соң еске сал”, “түрікменшеге аудар”.</string>
+    <string name="omnix_chat_suggestion_4">YouTube-ты аш</string>
+    <string name="omnix_chat_suggestion_5">Бір сағаттан соң еске сал</string>
+    <string name="omnix_chat_repeat">Тағы бір рет</string>
+    <string name="omnix_chat_rename">Чаттың атын өзгерту</string>
+    <string name="omnix_chat_rename_hint">Чат атауы</string>
+    <string name="omnix_chat_save">Сақтау</string>
     <string name="omnix_chat_pin">Чатты бекіту</string>
     <string name="omnix_chat_unpin">Бекітуді алу</string>
     <string name="omnix_chat_group_pinned">Бекітілгендер</string>

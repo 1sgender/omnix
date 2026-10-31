@@ -183,7 +183,14 @@
     <string name="omnix_chat_group_older">Has öň</string>
     <string name="omnix_chat_copy">Göçür</string>
     <string name="omnix_chat_copied">Göçürildi</string>
-    <string name="omnix_chat_delete_hint">Çaty bekitmek ýa-da pozmak üçin basyp duruň</string>
+    <string name="omnix_chat_delete_hint">Çaty bekitmek, adyny üýtgetmek ýa-da pozmak üçin basyp duruň</string>
+    <string name="omnix_chat_empty_hint">“Omni” diýiň ýa-da ýazyň. Mysal üçin: “ýutuby aç”, “bir sagatdan ýatla”, “rusça terjime et”.</string>
+    <string name="omnix_chat_suggestion_4">Ýutuby aç</string>
+    <string name="omnix_chat_suggestion_5">Bir sagatdan ýatla</string>
+    <string name="omnix_chat_repeat">Ýene bir gezek</string>
+    <string name="omnix_chat_rename">Çatyň adyny üýtget</string>
+    <string name="omnix_chat_rename_hint">Çatyň ady</string>
+    <string name="omnix_chat_save">Ýatda sakla</string>
     <string name="omnix_chat_pin">Çaty bekit</string>
     <string name="omnix_chat_unpin">Çatyň bekidilmegini aýyr</string>
     <string name="omnix_chat_group_pinned">Bekidilenler</string>

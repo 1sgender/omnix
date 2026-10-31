@@ -182,7 +182,14 @@
     <string name="omnix_chat_group_older">Ранее</string>
     <string name="omnix_chat_copy">Скопировать</string>
     <string name="omnix_chat_copied">Скопировано</string>
-    <string name="omnix_chat_delete_hint">Удерживайте чат, чтобы закрепить или удалить</string>
+    <string name="omnix_chat_delete_hint">Удерживайте чат, чтобы закрепить, переименовать или удалить</string>
+    <string name="omnix_chat_empty_hint">Скажите «Омни» или напишите. Например: «открой ютуб», «напомни через час», «переведи на туркменский».</string>
+    <string name="omnix_chat_suggestion_4">Открой ютуб</string>
+    <string name="omnix_chat_suggestion_5">Напомни через час</string>
+    <string name="omnix_chat_repeat">Ещё раз</string>
+    <string name="omnix_chat_rename">Переименовать чат</string>
+    <string name="omnix_chat_rename_hint">Название чата</string>
+    <string name="omnix_chat_save">Сохранить</string>
     <string name="omnix_chat_pin">Закрепить чат</string>
     <string name="omnix_chat_unpin">Открепить чат</string>
     <string name="omnix_chat_group_pinned">Закреплённые</string>

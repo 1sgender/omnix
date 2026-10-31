@@ -135,7 +135,14 @@
     <string name="omnix_chat_group_older">Avvalroq</string>
     <string name="omnix_chat_copy">Nusxalash</string>
     <string name="omnix_chat_copied">Nusxalandi</string>
-    <string name="omnix_chat_delete_hint">Chatni mahkamlash yoki o‘chirish uchun bosib turing</string>
+    <string name="omnix_chat_delete_hint">Mahkamlash, nomini o‘zgartirish yoki o‘chirish uchun chatni bosib turing</string>
+    <string name="omnix_chat_empty_hint">“Omni” deng yoki yozing. Masalan: “YouTube’ni och”, “bir soatdan keyin eslat”, “turkmanchaga tarjima qil”.</string>
+    <string name="omnix_chat_suggestion_4">YouTube’ni och</string>
+    <string name="omnix_chat_suggestion_5">Bir soatdan keyin eslat</string>
+    <string name="omnix_chat_repeat">Yana bir bor</string>
+    <string name="omnix_chat_rename">Chat nomini o‘zgartirish</string>
+    <string name="omnix_chat_rename_hint">Chat nomi</string>
+    <string name="omnix_chat_save">Saqlash</string>
     <string name="omnix_chat_pin">Chatni mahkamlash</string>
     <string name="omnix_chat_unpin">Mahkamlashni olib tashlash</string>
     <string name="omnix_chat_group_pinned">Mahkamlanganlar</string>

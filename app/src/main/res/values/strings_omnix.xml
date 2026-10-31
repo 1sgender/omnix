@@ -184,7 +184,14 @@
     <string name="omnix_chat_group_older">Older</string>
     <string name="omnix_chat_copy">Copy</string>
     <string name="omnix_chat_copied">Copied</string>
-    <string name="omnix_chat_delete_hint">Hold a chat to pin or delete it</string>
+    <string name="omnix_chat_delete_hint">Hold a chat to pin, rename or delete it</string>
+    <string name="omnix_chat_empty_hint">Say “Omni” or type. For example: “open YouTube”, “remind me in an hour”, “translate to Turkmen”.</string>
+    <string name="omnix_chat_suggestion_4">Open YouTube</string>
+    <string name="omnix_chat_suggestion_5">Remind me in an hour</string>
+    <string name="omnix_chat_repeat">Ask again</string>
+    <string name="omnix_chat_rename">Rename chat</string>
+    <string name="omnix_chat_rename_hint">Chat name</string>
+    <string name="omnix_chat_save">Save</string>
     <string name="omnix_chat_pin">Pin chat</string>
     <string name="omnix_chat_unpin">Unpin chat</string>
     <string name="omnix_chat_group_pinned">Pinned</string>
