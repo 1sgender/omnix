@@ -48,14 +48,14 @@
     <string name="omnix_home_offline_pill">OFFLINE · ON DEVICE</string>
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Headphones connected, battery %1$d%%</string>
-    <string name="omnix_home_card_automations">Automations</string>
+    <string name="omnix_home_card_automations">Protocols</string>
     <string name="omnix_home_card_translator">Translator</string>
     <string name="omnix_home_card_translator_sub">Live, into your headphones</string>
     <string name="omnix_home_card_memory">Memory</string>
     <string name="omnix_home_card_memory_sub">What I remember about you</string>
     <string name="omnix_home_card_reminders">Reminders</string>
     <string name="omnix_home_card_reminders_sub">Alarms and to-dos</string>
-    <string name="omnix_home_card_automations_sub">Routines by phrase</string>
+    <string name="omnix_home_card_automations_sub">Protocols by phrase</string>
 
     <!-- ===== Action phrasing (§16, §19) ===== -->
     <string name="omnix_action_calling">Calling %1$s…</string>
@@ -74,7 +74,7 @@
     <string name="omnix_action_app_generic">Opening app…</string>
     <string name="omnix_action_device_setting">Adjusting your phone…</string>
     <string name="omnix_action_media">Controlling playback…</string>
-    <string name="omnix_action_automation">Creating automation…</string>
+    <string name="omnix_action_automation">Creating protocol…</string>
 
     <!-- Action results -->
     <string name="omnix_result_call_started">Call started</string>
@@ -265,8 +265,8 @@
     <string name="omnix_voice_background">Background</string>
     <string name="omnix_voice_background_body">Allow OMNIX to keep working when the screen is off.</string>
     <string name="omnix_voice_background_action">Allow</string>
-    <string name="omnix_voice_automations">Automations</string>
-    <string name="omnix_voice_automations_empty">No automations yet. Tap “New automation” or say: “Omni, when my headphones connect, play music”.</string>
+    <string name="omnix_voice_automations">Protocols</string>
+    <string name="omnix_voice_automations_empty">No protocols yet. Describe one in words or tap “New protocol”, or say: “Omni, when my headphones connect, play music”.</string>
 
     <string name="omnix_privacy_title">Privacy</string>
     <string name="omnix_privacy_microphone">Microphone</string>
@@ -365,8 +365,8 @@
     <string name="omnix_language_old_android">Choosing a language inside the app needs Android 13 or newer. OMNIX follows the phone’s language.</string>
 
     <string name="omnix_notifications_settings_title">Notifications</string>
-    <string name="omnix_notifications_routines">Speak automations</string>
-    <string name="omnix_notifications_routines_body">OMNIX says out loud what an automation did.</string>
+    <string name="omnix_notifications_routines">Speak protocols</string>
+    <string name="omnix_notifications_routines_body">OMNIX says out loud what a protocol did.</string>
     <string name="omnix_notifications_system">Phone notifications</string>
     <string name="omnix_notifications_system_body">Needed so Android keeps OMNIX listening in the background. Channels are managed in system settings.</string>
     <string name="omnix_notifications_on">On</string>
@@ -478,8 +478,8 @@
     <string name="omnix_automations_briefing_body">Time, battery, weather and plans — offline, in your ear.</string>
     <string name="omnix_automations_briefing_running">Preparing the briefing…</string>
     <string name="omnix_automations_briefing_ok">Playing</string>
-    <string name="omnix_automations_delete_title">Delete this automation?</string>
-    <string name="omnix_automations_delete_body">“%1$s” will be deleted permanently. The routine will stop firing.</string>
+    <string name="omnix_automations_delete_title">Delete this protocol?</string>
+    <string name="omnix_automations_delete_body">“%1$s” will be deleted permanently. The protocol will stop firing.</string>
     <string name="omnix_automations_delete_confirm">Delete</string>
     <string name="omnix_automations_trigger_time">Every day at %1$s</string>
     <string name="omnix_automations_trigger_headphones_on">When headphones connect</string>
@@ -498,7 +498,10 @@
     <string name="omnix_automations_action_briefing">Briefing</string>
     <string name="omnix_automations_action_other">Action</string>
     <string name="omnix_automations_never_fired">Never fired</string>
-    <string name="omnix_automations_new">New automation</string>
+    <string name="omnix_automations_new">New protocol</string>
+    <string name="omnix_protocols_describe_hint">Describe the protocol in words, e.g. “when my headphones connect, set volume to 40%”</string>
+    <string name="omnix_protocols_describe_button">Create from description</string>
+    <string name="omnix_protocols_prompt_prefix">Create a protocol: </string>
     <string name="omnix_automations_new_when">When</string>
     <string name="omnix_automations_new_do">Do</string>
     <string name="omnix_automations_new_time">Time: %1$s</string>
@@ -508,8 +511,8 @@
     <string name="omnix_automations_new_volume_value">Volume %1$d%%</string>
     <string name="omnix_automations_new_app_hint">App name, e.g. YouTube</string>
     <string name="omnix_automations_new_create">Create</string>
-    <string name="omnix_automations_limit_title">Automation limit reached</string>
-    <string name="omnix_automations_limit_body">Limit of your own automations on your plan: %1$d. Delete one you no longer need.</string>
+    <string name="omnix_automations_limit_title">Protocol limit reached</string>
+    <string name="omnix_automations_limit_body">Limit of your own protocols on your plan: %1$d. Delete one you no longer need.</string>
     <string name="omnix_automations_limit_ok">OK</string>
     <string name="omnix_automations_default_morning">Morning briefing at 07:00</string>
     <string name="omnix_automations_default_morning_headphones">Morning volume in headphones</string>
@@ -531,7 +534,7 @@
     <string name="omnix_privacy_messages_money">Ask only when money amounts are mentioned</string>
     <string name="omnix_privacy_messages_never">Never ask (amounts are still confirmed)</string>
     <string name="omnix_privacy_forced_title">Always confirmed</string>
-    <string name="omnix_privacy_forced_body">Money, deletions, typing in other apps and anything run by automations ask first. This cannot be turned off.</string>
+    <string name="omnix_privacy_forced_body">Money, deletions, typing in other apps and anything run by protocols ask first. This cannot be turned off.</string>
     <string name="omnix_privacy_section_contacts">Trusted contacts</string>
     <string name="omnix_privacy_contacts_hint">Calls and messages to these contacts may skip confirmation, when the policy allows it</string>
     <string name="omnix_privacy_contact_add_hint">Name or phone number</string>

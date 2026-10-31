@@ -18,6 +18,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,6 +69,7 @@ import java.util.Date
 fun AutomationsScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    onDescribe: ((String) -> Unit)? = null,
     viewModel: AutomationsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,6 +79,29 @@ fun AutomationsScreen(
 
     SectionScaffold(stringResource(R.string.omnix_voice_automations), modifier, onBack) {
         val spacing = OmnixTheme.spacing
+
+        // Протокол можно описать словами: чат поймёт и создаст его.
+        if (onDescribe != null) {
+            var described by rememberSaveable { mutableStateOf("") }
+            OutlinedTextField(
+                value = described,
+                onValueChange = { described = it.take(300) },
+                placeholder = { Text(stringResource(R.string.omnix_protocols_describe_hint)) },
+                minLines = 2,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(spacing.sm))
+            OmnixPrimaryButton(
+                text = stringResource(R.string.omnix_protocols_describe_button),
+                onClick = {
+                    onDescribe(described)
+                    described = ""
+                },
+                enabled = described.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(spacing.md))
+        }
 
         OmnixPrimaryButton(
             text = stringResource(R.string.omnix_automations_new),
