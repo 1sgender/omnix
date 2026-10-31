@@ -25,6 +25,14 @@ class AppLanguageTest {
     }
 
     @Test
+    fun `only turkmen is recognised on the server`() {
+        assertEquals(true, SpeechLanguage.usesServerRecognition(AppLanguage.TK))
+        assertEquals(false, SpeechLanguage.usesServerRecognition(AppLanguage.RU))
+        assertEquals(false, SpeechLanguage.usesServerRecognition(AppLanguage.UZ))
+        assertEquals("tk", SpeechLanguage.SERVER_HINT_TK)
+    }
+
+    @Test
     fun `voice falls back to Russian, then English`() {
         val onlyRu = SpeechLanguage.ttsLocale(AppLanguage.TK) { it.language == "ru" }
         assertEquals("ru", onlyRu.language)

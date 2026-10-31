@@ -34,7 +34,13 @@ enum class AppLanguage(val code: String, val speechTag: String, val nativeName: 
 /** Языки распознавания и озвучки: у системных движков туркменского нет. */
 object SpeechLanguage {
 
-    /** Распознаватель Android: туркменского нет — слушаем по-русски. */
+    /** Код языка для серверного распознавания (Whisper). */
+    const val SERVER_HINT_TK = "tk"
+
+    /** Туркменский распознаёт сервер: у Android-распознавателя его нет. */
+    fun usesServerRecognition(language: AppLanguage = AppLanguage.current()): Boolean = language == AppLanguage.TK
+
+    /** Распознаватель Android: туркменского нет — слушаем по-русски (запасной тег). */
     fun recognitionTag(language: AppLanguage = AppLanguage.current()): String =
         if (language == AppLanguage.TK) AppLanguage.RU.speechTag else language.speechTag
 
