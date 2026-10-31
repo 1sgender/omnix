@@ -9,6 +9,6 @@
         <item name="android:windowBackground">@color/omnix_launch_ground</item>
         <item name="android:statusBarColor">@color/omnix_launch_ground</item>
         <item name="android:navigationBarColor">@color/omnix_launch_ground</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">@bool/omnix_light_bars</item>
     </style>
 </resources>

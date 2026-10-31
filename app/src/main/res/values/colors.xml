@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Warm graphite, the OMNIX ground (OmnixColors.WarmGraphite). -->
-    <color name="omnix_launch_ground">#FF0F0E0C</color>
+    <!-- Светлая тема: тёплая бумага; тёмная (values-night) — тёплый графит
+         (OmnixColors.WarmGraphite). Земля окна совпадает с первым кадром Compose. -->
+    <color name="omnix_launch_ground">#FFF6F4EF</color>
+    <color name="omnix_logo_left">#FF1B2536</color>
+    <color name="omnix_logo_right">#FF6FA800</color>
 </resources>
