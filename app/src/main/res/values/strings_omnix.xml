@@ -499,7 +499,7 @@
     <string name="omnix_automations_action_other">Action</string>
     <string name="omnix_automations_never_fired">Never fired</string>
     <string name="omnix_automations_new">New protocol</string>
-    <string name="omnix_protocols_describe_hint">Describe the protocol in words, e.g. “when my headphones connect, set volume to 40%”</string>
+    <string name="omnix_protocols_describe_hint">Describe the protocol in words, e.g. “when my headphones connect, set volume to 40”</string>
     <string name="omnix_protocols_describe_button">Create from description</string>
     <string name="omnix_protocols_prompt_prefix">Create a protocol: </string>
     <string name="omnix_automations_new_when">When</string>

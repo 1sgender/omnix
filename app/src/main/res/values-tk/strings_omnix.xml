@@ -497,7 +497,7 @@
     <string name="omnix_automations_action_other">Hereket</string>
     <string name="omnix_automations_never_fired">Hiç wagt çalışmady</string>
     <string name="omnix_automations_new">Täze protokol</string>
-    <string name="omnix_protocols_describe_hint">Protokoly sözler bilen düşündiriň, meselem: «gulaklyk birikende sesi 40% goý»</string>
+    <string name="omnix_protocols_describe_hint">Protokoly sözler bilen düşündiriň, meselem: «gulaklyk birikende sesi 40 goý»</string>
     <string name="omnix_protocols_describe_button">Düşündirişden döret</string>
     <string name="omnix_protocols_prompt_prefix">Protokol döret: </string>
     <string name="omnix_automations_new_when">Haçan</string>

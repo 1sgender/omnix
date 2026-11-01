@@ -421,7 +421,7 @@
     <string name="omnix_automations_action_other">Әрекет</string>
     <string name="omnix_automations_never_fired">Ешқашан іске қосылмаған</string>
     <string name="omnix_automations_new">Жаңа протокол</string>
-    <string name="omnix_protocols_describe_hint">Протоколды сөзбен сипаттаңыз, мысалы: «құлаққап қосылғанда дыбысты 40% қыл»</string>
+    <string name="omnix_protocols_describe_hint">Протоколды сөзбен сипаттаңыз, мысалы: «құлаққап қосылғанда дыбысты 40 қыл»</string>
     <string name="omnix_protocols_describe_button">Сипаттама бойынша жасау</string>
     <string name="omnix_protocols_prompt_prefix">Протокол жаса: </string>
     <string name="omnix_automations_new_when">Қашан</string>

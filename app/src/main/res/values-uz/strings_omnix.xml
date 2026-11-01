@@ -421,7 +421,7 @@
     <string name="omnix_automations_action_other">Amal</string>
     <string name="omnix_automations_never_fired">Hech qachon ishlamagan</string>
     <string name="omnix_automations_new">Yangi protokol</string>
-    <string name="omnix_protocols_describe_hint">Protokolni soʻzlar bilan tasvirlang, masalan: “quloqchin ulanganda ovozni 40% qil”</string>
+    <string name="omnix_protocols_describe_hint">Protokolni soʻzlar bilan tasvirlang, masalan: “quloqchin ulanganda ovozni 40 qil”</string>
     <string name="omnix_protocols_describe_button">Tavsif boʻyicha yaratish</string>
     <string name="omnix_protocols_prompt_prefix">Protokol yarat: </string>
     <string name="omnix_automations_new_when">Qachon</string>
