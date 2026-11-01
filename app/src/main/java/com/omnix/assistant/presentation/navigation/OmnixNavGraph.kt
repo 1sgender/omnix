@@ -53,6 +53,7 @@ import com.omnix.assistant.presentation.settings.SECTION_NOTIFICATIONS
 import com.omnix.assistant.presentation.settings.SECTION_VOICE
 import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
+import com.omnix.assistant.voice.audio.Haptics
 import com.omnix.assistant.presentation.state.SystemStateType
 import com.omnix.assistant.presentation.translator.TranslatorRoute
 
@@ -113,6 +114,7 @@ fun OmnixNavGraph(
             composable(OmnixDestination.Chat.route) {
                 val chatViewModel: ChatViewModel = hiltViewModel()
                 val chatState by chatViewModel.uiState.collectAsState()
+                val chatContext = LocalContext.current
                 val pinnedViewModel: PinnedChatsViewModel = hiltViewModel()
                 val pinnedChats by pinnedViewModel.pinned.collectAsState()
                 val chatTitles by pinnedViewModel.titles.collectAsState()
@@ -120,7 +122,10 @@ fun OmnixNavGraph(
                     state = chatState,
                     isOnline = uiState.isOnline,
                     onInputChange = chatViewModel::onInputTextChanged,
-                    onSend = { chatViewModel.sendTextMessage() },
+                    onSend = {
+                        Haptics.tick(chatContext)
+                        chatViewModel.sendTextMessage()
+                    },
                     onConfirm = chatViewModel::confirmPendingAction,
                     onCancel = chatViewModel::cancelPendingAction,
                     onNewChat = chatViewModel::startNewConversation,

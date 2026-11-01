@@ -203,6 +203,8 @@
     <string name="omnix_voice_speaking_speed">Сөйлеу жылдамдығы</string>
     <string name="omnix_voice_tone">Дауыс тембрі</string>
     <string name="omnix_voice_feedback">Дауыстық кері байланыс</string>
+    <string name="omnix_voice_haptics">Діріл жауабы</string>
+    <string name="omnix_voice_haptics_body">«Омни» дегенде және жібергенде жеңіл діріл</string>
     <string name="omnix_voice_listening">Тыңдау</string>
     <string name="omnix_voice_listening_body">OMNIX фонда «Омни» сөзін тыңдай берсін.</string>
     <string name="omnix_voice_headset_only">Тек Clip қосылғанда</string>

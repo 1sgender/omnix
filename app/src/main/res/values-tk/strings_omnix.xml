@@ -256,6 +256,8 @@
     <string name="omnix_voice_speaking_speed">Gepleşik tizligi</string>
     <string name="omnix_voice_tone">Dawuş tony</string>
     <string name="omnix_voice_feedback">Sesli jogap</string>
+    <string name="omnix_voice_haptics">Titreme jogaby</string>
+    <string name="omnix_voice_haptics_body">«Omni» aýdylanda we iberilende ýeňil titreme</string>
     <string name="omnix_voice_listening">Diňleme</string>
     <string name="omnix_voice_listening_body">OMNIX fonda «Omni» sözüni diňläp durşun.</string>
     <string name="omnix_voice_headset_only">Diňe Clip birikdirilen wagty</string>

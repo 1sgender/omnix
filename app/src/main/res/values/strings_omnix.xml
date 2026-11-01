@@ -257,6 +257,8 @@
     <string name="omnix_voice_speaking_speed">Speaking speed</string>
     <string name="omnix_voice_tone">Voice tone</string>
     <string name="omnix_voice_feedback">Voice feedback</string>
+    <string name="omnix_voice_haptics">Haptic feedback</string>
+    <string name="omnix_voice_haptics_body">A light tap on “Omni” and when sending</string>
     <string name="omnix_voice_listening">Listening</string>
     <string name="omnix_voice_listening_body">Keep OMNIX listening for “Omni” in the background.</string>
     <string name="omnix_voice_headset_only">Only when the Clip is connected</string>

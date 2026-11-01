@@ -203,6 +203,8 @@
     <string name="omnix_voice_speaking_speed">Gapirish tezligi</string>
     <string name="omnix_voice_tone">Ovoz ohangi</string>
     <string name="omnix_voice_feedback">Ovozli javob</string>
+    <string name="omnix_voice_haptics">Tebranish aloqasi</string>
+    <string name="omnix_voice_haptics_body">«Omni» deganda va yuborishda yengil tebranish</string>
     <string name="omnix_voice_listening">Tinglash</string>
     <string name="omnix_voice_listening_body">OMNIX fonda “Omni” soʻzini tinglashda davom etsin.</string>
     <string name="omnix_voice_headset_only">Faqat Clip ulanganda</string>

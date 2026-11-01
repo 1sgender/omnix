@@ -203,6 +203,8 @@
     <string name="omnix_voice_speaking_speed">Konuşma hızı</string>
     <string name="omnix_voice_tone">Ses tonu</string>
     <string name="omnix_voice_feedback">Sesli geri bildirim</string>
+    <string name="omnix_voice_haptics">Titreşim geri bildirimi</string>
+    <string name="omnix_voice_haptics_body">«Omni» dediğinizde ve gönderirken hafif titreşim</string>
     <string name="omnix_voice_listening">Dinleme</string>
     <string name="omnix_voice_listening_body">OMNIX arka planda “Omni” sözünü dinlemeye devam etsin.</string>
     <string name="omnix_voice_headset_only">Yalnızca Clip bağlıyken</string>
