@@ -28,7 +28,7 @@ fun VoiceSettingsScreen(
     headsetOnly: Boolean,
     listeningActive: Boolean,
     voiceFeedback: Boolean,
-    haptics: Boolean = true,
+    haptics: Boolean,
     automationCount: Int,
     modifier: Modifier = Modifier,
     wakeWordEnabled: Boolean = true,
