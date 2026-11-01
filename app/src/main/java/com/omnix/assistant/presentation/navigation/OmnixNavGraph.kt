@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +23,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -30,8 +32,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.omnix.assistant.R
 import com.omnix.assistant.presentation.automations.AutomationsScreen
 import com.omnix.assistant.presentation.chat.ChatViewModel
+import com.omnix.assistant.presentation.chat.ChatHandoffViewModel
 import com.omnix.assistant.presentation.chat.OmnixChatScreen
 import com.omnix.assistant.presentation.chat.PinnedChatsViewModel
 import com.omnix.assistant.presentation.components.ConfirmationSheet
@@ -118,6 +122,10 @@ fun OmnixNavGraph(
                 val pinnedViewModel: PinnedChatsViewModel = hiltViewModel()
                 val pinnedChats by pinnedViewModel.pinned.collectAsState()
                 val chatTitles by pinnedViewModel.titles.collectAsState()
+                val chatHandoff: ChatHandoffViewModel = hiltViewModel()
+                LaunchedEffect(Unit) {
+                    chatHandoff.take()?.let { chatViewModel.sendTextMessage(it) }
+                }
                 OmnixChatScreen(
                     state = chatState,
                     isOnline = uiState.isOnline,
@@ -251,8 +259,14 @@ fun OmnixNavGraph(
             }
 
             composable(OmnixDestination.Automations.route) {
+                val protocolPrompt = stringResource(R.string.omnix_protocols_prompt_prefix)
+                val handoff: ChatHandoffViewModel = hiltViewModel()
                 AutomationsScreen(
-                    onBack = navController::popBackStack
+                    onBack = navController::popBackStack,
+                    onDescribe = { description ->
+                        handoff.put(protocolPrompt + description)
+                        navController.navigateSingleTop(OmnixDestination.Chat)
+                    }
                 )
             }
 

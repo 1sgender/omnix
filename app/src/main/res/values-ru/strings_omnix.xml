@@ -47,14 +47,14 @@
     <string name="omnix_home_offline_pill">ОФЛАЙН · НА УСТРОЙСТВЕ</string>
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Наушники подключены, заряд %1$d%%</string>
-    <string name="omnix_home_card_automations">Автоматизации</string>
+    <string name="omnix_home_card_automations">Протоколы</string>
     <string name="omnix_home_card_translator">Переводчик</string>
     <string name="omnix_home_card_translator_sub">В наушники, вживую</string>
     <string name="omnix_home_card_memory">Память</string>
     <string name="omnix_home_card_memory_sub">Что я о вас помню</string>
     <string name="omnix_home_card_reminders">Напоминания</string>
     <string name="omnix_home_card_reminders_sub">Будильники и дела</string>
-    <string name="omnix_home_card_automations_sub">Сценарии по фразе</string>
+    <string name="omnix_home_card_automations_sub">Протоколы по фразе</string>
 
     <!-- ===== Действия ===== -->
     <string name="omnix_action_calling">Звоню %1$s…</string>
@@ -73,7 +73,7 @@
     <string name="omnix_action_app_generic">Открываю приложение…</string>
     <string name="omnix_action_device_setting">Настраиваю телефон…</string>
     <string name="omnix_action_media">Управляю воспроизведением…</string>
-    <string name="omnix_action_automation">Создаю автоматизацию…</string>
+    <string name="omnix_action_automation">Создаю протокол…</string>
 
     <string name="omnix_result_call_started">Звонок начат</string>
     <string name="omnix_result_message_sent">Сообщение отправлено</string>
@@ -265,8 +265,8 @@
     <string name="omnix_voice_background">Работа в фоне</string>
     <string name="omnix_voice_background_body">Разрешите OMNIX работать при выключенном экране.</string>
     <string name="omnix_voice_background_action">Разрешить</string>
-    <string name="omnix_voice_automations">Автоматизации</string>
-    <string name="omnix_voice_automations_empty">Автоматизаций пока нет. Нажмите «Новая автоматизация» или скажите: «Омни, когда подключу наушники — включи музыку».</string>
+    <string name="omnix_voice_automations">Протоколы</string>
+    <string name="omnix_voice_automations_empty">Протоколов пока нет. Опишите протокол словами, нажмите «Новый протокол» или скажите: «Омни, когда подключу наушники — включи музыку».</string>
 
     <string name="omnix_privacy_title">Приватность</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
@@ -365,8 +365,8 @@
     <string name="omnix_language_old_android">Выбор языка в приложении есть с Android 13. OMNIX говорит на языке телефона.</string>
 
     <string name="omnix_notifications_settings_title">Уведомления</string>
-    <string name="omnix_notifications_routines">Озвучивать автоматизации</string>
-    <string name="omnix_notifications_routines_body">OMNIX вслух скажет, что сделала автоматизация.</string>
+    <string name="omnix_notifications_routines">Озвучивать протоколы</string>
+    <string name="omnix_notifications_routines_body">OMNIX вслух скажет, что сделал протокол.</string>
     <string name="omnix_notifications_system">Уведомления на телефоне</string>
     <string name="omnix_notifications_system_body">Нужны, чтобы Android не выключал прослушивание в фоне. Каналы настраиваются в системе.</string>
     <string name="omnix_notifications_on">Включены</string>
@@ -477,8 +477,8 @@
     <string name="omnix_automations_briefing_body">Время, заряд, погода и планы — офлайн, в наушник.</string>
     <string name="omnix_automations_briefing_running">Готовлю брифинг…</string>
     <string name="omnix_automations_briefing_ok">Озвучивается</string>
-    <string name="omnix_automations_delete_title">Удалить эту автоматизацию?</string>
-    <string name="omnix_automations_delete_body">«%1$s» будет удалена навсегда. Рутина перестанет срабатывать.</string>
+    <string name="omnix_automations_delete_title">Удалить этот протокол?</string>
+    <string name="omnix_automations_delete_body">«%1$s» будет удалён навсегда. Протокол перестанет срабатывать.</string>
     <string name="omnix_automations_delete_confirm">Удалить</string>
     <string name="omnix_automations_trigger_time">Каждый день в %1$s</string>
     <string name="omnix_automations_trigger_headphones_on">При подключении наушников</string>
@@ -497,7 +497,10 @@
     <string name="omnix_automations_action_briefing">Брифинг</string>
     <string name="omnix_automations_action_other">Действие</string>
     <string name="omnix_automations_never_fired">Ни разу не срабатывало</string>
-    <string name="omnix_automations_new">Новая автоматизация</string>
+    <string name="omnix_automations_new">Новый протокол</string>
+    <string name="omnix_protocols_describe_hint">Опишите протокол словами, например: «когда подключу наушники, поставь громкость 40»</string>
+    <string name="omnix_protocols_describe_button">Создать по описанию</string>
+    <string name="omnix_protocols_prompt_prefix">Создай протокол: </string>
     <string name="omnix_automations_new_when">Когда</string>
     <string name="omnix_automations_new_do">Что сделать</string>
     <string name="omnix_automations_new_time">Время: %1$s</string>
@@ -507,8 +510,8 @@
     <string name="omnix_automations_new_volume_value">Громкость %1$d%%</string>
     <string name="omnix_automations_new_app_hint">Название приложения, например YouTube</string>
     <string name="omnix_automations_new_create">Создать</string>
-    <string name="omnix_automations_limit_title">Достигнут лимит автоматизаций</string>
-    <string name="omnix_automations_limit_body">Лимит своих правил на вашем тарифе: %1$d. Удалите ненужное.</string>
+    <string name="omnix_automations_limit_title">Достигнут лимит протоколов</string>
+    <string name="omnix_automations_limit_body">Лимит своих протоколов на вашем тарифе: %1$d. Удалите ненужное.</string>
     <string name="omnix_automations_limit_ok">Понятно</string>
     <string name="omnix_automations_default_morning">Утренний брифинг в 07:00</string>
     <string name="omnix_automations_default_morning_headphones">Утренняя громкость в наушниках</string>
@@ -532,7 +535,7 @@
     <string name="omnix_privacy_messages_money">Спрашивать только при суммах денег</string>
     <string name="omnix_privacy_messages_never">Не спрашивать (суммы подтверждаются всегда)</string>
     <string name="omnix_privacy_forced_title">Всегда с подтверждением</string>
-    <string name="omnix_privacy_forced_body">Деньги, удаления, ввод в других приложениях и любые действия автоматизаций сначала спрашивают. Это нельзя отключить.</string>
+    <string name="omnix_privacy_forced_body">Деньги, удаления, ввод в других приложениях и любые действия протоколов сначала спрашивают. Это нельзя отключить.</string>
     <string name="omnix_privacy_section_contacts">Доверенные контакты</string>
     <string name="omnix_privacy_contacts_hint">Звонки и сообщения этим контактам могут пропускать подтверждение, если политика это разрешает</string>
     <string name="omnix_privacy_contact_add_hint">Имя или номер телефона</string>
