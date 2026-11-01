@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   OMNIX mark: the letter "O" split into two earcups - the left half shifted up,
-  the right half shifted down. Drawn inside the 66dp adaptive-icon safe zone
-  (centre 54,54; farthest point is about 27dp away), so any launcher mask
-  keeps the whole mark visible.
+  the right half shifted down. The left earcup is soft white, the right one is
+  the brand signal lime (design v2). Round caps keep the mark friendly at small
+  sizes. Drawn inside the 66dp adaptive-icon safe zone (centre 54,54; farthest
+  point is about 28dp away), so any launcher mask keeps the whole mark visible.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -13,9 +14,11 @@
     <path
         android:pathData="M52,30.5A20,20 0,0 0,52 70.5"
         android:strokeColor="#F4F6FB"
-        android:strokeWidth="8" />
+        android:strokeLineCap="round"
+        android:strokeWidth="9" />
     <path
         android:pathData="M56,37.5A20,20 0,0 1,56 77.5"
-        android:strokeColor="#F4F6FB"
-        android:strokeWidth="8" />
+        android:strokeColor="#C8FF4D"
+        android:strokeLineCap="round"
+        android:strokeWidth="9" />
 </vector>

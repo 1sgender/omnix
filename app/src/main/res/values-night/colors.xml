@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="omnix_launch_ground">#FF0F0E0C</color>
+    <color name="omnix_logo_left">#FFF4F6FB</color>
+    <color name="omnix_logo_right">#FFC8FF4D</color>
+</resources>

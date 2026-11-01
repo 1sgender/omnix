@@ -46,6 +46,7 @@ class OmnixExperienceStore @Inject constructor(
         val NIGHT_DIMMING = booleanPreferencesKey("night_dimming")
         val REDUCE_MOTION_OVERRIDE = stringPreferencesKey("reduce_motion_override")
         val VOICE_FEEDBACK = booleanPreferencesKey("voice_feedback")
+        val HAPTICS = booleanPreferencesKey("haptics")
         val NOTIFY_ASSISTANT = booleanPreferencesKey("notify_assistant")
         val NOTIFY_DEVICE = booleanPreferencesKey("notify_device")
         val NOTIFY_ROUTINES = booleanPreferencesKey("notify_routines")
@@ -99,6 +100,9 @@ class OmnixExperienceStore @Inject constructor(
     val voiceFeedback: Flow<Boolean> =
         preferences.map { it[Keys.VOICE_FEEDBACK] ?: true }
 
+    val haptics: Flow<Boolean> =
+        preferences.map { it[Keys.HAPTICS] ?: true }
+
     val notifyAssistant: Flow<Boolean> = preferences.map { it[Keys.NOTIFY_ASSISTANT] ?: true }
     val notifyDevice: Flow<Boolean> = preferences.map { it[Keys.NOTIFY_DEVICE] ?: true }
     val notifyRoutines: Flow<Boolean> = preferences.map { it[Keys.NOTIFY_ROUTINES] ?: true }
@@ -143,6 +147,11 @@ class OmnixExperienceStore @Inject constructor(
     }
 
     suspend fun setVoiceFeedback(enabled: Boolean) = edit { it[Keys.VOICE_FEEDBACK] = enabled }
+
+    suspend fun setHaptics(enabled: Boolean) {
+        com.omnix.assistant.voice.audio.Haptics.setEnabled(context, enabled)
+        edit { it[Keys.HAPTICS] = enabled }
+    }
 
     suspend fun setNotifyAssistant(enabled: Boolean) = edit { it[Keys.NOTIFY_ASSISTANT] = enabled }
 

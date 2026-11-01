@@ -71,6 +71,7 @@ fun SettingsSectionRoute(
             // rather than pretending to know.
             listeningActive = true,
             voiceFeedback = appearanceState.voiceFeedback,
+            haptics = appearanceState.haptics,
             automationCount = state.automations.size,
             onSpeechRateChange = viewModel::onSpeechRateChanged,
             onSpeechPitchChange = viewModel::onSpeechPitchChanged,
@@ -78,6 +79,7 @@ fun SettingsSectionRoute(
             onWakeWordEnabledChange = viewModel::onWakeWordEnabledChanged,
             onHeadsetOnlyChange = viewModel::onHeadsetOnlyModeChanged,
             onVoiceFeedbackChange = appearanceViewModel::setVoiceFeedback,
+            onHapticsChange = appearanceViewModel::setHaptics,
             onCommitChanges = viewModel::saveAllSettings,
             onOpenAutomations = onOpenAutomations
         )

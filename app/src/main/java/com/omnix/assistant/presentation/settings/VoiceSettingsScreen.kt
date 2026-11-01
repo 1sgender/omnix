@@ -28,6 +28,7 @@ fun VoiceSettingsScreen(
     headsetOnly: Boolean,
     listeningActive: Boolean,
     voiceFeedback: Boolean,
+    haptics: Boolean,
     automationCount: Int,
     modifier: Modifier = Modifier,
     wakeWordEnabled: Boolean = true,
@@ -39,6 +40,7 @@ fun VoiceSettingsScreen(
     onHeadsetOnlyChange: (Boolean) -> Unit = {},
     onListeningChange: (Boolean) -> Unit = {},
     onVoiceFeedbackChange: (Boolean) -> Unit = {},
+    onHapticsChange: (Boolean) -> Unit = {},
     onCommitChanges: () -> Unit = {},
     onOpenBackgroundSettings: () -> Unit = {},
     onOpenAutomations: () -> Unit = {}
@@ -120,6 +122,14 @@ fun VoiceSettingsScreen(
                 title = stringResource(R.string.omnix_voice_feedback),
                 checked = voiceFeedback,
                 onCheckedChange = onVoiceFeedbackChange,
+                inset = true
+            )
+            OmnixGroupDivider()
+            OmnixToggleRow(
+                title = stringResource(R.string.omnix_voice_haptics),
+                subtitle = stringResource(R.string.omnix_voice_haptics_body),
+                checked = haptics,
+                onCheckedChange = onHapticsChange,
                 inset = true
             )
         }

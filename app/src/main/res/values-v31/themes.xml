@@ -8,9 +8,10 @@
         <item name="android:windowBackground">@color/omnix_launch_ground</item>
         <item name="android:statusBarColor">@color/omnix_launch_ground</item>
         <item name="android:navigationBarColor">@color/omnix_launch_ground</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">@bool/omnix_light_bars</item>
         <item name="android:windowSplashScreenBackground">@color/omnix_launch_ground</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="android:windowLightNavigationBar">@bool/omnix_light_bars</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/omnix_launch_ground</item>
     </style>
 </resources>

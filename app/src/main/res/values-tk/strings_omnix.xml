@@ -47,14 +47,14 @@
     <string name="omnix_home_offline_pill">OFLAÝN · ENJAMDA</string>
     <string name="omnix_home_clip_battery">%1$d%%</string>
     <string name="omnix_home_clip_a11y_battery">Gulaklyklar birikdirildi, zarýad %1$d%%</string>
-    <string name="omnix_home_card_automations">Awtomatizasiýalar</string>
+    <string name="omnix_home_card_automations">Protokollar</string>
     <string name="omnix_home_card_translator">Terjimeçi</string>
     <string name="omnix_home_card_translator_sub">Gulaklyga, göni</string>
     <string name="omnix_home_card_memory">Ýat</string>
     <string name="omnix_home_card_memory_sub">Siz hakda näme ýadymda</string>
     <string name="omnix_home_card_reminders">Ýatlatmalar</string>
     <string name="omnix_home_card_reminders_sub">Oýardyjylar we işler</string>
-    <string name="omnix_home_card_automations_sub">Söz boýunça ssenariler</string>
+    <string name="omnix_home_card_automations_sub">Söz boýunça protokollar</string>
 
     <!-- ===== Hereketleriň aýdylyşy (§16, §19) ===== -->
     <string name="omnix_action_calling">Jaň edýärin: %1$s…</string>
@@ -73,7 +73,7 @@
     <string name="omnix_action_app_generic">Programma açylýar…</string>
     <string name="omnix_action_device_setting">Telefonyňyzy sazlaýyn…</string>
     <string name="omnix_action_media">Aýdym-sazy dolandyran…</string>
-    <string name="omnix_action_automation">Awtomatiki iş döredilýär…</string>
+    <string name="omnix_action_automation">Protokol döredilýär…</string>
 
     <!-- Hereket netijeleri -->
     <string name="omnix_result_call_started">Jaň başlady</string>
@@ -183,7 +183,17 @@
     <string name="omnix_chat_group_older">Has öň</string>
     <string name="omnix_chat_copy">Göçür</string>
     <string name="omnix_chat_copied">Göçürildi</string>
-    <string name="omnix_chat_delete_hint">Pozmak üçin çaty basyp saklaň</string>
+    <string name="omnix_chat_delete_hint">Çaty bekitmek, adyny üýtgetmek ýa-da pozmak üçin basyp duruň</string>
+    <string name="omnix_chat_empty_hint">“Omni” diýiň ýa-da ýazyň. Mysal üçin: “ýutuby aç”, “bir sagatdan ýatla”, “rusça terjime et”.</string>
+    <string name="omnix_chat_suggestion_4">Ýutuby aç</string>
+    <string name="omnix_chat_suggestion_5">Bir sagatdan ýatla</string>
+    <string name="omnix_chat_repeat">Ýene bir gezek</string>
+    <string name="omnix_chat_rename">Çatyň adyny üýtget</string>
+    <string name="omnix_chat_rename_hint">Çatyň ady</string>
+    <string name="omnix_chat_save">Ýatda sakla</string>
+    <string name="omnix_chat_pin">Çaty bekit</string>
+    <string name="omnix_chat_unpin">Çatyň bekidilmegini aýyr</string>
+    <string name="omnix_chat_group_pinned">Bekidilenler</string>
     <string name="omnix_chat_suggestion_1">Ertir üçin meýilnama düz</string>
     <string name="omnix_chat_suggestion_2">Emeli aňyň nähili işleýändigini ýönekeý düşündir</string>
     <string name="omnix_chat_suggestion_3">Dosta gysga gutlag ýazmaga kömek et</string>
@@ -246,6 +256,8 @@
     <string name="omnix_voice_speaking_speed">Gepleşik tizligi</string>
     <string name="omnix_voice_tone">Dawuş tony</string>
     <string name="omnix_voice_feedback">Sesli jogap</string>
+    <string name="omnix_voice_haptics">Titreme jogaby</string>
+    <string name="omnix_voice_haptics_body">«Omni» aýdylanda we iberilende ýeňil titreme</string>
     <string name="omnix_voice_listening">Diňleme</string>
     <string name="omnix_voice_listening_body">OMNIX fonda «Omni» sözüni diňläp durşun.</string>
     <string name="omnix_voice_headset_only">Diňe Clip birikdirilen wagty</string>
@@ -254,8 +266,8 @@
     <string name="omnix_voice_background">Fon</string>
     <string name="omnix_voice_background_body">OMNIX-e ekran öçüli wagtynda-da işlemäge rugsat beriň.</string>
     <string name="omnix_voice_background_action">Rugsat ber</string>
-    <string name="omnix_voice_automations">Awtomatiki işler</string>
-    <string name="omnix_voice_automations_empty">Heniz awtomatlaşdyrma ýok. «Täze awtomatlaşdyrma» basyň ýa-da aýdyň: «Omni, gulaklyk birikende aýdym goý».</string>
+    <string name="omnix_voice_automations">Protokollar</string>
+    <string name="omnix_voice_automations_empty">Heniz protokol ýok. Protokoly sözler bilen düşündiriň, «Täze protokol» basyň ýa-da aýdyň: «Omni, gulaklyk birikende aýdym goý».</string>
 
     <string name="omnix_privacy_title">Hususylyk</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
@@ -354,8 +366,8 @@
     <string name="omnix_language_old_android">Programmada dil saýlamak Android 13-den başlap bar. OMNIX telefonyň dilinde gürleýär.</string>
 
     <string name="omnix_notifications_settings_title">Bildirişler</string>
-    <string name="omnix_notifications_routines">Awtomatlaşdyrmalary sesli aýt</string>
-    <string name="omnix_notifications_routines_body">OMNIX awtomatlaşdyrmanyň näme edendigini sesli aýdar.</string>
+    <string name="omnix_notifications_routines">Protokollary sesli aýt</string>
+    <string name="omnix_notifications_routines_body">OMNIX protokolyň näme edendigini sesli aýdar.</string>
     <string name="omnix_notifications_system">Telefondaky bildirişler</string>
     <string name="omnix_notifications_system_body">Android OMNIX-iň fonda diňlemegini öçürmez ýaly gerek. Kanallar ulgam sazlamalarynda dolandyrylýar.</string>
     <string name="omnix_notifications_on">Açyk</string>
@@ -466,8 +478,8 @@
     <string name="omnix_automations_briefing_body">Wagt, batareýa, howa we meýilnama — oflaýn, gulaga.</string>
     <string name="omnix_automations_briefing_running">Brifiňi taýýarlaýaryn…</string>
     <string name="omnix_automations_briefing_ok">Aýdylýar</string>
-    <string name="omnix_automations_delete_title">Bu awtomatik işi pozýarysyzmy?</string>
-    <string name="omnix_automations_delete_body">«%1$s» hemişelik pozular. Bu iş indiket çalışmaz.</string>
+    <string name="omnix_automations_delete_title">Bu protokol pozulsynmy?</string>
+    <string name="omnix_automations_delete_body">«%1$s» hemişelik pozular. Protokol indi işlemez.</string>
     <string name="omnix_automations_delete_confirm">Poz</string>
     <string name="omnix_automations_trigger_time">Her gün %1$s</string>
     <string name="omnix_automations_trigger_headphones_on">Gulaklyk birikdirilende</string>
@@ -486,7 +498,10 @@
     <string name="omnix_automations_action_briefing">Brifiň</string>
     <string name="omnix_automations_action_other">Hereket</string>
     <string name="omnix_automations_never_fired">Hiç wagt çalışmady</string>
-    <string name="omnix_automations_new">Täze awtomatlaşdyrma</string>
+    <string name="omnix_automations_new">Täze protokol</string>
+    <string name="omnix_protocols_describe_hint">Protokoly sözler bilen düşündiriň, meselem: «gulaklyk birikende sesi 40 goý»</string>
+    <string name="omnix_protocols_describe_button">Düşündirişden döret</string>
+    <string name="omnix_protocols_prompt_prefix">Protokol döret: </string>
     <string name="omnix_automations_new_when">Haçan</string>
     <string name="omnix_automations_new_do">Näme etmeli</string>
     <string name="omnix_automations_new_time">Wagt: %1$s</string>
@@ -496,8 +511,8 @@
     <string name="omnix_automations_new_volume_value">Ses %1$d%%</string>
     <string name="omnix_automations_new_app_hint">Programmanyň ady, meselem YouTube</string>
     <string name="omnix_automations_new_create">Döret</string>
-    <string name="omnix_automations_limit_title">Awtomatlaşdyrma çägi doldy</string>
-    <string name="omnix_automations_limit_body">Tarifiňizde öz düzgünleriňiziň çägi: %1$d. Gereksizini pozuň.</string>
+    <string name="omnix_automations_limit_title">Protokol çägi doldy</string>
+    <string name="omnix_automations_limit_body">Tarifiňizde öz protokollaryňyzyň çägi: %1$d. Gereksizini pozuň.</string>
     <string name="omnix_automations_limit_ok">Düşnükli</string>
     <string name="omnix_automations_default_morning">Sagat 07:00-da irki brifing</string>
     <string name="omnix_automations_default_morning_headphones">Gulaklykda irki ses</string>
@@ -519,7 +534,7 @@
     <string name="omnix_privacy_messages_money">Diňe pul mukdary agzalanda sora</string>
     <string name="omnix_privacy_messages_never">Sorama (summalar hemişe tassyklanýar)</string>
     <string name="omnix_privacy_forced_title">Hemişe tassyklanýar</string>
-    <string name="omnix_privacy_forced_body">Pul, öçürmeler, beýleki programmalarda ýazmak we awtomatiki hereketler ilki soraýar. Ýapyp bolmaýar.</string>
+    <string name="omnix_privacy_forced_body">Pul, öçürmeler, beýleki programmalarda ýazmak we protokollaryň ähli hereketleri ilki soraýar. Ýapyp bolmaýar.</string>
     <string name="omnix_privacy_section_contacts">Ynamly baglanyşyklar</string>
     <string name="omnix_privacy_contacts_hint">Bu baglanyşyklara jaňlar we habarlar tassyklamany geçip bilýär, syýasat rugsat berende</string>
     <string name="omnix_privacy_contact_add_hint">Ad ýa-da telefon belgisi</string>

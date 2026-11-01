@@ -50,4 +50,18 @@ class ConversationGroupsTest {
             groups.map { (group, items) -> group to items.map { it.id } }
         )
     }
+
+    @Test
+    fun `pinned chats go first whatever their date`() {
+        val groups = conversationGroups(chats, query = "", today = today, zone = zone, pinned = setOf(5L, 3L))
+        assertEquals(
+            listOf(
+                ConversationGroup.PINNED to listOf(3L, 5L),
+                ConversationGroup.TODAY to listOf(1L),
+                ConversationGroup.YESTERDAY to listOf(2L),
+                ConversationGroup.MONTH to listOf(4L)
+            ),
+            groups.map { (group, items) -> group to items.map { it.id } }
+        )
+    }
 }
