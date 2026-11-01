@@ -421,7 +421,7 @@
     <string name="omnix_automations_action_other">İşlem</string>
     <string name="omnix_automations_never_fired">Hiç çalışmadı</string>
     <string name="omnix_automations_new">Yeni protokol</string>
-    <string name="omnix_protocols_describe_hint">Protokolü kelimelerle anlatın, örneğin: “kulaklığım bağlanınca sesi %40 yap”</string>
+    <string name="omnix_protocols_describe_hint">Protokolü kelimelerle anlatın, örneğin: “kulaklığım bağlanınca sesi 40 yap”</string>
     <string name="omnix_protocols_describe_button">Açıklamadan oluştur</string>
     <string name="omnix_protocols_prompt_prefix">Protokol oluştur: </string>
     <string name="omnix_automations_new_when">Ne zaman</string>
