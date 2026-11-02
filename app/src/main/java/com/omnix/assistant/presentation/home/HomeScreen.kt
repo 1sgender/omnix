@@ -314,8 +314,7 @@ internal fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
             OmnixRingMark(
                 color = markColor,
                 width = size * MARK_RATIO,
-                height = size * MARK_RATIO * 80f / 104f,
-                strokeUnits = 2.6f
+                height = size * MARK_RATIO * 80f / 104f
             )
         }
     }

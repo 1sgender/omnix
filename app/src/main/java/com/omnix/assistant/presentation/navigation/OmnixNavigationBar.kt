@@ -78,7 +78,6 @@ fun OmnixNavigationBar(
                     color = tint,
                     width = 22.dp,
                     height = 16.dp,
-                    strokeUnits = 3.6f,
                     modifier = Modifier.clearAndSetSemantics {}
                 )
             }

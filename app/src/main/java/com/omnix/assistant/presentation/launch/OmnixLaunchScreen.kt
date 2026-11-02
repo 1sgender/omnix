@@ -185,7 +185,7 @@ private fun SelfDrawingRing(still: Boolean) {
                 )
             }
         }
-        OmnixRingMark(color = colors.textPrimary, width = 56.dp, height = 43.dp, strokeUnits = 2.6f)
+        OmnixRingMark(color = colors.textPrimary, width = 56.dp, height = 43.dp)
     }
 }
 

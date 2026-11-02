@@ -168,8 +168,7 @@ private fun StatusCard(clip: ClipState, modifier: Modifier = Modifier) {
         OmnixRingMark(
             color = if (connected) colors.textPrimary else colors.textTertiary,
             width = 96.dp,
-            height = 72.dp,
-            strokeUnits = 2.4f
+            height = 72.dp
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

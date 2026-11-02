@@ -152,10 +152,9 @@ private fun WelcomeStep(visualSize: Dp, onStart: () -> Unit, onEnterCode: () -> 
                 contentAlignment = Alignment.Center
             ) {
                 OmnixRingMark(
-                    color = colors.accentBrand,
+                    color = colors.textPrimary,
                     width = visualSize * 0.42f,
-                    height = visualSize * 0.42f * 80f / 104f,
-                    strokeUnits = 2.6f
+                    height = visualSize * 0.42f * 80f / 104f
                 )
             }
         },

@@ -302,7 +302,7 @@ private fun UpdateRing(stage: UpdateStage, progress: Float?, centerLabel: String
             }
         }
         when (stage) {
-            UpdateStage.AVAILABLE -> OmnixRingMark(width = 76.dp, height = 58.dp, strokeUnits = 3.0f)
+            UpdateStage.AVAILABLE -> OmnixRingMark(width = 76.dp, height = 58.dp)
             UpdateStage.DOWNLOADING -> if (centerLabel != null) {
                 Text(
                     text = centerLabel,
@@ -310,7 +310,7 @@ private fun UpdateRing(stage: UpdateStage, progress: Float?, centerLabel: String
                     color = colors.textPrimary
                 )
             } else {
-                OmnixRingMark(width = 64.dp, height = 49.dp, strokeUnits = 3.0f)
+                OmnixRingMark(width = 64.dp, height = 49.dp)
             }
             UpdateStage.READY -> Unit
             UpdateStage.FAILED -> OmnixAlertIcon(color = error, size = 48.dp)

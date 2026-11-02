@@ -16,11 +16,12 @@ import com.omnix.assistant.R
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
- * Маленький знак логотипа без надписи: кольцо «O», разрезанное на две
- * половины-чаши (левая сдвинута вверх, правая вниз) — образ двух наушников.
- * Геометрия задана в сетке 34×26: центр (17,13), радиус 8, толщина 3.4,
- * левая половина смещена на (−1.1, −1.6), правая на (+1.1, +1.6).
- * Знак доступен скринридеру как «OMNIX» (role="img", aria-label="OMNIX").
+ * Знак логотипа без надписи: кольцо «O», рассечённое горизонтальной щелью,
+ * верхняя половина сдвинута влево, нижняя вправо («трафарет»). Тот же знак,
+ * что в иконке и на заставке (drawable/ic_launcher_foreground.xml).
+ * Геометрия в сетке 58×64: радиус 19.5, толщина 13, концы дуг лежат на 3
+ * выше/ниже центра каждой половины, половины разнесены по горизонтали на 6.
+ * Цвет по умолчанию — основной текст темы, поэтому знак следует светлой/тёмной теме.
  */
 @Composable
 internal fun OmnixRingMark(
@@ -28,9 +29,7 @@ internal fun OmnixRingMark(
     color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary,
     // Разные экраны задают разные размеры знака: клип-флоу 28×22, активация 26×20.
     width: Dp = MARK_WIDTH,
-    height: Dp = MARK_HEIGHT,
-    // Толщина в единицах сетки 34×26: крупный знак в ядре Home рисуется тоньше (2.6).
-    strokeUnits: Float = RING_STROKE
+    height: Dp = MARK_HEIGHT
 ) {
     val markLabel = stringResource(R.string.omnix_wordmark)
     Canvas(
@@ -38,37 +37,37 @@ internal fun OmnixRingMark(
             .size(width = width, height = height)
             .semantics { contentDescription = markLabel }
     ) {
-        val unit = size.width / GRID_WIDTH
+        val unit = minOf(size.width / GRID_WIDTH, size.height / GRID_HEIGHT)
         val radius = RING_RADIUS * unit
-        val cupSize = Size(width = radius * 2f, height = radius * 2f)
-        val stroke = Stroke(width = strokeUnits * unit)
+        val arcSize = Size(width = radius * 2f, height = radius * 2f)
+        val stroke = Stroke(width = RING_STROKE * unit)
         val centerX = size.width * 0.5f
         val centerY = size.height * 0.5f
 
-        // Левая чаша: от низа через левый край к верху, смещена вверх-влево.
+        // Верхняя половина: дуга через верх, сдвинута влево.
         drawArc(
             color = color,
-            startAngle = LEFT_CUP_START,
-            sweepAngle = HALF_TURN,
+            startAngle = TOP_START,
+            sweepAngle = HALF_SWEEP,
             useCenter = false,
             topLeft = Offset(
-                x = centerX - radius - CUP_SHIFT_X * unit,
-                y = centerY - radius - CUP_SHIFT_Y * unit
+                x = centerX - SHIFT_X * unit - radius,
+                y = centerY - SHIFT_Y * unit - radius
             ),
-            size = cupSize,
+            size = arcSize,
             style = stroke
         )
-        // Правая чаша: от верха через правый край к низу, смещена вниз-вправо.
+        // Нижняя половина: дуга через низ, сдвинута вправо.
         drawArc(
             color = color,
-            startAngle = RIGHT_CUP_START,
-            sweepAngle = HALF_TURN,
+            startAngle = BOTTOM_START,
+            sweepAngle = HALF_SWEEP,
             useCenter = false,
             topLeft = Offset(
-                x = centerX - radius + CUP_SHIFT_X * unit,
-                y = centerY - radius + CUP_SHIFT_Y * unit
+                x = centerX + SHIFT_X * unit - radius,
+                y = centerY + SHIFT_Y * unit - radius
             ),
-            size = cupSize,
+            size = arcSize,
             style = stroke
         )
     }
@@ -77,11 +76,15 @@ internal fun OmnixRingMark(
 private val MARK_WIDTH = 28.dp
 private val MARK_HEIGHT = 22.dp
 
-private const val GRID_WIDTH = 34f
-private const val RING_RADIUS = 8f
-private const val RING_STROKE = 3.4f
-private const val CUP_SHIFT_X = 1.1f
-private const val CUP_SHIFT_Y = 1.6f
-private const val HALF_TURN = 180f
-private const val LEFT_CUP_START = 90f
-private const val RIGHT_CUP_START = -90f
+private const val GRID_WIDTH = 58f
+private const val GRID_HEIGHT = 64f
+private const val RING_RADIUS = 19.5f
+private const val RING_STROKE = 13f
+private const val SHIFT_X = 3f
+private const val SHIFT_Y = 6f
+
+// Концы дуг отстоят на 3 от центра половины: asin(3 / 19.5) ≈ 8.85°.
+private const val END_TILT = 8.85f
+private const val HALF_SWEEP = 180f + 2f * END_TILT
+private const val TOP_START = 180f - END_TILT
+private const val BOTTOM_START = -END_TILT
