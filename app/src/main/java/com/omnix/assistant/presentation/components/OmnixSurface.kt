@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,24 +70,5 @@ fun OmnixStatusDot(
             .size(size)
             .clip(CircleShape)
             .background(color)
-    )
-}
-
-/**
- * A caption rendered the way spoken examples are shown on Home and in the
- * first-run flow — quoted, quiet, never a button (§24).
- */
-@Composable
-fun OmnixSpokenExample(
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = text,
-        style = OmnixTheme.typography.caption,
-        // Examples are intentionally secondary, but must remain legible above
-        // the dark ground rather than blending into it.
-        color = OmnixTheme.colors.textTertiary,
-        modifier = modifier
     )
 }

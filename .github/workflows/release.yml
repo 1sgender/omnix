@@ -206,6 +206,7 @@ jobs:
           path: |
             app/build/outputs/bundle/*Release/*.aab
             app/build/outputs/apk/*/**/*release*.apk
+            app/build/outputs/mapping/*Release/mapping.txt
           if-no-files-found: error
           retention-days: 90
 

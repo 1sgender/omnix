@@ -41,15 +41,11 @@ class OmnixExperienceStore @Inject constructor(
         val CLIP_LAST_SEEN_MILLIS = longPreferencesKey("clip_last_seen_millis")
         val CLIP_LAST_DEVICE_NAME = stringPreferencesKey("clip_last_device_name")
         val MICROPHONE_PROMPTED = booleanPreferencesKey("microphone_prompted")
-        val NOTIFICATIONS_PROMPTED = booleanPreferencesKey("notifications_prompted")
         val APPEARANCE = stringPreferencesKey("appearance")
         val NIGHT_DIMMING = booleanPreferencesKey("night_dimming")
         val REDUCE_MOTION_OVERRIDE = stringPreferencesKey("reduce_motion_override")
         val VOICE_FEEDBACK = booleanPreferencesKey("voice_feedback")
         val HAPTICS = booleanPreferencesKey("haptics")
-        val NOTIFY_ASSISTANT = booleanPreferencesKey("notify_assistant")
-        val NOTIFY_DEVICE = booleanPreferencesKey("notify_device")
-        val NOTIFY_ROUTINES = booleanPreferencesKey("notify_routines")
     }
 
     private val preferences: Flow<Preferences> = context.omnixExperienceDataStore.data
@@ -82,9 +78,6 @@ class OmnixExperienceStore @Inject constructor(
     val microphonePrompted: Flow<Boolean> =
         preferences.map { it[Keys.MICROPHONE_PROMPTED] ?: false }
 
-    val notificationsPrompted: Flow<Boolean> =
-        preferences.map { it[Keys.NOTIFICATIONS_PROMPTED] ?: false }
-
     /** "System" | "Light" | "Dark" (§47). Default Dark: the product is
      *  voice-first, logo-dark, and pocket-lit; stored user choice wins. */
     val appearance: Flow<String> =
@@ -103,9 +96,6 @@ class OmnixExperienceStore @Inject constructor(
     val haptics: Flow<Boolean> =
         preferences.map { it[Keys.HAPTICS] ?: true }
 
-    val notifyAssistant: Flow<Boolean> = preferences.map { it[Keys.NOTIFY_ASSISTANT] ?: true }
-    val notifyDevice: Flow<Boolean> = preferences.map { it[Keys.NOTIFY_DEVICE] ?: true }
-    val notifyRoutines: Flow<Boolean> = preferences.map { it[Keys.NOTIFY_ROUTINES] ?: true }
 
     suspend fun setOnboardingCompleted(completed: Boolean) = edit {
         it[Keys.ONBOARDING_COMPLETED] = completed
@@ -134,10 +124,6 @@ class OmnixExperienceStore @Inject constructor(
         it[Keys.MICROPHONE_PROMPTED] = prompted
     }
 
-    suspend fun setNotificationsPrompted(prompted: Boolean) = edit {
-        it[Keys.NOTIFICATIONS_PROMPTED] = prompted
-    }
-
     suspend fun setAppearance(value: String) = edit { it[Keys.APPEARANCE] = value }
 
     suspend fun setNightDimming(enabled: Boolean) = edit { it[Keys.NIGHT_DIMMING] = enabled }
@@ -152,12 +138,6 @@ class OmnixExperienceStore @Inject constructor(
         com.omnix.assistant.voice.audio.Haptics.setEnabled(context, enabled)
         edit { it[Keys.HAPTICS] = enabled }
     }
-
-    suspend fun setNotifyAssistant(enabled: Boolean) = edit { it[Keys.NOTIFY_ASSISTANT] = enabled }
-
-    suspend fun setNotifyDevice(enabled: Boolean) = edit { it[Keys.NOTIFY_DEVICE] = enabled }
-
-    suspend fun setNotifyRoutines(enabled: Boolean) = edit { it[Keys.NOTIFY_ROUTINES] = enabled }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         context.omnixExperienceDataStore.edit(block)

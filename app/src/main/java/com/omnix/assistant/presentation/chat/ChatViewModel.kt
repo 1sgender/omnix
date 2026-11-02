@@ -17,7 +17,9 @@ import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.chat.ChatConversationStore
 import com.omnix.assistant.domain.models.ConversationSummary
+import android.util.Log
 import com.omnix.assistant.domain.models.Message
+import kotlinx.coroutines.CancellationException
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.domain.repository.MessageRepository
@@ -106,6 +108,8 @@ class ChatViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
+        private const val TAG_SEND = "ChatViewModel"
+
         /**
          * CR-17: дебаунс для PrivacyClassifier при быстром вводе с клавиатуры.
          * Меньше 150 мс — дёргает классификатор на каждый слог; больше 400 мс —
@@ -337,10 +341,22 @@ class ChatViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val result = sendPromptUseCase(
-                query,
-                privacyLevel = sendHint
-            )
+            val result = try {
+                sendPromptUseCase(
+                    query,
+                    privacyLevel = sendHint
+                )
+            } catch (e: CancellationException) {
+                _uiState.update { it.copy(isSending = false) }
+                throw e
+            } catch (e: Exception) {
+                // Сбой внутри конвейера не должен ронять приложение: пишем его в
+                // журнал, а пользователю показываем ошибку в ленте (там же
+                // кнопка «Повторить»).
+                Log.e(TAG_SEND, "sendTextMessage failed", e)
+                reportSendFailure()
+                return@launch
+            }
             _uiState.update { it.copy(isSending = false) }
 
             when (result) {
@@ -388,6 +404,22 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /** Снимает «отправляется» и кладёт в ленту ошибку (ERROR-пузырь с «Повторить»). */
+    private suspend fun reportSendFailure() {
+        _uiState.update { it.copy(isSending = false) }
+        try {
+            messageRepository.insertMessage(
+                Message(
+                    role = MessageRole.ERROR,
+                    text = context.getString(R.string.omnix_chat_send_failed),
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG_SEND, "reportSendFailure: не удалось сохранить сообщение об ошибке", e)
+        }
+    }
+
     /**
      * C-02: пользователь согласился отправить приватный запрос в облако.
      *
@@ -405,12 +437,21 @@ class ChatViewModel @Inject constructor(
         // effective, который был посчитан use case в момент первого вызова и уже
         // показан в UI-карточке; его достаточно для hint.
         viewModelScope.launch {
-            val result = sendPromptUseCase(
-                userPrompt = consent.userPrompt,
-                source = com.omnix.assistant.agent.decision.RequestSource.CHAT,
-                privacyLevel = consent.privacyLevel,
-                cloudExplicitlyAllowed = true
-            )
+            val result = try {
+                sendPromptUseCase(
+                    userPrompt = consent.userPrompt,
+                    source = com.omnix.assistant.agent.decision.RequestSource.CHAT,
+                    privacyLevel = consent.privacyLevel,
+                    cloudExplicitlyAllowed = true
+                )
+            } catch (e: CancellationException) {
+                _uiState.update { it.copy(isSending = false) }
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG_SEND, "confirmCloudConsent failed", e)
+                reportSendFailure()
+                return@launch
+            }
             _uiState.update { it.copy(isSending = false) }
             when (result) {
                 is Resource.Success -> {

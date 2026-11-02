@@ -174,31 +174,6 @@ class PrivacyPolicyViewModel @Inject constructor(
         }
     }
 
-    fun setScreenReaderAllowList(enabled: Boolean) {
-        accessibilityStore.setAllowListMode(enabled)
-        refreshAccessibility()
-    }
-
-    fun blockPackage(raw: String) {
-        accessibilityStore.blockPackage(raw)
-        refreshAccessibility()
-    }
-
-    fun unblockPackage(packageName: String) {
-        accessibilityStore.unblockPackage(packageName)
-        refreshAccessibility()
-    }
-
-    fun allowPackage(raw: String) {
-        accessibilityStore.allowPackage(raw)
-        refreshAccessibility()
-    }
-
-    fun revokePackageAllowance(packageName: String) {
-        accessibilityStore.revokeAllowance(packageName)
-        refreshAccessibility()
-    }
-
     /**
      * Точное удаление одного воспоминания по id (браузер памяти):
      * без семантического матчинга — строка, которую видит пользователь,

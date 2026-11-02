@@ -33,9 +33,6 @@ class AppearanceViewModelTest {
     private val reduceMotion = MutableStateFlow(REDUCE_MOTION_SYSTEM)
     private val voiceFeedback = MutableStateFlow(true)
     private val haptics = MutableStateFlow(true)
-    private val notifyAssistant = MutableStateFlow(true)
-    private val notifyDevice = MutableStateFlow(true)
-    private val notifyRoutines = MutableStateFlow(true)
 
     private fun store(): OmnixExperienceStore {
         val store = mockk<OmnixExperienceStore>(relaxed = true)
@@ -44,9 +41,6 @@ class AppearanceViewModelTest {
         io.mockk.every { store.reduceMotionOverride } returns reduceMotion
         io.mockk.every { store.voiceFeedback } returns voiceFeedback
         io.mockk.every { store.haptics } returns haptics
-        io.mockk.every { store.notifyAssistant } returns notifyAssistant
-        io.mockk.every { store.notifyDevice } returns notifyDevice
-        io.mockk.every { store.notifyRoutines } returns notifyRoutines
         return store
     }
 
@@ -115,21 +109,5 @@ class AppearanceViewModelTest {
             advanceUntilIdle()
 
             coVerify { store.setAppearance("Light") }
-        }
-
-    @Test
-    fun `notification preferences are observed and written`() =
-        runTest(mainDispatcher.dispatcher) {
-            val store = store()
-            val viewModel = AppearanceViewModel(store)
-            notifyDevice.value = false
-
-            val state = viewModel.uiState.first { !it.notifyDevice }
-            assertTrue(state.notifyAssistant)
-            assertFalse(state.notifyDevice)
-
-            viewModel.setNotifyRoutines(false)
-            advanceUntilIdle()
-            coVerify { store.setNotifyRoutines(false) }
         }
 }

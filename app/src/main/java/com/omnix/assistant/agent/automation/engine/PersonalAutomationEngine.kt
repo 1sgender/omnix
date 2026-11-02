@@ -9,11 +9,9 @@ import com.omnix.assistant.agent.automation.scheduler.AutomationScheduleManager
 import com.omnix.assistant.agent.executor.ToolExecutor
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.core.license.ClientPlanGate
-import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.tts.TextToSpeechManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -48,8 +46,7 @@ class PersonalAutomationEngine @Inject constructor(
     private val scheduleManager: AutomationScheduleManager,
     private val json: Json,
     private val planGate: ClientPlanGate,
-    private val deletionStore: AutomationDeletionStore,
-    private val experienceStore: OmnixExperienceStore
+    private val deletionStore: AutomationDeletionStore
 ) {
     companion object {
         private const val TAG = "AutomationEngine"
@@ -186,9 +183,7 @@ class PersonalAutomationEngine @Inject constructor(
             }
         }
 
-        // «Озвучивать автоматизации» в разделе «Уведомления»: раньше переключатель
-        // сохранялся, но никем не читался.
-        if (voiceMessages.isNotEmpty() && experienceStore.notifyRoutines.first()) {
+        if (voiceMessages.isNotEmpty()) {
             withContext(Dispatchers.Main) {
                 textToSpeechManager.speak(voiceMessages.joinToString(" "))
             }
