@@ -20,6 +20,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,7 +46,7 @@ import com.omnix.assistant.presentation.components.clipLabel
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import com.omnix.assistant.presentation.firstrun.OmnixRingMark
+import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
 import com.omnix.assistant.presentation.state.ClipCapability
 import com.omnix.assistant.presentation.state.ClipState
 
@@ -165,11 +166,20 @@ private fun StatusCard(clip: ClipState, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        OmnixRingMark(
-            color = if (connected) colors.textPrimary else colors.textTertiary,
-            width = 96.dp,
-            height = 72.dp
-        )
+        Box(
+            modifier = Modifier
+                .size(84.dp)
+                .background(colors.background, CircleShape)
+                .border(BorderStroke(1.dp, colors.border), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                OmnixHeadphonesLineIcon,
+                contentDescription = null,
+                tint = if (connected) colors.textPrimary else colors.textTertiary,
+                modifier = Modifier.size(44.dp)
+            )
+        }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -223,8 +233,27 @@ private fun BatteryTile(percent: Int) {
             style = OmnixMonoLabelStyle.copy(letterSpacing = 0.04.em),
             color = colors.textSecondary
         )
+        // «Трафарет»: заряд ещё и пятью сегментами — читается без цифры.
+        Row(
+            modifier = Modifier.padding(top = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            val lit = ((percent + 10) / 20).coerceIn(0, BATTERY_SEGMENTS)
+            repeat(BATTERY_SEGMENTS) { index ->
+                Box(
+                    Modifier
+                        .size(width = 22.dp, height = 4.dp)
+                        .background(
+                            if (index < lit) colors.textPrimary else colors.surfaceFilled,
+                            RoundedCornerShape(1.dp)
+                        )
+                )
+            }
+        }
     }
 }
+
+private const val BATTERY_SEGMENTS = 5
 
 @Composable
 private fun SwitchGroup(
@@ -265,7 +294,7 @@ private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onChang
             Text(text = title, style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp), color = colors.textPrimary)
             Text(text = subtitle, style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp), color = colors.textSecondary)
         }
-        // The canvas switch: 52×32 track, 26 knob; lime with a dark knob when on.
+        // The canvas switch: 52×32 track, 26 knob; paper with an ink knob when on.
         Box(
             modifier = Modifier
                 .size(width = 52.dp, height = 32.dp)

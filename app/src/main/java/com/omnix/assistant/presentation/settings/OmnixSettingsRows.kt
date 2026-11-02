@@ -293,9 +293,10 @@ fun OmnixSettingsSectionHeader(
     text: String,
     modifier: Modifier = Modifier
 ) {
+    // «Трафарет»: метки разделов — моноширинным шрифтом, как на всём экране «Я».
     Text(
-        text = text,
-        style = OmnixTheme.typography.overline,
+        text = text.uppercase(java.util.Locale.getDefault()),
+        style = com.omnix.assistant.presentation.design.OmnixMonoLabelStyle,
         color = OmnixTheme.colors.textTertiary,
         modifier = modifier.padding(
             top = OmnixTheme.spacing.lg,
