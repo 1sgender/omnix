@@ -510,4 +510,10 @@
         <item quantity="one">1 kez çalıştı · son %2$s</item>
         <item quantity="other">%1$d kez çalıştı · son %2$s</item>
     </plurals>
+    <string name="omnix_home_greeting_morning">Günaydın</string>
+    <string name="omnix_home_greeting_day">İyi günler</string>
+    <string name="omnix_home_greeting_evening">İyi akşamlar</string>
+    <string name="omnix_home_greeting_night">İyi geceler</string>
+    <string name="omnix_home_example_weather">“Yarın hava nasıl?”</string>
+    <string name="omnix_home_example_remind">“18:00\'de hatırlat”</string>
 </resources>

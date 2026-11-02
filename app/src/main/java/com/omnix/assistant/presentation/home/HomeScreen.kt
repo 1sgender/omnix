@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -75,6 +76,8 @@ import com.omnix.assistant.presentation.state.ClipCapability
 import com.omnix.assistant.presentation.state.ClipState
 import com.omnix.assistant.presentation.state.OmnixPhase
 import com.omnix.assistant.presentation.state.OmnixUiState
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * Home — the OMNIX logo is the assistant's power switch.
@@ -115,7 +118,7 @@ fun HomeScreen(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The logo gives up size on short screens before anything else.
-        val logoSize = (maxHeight * 0.34f).coerceIn(LOGO_MIN, LOGO_MAX)
+        val logoSize = (maxHeight * 0.36f).coerceIn(LOGO_MIN, LOGO_MAX)
 
         Column(
             modifier = Modifier
@@ -123,29 +126,23 @@ fun HomeScreen(
                 .padding(horizontal = SCREEN_PADDING),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ON-only top row: the headphones the assistant hears through.
-            AnimatedVisibility(
-                visible = on,
-                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
-                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = SCREEN_PADDING),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    ClipPill(clip = state.clip, onClick = onClipTap)
-                }
-            }
+            HomeHeader(on = on, clip = state.clip, onClipTap = onClipTap)
 
             Spacer(Modifier.weight(1f))
 
             PowerLogo(state = state, size = logoSize, onTap = onLogoTap)
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(12.dp))
 
             StatusText(state = state)
+
+            AnimatedVisibility(
+                visible = on && state.phase is OmnixPhase.Idle,
+                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
+                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
+            ) {
+                ExamplePhrases()
+            }
 
             state.assistantPowerError?.let { error ->
                 Spacer(Modifier.height(20.dp))
@@ -193,6 +190,70 @@ fun HomeScreen(
                     Spacer(Modifier.height(SCREEN_PADDING))
                 }
             }
+        }
+    }
+}
+
+/** Date in mono and a greeting by the hour; the headphones pill while OMNIX is on. */
+@Composable
+private fun HomeHeader(on: Boolean, clip: ClipState, onClipTap: () -> Unit) {
+    val colors = OmnixTheme.colors
+    val locale = LocalConfiguration.current.locales[0]
+    val now = remember { LocalDateTime.now() }
+    val date = remember(locale) {
+        now.format(DateTimeFormatter.ofPattern("EEE · d MMMM", locale)).uppercase(locale)
+    }
+    val greeting = stringResource(
+        when (now.hour) {
+            in 5..11 -> R.string.omnix_home_greeting_morning
+            in 12..17 -> R.string.omnix_home_greeting_day
+            in 18..22 -> R.string.omnix_home_greeting_evening
+            else -> R.string.omnix_home_greeting_night
+        }
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = SCREEN_PADDING),
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(text = date, style = OmnixMonoLabelStyle, color = colors.textTertiary, maxLines = 1)
+            Text(
+                text = greeting,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp),
+                color = colors.textPrimary,
+                maxLines = 1
+            )
+        }
+        AnimatedVisibility(
+            visible = on,
+            enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
+            exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
+        ) {
+            ClipPill(clip = clip, onClick = onClipTap)
+        }
+    }
+}
+
+/** What to say after «Омни»: two quiet examples while OMNIX waits. */
+@Composable
+private fun ExamplePhrases() {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = Modifier.padding(top = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        listOf(R.string.omnix_home_example_weather, R.string.omnix_home_example_remind).forEach { res ->
+            Text(
+                text = stringResource(res),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                color = colors.textPrimary,
+                maxLines = 1,
+                modifier = Modifier
+                    .border(BorderStroke(1.dp, colors.border), PillShape)
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            )
         }
     }
 }
@@ -302,11 +363,11 @@ private fun StatusText(state: OmnixUiState) {
     ) { (shownTitle, shownHint) ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = shownTitle,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 28.sp, lineHeight = 32.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp),
                 color = colors.textPrimary,
                 textAlign = TextAlign.Center,
                 maxLines = 2
@@ -600,7 +661,7 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
 }
 
 private val SCREEN_PADDING = 20.dp
-private val LOGO_MIN = 180.dp
-private val LOGO_MAX = 264.dp
+private val LOGO_MIN = 200.dp
+private val LOGO_MAX = 300.dp
 private val PillShape = RoundedCornerShape(18.dp)
 private val CardShape = RoundedCornerShape(18.dp)

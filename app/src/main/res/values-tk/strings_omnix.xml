@@ -586,4 +586,10 @@
     <string name="omnix_rearm_channel">Täzeden açylandan soň diňlemek</string>
     <string name="omnix_rearm_title">OMNIX diňlemeýär</string>
     <string name="omnix_rearm_body">Telefon täzeden açyldy ýa-da OMNIX täzelendi. OMNIX ýene «Omni» sözüni diňlesin diýseňiz, basyň.</string>
+    <string name="omnix_home_greeting_morning">Ertiriňiz haýyrly</string>
+    <string name="omnix_home_greeting_day">Günüňiz haýyrly</string>
+    <string name="omnix_home_greeting_evening">Agşamyňyz haýyrly</string>
+    <string name="omnix_home_greeting_night">Gijäňiz rahat</string>
+    <string name="omnix_home_example_weather">«Ertir howa nähili?»</string>
+    <string name="omnix_home_example_remind">«18:00-da ýatlat»</string>
 </resources>

@@ -588,4 +588,10 @@
     <string name="omnix_rearm_channel">Listening after restart</string>
     <string name="omnix_rearm_title">OMNIX is not listening</string>
     <string name="omnix_rearm_body">The phone restarted or OMNIX was updated. Tap to turn listening for “Omni” back on.</string>
+    <string name="omnix_home_greeting_morning">Good morning</string>
+    <string name="omnix_home_greeting_day">Good afternoon</string>
+    <string name="omnix_home_greeting_evening">Good evening</string>
+    <string name="omnix_home_greeting_night">Good night</string>
+    <string name="omnix_home_example_weather">“Weather tomorrow?”</string>
+    <string name="omnix_home_example_remind">“Remind me at 6 pm”</string>
 </resources>

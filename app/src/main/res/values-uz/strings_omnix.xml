@@ -510,4 +510,10 @@
         <item quantity="one">1 marta ishladi · oxirgi %2$s</item>
         <item quantity="other">%1$d marta ishladi · oxirgi %2$s</item>
     </plurals>
+    <string name="omnix_home_greeting_morning">Xayrli tong</string>
+    <string name="omnix_home_greeting_day">Xayrli kun</string>
+    <string name="omnix_home_greeting_evening">Xayrli kech</string>
+    <string name="omnix_home_greeting_night">Xayrli tun</string>
+    <string name="omnix_home_example_weather">«Ertaga ob-havo qanday?»</string>
+    <string name="omnix_home_example_remind">«18:00 da eslat»</string>
 </resources>

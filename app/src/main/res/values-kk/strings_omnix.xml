@@ -510,4 +510,10 @@
         <item quantity="one">1 рет іске қосылды · соңғысы %2$s</item>
         <item quantity="other">%1$d рет іске қосылды · соңғысы %2$s</item>
     </plurals>
+    <string name="omnix_home_greeting_morning">Қайырлы таң</string>
+    <string name="omnix_home_greeting_day">Қайырлы күн</string>
+    <string name="omnix_home_greeting_evening">Қайырлы кеш</string>
+    <string name="omnix_home_greeting_night">Қайырлы түн</string>
+    <string name="omnix_home_example_weather">«Ертең ауа райы қандай?»</string>
+    <string name="omnix_home_example_remind">«18:00-де еске сал»</string>
 </resources>

@@ -587,4 +587,10 @@
     <string name="omnix_rearm_channel">Прослушивание после перезапуска</string>
     <string name="omnix_rearm_title">OMNIX не слушает</string>
     <string name="omnix_rearm_body">Телефон перезагрузился или OMNIX обновился. Нажмите, чтобы OMNIX снова слушал «Омни».</string>
+    <string name="omnix_home_greeting_morning">Доброе утро</string>
+    <string name="omnix_home_greeting_day">Добрый день</string>
+    <string name="omnix_home_greeting_evening">Добрый вечер</string>
+    <string name="omnix_home_greeting_night">Доброй ночи</string>
+    <string name="omnix_home_example_weather">«Какая погода завтра?»</string>
+    <string name="omnix_home_example_remind">«Напомни в 18:00»</string>
 </resources>
