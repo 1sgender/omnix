@@ -142,21 +142,13 @@ fun FirstRunScreen(
 private fun WelcomeStep(visualSize: Dp, onStart: () -> Unit, onEnterCode: () -> Unit) {
     val colors = OmnixTheme.colors
     StepBody(
+        // «Трафарет»: первый экран — сам знак, крупно и без рамки.
         visual = {
-            Box(
-                modifier = Modifier
-                    .size(visualSize)
-                    .clip(CircleShape)
-                    .background(lerp(colors.background, colors.surface, 0.5f))
-                    .border(BorderStroke(1.5.dp, colors.accentBrand), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                OmnixRingMark(
-                    color = colors.textPrimary,
-                    width = visualSize * 0.42f,
-                    height = visualSize * 0.42f * 80f / 104f
-                )
-            }
+            OmnixRingMark(
+                color = colors.textPrimary,
+                width = visualSize,
+                height = visualSize
+            )
         },
         title = stringResource(R.string.omnix_setup_welcome_title),
         body = stringResource(R.string.omnix_setup_welcome_body),
