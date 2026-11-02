@@ -603,4 +603,8 @@
     <string name="omnix_profile_expired">Möhleti geçdi</string>
     <string name="omnix_profile_devices">ENJAMLAR</string>
     <string name="omnix_profile_this_phone">Bu telefon</string>
+    <string name="omnix_privacy_where_device">TELEFONDA</string>
+    <string name="omnix_privacy_where_device_body">Ýat, söhbet taryhy, protokollar, ses</string>
+    <string name="omnix_privacy_where_cloud">BULUTDA</string>
+    <string name="omnix_privacy_where_cloud_body">Diňe soragyň teksti, ses ýazgysyz</string>
 </resources>

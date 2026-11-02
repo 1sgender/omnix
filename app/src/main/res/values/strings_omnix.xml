@@ -605,4 +605,8 @@
     <string name="omnix_profile_expired">Expired</string>
     <string name="omnix_profile_devices">DEVICES</string>
     <string name="omnix_profile_this_phone">This phone</string>
+    <string name="omnix_privacy_where_device">ON THE PHONE</string>
+    <string name="omnix_privacy_where_device_body">Memory, chat history, protocols, voice</string>
+    <string name="omnix_privacy_where_cloud">IN THE CLOUD</string>
+    <string name="omnix_privacy_where_cloud_body">Only the text of a request, never a voice recording</string>
 </resources>

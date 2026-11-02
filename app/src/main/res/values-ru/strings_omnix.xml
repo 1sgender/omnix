@@ -604,4 +604,8 @@
     <string name="omnix_profile_expired">Истекла</string>
     <string name="omnix_profile_devices">УСТРОЙСТВА</string>
     <string name="omnix_profile_this_phone">Этот телефон</string>
+    <string name="omnix_privacy_where_device">НА ТЕЛЕФОНЕ</string>
+    <string name="omnix_privacy_where_device_body">Память, история чатов, протоколы, голос</string>
+    <string name="omnix_privacy_where_cloud">В ОБЛАКЕ</string>
+    <string name="omnix_privacy_where_cloud_body">Только текст запроса, без записи голоса</string>
 </resources>

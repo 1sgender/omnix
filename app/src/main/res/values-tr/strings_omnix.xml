@@ -527,4 +527,8 @@
     <string name="omnix_profile_expired">Süresi doldu</string>
     <string name="omnix_profile_devices">CİHAZLAR</string>
     <string name="omnix_profile_this_phone">Bu telefon</string>
+    <string name="omnix_privacy_where_device">TELEFONDA</string>
+    <string name="omnix_privacy_where_device_body">Bellek, sohbet geçmişi, protokoller, ses</string>
+    <string name="omnix_privacy_where_cloud">BULUTTA</string>
+    <string name="omnix_privacy_where_cloud_body">Yalnızca isteğin metni, ses kaydı yok</string>
 </resources>

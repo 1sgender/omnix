@@ -527,4 +527,8 @@
     <string name="omnix_profile_expired">Мерзімі өтті</string>
     <string name="omnix_profile_devices">ҚҰРЫЛҒЫЛАР</string>
     <string name="omnix_profile_this_phone">Осы телефон</string>
+    <string name="omnix_privacy_where_device">ТЕЛЕФОНДА</string>
+    <string name="omnix_privacy_where_device_body">Жад, чат тарихы, протоколдар, дауыс</string>
+    <string name="omnix_privacy_where_cloud">БҰЛТТА</string>
+    <string name="omnix_privacy_where_cloud_body">Тек сұраудың мәтіні, дауыс жазбасынсыз</string>
 </resources>

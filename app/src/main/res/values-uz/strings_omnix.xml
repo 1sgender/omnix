@@ -527,4 +527,8 @@
     <string name="omnix_profile_expired">Muddati tugagan</string>
     <string name="omnix_profile_devices">QURILMALAR</string>
     <string name="omnix_profile_this_phone">Shu telefon</string>
+    <string name="omnix_privacy_where_device">TELEFONDA</string>
+    <string name="omnix_privacy_where_device_body">Xotira, chatlar tarixi, protokollar, ovoz</string>
+    <string name="omnix_privacy_where_cloud">BULUTDA</string>
+    <string name="omnix_privacy_where_cloud_body">Faqat so‘rov matni, ovoz yozuvisiz</string>
 </resources>
