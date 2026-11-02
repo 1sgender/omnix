@@ -13,10 +13,10 @@
         <path
             android:pathData="M31.73,51A19.5,19.5 0,1 1,70.27 51"
             android:strokeColor="@color/omnix_logo_mark"
-            android:strokeWidth="13" />
+            android:strokeWidth="9" />
         <path
             android:pathData="M76.27,57A19.5,19.5 0,1 1,37.73 57"
             android:strokeColor="@color/omnix_logo_mark"
-            android:strokeWidth="13" />
+            android:strokeWidth="9" />
     </group>
 </vector>

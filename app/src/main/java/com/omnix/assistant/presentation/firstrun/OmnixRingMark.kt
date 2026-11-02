@@ -19,7 +19,7 @@ import com.omnix.assistant.presentation.design.OmnixTheme
  * Знак логотипа без надписи: кольцо «O», рассечённое горизонтальной щелью,
  * верхняя половина сдвинута влево, нижняя вправо («трафарет»). Тот же знак,
  * что в иконке и на заставке (drawable/ic_launcher_foreground.xml).
- * Геометрия в сетке 58×64: радиус 19.5, толщина 13, концы дуг лежат на 3
+ * Геометрия в сетке 54×60: радиус 19.5, толщина 9, концы дуг лежат на 3
  * выше/ниже центра каждой половины, половины разнесены по горизонтали на 6.
  * Цвет по умолчанию — основной текст темы, поэтому знак следует светлой/тёмной теме.
  */
@@ -76,10 +76,10 @@ internal fun OmnixRingMark(
 private val MARK_WIDTH = 28.dp
 private val MARK_HEIGHT = 22.dp
 
-private const val GRID_WIDTH = 58f
-private const val GRID_HEIGHT = 64f
+private const val GRID_WIDTH = 54f
+private const val GRID_HEIGHT = 60f
 private const val RING_RADIUS = 19.5f
-private const val RING_STROKE = 13f
+private const val RING_STROKE = 9f
 private const val SHIFT_X = 3f
 private const val SHIFT_Y = 6f
 
