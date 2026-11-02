@@ -315,7 +315,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         scope.launch {
             getSettingsUseCase().collectLatest { settings ->
                 speechRate = settings.speechRate
-                speechPitch = settings.speechPitch
+                // Голос OMNIX зафиксирован: тембр из настроек больше не применяется.
                 systemPrompt = settings.systemPrompt
                 isHeadsetOnlyMode = settings.isHeadsetOnlyMode
             }

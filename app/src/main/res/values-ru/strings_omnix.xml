@@ -151,8 +151,6 @@
     <string name="omnix_devices_title">Наушники</string>
     <string name="omnix_devices_clip_name">Наушники</string>
     <string name="omnix_devices_battery">ЗАРЯД</string>
-    <string name="omnix_devices_wake_title">Фраза «Омни»</string>
-    <string name="omnix_devices_wake_sub">Вызов без рук</string>
     <string name="omnix_devices_translate_title">Перевод в наушники</string>
     <string name="omnix_devices_translate_sub">Собеседник звучит на вашем языке</string>
     <string name="omnix_devices_find">Подключить наушники</string>
@@ -203,6 +201,8 @@
     <string name="omnix_chat_dictation_start">Голосовой ввод</string>
     <string name="omnix_chat_dictation_stop">Остановить голосовой ввод</string>
     <string name="omnix_chat_network_error">Ошибка сети. Проверьте соединение и повторите.</string>
+    <string name="omnix_chat_send_failed">Не удалось отправить сообщение. Попробуйте ещё раз.</string>
+    <string name="omnix_chat_retry">Повторить</string>
     <string name="omnix_privacy_badge_private">Личное</string>
     <string name="omnix_privacy_badge_sensitive">Чувствительное</string>
     <string name="omnix_privacy_badge_hint">OMNIX спросит, прежде чем отправить это в облако</string>
@@ -253,7 +253,6 @@
 
     <string name="omnix_voice_title">Голос</string>
     <string name="omnix_voice_speaking_speed">Скорость речи</string>
-    <string name="omnix_voice_tone">Тембр</string>
     <string name="omnix_voice_feedback">Голосовые ответы</string>
     <string name="omnix_voice_haptics">Вибро-отклик</string>
     <string name="omnix_voice_haptics_body">Лёгкий «тик» на «Омни» и при отправке</string>
@@ -525,7 +524,6 @@
         <item quantity="many">Сработало %1$d раз · последний %2$s</item>
         <item quantity="other">Сработало %1$d раз · последний %2$s</item>
     </plurals>
-    <string name="omnix_privacy_section_confirmations">Подтверждения действий</string>
     <string name="omnix_privacy_calls">Звонки</string>
     <string name="omnix_privacy_calls_always">Всегда спрашивать</string>
     <string name="omnix_privacy_calls_trusted">Спрашивать, кроме доверенных контактов</string>
@@ -536,25 +534,11 @@
     <string name="omnix_privacy_messages_never">Не спрашивать (суммы подтверждаются всегда)</string>
     <string name="omnix_privacy_forced_title">Всегда с подтверждением</string>
     <string name="omnix_privacy_forced_body">Деньги, удаления, ввод в других приложениях и любые действия протоколов сначала спрашивают. Это нельзя отключить.</string>
-    <string name="omnix_privacy_section_contacts">Доверенные контакты</string>
     <string name="omnix_privacy_contacts_hint">Звонки и сообщения этим контактам могут пропускать подтверждение, если политика это разрешает</string>
     <string name="omnix_privacy_contact_add_hint">Имя или номер телефона</string>
     <string name="omnix_privacy_add">Добавить</string>
     <string name="omnix_privacy_remove">Убрать</string>
     <string name="omnix_privacy_contacts_empty">Доверенных контактов пока нет</string>
-    <string name="omnix_privacy_section_screen">Чтение экрана</string>
-    <string name="omnix_privacy_screen_mode_block">Всё, кроме запрещённых приложений</string>
-    <string name="omnix_privacy_screen_mode_block_hint">По умолчанию: OMNIX читает экран, пока приложение не запрещено</string>
-    <string name="omnix_privacy_screen_mode_allow">Только разрешённые мной приложения</string>
-    <string name="omnix_privacy_screen_mode_allow_hint">Строже: чтение работает только там, где разрешено</string>
-    <string name="omnix_privacy_blocked_apps">Запрещённые приложения</string>
-    <string name="omnix_privacy_blocked_empty">Ничего не запрещено</string>
-    <string name="omnix_privacy_allowed_apps">Разрешённые приложения</string>
-    <string name="omnix_privacy_allowed_empty">Явно не разрешено ничего</string>
-    <string name="omnix_privacy_package_hint">Пакет приложения, например com.example.app</string>
-    <string name="omnix_privacy_advanced">Дополнительно</string>
-    <string name="omnix_privacy_advanced_body">Подтверждения, доверенные контакты, чтение экрана</string>
-    <string name="omnix_privacy_advanced_hide">Нажмите, чтобы скрыть</string>
     <string name="omnix_fact_name">Имя</string>
     <string name="omnix_fact_city">Город</string>
     <string name="omnix_fact_car">Машина</string>

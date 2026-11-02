@@ -10,11 +10,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
@@ -43,6 +43,7 @@ import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
 import com.omnix.assistant.presentation.devices.DevicesCapabilitiesViewModel
 import com.omnix.assistant.presentation.home.HomeRoute
+import com.omnix.assistant.presentation.settings.AiModelViewModel
 import com.omnix.assistant.presentation.settings.SettingsViewModel
 import com.omnix.assistant.presentation.settings.MeRoute
 import com.omnix.assistant.presentation.settings.MemoryScreen
@@ -188,10 +189,8 @@ fun OmnixNavGraph(
                 val devicesContext = LocalContext.current
                 DevicesScreen(
                     clip = uiState.clip,
-                    wakeWordEnabled = headphoneState.wakeWordEnabled,
                     translatorToHeadphones = headphoneState.translatorToHeadphones,
                     capabilities = capabilities,
-                    onWakeWordChange = headphoneSettings::onWakeWordEnabledChanged,
                     onTranslatorToHeadphonesChange = headphoneSettings::onTranslatorToHeadphonesChanged,
                     onFind = omnixViewModel::refreshHeadphones,
                     onOpenSystemBluetooth = {
@@ -236,16 +235,18 @@ fun OmnixNavGraph(
                     onCallPolicyChange = policyViewModel::setCallPolicy,
                     onMessagingPolicyChange = policyViewModel::setMessagingPolicy,
                     onAddTrustedContact = policyViewModel::addTrustedContact,
-                    onRemoveTrustedContact = policyViewModel::removeTrustedContact,
-                    onScreenReaderModeChange = policyViewModel::setScreenReaderAllowList,
-                    onBlockPackage = policyViewModel::blockPackage,
-                    onUnblockPackage = policyViewModel::unblockPackage,
-                    onAllowPackage = policyViewModel::allowPackage,
-                    onRevokePackageAllowance = policyViewModel::revokePackageAllowance
+                    onRemoveTrustedContact = policyViewModel::removeTrustedContact
                 )
             }
 
             composable(OmnixDestination.Memory.route) {
+                // Память — только для админа: обычного пользователя возвращаем назад.
+                val memoryAdminViewModel: AiModelViewModel = hiltViewModel()
+                val memoryIsAdmin by memoryAdminViewModel.admin.collectAsStateWithLifecycle()
+                if (!memoryIsAdmin.isAdmin) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
                 val memoryViewModel: PrivacyPolicyViewModel = hiltViewModel()
                 val memoryState by memoryViewModel.uiState.collectAsStateWithLifecycle()
                 MemoryScreen(

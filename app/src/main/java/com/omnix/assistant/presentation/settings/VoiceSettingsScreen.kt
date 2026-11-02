@@ -23,7 +23,6 @@ import com.omnix.assistant.R
 @Composable
 fun VoiceSettingsScreen(
     speechRate: Float,
-    speechPitch: Float,
     wakeSensitivity: Float,
     headsetOnly: Boolean,
     listeningActive: Boolean,
@@ -34,7 +33,6 @@ fun VoiceSettingsScreen(
     wakeWordEnabled: Boolean = true,
     onBack: (() -> Unit)? = null,
     onSpeechRateChange: (Float) -> Unit = {},
-    onSpeechPitchChange: (Float) -> Unit = {},
     onWakeSensitivityChange: (Float) -> Unit = {},
     onWakeWordEnabledChange: (Boolean) -> Unit = {},
     onHeadsetOnlyChange: (Boolean) -> Unit = {},
@@ -104,16 +102,6 @@ fun VoiceSettingsScreen(
                 valueLabel = levelLabel(speechRate, 0.5f, 2.0f),
                 valueRange = 0.5f..2.0f,
                 onValueChange = onSpeechRateChange,
-                onValueChangeFinished = onCommitChanges,
-                inset = true
-            )
-            OmnixGroupDivider()
-            OmnixSliderRow(
-                title = stringResource(R.string.omnix_voice_tone),
-                value = speechPitch,
-                valueLabel = levelLabel(speechPitch, 0.5f, 2.0f),
-                valueRange = 0.5f..2.0f,
-                onValueChange = onSpeechPitchChange,
                 onValueChangeFinished = onCommitChanges,
                 inset = true
             )

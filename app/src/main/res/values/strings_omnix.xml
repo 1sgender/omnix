@@ -153,8 +153,6 @@
     <string name="omnix_devices_title">Headphones</string>
     <string name="omnix_devices_clip_name">Headphones</string>
     <string name="omnix_devices_battery">BATTERY</string>
-    <string name="omnix_devices_wake_title">The word “Omni”</string>
-    <string name="omnix_devices_wake_sub">Hands-free call</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
     <string name="omnix_devices_find">Connect headphones</string>
@@ -205,6 +203,8 @@
     <string name="omnix_chat_dictation_start">Dictate</string>
     <string name="omnix_chat_dictation_stop">Stop dictation</string>
     <string name="omnix_chat_network_error">Network error. Check your connection and try again.</string>
+    <string name="omnix_chat_send_failed">Could not send the message. Please try again.</string>
+    <string name="omnix_chat_retry">Retry</string>
     <string name="omnix_privacy_badge_private">Private</string>
     <string name="omnix_privacy_badge_sensitive">Sensitive</string>
     <string name="omnix_privacy_badge_hint">OMNIX will ask before this leaves the device</string>
@@ -255,7 +255,6 @@
 
     <string name="omnix_voice_title">Voice</string>
     <string name="omnix_voice_speaking_speed">Speaking speed</string>
-    <string name="omnix_voice_tone">Voice tone</string>
     <string name="omnix_voice_feedback">Voice feedback</string>
     <string name="omnix_voice_haptics">Haptic feedback</string>
     <string name="omnix_voice_haptics_body">A light tap on “Omni” and when sending</string>
@@ -526,7 +525,6 @@
         <item quantity="one">Fired once · last %2$s</item>
         <item quantity="other">Fired %1$d times · last %2$s</item>
     </plurals>
-    <string name="omnix_privacy_section_confirmations">Action confirmations</string>
     <string name="omnix_privacy_calls">Calls</string>
     <string name="omnix_privacy_calls_always">Always ask</string>
     <string name="omnix_privacy_calls_trusted">Ask, except trusted contacts</string>
@@ -537,25 +535,11 @@
     <string name="omnix_privacy_messages_never">Never ask (amounts are still confirmed)</string>
     <string name="omnix_privacy_forced_title">Always confirmed</string>
     <string name="omnix_privacy_forced_body">Money, deletions, typing in other apps and anything run by protocols ask first. This cannot be turned off.</string>
-    <string name="omnix_privacy_section_contacts">Trusted contacts</string>
     <string name="omnix_privacy_contacts_hint">Calls and messages to these contacts may skip confirmation, when the policy allows it</string>
     <string name="omnix_privacy_contact_add_hint">Name or phone number</string>
     <string name="omnix_privacy_add">Add</string>
     <string name="omnix_privacy_remove">Remove</string>
     <string name="omnix_privacy_contacts_empty">No trusted contacts yet</string>
-    <string name="omnix_privacy_section_screen">Screen reading</string>
-    <string name="omnix_privacy_screen_mode_block">Everything except blocked apps</string>
-    <string name="omnix_privacy_screen_mode_block_hint">Default: OMNIX reads the screen unless you forbid an app</string>
-    <string name="omnix_privacy_screen_mode_allow">Only apps I allow</string>
-    <string name="omnix_privacy_screen_mode_allow_hint">Stricter: reading works only where you allowed it</string>
-    <string name="omnix_privacy_blocked_apps">Blocked apps</string>
-    <string name="omnix_privacy_blocked_empty">Nothing is blocked</string>
-    <string name="omnix_privacy_allowed_apps">Allowed apps</string>
-    <string name="omnix_privacy_allowed_empty">Nothing is allowed explicitly</string>
-    <string name="omnix_privacy_package_hint">App package, e.g. com.example.app</string>
-    <string name="omnix_privacy_advanced">Advanced</string>
-    <string name="omnix_privacy_advanced_body">Confirmations, trusted contacts, screen reading</string>
-    <string name="omnix_privacy_advanced_hide">Tap to hide</string>
     <string name="omnix_fact_name">Name</string>
     <string name="omnix_fact_city">City</string>
     <string name="omnix_fact_car">Car</string>

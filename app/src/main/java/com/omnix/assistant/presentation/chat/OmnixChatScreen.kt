@@ -245,7 +245,7 @@ private fun ChatThread(
         for (m in state.messages) {
             when (m.role) {
                 MessageRole.USER -> lastQuestion = m.text
-                MessageRole.ASSISTANT -> lastQuestion?.let { targets[m.id] = it }
+                MessageRole.ASSISTANT, MessageRole.ERROR -> lastQuestion?.let { targets[m.id] = it }
                 else -> Unit
             }
         }
@@ -510,6 +510,17 @@ private fun MessageRow(
         ) {
             OmnixAlertIcon(color = colors.stateError, size = 16.dp)
             Text(text = message.text, style = BubbleText, color = colors.stateError)
+            if (onRepeat != null) {
+                Text(
+                    text = stringResource(R.string.omnix_chat_retry),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+                    color = colors.stateError,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable(onClick = onRepeat)
+                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                )
+            }
         }
         return
     }

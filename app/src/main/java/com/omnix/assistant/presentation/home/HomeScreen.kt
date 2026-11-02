@@ -1,5 +1,6 @@
 package com.omnix.assistant.presentation.home
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -38,8 +39,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -115,7 +116,7 @@ fun HomeScreen(
     onPowerErrorAction: (AssistantPowerError) -> Unit = {},
     onPowerErrorDismiss: () -> Unit = {},
     onTranslatorTap: () -> Unit = {},
-    onMemoryTap: () -> Unit = {},
+    onMemoryTap: (() -> Unit)? = null,
     onRemindersTap: () -> Unit = {},
     onAutomationsTap: () -> Unit = {},
     onSystemStateAction: () -> Unit = {},
@@ -546,53 +547,49 @@ private fun OnDevicePill() {
 @Composable
 private fun QuickActions(
     onTranslatorTap: () -> Unit,
-    onMemoryTap: () -> Unit,
+    onMemoryTap: (() -> Unit)?,
     onRemindersTap: () -> Unit,
     onAutomationsTap: () -> Unit
 ) {
     val colors = OmnixTheme.colors
+    // Память — только для админа: у обычного пользователя в сетке три карточки.
+    val cards = buildList {
+        add(QuickAction(OmnixTranslatorLineIcon, colors.accentBrand, R.string.omnix_home_card_translator, R.string.omnix_home_card_translator_sub, onTranslatorTap))
+        if (onMemoryTap != null) {
+            add(QuickAction(OmnixMemoryLineIcon, colors.textPrimary, R.string.omnix_home_card_memory, R.string.omnix_home_card_memory_sub, onMemoryTap))
+        }
+        add(QuickAction(OmnixAlarmLineIcon, colors.textPrimary, R.string.omnix_home_card_reminders, R.string.omnix_home_card_reminders_sub, onRemindersTap))
+        add(QuickAction(OmnixBoltLineIcon, colors.textPrimary, R.string.omnix_home_card_automations, R.string.omnix_home_card_automations_sub, onAutomationsTap))
+    }
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            QuickActionCard(
-                icon = OmnixTranslatorLineIcon,
-                iconTint = colors.accentBrand,
-                title = stringResource(R.string.omnix_home_card_translator),
-                subtitle = stringResource(R.string.omnix_home_card_translator_sub),
-                onClick = onTranslatorTap,
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionCard(
-                icon = OmnixMemoryLineIcon,
-                iconTint = colors.textPrimary,
-                title = stringResource(R.string.omnix_home_card_memory),
-                subtitle = stringResource(R.string.omnix_home_card_memory_sub),
-                onClick = onMemoryTap,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            QuickActionCard(
-                icon = OmnixAlarmLineIcon,
-                iconTint = colors.textPrimary,
-                title = stringResource(R.string.omnix_home_card_reminders),
-                subtitle = stringResource(R.string.omnix_home_card_reminders_sub),
-                onClick = onRemindersTap,
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionCard(
-                icon = OmnixBoltLineIcon,
-                iconTint = colors.textPrimary,
-                title = stringResource(R.string.omnix_home_card_automations),
-                subtitle = stringResource(R.string.omnix_home_card_automations_sub),
-                onClick = onAutomationsTap,
-                modifier = Modifier.weight(1f)
-            )
+        cards.chunked(2).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { card ->
+                    QuickActionCard(
+                        icon = card.icon,
+                        iconTint = card.tint,
+                        title = stringResource(card.title),
+                        subtitle = stringResource(card.subtitle),
+                        onClick = card.onClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
         }
     }
 }
+
+private class QuickAction(
+    val icon: ImageVector,
+    val tint: Color,
+    @StringRes val title: Int,
+    @StringRes val subtitle: Int,
+    val onClick: () -> Unit
+)
 
 @Composable
 private fun QuickActionCard(

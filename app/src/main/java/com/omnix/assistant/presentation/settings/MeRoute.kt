@@ -1,7 +1,7 @@
 package com.omnix.assistant.presentation.settings
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,6 +47,7 @@ fun MeRoute(
     val settings by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val appearance by appearanceViewModel.uiState.collectAsStateWithLifecycle()
     val aiChoice by aiModelViewModel.choice.collectAsStateWithLifecycle()
+    val isAdmin = aiModelViewModel.admin.collectAsStateWithLifecycle().value.isAdmin
 
     val license = settings.licenseInfo?.takeIf { it.isActivated && !it.isExpired }
     val appearanceValue = stringResource(
@@ -85,12 +86,15 @@ fun MeRoute(
                         value = settings.automations.size.takeIf { it > 0 }?.toString().orEmpty(),
                         destination = OmnixDestination.Automations
                     ),
+                    // Память — только для админа (владельца).
+                ) + (if (isAdmin) listOf(
                     MeRow(
                         icon = OmnixMemoryLineIcon,
                         label = stringResource(R.string.omnix_me_row_memory),
                         value = "",
                         destination = OmnixDestination.Memory
-                    ),
+                    )
+                ) else emptyList()) + listOf(
                     // Приватность снова своей строкой: в v344 «Память» вела в неё,
                     // и память терялась среди политик звонков.
                     MeRow(
