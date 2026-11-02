@@ -242,7 +242,6 @@
     <string name="omnix_me_section_features">Mümkinçilikler</string>
     <string name="omnix_me_section_settings">Sazlamalar</string>
     <string name="omnix_me_row_language">Dil</string>
-    <string name="omnix_me_row_notifications">Bildirişler</string>
     <string name="omnix_me_license_active">Ygtyýarnama işjeň</string>
     <string name="omnix_me_no_name">Siziň profiliňiz</string>
     <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
@@ -364,13 +363,6 @@
     <string name="omnix_language_hint">OMNIX saýlanan dilde görkezýär, diňleýär we gürleýär. Türkmençe häzirlikçe rusça diňlenýär we sesleşdirilýär — OMNIX-iň öz türkmen sesi peýda bolýança.</string>
     <string name="omnix_language_old_android">Programmada dil saýlamak Android 13-den başlap bar. OMNIX telefonyň dilinde gürleýär.</string>
 
-    <string name="omnix_notifications_settings_title">Bildirişler</string>
-    <string name="omnix_notifications_routines">Protokollary sesli aýt</string>
-    <string name="omnix_notifications_routines_body">OMNIX protokolyň näme edendigini sesli aýdar.</string>
-    <string name="omnix_notifications_system">Telefondaky bildirişler</string>
-    <string name="omnix_notifications_system_body">Android OMNIX-iň fonda diňlemegini öçürmez ýaly gerek. Kanallar ulgam sazlamalarynda dolandyrylýar.</string>
-    <string name="omnix_notifications_on">Açyk</string>
-    <string name="omnix_notifications_off">Öçük</string>
 
     <string name="omnix_appearance_title">Görnüş</string>
     <string name="omnix_appearance_system">Ulgam</string>

@@ -190,7 +190,6 @@
     <string name="omnix_me_section_features">Imkoniyatlar</string>
     <string name="omnix_me_section_settings">Sozlamalar</string>
     <string name="omnix_me_row_language">Til</string>
-    <string name="omnix_me_row_notifications">Bildirishnomalar</string>
     <string name="omnix_me_license_active">Litsenziya faol</string>
     <string name="omnix_me_no_name">Profilingiz</string>
     <string name="omnix_me_license_inactive">Litsenziya faol emas</string>
@@ -306,13 +305,6 @@
     <string name="omnix_language_system">Telefondagi kabi</string>
     <string name="omnix_language_hint">OMNIX tanlangan tilda koʻrsatadi, tinglaydi va gapiradi. Turkmancha hozircha ruscha tinglanadi va ovozlanadi — OMNIX’ning oʻz turkmancha ovozi paydo boʻlguncha.</string>
     <string name="omnix_language_old_android">Ilova ichida til tanlash Android 13 yoki yangisini talab qiladi. OMNIX telefon tilida gapiradi.</string>
-    <string name="omnix_notifications_settings_title">Bildirishnomalar</string>
-    <string name="omnix_notifications_routines">Protokollarni ovozlash</string>
-    <string name="omnix_notifications_routines_body">OMNIX protokol nima qilganini ovoz chiqarib aytadi.</string>
-    <string name="omnix_notifications_system">Telefon bildirishnomalari</string>
-    <string name="omnix_notifications_system_body">Android OMNIX’ning fonda tinglashini toʻxtatmasligi uchun kerak. Kanallar tizim sozlamalarida boshqariladi.</string>
-    <string name="omnix_notifications_on">Yoqilgan</string>
-    <string name="omnix_notifications_off">Oʻchirilgan</string>
     <string name="omnix_appearance_title">Koʻrinish</string>
     <string name="omnix_appearance_system">Tizim</string>
     <string name="omnix_appearance_light">Yorugʻ</string>

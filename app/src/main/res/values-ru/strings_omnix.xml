@@ -241,7 +241,6 @@
     <string name="omnix_me_section_features">Возможности</string>
     <string name="omnix_me_section_settings">Настройки</string>
     <string name="omnix_me_row_language">Язык</string>
-    <string name="omnix_me_row_notifications">Уведомления</string>
     <string name="omnix_me_license_active">Лицензия активна</string>
     <string name="omnix_me_no_name">Ваш профиль</string>
     <string name="omnix_me_license_inactive">Лицензия не активна</string>
@@ -363,13 +362,6 @@
     <string name="omnix_language_hint">OMNIX показывает, слушает и говорит на выбранном языке. Туркменский пока слушается и озвучивается по-русски — до собственного туркменского голоса OMNIX.</string>
     <string name="omnix_language_old_android">Выбор языка в приложении есть с Android 13. OMNIX говорит на языке телефона.</string>
 
-    <string name="omnix_notifications_settings_title">Уведомления</string>
-    <string name="omnix_notifications_routines">Озвучивать протоколы</string>
-    <string name="omnix_notifications_routines_body">OMNIX вслух скажет, что сделал протокол.</string>
-    <string name="omnix_notifications_system">Уведомления на телефоне</string>
-    <string name="omnix_notifications_system_body">Нужны, чтобы Android не выключал прослушивание в фоне. Каналы настраиваются в системе.</string>
-    <string name="omnix_notifications_on">Включены</string>
-    <string name="omnix_notifications_off">Выключены</string>
 
     <string name="omnix_appearance_title">Оформление</string>
     <string name="omnix_appearance_system">Системное</string>

@@ -243,7 +243,6 @@
     <string name="omnix_me_section_features">Features</string>
     <string name="omnix_me_section_settings">Settings</string>
     <string name="omnix_me_row_language">Language</string>
-    <string name="omnix_me_row_notifications">Notifications</string>
     <string name="omnix_me_license_active">License active</string>
     <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
@@ -365,13 +364,6 @@
     <string name="omnix_language_hint">OMNIX shows, hears and speaks the chosen language. Turkmen is heard and spoken in Russian for now, until OMNIX has its own Turkmen voice.</string>
     <string name="omnix_language_old_android">Choosing a language inside the app needs Android 13 or newer. OMNIX follows the phone’s language.</string>
 
-    <string name="omnix_notifications_settings_title">Notifications</string>
-    <string name="omnix_notifications_routines">Speak protocols</string>
-    <string name="omnix_notifications_routines_body">OMNIX says out loud what a protocol did.</string>
-    <string name="omnix_notifications_system">Phone notifications</string>
-    <string name="omnix_notifications_system_body">Needed so Android keeps OMNIX listening in the background. Channels are managed in system settings.</string>
-    <string name="omnix_notifications_on">On</string>
-    <string name="omnix_notifications_off">Off</string>
 
     <string name="omnix_appearance_title">Appearance</string>
     <string name="omnix_appearance_system">System</string>

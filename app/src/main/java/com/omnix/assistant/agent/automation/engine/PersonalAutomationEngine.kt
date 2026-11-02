@@ -13,7 +13,6 @@ import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.voice.tts.TextToSpeechManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -186,9 +185,7 @@ class PersonalAutomationEngine @Inject constructor(
             }
         }
 
-        // «Озвучивать автоматизации» в разделе «Уведомления»: раньше переключатель
-        // сохранялся, но никем не читался.
-        if (voiceMessages.isNotEmpty() && experienceStore.notifyRoutines.first()) {
+        if (voiceMessages.isNotEmpty()) {
             withContext(Dispatchers.Main) {
                 textToSpeechManager.speak(voiceMessages.joinToString(" "))
             }

@@ -87,10 +87,6 @@ class AiModelViewModel @Inject constructor(
         viewModelScope.launch { settings.setWakeListening(engine, phrase) }
     }
 
-    fun dismissFailure() {
-        _failure.value = null
-    }
-
     private companion object {
         /** Загрузка модели в память на медленном телефоне занимает десятки секунд. */
         const val LOCAL_LOAD_TIMEOUT_MS = 90_000L

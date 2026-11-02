@@ -54,7 +54,6 @@ import com.omnix.assistant.presentation.settings.SECTION_ADVANCED
 import com.omnix.assistant.presentation.settings.SECTION_AI
 import com.omnix.assistant.presentation.settings.SECTION_APPEARANCE
 import com.omnix.assistant.presentation.settings.SECTION_LANGUAGE
-import com.omnix.assistant.presentation.settings.SECTION_NOTIFICATIONS
 import com.omnix.assistant.presentation.settings.SECTION_VOICE
 import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
@@ -337,7 +336,6 @@ internal val settingsSections = listOf(
     SECTION_VOICE,
     SECTION_AI,
     SECTION_LANGUAGE,
-    SECTION_NOTIFICATIONS,
     SECTION_APPEARANCE,
     SECTION_ABOUT,
     SECTION_ADVANCED

@@ -9,7 +9,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAppearanceLineIcon
-import com.omnix.assistant.presentation.components.OmnixBellLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
 import com.omnix.assistant.presentation.components.OmnixGlobeLineIcon
 import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
@@ -139,12 +138,6 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_me_row_language),
                         value = com.omnix.assistant.core.locale.AppLanguage.current().nativeName,
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
-                    ),
-                    MeRow(
-                        icon = OmnixBellLineIcon,
-                        label = stringResource(R.string.omnix_me_row_notifications),
-                        value = "",
-                        destination = OmnixDestination.SettingsSection(SECTION_NOTIFICATIONS)
                     )
                 )
             )
