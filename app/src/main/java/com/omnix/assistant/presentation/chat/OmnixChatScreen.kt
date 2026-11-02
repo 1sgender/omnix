@@ -1,6 +1,5 @@
 package com.omnix.assistant.presentation.chat
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -23,13 +22,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,20 +39,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -116,6 +113,7 @@ import kotlin.math.sin
  * (красный пузырь), вопрос о согласии на облако (C-02), метка приватности при
  * вводе (CR-17) и общий лист подтверждения.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OmnixChatScreen(
     state: ChatUiState,
@@ -139,30 +137,35 @@ fun OmnixChatScreen(
     onRename: (Long, String) -> Unit = { _, _ -> }
 ) {
     val colors = OmnixTheme.colors
-    val drawerState = rememberDrawerState(if (state.showHistory) DrawerValue.Open else DrawerValue.Closed)
-    val historyOpen by rememberUpdatedState(state.showHistory)
-    val closeHistory by rememberUpdatedState(onCloseHistory)
 
-    // Меню открывает и закрывает ViewModel (кнопка, выбор чата); свайп
-    // пользователя сообщаем обратно, чтобы состояние не разошлось.
-    LaunchedEffect(state.showHistory) {
-        if (state.showHistory) drawerState.open() else drawerState.close()
+    Box(modifier = modifier) {
+        ChatThread(
+            state = state,
+            isOnline = isOnline,
+            onInputChange = onInputChange,
+            onSend = onSend,
+            onNewChat = onNewChat,
+            onOpenHistory = onOpenHistory,
+            onAllowCloud = onAllowCloud,
+            onKeepLocal = onKeepLocal,
+            onToggleDictation = onToggleDictation
+        )
     }
-    LaunchedEffect(drawerState) {
-        snapshotFlow { drawerState.currentValue }.collect { value ->
-            if (value == DrawerValue.Closed && historyOpen) closeHistory()
-        }
-    }
-    BackHandler(enabled = state.showHistory, onBack = onCloseHistory)
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        modifier = modifier,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = colors.background,
-                drawerShape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp),
-                modifier = Modifier.width(304.dp)
+    // Список чатов — шторка на пол-экрана поверх чата (дизайн «Трафарет»).
+    // Открывает и закрывает её ViewModel; смахивание вниз и «Назад» сообщаем ей.
+    if (state.showHistory) {
+        ModalBottomSheet(
+            onDismissRequest = onCloseHistory,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = colors.surface,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            dragHandle = { BottomSheetDefaults.DragHandle(color = colors.surfaceFilled) }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(HISTORY_SHEET_HEIGHT)
             ) {
                 ChatDrawerContent(
                     conversations = state.conversations,
@@ -177,18 +180,6 @@ fun OmnixChatScreen(
                 )
             }
         }
-    ) {
-        ChatThread(
-            state = state,
-            isOnline = isOnline,
-            onInputChange = onInputChange,
-            onSend = onSend,
-            onNewChat = onNewChat,
-            onOpenHistory = onOpenHistory,
-            onAllowCloud = onAllowCloud,
-            onKeepLocal = onKeepLocal,
-            onToggleDictation = onToggleDictation
-        )
     }
 
     // Confirmation reuses the one shared sheet: the tap path and the voice
@@ -482,11 +473,11 @@ private fun MessageRow(
                 Text(
                     text = message.text,
                     style = BubbleText,
-                    color = colors.textPrimary,
+                    color = colors.onActionPrimary,
                     modifier = Modifier
                         .widthIn(max = threadWidth * 0.78f)
                         .clip(UserBubbleShape)
-                        .background(colors.surfaceElevated)
+                        .background(colors.actionPrimary)
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                 )
             }
@@ -599,7 +590,7 @@ private fun CopyButton(text: String) {
     }
 }
 
-/** Пауза между отправкой и ответом: одна мягко пульсирующая точка, без пузыря. */
+/** Пауза между отправкой и ответом: три точки, по которым бежит волна яркости. */
 @Composable
 private fun ThinkingRow() {
     val colors = OmnixTheme.colors
@@ -617,17 +608,29 @@ private fun ThinkingRow() {
         ),
         label = "omnixThinkingPhase"
     )
-    val pulse = if (reduced) 0.8f else 0.55f + 0.45f * sin(phase * PI).toFloat()
-
-    Box(
+    Row(
         modifier = Modifier
-            .padding(vertical = 6.dp)
-            .clearAndSetSemantics { contentDescription = label }
-            .size(12.dp * pulse)
-            .clip(CircleShape)
-            .background(colors.textPrimary)
-    )
+            .padding(vertical = 8.dp)
+            .clearAndSetSemantics { contentDescription = label },
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        repeat(THINKING_DOTS) { index ->
+            val wave = if (reduced) {
+                0.6f
+            } else {
+                0.25f + 0.75f * ((sin((phase - index / THINKING_DOTS.toFloat()) * 2 * PI) + 1) / 2).toFloat()
+            }
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(colors.textPrimary.copy(alpha = wave))
+            )
+        }
+    }
 }
+
+private const val THINKING_DOTS = 3
 
 /**
  * Consent first, privacy badge under it: the badge is a warning about text
@@ -865,9 +868,10 @@ private fun ChatComposer(
 /** Поле ввода чата; в боковом меню есть второе поле — поиск. */
 internal const val CHAT_COMPOSER_FIELD_TAG = "chat-composer-field"
 
-private val BubbleText = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 24.sp)
+private const val HISTORY_SHEET_HEIGHT = 0.55f
+private val BubbleText =TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 24.sp)
 private val FieldText = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 22.sp)
-private val UserBubbleShape = RoundedCornerShape(22.dp)
+private val UserBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 6.dp, bottomStart = 20.dp)
 private val ErrorShape = RoundedCornerShape(16.dp)
 private val SuggestionShape = RoundedCornerShape(16.dp)
 private val ComposerShape = RoundedCornerShape(28.dp)

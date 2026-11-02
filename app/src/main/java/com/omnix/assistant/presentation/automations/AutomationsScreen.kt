@@ -2,8 +2,20 @@ package com.omnix.assistant.presentation.automations
 
 import android.app.TimePickerDialog
 import android.text.format.DateFormat as AndroidDateFormat
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import java.util.Locale
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,7 +58,6 @@ import com.omnix.assistant.presentation.settings.OmnixSettingRow
 import com.omnix.assistant.presentation.settings.OmnixSettingsGroup
 import com.omnix.assistant.presentation.settings.OmnixSettingsSectionHeader
 import com.omnix.assistant.presentation.settings.OmnixTextFieldRow
-import com.omnix.assistant.presentation.settings.OmnixToggleRow
 import com.omnix.assistant.presentation.settings.SectionScaffold
 import com.omnix.assistant.presentation.state.ConfirmationRequest
 import java.text.DateFormat
@@ -204,14 +215,54 @@ private fun AutomationCard(
     onToggle: (Boolean) -> Unit,
     onDelete: () -> Unit
 ) {
+    val colors = OmnixTheme.colors
+    val isTime = rule.trigger == AutomationTriggerLabel.TIME_SCHEDULE && !rule.triggerParam.isNullOrBlank()
     OmnixSettingsGroup {
-        OmnixToggleRow(
-            title = ruleName(rule),
-            subtitle = "${triggerText(rule)} → ${actionsText(rule)}",
-            checked = rule.isEnabled,
-            onCheckedChange = onToggle,
-            inset = true
-        )
+        // «Трафарет»: слева «когда» (время крупно или условие моноширинным),
+        // в центре имя и действия чипами, справа переключатель.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Column(modifier = Modifier.width(64.dp)) {
+                if (isTime) {
+                    Text(
+                        text = rule.triggerParam.orEmpty(),
+                        style = OmnixTheme.typography.headline,
+                        color = if (rule.isEnabled) colors.textPrimary else colors.textTertiary
+                    )
+                } else {
+                    Text(
+                        text = triggerText(rule).uppercase(Locale.getDefault()),
+                        style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                        color = colors.textTertiary,
+                        maxLines = 3
+                    )
+                }
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = ruleName(rule),
+                    style = OmnixTheme.typography.headline.copy(fontSize = 15.sp),
+                    color = if (rule.isEnabled) colors.textPrimary else colors.textSecondary
+                )
+                ActionChips(actionLabels(rule))
+            }
+            Switch(
+                checked = rule.isEnabled,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = colors.background,
+                    checkedTrackColor = colors.actionPrimary,
+                    checkedBorderColor = colors.actionPrimary,
+                    uncheckedThumbColor = colors.textTertiary,
+                    uncheckedTrackColor = colors.surface,
+                    uncheckedBorderColor = colors.border
+                )
+            )
+        }
         OmnixGroupDivider()
         OmnixSettingRow(
             title = triggerStats(rule),
@@ -256,30 +307,50 @@ private fun triggerText(rule: AutomationUiModel): String = when (rule.trigger) {
         stringResource(R.string.omnix_automations_trigger_unknown)
 }
 
+/** Действия чипами в рамке; переносятся на новую строку, если не помещаются. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun actionsText(rule: AutomationUiModel): String {
-    if (rule.actions.isEmpty()) {
-        return stringResource(R.string.omnix_automations_no_actions)
+private fun ActionChips(labels: List<String>) {
+    val colors = OmnixTheme.colors
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        labels.forEach { label ->
+            Text(
+                text = label,
+                style = OmnixTheme.typography.caption2,
+                color = colors.textSecondary,
+                modifier = Modifier
+                    .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 7.dp, vertical = 3.dp)
+            )
+        }
     }
-    // Явный цикл, а не joinToString{}: лямбда не является composable-контекстом,
-    // stringResource внутри неё не компилируется.
+}
+
+@Composable
+private fun actionLabels(rule: AutomationUiModel): List<String> {
+    if (rule.actions.isEmpty()) {
+        return listOf(stringResource(R.string.omnix_automations_no_actions))
+    }
     val parts = ArrayList<String>(rule.actions.size)
     for (action in rule.actions) {
-        parts.add(
-            when (action.label) {
-                AutomationActionLabel.OPEN_APP ->
-                    stringResource(R.string.omnix_automations_action_app, action.param.orEmpty())
-                AutomationActionLabel.WEATHER -> stringResource(R.string.omnix_automations_action_weather)
-                AutomationActionLabel.TIME -> stringResource(R.string.omnix_automations_action_time)
-                AutomationActionLabel.MEMORY -> stringResource(R.string.omnix_automations_action_memory)
-                AutomationActionLabel.VOLUME -> stringResource(R.string.omnix_automations_action_volume)
-                AutomationActionLabel.MEDIA -> stringResource(R.string.omnix_automations_action_media)
-                AutomationActionLabel.BRIEFING -> stringResource(R.string.omnix_automations_action_briefing)
-                AutomationActionLabel.OTHER -> stringResource(R.string.omnix_automations_action_other)
-            }
-        )
+        parts.add(actionLabel(action.label, action.param))
     }
-    return parts.joinToString(" + ")
+    return parts
+}
+
+@Composable
+private fun actionLabel(label: AutomationActionLabel, param: String?): String = when (label) {
+    AutomationActionLabel.OPEN_APP -> stringResource(R.string.omnix_automations_action_app, param.orEmpty())
+    AutomationActionLabel.WEATHER -> stringResource(R.string.omnix_automations_action_weather)
+    AutomationActionLabel.TIME -> stringResource(R.string.omnix_automations_action_time)
+    AutomationActionLabel.MEMORY -> stringResource(R.string.omnix_automations_action_memory)
+    AutomationActionLabel.VOLUME -> stringResource(R.string.omnix_automations_action_volume)
+    AutomationActionLabel.MEDIA -> stringResource(R.string.omnix_automations_action_media)
+    AutomationActionLabel.BRIEFING -> stringResource(R.string.omnix_automations_action_briefing)
+    AutomationActionLabel.OTHER -> stringResource(R.string.omnix_automations_action_other)
 }
 
 @Composable

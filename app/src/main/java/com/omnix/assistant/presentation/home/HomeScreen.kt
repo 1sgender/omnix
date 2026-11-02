@@ -4,12 +4,6 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -17,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,14 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -81,7 +69,6 @@ import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
-import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 import com.omnix.assistant.presentation.state.ActionPhrase
 import com.omnix.assistant.presentation.state.AssistantPower
 import com.omnix.assistant.presentation.state.AssistantPowerError
@@ -89,6 +76,8 @@ import com.omnix.assistant.presentation.state.ClipCapability
 import com.omnix.assistant.presentation.state.ClipState
 import com.omnix.assistant.presentation.state.OmnixPhase
 import com.omnix.assistant.presentation.state.OmnixUiState
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * Home — the OMNIX logo is the assistant's power switch.
@@ -129,7 +118,7 @@ fun HomeScreen(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The logo gives up size on short screens before anything else.
-        val logoSize = (maxHeight * 0.34f).coerceIn(LOGO_MIN, LOGO_MAX)
+        val logoSize = (maxHeight * 0.36f).coerceIn(LOGO_MIN, LOGO_MAX)
 
         Column(
             modifier = Modifier
@@ -137,29 +126,23 @@ fun HomeScreen(
                 .padding(horizontal = SCREEN_PADDING),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ON-only top row: the headphones the assistant hears through.
-            AnimatedVisibility(
-                visible = on,
-                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
-                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = SCREEN_PADDING),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    ClipPill(clip = state.clip, onClick = onClipTap)
-                }
-            }
+            HomeHeader(on = on, clip = state.clip, onClipTap = onClipTap)
 
             Spacer(Modifier.weight(1f))
 
             PowerLogo(state = state, size = logoSize, onTap = onLogoTap)
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(12.dp))
 
             StatusText(state = state)
+
+            AnimatedVisibility(
+                visible = on && state.phase is OmnixPhase.Idle,
+                enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
+                exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
+            ) {
+                ExamplePhrases()
+            }
 
             state.assistantPowerError?.let { error ->
                 Spacer(Modifier.height(20.dp))
@@ -211,14 +194,79 @@ fun HomeScreen(
     }
 }
 
+/** Date in mono and a greeting by the hour; the headphones pill while OMNIX is on. */
+@Composable
+private fun HomeHeader(on: Boolean, clip: ClipState, onClipTap: () -> Unit) {
+    val colors = OmnixTheme.colors
+    val locale = LocalConfiguration.current.locales[0]
+    val now = remember { LocalDateTime.now() }
+    val date = remember(locale) {
+        now.format(DateTimeFormatter.ofPattern("EEE · d MMMM", locale)).uppercase(locale)
+    }
+    val greeting = stringResource(
+        when (now.hour) {
+            in 5..11 -> R.string.omnix_home_greeting_morning
+            in 12..17 -> R.string.omnix_home_greeting_day
+            in 18..22 -> R.string.omnix_home_greeting_evening
+            else -> R.string.omnix_home_greeting_night
+        }
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = SCREEN_PADDING),
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(text = date, style = OmnixMonoLabelStyle, color = colors.textTertiary, maxLines = 1)
+            Text(
+                text = greeting,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp),
+                color = colors.textPrimary,
+                maxLines = 1
+            )
+        }
+        AnimatedVisibility(
+            visible = on,
+            enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
+            exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
+        ) {
+            ClipPill(clip = clip, onClick = onClipTap)
+        }
+    }
+}
+
+/** What to say after «Омни»: two quiet examples while OMNIX waits. */
+@Composable
+private fun ExamplePhrases() {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = Modifier.padding(top = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        listOf(R.string.omnix_home_example_weather, R.string.omnix_home_example_remind).forEach { res ->
+            Text(
+                text = stringResource(res),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                color = colors.textPrimary,
+                maxLines = 1,
+                modifier = Modifier
+                    .border(BorderStroke(1.dp, colors.border), PillShape)
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            )
+        }
+    }
+}
+
 private val OmnixPhase.isHearing: Boolean
     get() = this is OmnixPhase.Listening || this is OmnixPhase.Recognizing
 
 /**
- * The logo as a switch: a circle with the OMNIX mark. Off — a quiet outline
- * and paper mark. On — a lime ring and mark with a slow breath; while OMNIX
- * hears a request the ring follows the real microphone level. Starting and
- * stopping turn a lime arc around the ring until the service answers.
+ * The logo as a switch: the animated stencil mark on a disc ([OmnixMarkCore]).
+ * Off — a dimmed, still mark. On — the mark plays the motion of what OMNIX
+ * is doing: rays on the real microphone level while it listens, a wave of
+ * dots and a breathing slit while it thinks or starts, liquid rings while it
+ * speaks.
  */
 @Composable
 internal fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
@@ -228,42 +276,14 @@ internal fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
     val power = state.assistantPower
     val lit = power == AssistantPower.ON || power == AssistantPower.STARTING
 
-    val ringColor by animateColorAsState(
-        targetValue = if (lit) colors.accentBrand else colors.textPrimary.copy(alpha = 0.10f),
-        animationSpec = tween(motion.stateTransitionMs),
-        label = "logo_ring"
-    )
     val markColor by animateColorAsState(
-        targetValue = if (lit) colors.accentBrand else colors.textPrimary,
+        targetValue = if (lit) colors.textPrimary else colors.textTertiary,
         animationSpec = tween(motion.stateTransitionMs),
         label = "logo_mark"
     )
-    val ringWidth by animateFloatAsState(
-        targetValue = if (power == AssistantPower.ON) 2.5f else 1.5f,
-        animationSpec = tween(motion.stateTransitionMs),
-        label = "logo_ring_width"
-    )
-
-    // Breath while ON and waiting; the real microphone level while hearing.
-    val transition = rememberInfiniteTransition(label = "logo")
-    val breath by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(BREATH_MS, easing = LinearEasing), RepeatMode.Reverse),
-        label = "logo_breath"
-    )
-    val sweep by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(SWEEP_MS, easing = LinearEasing)),
-        label = "logo_sweep"
-    )
     val busy = power == AssistantPower.STARTING || power == AssistantPower.STOPPING
-    val pulse = when {
-        reduced || power != AssistantPower.ON -> 1f
-        state.phase.isHearing -> 1f + 0.04f * state.audioLevel.coerceIn(0f, 1f)
-        else -> 1f + 0.015f * breath
-    }
+    val mode = markMode(power, state.phase)
+    val level = if (state.phase.isHearing) state.audioLevel else 0f
 
     val onLabel = stringResource(R.string.omnix_home_power_on_state)
     val offLabel = stringResource(R.string.omnix_home_power_off_state)
@@ -273,10 +293,8 @@ internal fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
     Box(
         modifier = Modifier
             .size(size)
-            .scale(pulse)
             .omnixPressScale(interaction)
             .clip(CircleShape)
-            .background(lerp(colors.background, colors.surface, 0.5f))
             .clickable(interactionSource = interaction, indication = null, enabled = !busy, onClick = onTap)
             .clearAndSetSemantics {
                 contentDescription = switchLabel
@@ -285,39 +303,25 @@ internal fun PowerLogo(state: OmnixUiState, size: Dp, onTap: () -> Unit) {
             },
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val stroke = ringWidth.dp.toPx()
-            val inset = stroke / 2f
-            drawCircle(
-                color = ringColor,
-                radius = this.size.minDimension / 2f - inset,
-                style = Stroke(width = stroke)
-            )
-            if (busy && !reduced) {
-                drawArc(
-                    color = colors.accentBrand,
-                    startAngle = sweep,
-                    sweepAngle = 70f,
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = Size(this.size.width - stroke, this.size.height - stroke),
-                    style = Stroke(width = stroke * 1.6f, cap = StrokeCap.Round)
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .size(size * INNER_RATIO)
-                .border(BorderStroke(1.dp, colors.textPrimary.copy(alpha = 0.06f)), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            OmnixRingMark(
-                color = markColor,
-                width = size * MARK_RATIO,
-                height = size * MARK_RATIO * 80f / 104f,
-                strokeUnits = 2.6f
-            )
-        }
+        OmnixMarkCore(
+            mode = mode,
+            level = level,
+            markColor = markColor,
+            discColor = colors.surface,
+            modifier = Modifier.fillMaxSize(),
+            reducedMotion = reduced
+        )
+    }
+}
+
+/** Which motion the home mark plays for the voice service state and phase. */
+private fun markMode(power: AssistantPower, phase: OmnixPhase): MarkMode = when (power) {
+    AssistantPower.OFF, AssistantPower.STOPPING -> MarkMode.IDLE
+    AssistantPower.STARTING -> MarkMode.THINK
+    AssistantPower.ON -> when (phase) {
+        is OmnixPhase.Thinking, is OmnixPhase.Executing -> MarkMode.THINK
+        is OmnixPhase.Speaking -> MarkMode.SPEAK
+        else -> MarkMode.LISTEN
     }
 }
 
@@ -359,11 +363,11 @@ private fun StatusText(state: OmnixUiState) {
     ) { (shownTitle, shownHint) ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = shownTitle,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 28.sp, lineHeight = 32.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp),
                 color = colors.textPrimary,
                 textAlign = TextAlign.Center,
                 maxLines = 2
@@ -657,11 +661,7 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
 }
 
 private val SCREEN_PADDING = 20.dp
-private val LOGO_MIN = 180.dp
-private val LOGO_MAX = 264.dp
-private const val INNER_RATIO = 188f / 248f
-private const val MARK_RATIO = 104f / 248f
-private const val BREATH_MS = 2_400
-private const val SWEEP_MS = 1_100
+private val LOGO_MIN = 200.dp
+private val LOGO_MAX = 300.dp
 private val PillShape = RoundedCornerShape(18.dp)
 private val CardShape = RoundedCornerShape(18.dp)

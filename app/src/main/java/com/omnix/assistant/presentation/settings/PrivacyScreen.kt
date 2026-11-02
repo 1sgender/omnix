@@ -1,5 +1,12 @@
 package com.omnix.assistant.presentation.settings
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,6 +85,8 @@ fun PrivacyScreen(
         modifier,
         onBack
     ) {
+        PrivacyWhereCards()
+        Spacer(Modifier.height(spacing.md))
         OmnixSettingsGroup {
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_microphone),
@@ -359,3 +368,44 @@ internal fun factKeyLabel(key: String): String = when (key) {
     "family.husband" -> stringResource(R.string.omnix_fact_husband)
     else -> key
 }
+
+/** «Трафарет»: где живут данные — на телефоне (инверсия) и в облаке (рамка). */
+@Composable
+private fun PrivacyWhereCards() {
+    val colors = OmnixTheme.colors
+    androidx.compose.foundation.layout.Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+    ) {
+        WhereCard(
+            label = stringResource(R.string.omnix_privacy_where_device),
+            body = stringResource(R.string.omnix_privacy_where_device_body),
+            ink = colors.onActionPrimary,
+            modifier = Modifier
+                .weight(1f)
+                .background(colors.actionPrimary, WhereShape)
+        )
+        WhereCard(
+            label = stringResource(R.string.omnix_privacy_where_cloud),
+            body = stringResource(R.string.omnix_privacy_where_cloud_body),
+            ink = colors.textPrimary,
+            modifier = Modifier
+                .weight(1f)
+                .background(colors.surface, WhereShape)
+                .border(BorderStroke(1.dp, colors.border), WhereShape)
+        )
+    }
+}
+
+@Composable
+private fun WhereCard(label: String, body: String, ink: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.padding(14.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
+    ) {
+        Text(text = label, style = OmnixMonoLabelStyle, color = ink.copy(alpha = 0.6f))
+        Text(text = body, style = OmnixTheme.typography.caption, color = ink)
+    }
+}
+
+private val WhereShape = RoundedCornerShape(20.dp)

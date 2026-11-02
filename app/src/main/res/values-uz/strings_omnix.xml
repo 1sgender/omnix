@@ -510,4 +510,25 @@
         <item quantity="one">1 marta ishladi · oxirgi %2$s</item>
         <item quantity="other">%1$d marta ishladi · oxirgi %2$s</item>
     </plurals>
+    <string name="omnix_home_greeting_morning">Xayrli tong</string>
+    <string name="omnix_home_greeting_day">Xayrli kun</string>
+    <string name="omnix_home_greeting_evening">Xayrli kech</string>
+    <string name="omnix_home_greeting_night">Xayrli tun</string>
+    <string name="omnix_home_example_weather">«Ertaga ob-havo qanday?»</string>
+    <string name="omnix_home_example_remind">«18:00 da eslat»</string>
+    <string name="omnix_profile_title">Profil</string>
+    <string name="omnix_profile_edit">Ismni o‘zgartirish</string>
+    <string name="omnix_profile_save">Saqlash</string>
+    <string name="omnix_profile_name_hint">Omni sizga shunday murojaat qiladi</string>
+    <string name="omnix_profile_subscription">OBUNA</string>
+    <string name="omnix_profile_active">Faol</string>
+    <string name="omnix_profile_active_until">%1$s gacha faol</string>
+    <string name="omnix_profile_inactive">Faollashtirilmagan</string>
+    <string name="omnix_profile_expired">Muddati tugagan</string>
+    <string name="omnix_profile_devices">QURILMALAR</string>
+    <string name="omnix_profile_this_phone">Shu telefon</string>
+    <string name="omnix_privacy_where_device">TELEFONDA</string>
+    <string name="omnix_privacy_where_device_body">Xotira, chatlar tarixi, protokollar, ovoz</string>
+    <string name="omnix_privacy_where_cloud">BULUTDA</string>
+    <string name="omnix_privacy_where_cloud_body">Faqat so‘rov matni, ovoz yozuvisiz</string>
 </resources>

@@ -510,4 +510,25 @@
         <item quantity="one">1 kez çalıştı · son %2$s</item>
         <item quantity="other">%1$d kez çalıştı · son %2$s</item>
     </plurals>
+    <string name="omnix_home_greeting_morning">Günaydın</string>
+    <string name="omnix_home_greeting_day">İyi günler</string>
+    <string name="omnix_home_greeting_evening">İyi akşamlar</string>
+    <string name="omnix_home_greeting_night">İyi geceler</string>
+    <string name="omnix_home_example_weather">“Yarın hava nasıl?”</string>
+    <string name="omnix_home_example_remind">“18:00\'de hatırlat”</string>
+    <string name="omnix_profile_title">Profil</string>
+    <string name="omnix_profile_edit">Adı düzenle</string>
+    <string name="omnix_profile_save">Kaydet</string>
+    <string name="omnix_profile_name_hint">Omni size böyle hitap edecek</string>
+    <string name="omnix_profile_subscription">ABONELİK</string>
+    <string name="omnix_profile_active">Etkin</string>
+    <string name="omnix_profile_active_until">%1$s tarihine kadar etkin</string>
+    <string name="omnix_profile_inactive">Etkinleştirilmedi</string>
+    <string name="omnix_profile_expired">Süresi doldu</string>
+    <string name="omnix_profile_devices">CİHAZLAR</string>
+    <string name="omnix_profile_this_phone">Bu telefon</string>
+    <string name="omnix_privacy_where_device">TELEFONDA</string>
+    <string name="omnix_privacy_where_device_body">Bellek, sohbet geçmişi, protokoller, ses</string>
+    <string name="omnix_privacy_where_cloud">BULUTTA</string>
+    <string name="omnix_privacy_where_cloud_body">Yalnızca isteğin metni, ses kaydı yok</string>
 </resources>
