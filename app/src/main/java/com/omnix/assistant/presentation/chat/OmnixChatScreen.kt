@@ -611,7 +611,9 @@ private fun ThinkingRow() {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            tween(OmnixTheme.motion.executingCycleMs * 2, easing = LinearEasing)
+            // В режиме уменьшенного движения цикл равен 0, а нулевая длительность
+            // даёт деление на ноль в VectorizedInfiniteRepeatableSpec.
+            tween((OmnixTheme.motion.executingCycleMs * 2).coerceAtLeast(1), easing = LinearEasing)
         ),
         label = "omnixThinkingPhase"
     )
