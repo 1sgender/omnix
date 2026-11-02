@@ -16,7 +16,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -41,7 +40,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalDrawerSheet
@@ -96,7 +94,6 @@ import com.omnix.assistant.presentation.components.OmnixNewChatLineIcon
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
 import com.omnix.assistant.presentation.components.OmnixSendLineIcon
-import com.omnix.assistant.presentation.components.omnixPressScale
 import com.omnix.assistant.presentation.design.LocalReducedMotion
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
@@ -767,7 +764,6 @@ private fun ChatComposer(
     val dictationLabel = stringResource(
         if (isDictating) R.string.omnix_chat_dictation_stop else R.string.omnix_chat_dictation_start
     )
-    val interaction = remember { MutableInteractionSource() }
 
     Row(
         modifier = Modifier
@@ -799,7 +795,6 @@ private fun ChatComposer(
                 value = text,
                 onValueChange = onTextChange,
                 singleLine = false,
-                maxLines = 6,
                 textStyle = FieldText.copy(color = colors.textPrimary),
                 cursorBrush = SolidColor(colors.textPrimary),
                 keyboardOptions = KeyboardOptions(
@@ -809,8 +804,8 @@ private fun ChatComposer(
                 modifier = Modifier
                     .testTag(CHAT_COMPOSER_FIELD_TAG)
                     .fillMaxWidth()
+                    // Высота ограничена, дальше поле прокручивается само.
                     .heightIn(max = 140.dp)
-                    .verticalScroll(rememberScrollState())
             )
         }
 
@@ -835,17 +830,16 @@ private fun ChatComposer(
             )
         }
 
-        AnimatedVisibility(visible = hasText || isSending, enter = fadeIn(), exit = fadeOut()) {
+        // Без анимаций появления и пружины нажатия: краш-отчёты 2026-11-02
+        // показали падение (divide by zero) именно здесь, при появлении кнопки.
+        if (hasText || isSending) {
             Box(
                 modifier = Modifier
                     .padding(start = 4.dp)
                     .size(40.dp)
-                    .omnixPressScale(interaction)
                     .clip(CircleShape)
                     .background(if (hasText && !isSending) colors.textPrimary else colors.surfaceElevated)
                     .clickable(
-                        interactionSource = interaction,
-                        indication = null,
                         enabled = hasText && !isSending,
                         onClick = onSend
                     )
