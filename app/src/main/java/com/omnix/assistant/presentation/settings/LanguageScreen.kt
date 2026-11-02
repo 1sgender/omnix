@@ -4,23 +4,32 @@ import android.app.LocaleManager
 import android.content.Context
 import android.os.Build
 import android.os.LocaleList
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.core.locale.AppLanguage
 import com.omnix.assistant.presentation.components.OmnixCheckIcon
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixTheme
 
 /**
@@ -58,6 +67,7 @@ internal fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -
 
         OmnixSettingsGroup {
             LanguageRow(
+                code = "—",
                 title = stringResource(R.string.omnix_language_system),
                 selected = selected == null,
                 onSelect = {
@@ -68,6 +78,7 @@ internal fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -
             AppLanguage.entries.forEach { language ->
                 OmnixGroupDivider()
                 LanguageRow(
+                    code = language.code.take(2).uppercase(java.util.Locale.ROOT),
                     title = language.nativeName,
                     selected = selected == language,
                     onSelect = {
@@ -80,17 +91,34 @@ internal fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -
     }
 }
 
+/** «Трафарет»: код языка моноширинным слева, название, галочка у выбранного. */
 @Composable
-private fun LanguageRow(title: String, selected: Boolean, onSelect: () -> Unit) {
-    OmnixSettingRow(
-        title = title,
-        inset = true,
-        onClick = onSelect,
+private fun LanguageRow(code: String, title: String, selected: Boolean, onSelect: () -> Unit) {
+    val colors = OmnixTheme.colors
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { this.selected = selected }
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect)
+            .heightIn(min = 56.dp)
+            .padding(horizontal = OmnixTheme.spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (selected) OmnixCheckIcon(color = OmnixTheme.colors.textPrimary)
+        Text(
+            text = code,
+            style = OmnixMonoLabelStyle,
+            color = colors.textTertiary,
+            modifier = Modifier.width(26.dp)
+        )
+        Text(
+            text = title,
+            style = OmnixTheme.typography.body.copy(
+                fontWeight = if (selected) FontWeight.SemiBold else null
+            ),
+            color = colors.textPrimary,
+            modifier = Modifier.weight(1f)
+        )
+        if (selected) OmnixCheckIcon(color = colors.textPrimary)
     }
 }
 
