@@ -1,7 +1,7 @@
 package com.omnix.assistant.presentation.settings
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -9,7 +9,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.omnix.assistant.BuildConfig
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAppearanceLineIcon
-import com.omnix.assistant.presentation.components.OmnixBellLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
 import com.omnix.assistant.presentation.components.OmnixGlobeLineIcon
 import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
@@ -47,6 +46,7 @@ fun MeRoute(
     val settings by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val appearance by appearanceViewModel.uiState.collectAsStateWithLifecycle()
     val aiChoice by aiModelViewModel.choice.collectAsStateWithLifecycle()
+    val isAdmin = aiModelViewModel.admin.collectAsStateWithLifecycle().value.isAdmin
 
     val license = settings.licenseInfo?.takeIf { it.isActivated && !it.isExpired }
     val appearanceValue = stringResource(
@@ -85,12 +85,15 @@ fun MeRoute(
                         value = settings.automations.size.takeIf { it > 0 }?.toString().orEmpty(),
                         destination = OmnixDestination.Automations
                     ),
+                    // Память — только для админа (владельца).
+                ) + (if (isAdmin) listOf(
                     MeRow(
                         icon = OmnixMemoryLineIcon,
                         label = stringResource(R.string.omnix_me_row_memory),
                         value = "",
                         destination = OmnixDestination.Memory
-                    ),
+                    )
+                ) else emptyList()) + listOf(
                     // Приватность снова своей строкой: в v344 «Память» вела в неё,
                     // и память терялась среди политик звонков.
                     MeRow(
@@ -135,12 +138,6 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_me_row_language),
                         value = com.omnix.assistant.core.locale.AppLanguage.current().nativeName,
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
-                    ),
-                    MeRow(
-                        icon = OmnixBellLineIcon,
-                        label = stringResource(R.string.omnix_me_row_notifications),
-                        value = "",
-                        destination = OmnixDestination.SettingsSection(SECTION_NOTIFICATIONS)
                     )
                 )
             )

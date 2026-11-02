@@ -12,12 +12,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -69,16 +68,10 @@ fun PrivacyScreen(
     onCallPolicyChange: (CallConfirmationPolicy) -> Unit = {},
     onMessagingPolicyChange: (MessagingConfirmationPolicy) -> Unit = {},
     onAddTrustedContact: (String) -> Unit = {},
-    onRemoveTrustedContact: (String) -> Unit = {},
-    onScreenReaderModeChange: (Boolean) -> Unit = {},
-    onBlockPackage: (String) -> Unit = {},
-    onUnblockPackage: (String) -> Unit = {},
-    onAllowPackage: (String) -> Unit = {},
-    onRevokePackageAllowance: (String) -> Unit = {}
+    onRemoveTrustedContact: (String) -> Unit = {}
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
-    var advancedOpen by rememberSaveable { mutableStateOf(false) }
 
     SectionScaffold(
         stringResource(R.string.omnix_privacy_title),
@@ -86,215 +79,115 @@ fun PrivacyScreen(
         onBack
     ) {
         OmnixSettingsGroup {
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_privacy_microphone),
-                    value = stringResource(
-                        if (microphoneAllowed) {
-                            R.string.omnix_privacy_allowed
-                        } else {
-                            R.string.omnix_privacy_not_allowed
-                        }
-                    ),
-                    inset = true
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_microphone),
+                value = stringResource(
+                    if (microphoneAllowed) R.string.omnix_privacy_allowed else R.string.omnix_privacy_not_allowed
+                ),
+                inset = true
+            )
+            OmnixGroupDivider()
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_voice_history),
+                value = stringResource(
+                    if (historyStored) R.string.omnix_privacy_stored_on_device else R.string.omnix_privacy_not_stored
+                ),
+                inset = true
+            )
+            OmnixGroupDivider()
+            // Реальное поведение: перед отправкой «приватного» запроса в облако
+            // оркестратор спрашивает согласие.
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_cloud),
+                value = stringResource(R.string.omnix_privacy_cloud_controlled),
+                inset = true
+            )
+            OmnixGroupDivider()
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_permissions),
+                value = stringResource(R.string.omnix_privacy_permissions_manage),
+                inset = true,
+                chevron = onManagePermissions != null,
+                onClick = onManagePermissions
+            )
+            OmnixGroupDivider()
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_calls),
+                inset = true
+            )
+            Column(modifier = Modifier.selectableGroup()) {
+                PolicyOption(
+                    label = stringResource(R.string.omnix_privacy_calls_always),
+                    selected = policyState.callPolicy == CallConfirmationPolicy.ALWAYS,
+                    onSelect = { onCallPolicyChange(CallConfirmationPolicy.ALWAYS) }
                 )
                 OmnixGroupDivider()
-
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_privacy_voice_history),
-                    value = stringResource(
-                        if (historyStored) {
-                            R.string.omnix_privacy_stored_on_device
-                        } else {
-                            R.string.omnix_privacy_not_stored
-                        }
-                    ),
-                    inset = true
+                PolicyOption(
+                    label = stringResource(R.string.omnix_privacy_calls_trusted),
+                    selected = policyState.callPolicy == CallConfirmationPolicy.TRUSTED_ONLY,
+                    onSelect = { onCallPolicyChange(CallConfirmationPolicy.TRUSTED_ONLY) }
                 )
                 OmnixGroupDivider()
-
-                // This reflects a real behaviour: the orchestrator asks for consent
-                // before sending a request classified as private to the cloud.
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_privacy_cloud),
-                    value = stringResource(R.string.omnix_privacy_cloud_controlled),
-                    inset = true
-                )
-                OmnixGroupDivider()
-
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_privacy_permissions),
-                    value = stringResource(R.string.omnix_privacy_permissions_manage),
-                    inset = true,
-                    chevron = onManagePermissions != null,
-                    onClick = onManagePermissions
+                PolicyOption(
+                    label = stringResource(R.string.omnix_privacy_calls_never),
+                    selected = policyState.callPolicy == CallConfirmationPolicy.NEVER,
+                    onSelect = { onCallPolicyChange(CallConfirmationPolicy.NEVER) }
                 )
             }
-
-        // Всё остальное — для тех, кто хочет тонкой настройки (решение владельца
-        // 2026-10-21: «Приватность» была экраном разработчика).
-        Spacer(Modifier.height(spacing.lg))
-        OmnixSettingsGroup {
+            OmnixGroupDivider()
             OmnixSettingRow(
-                title = stringResource(R.string.omnix_privacy_advanced),
-                subtitle = stringResource(
-                    if (advancedOpen) R.string.omnix_privacy_advanced_hide else R.string.omnix_privacy_advanced_body
-                ),
-                inset = true,
-                chevron = true,
-                onClick = { advancedOpen = !advancedOpen }
+                title = stringResource(R.string.omnix_privacy_messages),
+                inset = true
             )
-        }
-        if (advancedOpen) {
-            OmnixSettingsSectionHeader(
-                text = stringResource(R.string.omnix_privacy_section_confirmations)
+            Column(modifier = Modifier.selectableGroup()) {
+                PolicyOption(
+                    label = stringResource(R.string.omnix_privacy_messages_always),
+                    selected = policyState.messagingPolicy == MessagingConfirmationPolicy.ALWAYS,
+                    onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.ALWAYS) }
+                )
+                OmnixGroupDivider()
+                PolicyOption(
+                    label = stringResource(R.string.omnix_privacy_messages_money),
+                    selected = policyState.messagingPolicy == MessagingConfirmationPolicy.MONEY_ONLY,
+                    onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.MONEY_ONLY) }
+                )
+                OmnixGroupDivider()
+                PolicyOption(
+                    label = stringResource(R.string.omnix_privacy_messages_never),
+                    selected = policyState.messagingPolicy == MessagingConfirmationPolicy.NEVER,
+                    onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.NEVER) }
+                )
+            }
+            OmnixGroupDivider()
+            // Обязательные правила названы фактом, а не переключателем: движок
+            // не даёт их отключить (деньги, удаления, ввод в чужих приложениях).
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_forced_title),
+                subtitle = stringResource(R.string.omnix_privacy_forced_body),
+                inset = true
             )
-                OmnixSettingsGroup {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_calls),
-                        inset = true
-                    )
-                    Column(modifier = Modifier.selectableGroup()) {
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_calls_always),
-                            selected = policyState.callPolicy == CallConfirmationPolicy.ALWAYS,
-                            onSelect = { onCallPolicyChange(CallConfirmationPolicy.ALWAYS) }
-                        )
-                        OmnixGroupDivider()
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_calls_trusted),
-                            selected = policyState.callPolicy == CallConfirmationPolicy.TRUSTED_ONLY,
-                            onSelect = { onCallPolicyChange(CallConfirmationPolicy.TRUSTED_ONLY) }
-                        )
-                        OmnixGroupDivider()
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_calls_never),
-                            selected = policyState.callPolicy == CallConfirmationPolicy.NEVER,
-                            onSelect = { onCallPolicyChange(CallConfirmationPolicy.NEVER) }
-                        )
-                    }
-                    OmnixGroupDivider()
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_messages),
-                        inset = true
-                    )
-                    Column(modifier = Modifier.selectableGroup()) {
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_messages_always),
-                            selected = policyState.messagingPolicy == MessagingConfirmationPolicy.ALWAYS,
-                            onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.ALWAYS) }
-                        )
-                        OmnixGroupDivider()
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_messages_money),
-                            selected = policyState.messagingPolicy == MessagingConfirmationPolicy.MONEY_ONLY,
-                            onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.MONEY_ONLY) }
-                        )
-                        OmnixGroupDivider()
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_messages_never),
-                            selected = policyState.messagingPolicy == MessagingConfirmationPolicy.NEVER,
-                            onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.NEVER) }
-                        )
-                    }
-                    OmnixGroupDivider()
-                    // Forced rules are stated, not switched: the engine keeps them
-                    // on for money, deletions, accessibility typing and anything an
-                    // automation tries to run — by design, not by preference.
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_forced_title),
-                        subtitle = stringResource(R.string.omnix_privacy_forced_body),
-                        inset = true
-                    )
-                }
-
-            OmnixSettingsSectionHeader(
-                text = stringResource(R.string.omnix_privacy_section_contacts)
+            OmnixGroupDivider()
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_contacts_hint),
+                inset = true
             )
-                OmnixSettingsGroup {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_contacts_hint),
-                        inset = true
-                    )
-                    EntryListGroup(
-                        entries = policyState.trustedContacts,
-                        emptyText = stringResource(R.string.omnix_privacy_contacts_empty),
-                        removeLabel = stringResource(R.string.omnix_privacy_remove),
-                        onRemove = onRemoveTrustedContact,
-                        rowTitle = { it }
-                    )
-                    OmnixGroupDivider()
-                    AddRow(
-                        fieldHint = stringResource(R.string.omnix_privacy_contact_add_hint),
-                        addLabel = stringResource(R.string.omnix_privacy_add),
-                        onAdd = onAddTrustedContact
-                    )
-                }
-
-            OmnixSettingsSectionHeader(
-                text = stringResource(R.string.omnix_privacy_section_screen)
+            EntryListGroup(
+                entries = policyState.trustedContacts,
+                emptyText = stringResource(R.string.omnix_privacy_contacts_empty),
+                removeLabel = stringResource(R.string.omnix_privacy_remove),
+                onRemove = onRemoveTrustedContact,
+                rowTitle = { it }
             )
-                OmnixSettingsGroup {
-                    Column(modifier = Modifier.selectableGroup()) {
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_screen_mode_block),
-                            subtitle = stringResource(R.string.omnix_privacy_screen_mode_block_hint),
-                            selected = !policyState.allowListMode,
-                            onSelect = { onScreenReaderModeChange(false) }
-                        )
-                        OmnixGroupDivider()
-                        PolicyOption(
-                            label = stringResource(R.string.omnix_privacy_screen_mode_allow),
-                            subtitle = stringResource(R.string.omnix_privacy_screen_mode_allow_hint),
-                            selected = policyState.allowListMode,
-                            onSelect = { onScreenReaderModeChange(true) }
-                        )
-                    }
-                }
-                Spacer(Modifier.height(spacing.sm))
-                OmnixSettingsGroup {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_blocked_apps),
-                        inset = true
-                    )
-                    EntryListGroup(
-                        entries = policyState.blockedPackages,
-                        emptyText = stringResource(R.string.omnix_privacy_blocked_empty),
-                        removeLabel = stringResource(R.string.omnix_privacy_remove),
-                        onRemove = onUnblockPackage,
-                        rowTitle = { it }
-                    )
-                    OmnixGroupDivider()
-                    AddRow(
-                        fieldHint = stringResource(R.string.omnix_privacy_package_hint),
-                        addLabel = stringResource(R.string.omnix_privacy_add),
-                        onAdd = onBlockPackage
-                    )
-                }
-                Spacer(Modifier.height(spacing.sm))
-                OmnixSettingsGroup {
-                    OmnixSettingRow(
-                        title = stringResource(R.string.omnix_privacy_allowed_apps),
-                        inset = true
-                    )
-                    EntryListGroup(
-                        entries = policyState.allowedPackages,
-                        emptyText = stringResource(R.string.omnix_privacy_allowed_empty),
-                        removeLabel = stringResource(R.string.omnix_privacy_remove),
-                        onRemove = onRevokePackageAllowance,
-                        rowTitle = { it }
-                    )
-                    OmnixGroupDivider()
-                    AddRow(
-                        fieldHint = stringResource(R.string.omnix_privacy_package_hint),
-                        addLabel = stringResource(R.string.omnix_privacy_add),
-                        onAdd = onAllowPackage
-                    )
-                }
-
+            OmnixGroupDivider()
+            AddRow(
+                fieldHint = stringResource(R.string.omnix_privacy_contact_add_hint),
+                addLabel = stringResource(R.string.omnix_privacy_add),
+                onAdd = onAddTrustedContact
+            )
         }
 
         if (onDeleteHistory != null) {
-            Spacer(Modifier.height(spacing.xl))
+            Spacer(Modifier.height(spacing.sm))
             OmnixTextButton(
                 text = stringResource(R.string.omnix_privacy_delete_history),
                 onClick = { deleteArmed = true }

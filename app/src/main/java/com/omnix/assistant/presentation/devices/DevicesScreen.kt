@@ -69,10 +69,8 @@ import com.omnix.assistant.presentation.state.ClipState
 fun DevicesScreen(
     clip: ClipState,
     modifier: Modifier = Modifier,
-    wakeWordEnabled: Boolean = true,
     translatorToHeadphones: Boolean = true,
     capabilities: List<CapabilityGroupUi> = emptyList(),
-    onWakeWordChange: (Boolean) -> Unit = {},
     onTranslatorToHeadphonesChange: (Boolean) -> Unit = {},
     onFind: () -> Unit = {},
     onOpenSystemBluetooth: () -> Unit = {},
@@ -92,14 +90,12 @@ fun DevicesScreen(
             modifier = Modifier.padding(top = 8.dp)
         )
 
-        StatusCard(clip = clip, modifier = Modifier.padding(top = 16.dp))
+        StatusCard(clip = clip, modifier = Modifier.padding(top = 12.dp))
 
         SwitchGroup(
-            wakeWordEnabled = wakeWordEnabled,
             translatorToHeadphones = translatorToHeadphones,
-            onWakeWordChange = onWakeWordChange,
             onTranslatorToHeadphonesChange = onTranslatorToHeadphonesChange,
-            modifier = Modifier.padding(top = 24.dp)
+            modifier = Modifier.padding(top = 12.dp)
         )
 
         // Android не даёт приложению ни подключить чужие наушники, ни разорвать
@@ -115,20 +111,20 @@ fun DevicesScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp)
+                .padding(top = 12.dp)
         )
 
         // Только то, что ждёт действия: «Доступно» человеку ничего не говорит
         // (замечание владельца 2026-10-21), а серое «нельзя» — тем более.
         val needAction = capabilities.filter { capabilityDot(it.status) == CapabilityDotToken.ATTENTION }
         if (needAction.isNotEmpty()) {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(20.dp))
             Text(
                 text = stringResource(R.string.omnix_devices_on_this_phone),
                 style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
                 color = OmnixTheme.colors.textSecondary
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             OmnixPanel {
                 needAction.forEachIndexed { index, group ->
                     if (index > 0) OmnixDivider()
@@ -165,14 +161,14 @@ private fun StatusCard(clip: ClipState, modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(24.dp))
             .background(colors.surface)
             .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(24.dp))
-            .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 20.dp),
+            .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         OmnixRingMark(
             color = if (connected) colors.textPrimary else colors.textTertiary,
-            width = 132.dp,
-            height = 100.dp,
+            width = 96.dp,
+            height = 72.dp,
             strokeUnits = 2.4f
         )
         Column(
@@ -233,9 +229,7 @@ private fun BatteryTile(percent: Int) {
 
 @Composable
 private fun SwitchGroup(
-    wakeWordEnabled: Boolean,
     translatorToHeadphones: Boolean,
-    onWakeWordChange: (Boolean) -> Unit,
     onTranslatorToHeadphonesChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -247,18 +241,6 @@ private fun SwitchGroup(
             .background(colors.surface)
             .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
     ) {
-        SwitchRow(
-            title = stringResource(R.string.omnix_devices_wake_title),
-            subtitle = stringResource(R.string.omnix_devices_wake_sub),
-            checked = wakeWordEnabled,
-            onChange = onWakeWordChange
-        )
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(colors.textPrimary.copy(alpha = 0.06f))
-        )
         SwitchRow(
             title = stringResource(R.string.omnix_devices_translate_title),
             subtitle = stringResource(R.string.omnix_devices_translate_sub),
@@ -274,7 +256,7 @@ private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onChang
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
+            .heightIn(min = 56.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

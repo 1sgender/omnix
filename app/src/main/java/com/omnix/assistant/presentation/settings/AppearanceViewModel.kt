@@ -25,9 +25,6 @@ data class AppearanceUiState(
     val reduceMotionOverride: String = REDUCE_MOTION_SYSTEM,
     val voiceFeedback: Boolean = true,
     val haptics: Boolean = true,
-    val notifyAssistant: Boolean = true,
-    val notifyDevice: Boolean = true,
-    val notifyRoutines: Boolean = true,
     /**
      * True once the stored values have actually been read. Until then the
      * app must not commit to a theme, or a dark-mode user would see one
@@ -71,18 +68,7 @@ class AppearanceViewModel @Inject constructor(
         )
     }
 
-    val uiState: StateFlow<AppearanceUiState> = combine(
-        presentation,
-        store.notifyAssistant,
-        store.notifyDevice,
-        store.notifyRoutines
-    ) { base, assistant, device, routines ->
-        base.copy(
-            notifyAssistant = assistant,
-            notifyDevice = device,
-            notifyRoutines = routines
-        )
-    }.stateIn(
+    val uiState: StateFlow<AppearanceUiState> = presentation.stateIn(
         scope = viewModelScope,
         // Kept alive across configuration changes so rotating the device
         // does not momentarily drop back to the default theme.
@@ -108,18 +94,6 @@ class AppearanceViewModel @Inject constructor(
 
     fun setHaptics(enabled: Boolean) {
         viewModelScope.launch { store.setHaptics(enabled) }
-    }
-
-    fun setNotifyAssistant(enabled: Boolean) {
-        viewModelScope.launch { store.setNotifyAssistant(enabled) }
-    }
-
-    fun setNotifyDevice(enabled: Boolean) {
-        viewModelScope.launch { store.setNotifyDevice(enabled) }
-    }
-
-    fun setNotifyRoutines(enabled: Boolean) {
-        viewModelScope.launch { store.setNotifyRoutines(enabled) }
     }
 
     private companion object {

@@ -8,12 +8,14 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.omnix.assistant.presentation.navigation.OmnixDestination
+import com.omnix.assistant.presentation.settings.AiModelViewModel
 import com.omnix.assistant.presentation.state.AssistantPowerError
 import com.omnix.assistant.presentation.state.OmnixUiState
 import com.omnix.assistant.presentation.state.OmnixViewModel
@@ -30,8 +32,10 @@ fun HomeRoute(
     viewModel: OmnixViewModel,
     onClipTap: () -> Unit,
     onOpen: (OmnixDestination) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    aiModelViewModel: AiModelViewModel = hiltViewModel()
 ) {
+    val isAdmin = aiModelViewModel.admin.collectAsStateWithLifecycle().value.isAdmin
     val context = LocalContext.current
     val microphonePrompted by viewModel.microphonePrompted.collectAsStateWithLifecycle()
 
@@ -54,7 +58,7 @@ fun HomeRoute(
         onTalkTap = viewModel::onTalkTap,
         onClipTap = onClipTap,
         onTranslatorTap = { onOpen(OmnixDestination.Translator) },
-        onMemoryTap = { onOpen(OmnixDestination.Memory) },
+        onMemoryTap = if (isAdmin) ({ onOpen(OmnixDestination.Memory) }) else null,
         onRemindersTap = { onOpen(OmnixDestination.Chat) },
         onAutomationsTap = { onOpen(OmnixDestination.Automations) },
         microphoneSettingsNeeded = settingsNeeded,

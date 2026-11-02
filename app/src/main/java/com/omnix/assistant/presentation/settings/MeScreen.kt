@@ -279,7 +279,6 @@ private fun RowGroup(rows: List<MeRow>, onOpen: (OmnixDestination) -> Unit) {
 const val SECTION_VOICE = "voice"
 const val SECTION_AI = "ai"
 const val SECTION_LANGUAGE = "language"
-const val SECTION_NOTIFICATIONS = "notifications"
 const val SECTION_APPEARANCE = "appearance"
 const val SECTION_ABOUT = "about"
 const val SECTION_ADVANCED = "advanced"

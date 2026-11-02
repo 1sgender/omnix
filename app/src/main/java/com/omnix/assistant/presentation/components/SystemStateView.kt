@@ -161,22 +161,3 @@ fun SystemStateView(
         }
     }
 }
-
-/**
- * Empty state (§19, §51): context, reason and the next action — never a bare
- * "No data".
- */
-@Composable
-fun OmnixEmptyState(
-    title: String,
-    description: String,
-    modifier: Modifier = Modifier,
-    actionLabel: String? = null,
-    onAction: (() -> Unit)? = null
-) {
-    SystemStateView(
-        message = OmnixSystemMessage(title, description, actionLabel),
-        modifier = modifier,
-        onAction = onAction
-    )
-}
