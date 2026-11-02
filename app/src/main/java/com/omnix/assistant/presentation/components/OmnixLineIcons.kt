@@ -14,8 +14,9 @@ import androidx.compose.ui.unit.dp
  * the canvas shows; the colour comes from the `tint` of the `Icon` that
  * renders them. Circles and rounded rects are written as arcs.
  */
+// Design «Трафарет»: a 1.6-unit stroke, lighter than v2's 2 to sit with the thin mark.
 private fun omnixLineIcon(name: String, vararg paths: String): ImageVector =
-    omnixLineIcon(name, 2f, *paths)
+    omnixLineIcon(name, 1.6f, *paths)
 
 private fun omnixLineIcon(name: String, strokeWidth: Float, vararg paths: String): ImageVector =
     ImageVector.Builder(
@@ -66,9 +67,11 @@ val OmnixTranslatorLineIcon: ImageVector = omnixLineIcon(
     "M13 21l4-9 4 9", "M14.5 18h5"
 )
 
+/** Память: большая и малая искры. */
 val OmnixMemoryLineIcon: ImageVector = omnixLineIcon(
     "Memory",
-    "M12 3l9 5-9 5-9-5z", "M3 13l9 5 9-5"
+    "M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z",
+    "M18.5 16l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"
 )
 
 val OmnixAlarmLineIcon: ImageVector = omnixLineIcon(
@@ -181,35 +184,35 @@ val OmnixChevronLineIcon: ImageVector = omnixLineIcon("Chevron", "M9 18l6-6-6-6"
 
 // ---- Me rows (2026-10-22: настоящие иконки вместо двухбуквенных плиток) ----
 
-/** Голос и фраза вызова. */
+/** Голос ответа: динамик со звуковыми волнами. */
 val OmnixVoiceLineIcon: ImageVector = omnixLineIcon(
     "Voice",
-    // rect x=9 y=3 w=6 h=11 rx=3
-    "M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z",
-    "M5 11a7 7 0 0 0 14 0", "M12 18v3"
+    "M4 9.5v5h3.5L12 18V6L7.5 9.5z",
+    "M15.5 9a4 4 0 0 1 0 6",
+    "M18 6.5a7.5 7.5 0 0 1 0 11"
 )
 
-/** ИИ-модель: искра. */
+/** ИИ-модель: плата с уровнями. */
 val OmnixSparkLineIcon: ImageVector = omnixLineIcon(
     "Spark",
-    "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z",
-    "M19 16v4", "M17 18h4"
+    "M7 6h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z",
+    "M9 10v4", "M12 9v6", "M15 11v2"
 )
 
-/** Оформление: круг, наполовину залитый линиями. */
+/** Оформление: круг, разделённый на светлую и тёмную половины. */
 val OmnixAppearanceLineIcon: ImageVector = omnixLineIcon(
     "Appearance",
-    // circle cx=12 cy=12 r=9
-    "M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0",
-    "M12 3v18", "M12 8h7.5", "M12 12h9", "M12 16h7.5"
+    // circle cx=12 cy=12 r=8
+    "M4 12a8 8 0 1 0 16 0a8 8 0 1 0-16 0",
+    "M12 4v16", "M12 7.5h6", "M12 12h8", "M12 16.5h6"
 )
 
-/** Язык: глобус. */
+/** Язык: буква «A» и знак перевода. */
 val OmnixGlobeLineIcon: ImageVector = omnixLineIcon(
     "Globe",
-    "M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0",
-    "M3 12h18",
-    "M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9s1.3-6.5 3.8-9z"
+    "M3 18l4.5-11L12 18", "M4.6 14.2h5.8",
+    "M14 9h7", "M17.5 7v2",
+    "M15 9c.7 3 2.5 5.5 5.5 7", "M20 9c-.6 3-2.4 5.5-5.5 7"
 )
 
 /** Уведомления: колокольчик. */
@@ -219,10 +222,10 @@ val OmnixBellLineIcon: ImageVector = omnixLineIcon(
     "M10 21h4"
 )
 
-/** Приватность: замок. */
+/** Приватность: щит с галочкой. */
 val OmnixLockLineIcon: ImageVector = omnixLineIcon(
     "Lock",
-    "M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z",
-    "M8 11V8a4 4 0 0 1 8 0v3"
+    "M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z",
+    "M9 12l2 2 4-4"
 )
 
