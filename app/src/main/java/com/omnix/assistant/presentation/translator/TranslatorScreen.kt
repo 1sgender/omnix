@@ -3,6 +3,7 @@ package com.omnix.assistant.presentation.translator
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import java.util.Locale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -315,7 +316,8 @@ private fun Conversation(state: ConversationState, languages: List<SupportedLang
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item(key = "status") { StatusLine(state) }
-        items(state.lines.asReversed(), key = { it.id }) { line -> LineEntry(line, languages) }
+        val latestId = state.lines.lastOrNull()?.id
+        items(state.lines.asReversed(), key = { it.id }) { line -> LineEntry(line, languages, latest = line.id == latestId) }
         if (state.lines.isEmpty() && !state.running) {
             item(key = "hint") {
                 Text(
@@ -348,34 +350,53 @@ private fun StatusLine(state: ConversationState) {
     )
 }
 
+/**
+ * Реплика карточкой (дизайн «Трафарет»): мои — в рамке, собеседника — на
+ * поверхности со сдвигом, последняя — инверсией и крупнее, чтобы её было
+ * видно с расстояния вытянутой руки.
+ */
 @Composable
-private fun LineEntry(line: ConversationLine, languages: List<SupportedLanguage>) {
+private fun LineEntry(line: ConversationLine, languages: List<SupportedLanguage>, latest: Boolean) {
     val colors = OmnixTheme.colors
     val mine = line.speaker == Speaker.ME
     val who = stringResource(if (mine) R.string.omnix_translator_me else R.string.omnix_translator_them)
     val lang = languages.firstOrNull { it.code == line.sourceLang }?.displayName
         ?: LiveTranslatorEngine.SUPPORTED_LANGUAGES.firstOrNull { it.code == line.sourceLang }?.displayName
         ?: line.sourceLang
+    val ink = if (latest) colors.onActionPrimary else colors.textPrimary
+    val muted = if (latest) colors.onActionPrimary.copy(alpha = 0.6f) else colors.textSecondary
+    val card = when {
+        latest -> Modifier.background(colors.actionPrimary, LineShape)
+        mine -> Modifier.border(BorderStroke(1.dp, colors.border), LineShape)
+        else -> Modifier.background(colors.surface, LineShape)
+    }
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = if (mine || latest) 0.dp else THEIR_INDENT, end = if (mine && !latest) THEIR_INDENT else 0.dp)
+            .then(card)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(text = "$who · $lang", style = MonoMeta, color = colors.textTertiary)
-        Text(text = line.original, style = OriginalStyle, color = colors.textSecondary)
+        Text(
+            text = "${who.uppercase(Locale.getDefault())} · ${lang.uppercase(Locale.getDefault())}",
+            style = MonoMeta,
+            color = muted
+        )
+        Text(text = line.original, style = OriginalStyle, color = muted)
         if (line.translated.isNotBlank()) {
             Text(
                 text = line.translated,
-                style = TranslationStyle,
+                style = if (latest) LatestTranslationStyle else TranslationStyle,
                 // Неудачный перевод несёт причину, а не перевод.
-                color = if (line.translatedOk) colors.textPrimary else colors.textSecondary
+                color = if (line.translatedOk) ink else muted
             )
         }
         if (line.translatedOk && !line.spoken) {
             Text(
                 text = stringResource(R.string.omnix_translator_no_voice),
                 style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
-                color = colors.textTertiary
+                color = muted
             )
         }
     }
@@ -444,8 +465,8 @@ private fun Controls(running: Boolean, onToggle: () -> Unit, onEnd: () -> Unit) 
             label = stringResource(if (running) R.string.omnix_translator_pause else R.string.omnix_translator_speak),
             size = 84.dp,
             iconSize = 30.dp,
-            background = if (running) colors.surface else colors.accentBrand,
-            iconTint = if (running) colors.textPrimary else colors.background,
+            background = if (running) colors.surface else colors.actionPrimary,
+            iconTint = if (running) colors.textPrimary else colors.onActionPrimary,
             border = if (running) colors.border else null,
             onClick = onToggle
         )
@@ -500,5 +521,8 @@ private val TranslationStyle = TextStyle(
     fontSize = 20.sp,
     lineHeight = 27.sp
 )
+private val LatestTranslationStyle = TranslationStyle.copy(fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 30.sp)
+private val LineShape = RoundedCornerShape(20.dp)
+private val THEIR_INDENT = 28.dp
 private val LanguageShape = RoundedCornerShape(16.dp)
 private val OutputShape = RoundedCornerShape(14.dp)

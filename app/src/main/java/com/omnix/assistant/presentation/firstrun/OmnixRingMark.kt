@@ -29,7 +29,9 @@ internal fun OmnixRingMark(
     color: androidx.compose.ui.graphics.Color = OmnixTheme.colors.textPrimary,
     // Разные экраны задают разные размеры знака: клип-флоу 28×22, активация 26×20.
     width: Dp = MARK_WIDTH,
-    height: Dp = MARK_HEIGHT
+    height: Dp = MARK_HEIGHT,
+    // Половинки разведены на столько единиц сетки (заставка собирает знак из 1 в 0).
+    spread: Float = 0f
 ) {
     val markLabel = stringResource(R.string.omnix_wordmark)
     Canvas(
@@ -51,8 +53,8 @@ internal fun OmnixRingMark(
             sweepAngle = HALF_SWEEP,
             useCenter = false,
             topLeft = Offset(
-                x = centerX - SHIFT_X * unit - radius,
-                y = centerY - SHIFT_Y * unit - radius
+                x = centerX - (SHIFT_X + spread * SPREAD_X) * unit - radius,
+                y = centerY - (SHIFT_Y + spread * SPREAD_Y) * unit - radius
             ),
             size = arcSize,
             style = stroke
@@ -64,8 +66,8 @@ internal fun OmnixRingMark(
             sweepAngle = HALF_SWEEP,
             useCenter = false,
             topLeft = Offset(
-                x = centerX + SHIFT_X * unit - radius,
-                y = centerY + SHIFT_Y * unit - radius
+                x = centerX + (SHIFT_X + spread * SPREAD_X) * unit - radius,
+                y = centerY + (SHIFT_Y + spread * SPREAD_Y) * unit - radius
             ),
             size = arcSize,
             style = stroke
@@ -82,6 +84,8 @@ private const val RING_RADIUS = 19.5f
 private const val RING_STROKE = 9f
 private const val SHIFT_X = 3f
 private const val SHIFT_Y = 6f
+private const val SPREAD_X = 14f
+private const val SPREAD_Y = 12f
 
 // Концы дуг отстоят на 3 от центра половины: asin(3 / 19.5) ≈ 8.85°.
 private const val END_TILT = 8.85f

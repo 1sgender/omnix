@@ -134,6 +134,8 @@ private const val RING_HOLD_MS = 300L
 private const val RING_FADE_OUT_MS = 200L
 private const val RING_REST_MS = 450L
 private const val RING_STATIC_TRIM = 0.75f
+private const val ASSEMBLE_MS = 560
+private const val ASSEMBLE_FADE = 0.65f
 
 /**
  * One cycle, ~2.4 s: the lime arc draws itself around (slow start, slow
@@ -146,6 +148,16 @@ private fun SelfDrawingRing(still: Boolean) {
     val frozen = OmnixTheme.reducedMotion || still
     val trim = remember { Animatable(0f) }
     val arcAlpha = remember { Animatable(1f) }
+    // «Трафарет»: при запуске половинки знака съезжаются из разведённого положения.
+    val assemble = remember { Animatable(if (frozen) 0f else 1f) }
+
+    LaunchedEffect(Unit) {
+        if (frozen) {
+            assemble.snapTo(0f)
+        } else {
+            assemble.animateTo(0f, tween(ASSEMBLE_MS, easing = FastOutSlowInEasing))
+        }
+    }
 
     LaunchedEffect(frozen) {
         if (frozen) {
@@ -175,7 +187,7 @@ private fun SelfDrawingRing(still: Boolean) {
             )
             if (trim.value > 0.002f && arcAlpha.value > 0.004f) {
                 drawArc(
-                    color = colors.accentBrand.copy(alpha = arcAlpha.value),
+                    color = colors.textPrimary.copy(alpha = arcAlpha.value),
                     startAngle = -90f,
                     sweepAngle = 360f * trim.value,
                     useCenter = false,
@@ -185,7 +197,12 @@ private fun SelfDrawingRing(still: Boolean) {
                 )
             }
         }
-        OmnixRingMark(color = colors.textPrimary, width = 56.dp, height = 43.dp)
+        OmnixRingMark(
+            color = colors.textPrimary.copy(alpha = 1f - ASSEMBLE_FADE * assemble.value),
+            width = 56.dp,
+            height = 43.dp,
+            spread = assemble.value
+        )
     }
 }
 
