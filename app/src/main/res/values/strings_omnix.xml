@@ -594,4 +594,15 @@
     <string name="omnix_home_greeting_night">Good night</string>
     <string name="omnix_home_example_weather">“Weather tomorrow?”</string>
     <string name="omnix_home_example_remind">“Remind me at 6 pm”</string>
+    <string name="omnix_profile_title">Profile</string>
+    <string name="omnix_profile_edit">Edit name</string>
+    <string name="omnix_profile_save">Save</string>
+    <string name="omnix_profile_name_hint">Omni will call you this</string>
+    <string name="omnix_profile_subscription">SUBSCRIPTION</string>
+    <string name="omnix_profile_active">Active</string>
+    <string name="omnix_profile_active_until">Active until %1$s</string>
+    <string name="omnix_profile_inactive">Not activated</string>
+    <string name="omnix_profile_expired">Expired</string>
+    <string name="omnix_profile_devices">DEVICES</string>
+    <string name="omnix_profile_this_phone">This phone</string>
 </resources>

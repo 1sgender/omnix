@@ -592,4 +592,15 @@
     <string name="omnix_home_greeting_night">Gijäňiz rahat</string>
     <string name="omnix_home_example_weather">«Ertir howa nähili?»</string>
     <string name="omnix_home_example_remind">«18:00-da ýatlat»</string>
+    <string name="omnix_profile_title">Profil</string>
+    <string name="omnix_profile_edit">Adyny üýtget</string>
+    <string name="omnix_profile_save">Ýatda sakla</string>
+    <string name="omnix_profile_name_hint">Omni size şeýle ýüzlener</string>
+    <string name="omnix_profile_subscription">ABUNA</string>
+    <string name="omnix_profile_active">Işjeň</string>
+    <string name="omnix_profile_active_until">%1$s çenli işjeň</string>
+    <string name="omnix_profile_inactive">Işjeňleşdirilmedi</string>
+    <string name="omnix_profile_expired">Möhleti geçdi</string>
+    <string name="omnix_profile_devices">ENJAMLAR</string>
+    <string name="omnix_profile_this_phone">Bu telefon</string>
 </resources>

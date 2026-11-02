@@ -96,7 +96,7 @@ fun MeScreen(
             Column {
                 Text(
                     text = stringResource(R.string.omnix_me_title),
-                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 24.sp),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp),
                     color = colors.textPrimary,
                     modifier = Modifier.padding(top = 24.dp)
                 )
@@ -104,7 +104,10 @@ fun MeScreen(
                     userName = userName,
                     licenseActive = licenseActive,
                     plan = plan,
-                    modifier = Modifier.padding(top = 20.dp)
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable(role = Role.Button) { onOpen(OmnixDestination.SettingsSection(SECTION_PROFILE)) }
                 )
                 Column(
                     modifier = Modifier.padding(top = 20.dp),
@@ -113,9 +116,9 @@ fun MeScreen(
                     groups.forEach { group ->
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                text = group.title,
-                                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-                                color = colors.textSecondary,
+                                text = group.title.uppercase(Locale.getDefault()),
+                                style = OmnixMonoLabelStyle,
+                                color = colors.textTertiary,
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                             RowGroup(rows = group.rows, onOpen = onOpen)
@@ -284,3 +287,4 @@ const val SECTION_APPEARANCE = "appearance"
 const val SECTION_ABOUT = "about"
 const val SECTION_ADVANCED = "advanced"
 const val SECTION_DIAGNOSTICS = "diagnostics"
+const val SECTION_PROFILE = "profile"

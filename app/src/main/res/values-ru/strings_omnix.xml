@@ -593,4 +593,15 @@
     <string name="omnix_home_greeting_night">Доброй ночи</string>
     <string name="omnix_home_example_weather">«Какая погода завтра?»</string>
     <string name="omnix_home_example_remind">«Напомни в 18:00»</string>
+    <string name="omnix_profile_title">Профиль</string>
+    <string name="omnix_profile_edit">Изменить имя</string>
+    <string name="omnix_profile_save">Сохранить</string>
+    <string name="omnix_profile_name_hint">Так Omni будет к вам обращаться</string>
+    <string name="omnix_profile_subscription">ПОДПИСКА</string>
+    <string name="omnix_profile_active">Активна</string>
+    <string name="omnix_profile_active_until">Активна до %1$s</string>
+    <string name="omnix_profile_inactive">Не активирована</string>
+    <string name="omnix_profile_expired">Истекла</string>
+    <string name="omnix_profile_devices">УСТРОЙСТВА</string>
+    <string name="omnix_profile_this_phone">Этот телефон</string>
 </resources>

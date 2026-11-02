@@ -516,4 +516,15 @@
     <string name="omnix_home_greeting_night">Xayrli tun</string>
     <string name="omnix_home_example_weather">«Ertaga ob-havo qanday?»</string>
     <string name="omnix_home_example_remind">«18:00 da eslat»</string>
+    <string name="omnix_profile_title">Profil</string>
+    <string name="omnix_profile_edit">Ismni o‘zgartirish</string>
+    <string name="omnix_profile_save">Saqlash</string>
+    <string name="omnix_profile_name_hint">Omni sizga shunday murojaat qiladi</string>
+    <string name="omnix_profile_subscription">OBUNA</string>
+    <string name="omnix_profile_active">Faol</string>
+    <string name="omnix_profile_active_until">%1$s gacha faol</string>
+    <string name="omnix_profile_inactive">Faollashtirilmagan</string>
+    <string name="omnix_profile_expired">Muddati tugagan</string>
+    <string name="omnix_profile_devices">QURILMALAR</string>
+    <string name="omnix_profile_this_phone">Shu telefon</string>
 </resources>
