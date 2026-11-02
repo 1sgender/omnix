@@ -17,7 +17,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
+import java.text.DateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -151,6 +155,28 @@ fun SettingsSectionRoute(
         }
 
         SECTION_LANGUAGE -> LanguageSettingsScreen(modifier = modifier, onBack = onBack)
+
+        SECTION_PROFILE -> {
+            val info = state.licenseInfo
+            ProfileScreen(
+                modifier = modifier,
+                onBack = onBack,
+                userName = state.userName,
+                plan = info?.planId.orEmpty().replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                license = when {
+                    info?.isExpired == true -> ProfileLicense.EXPIRED
+                    info?.isActivated == true -> ProfileLicense.ACTIVE
+                    else -> ProfileLicense.INACTIVE
+                },
+                expiryText = info?.expiryDate?.takeIf { it > 0L }?.let { millis ->
+                    DateFormat.getDateInstance(DateFormat.LONG, Locale.getDefault()).format(Date(millis))
+                },
+                deviceName = listOf(Build.MANUFACTURER, Build.MODEL)
+                    .distinct()
+                    .joinToString(" ") { part -> part.replaceFirstChar { it.titlecase(Locale.getDefault()) } },
+                onSaveName = viewModel::saveUserName
+            )
+        }
 
         SECTION_ADVANCED -> AdvancedSettingsScreen(
             modifier = modifier,

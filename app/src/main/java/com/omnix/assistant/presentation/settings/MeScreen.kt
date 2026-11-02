@@ -96,7 +96,7 @@ fun MeScreen(
             Column {
                 Text(
                     text = stringResource(R.string.omnix_me_title),
-                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 24.sp),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp),
                     color = colors.textPrimary,
                     modifier = Modifier.padding(top = 24.dp)
                 )
@@ -104,7 +104,10 @@ fun MeScreen(
                     userName = userName,
                     licenseActive = licenseActive,
                     plan = plan,
-                    modifier = Modifier.padding(top = 20.dp)
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable(role = Role.Button) { onOpen(OmnixDestination.SettingsSection(SECTION_PROFILE)) }
                 )
                 Column(
                     modifier = Modifier.padding(top = 20.dp),
@@ -113,9 +116,9 @@ fun MeScreen(
                     groups.forEach { group ->
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                text = group.title,
-                                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-                                color = colors.textSecondary,
+                                text = group.title.uppercase(Locale.getDefault()),
+                                style = OmnixMonoLabelStyle,
+                                color = colors.textTertiary,
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                             RowGroup(rows = group.rows, onOpen = onOpen)
@@ -166,20 +169,20 @@ private fun AccountCard(userName: String, licenseActive: Boolean, plan: String, 
         Box(
             modifier = Modifier
                 .size(52.dp)
-                .background(colors.surfaceElevated, CircleShape)
+                .background(colors.actionPrimary, CircleShape)
                 .clearAndSetSemantics {},
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = shownName.take(1).uppercase(Locale.getDefault()),
-                style = TextStyle(fontFamily = OmnixSans, fontSize = 18.sp),
-                color = colors.textPrimary
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
+                color = colors.onActionPrimary
             )
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = shownName,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp),
                 color = colors.textPrimary,
                 maxLines = 1
             )
@@ -194,15 +197,15 @@ private fun AccountCard(userName: String, licenseActive: Boolean, plan: String, 
         if (plan.isNotBlank()) {
             Box(
                 modifier = Modifier
-                    .height(28.dp)
-                    .border(BorderStroke(1.dp, colors.accentBrand), RoundedCornerShape(14.dp))
-                    .padding(horizontal = 12.dp),
+                    .height(24.dp)
+                    .background(colors.actionPrimary, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = plan,
-                    style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
-                    color = colors.accentBrand
+                    text = plan.uppercase(Locale.getDefault()),
+                    style = OmnixMonoLabelStyle.copy(fontSize = 11.sp),
+                    color = colors.onActionPrimary
                 )
             }
         }
@@ -223,6 +226,7 @@ private fun RowGroup(rows: List<MeRow>, onOpen: (OmnixDestination) -> Unit) {
             if (index > 0) {
                 Box(
                     Modifier
+                        .padding(start = 62.dp)
                         .fillMaxWidth()
                         .height(1.dp)
                         .background(colors.textPrimary.copy(alpha = 0.06f))
@@ -233,14 +237,14 @@ private fun RowGroup(rows: List<MeRow>, onOpen: (OmnixDestination) -> Unit) {
                     .fillMaxWidth()
                     .heightIn(min = 56.dp)
                     .clickable(role = Role.Button) { onOpen(row.destination) }
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
-                        .background(colors.surfaceElevated, RoundedCornerShape(10.dp))
+                        .size(34.dp)
+                        .background(colors.surfaceElevated, RoundedCornerShape(11.dp))
                         .clearAndSetSemantics {},
                     contentAlignment = Alignment.Center
                 ) {
@@ -283,3 +287,4 @@ const val SECTION_APPEARANCE = "appearance"
 const val SECTION_ABOUT = "about"
 const val SECTION_ADVANCED = "advanced"
 const val SECTION_DIAGNOSTICS = "diagnostics"
+const val SECTION_PROFILE = "profile"

@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +26,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
@@ -38,8 +41,8 @@ import com.omnix.assistant.presentation.firstrun.OmnixRingMark
  * headphones moved to a Me row).
  *
  * Full width on the screen ground with a hairline on top; three equal tabs,
- * each an icon over a label. The active tab has the lime icon and the paper
- * label, the rest are dimmed. Secondary screens keep their parent tab lit via
+ * each an icon over a label. The active tab is lit and carries the stencil
+ * indicator (two offset bars), the rest are dimmed. Secondary screens keep their parent tab lit via
  * [tabForRoute]: OMNIX's modes keep Home, everything reached from Me keeps Me.
  */
 @Composable
@@ -64,7 +67,7 @@ fun OmnixNavigationBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, top = 8.dp, end = 8.dp)
+                .padding(start = 8.dp, top = 4.dp, end = 8.dp)
                 .navigationBarsPadding()
                 .padding(bottom = 8.dp)
         ) {
@@ -78,7 +81,6 @@ fun OmnixNavigationBar(
                     color = tint,
                     width = 22.dp,
                     height = 16.dp,
-                    strokeUnits = 3.6f,
                     modifier = Modifier.clearAndSetSemantics {}
                 )
             }
@@ -125,18 +127,53 @@ private fun NavigationItem(
                     this.contentDescription = contentDescription
                 }
             }
-            .padding(vertical = 8.dp),
+            .padding(bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        StencilIndicator(visible = selected, color = colors.textPrimary)
         Box(modifier = Modifier.height(22.dp), contentAlignment = Alignment.Center) {
-            icon(if (selected) colors.accentBrand else colors.textSecondary)
+            icon(if (selected) colors.textPrimary else colors.textTertiary)
         }
         Text(
             text = label,
-            style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 16.sp),
-            color = if (selected) colors.textPrimary else colors.textSecondary,
+            style = TextStyle(
+                fontFamily = OmnixSans,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                fontSize = 12.sp,
+                lineHeight = 16.sp
+            ),
+            color = if (selected) colors.textPrimary else colors.textTertiary,
             maxLines = 1
         )
     }
 }
+
+/**
+ * The active-tab mark of design «Трафарет»: two short bars offset like the
+ * halves of the logo. Keeps its height when hidden so tabs never jump.
+ */
+@Composable
+private fun StencilIndicator(visible: Boolean, color: Color) {
+    Row(
+        modifier = Modifier.height(INDICATOR_HEIGHT),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val bar = if (visible) color else Color.Transparent
+        Box(
+            Modifier
+                .offset(y = (-1).dp)
+                .size(width = 9.dp, height = 3.dp)
+                .background(bar, RoundedCornerShape(2.dp))
+        )
+        Box(
+            Modifier
+                .offset(y = 1.dp)
+                .size(width = 9.dp, height = 3.dp)
+                .background(bar, RoundedCornerShape(2.dp))
+        )
+    }
+}
+
+private val INDICATOR_HEIGHT = 8.dp

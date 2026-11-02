@@ -32,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -142,22 +141,13 @@ fun FirstRunScreen(
 private fun WelcomeStep(visualSize: Dp, onStart: () -> Unit, onEnterCode: () -> Unit) {
     val colors = OmnixTheme.colors
     StepBody(
+        // «Трафарет»: первый экран — сам знак, крупно и без рамки.
         visual = {
-            Box(
-                modifier = Modifier
-                    .size(visualSize)
-                    .clip(CircleShape)
-                    .background(lerp(colors.background, colors.surface, 0.5f))
-                    .border(BorderStroke(1.5.dp, colors.accentBrand), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                OmnixRingMark(
-                    color = colors.accentBrand,
-                    width = visualSize * 0.42f,
-                    height = visualSize * 0.42f * 80f / 104f,
-                    strokeUnits = 2.6f
-                )
-            }
+            OmnixRingMark(
+                color = colors.textPrimary,
+                width = visualSize,
+                height = visualSize
+            )
         },
         title = stringResource(R.string.omnix_setup_welcome_title),
         body = stringResource(R.string.omnix_setup_welcome_body),
@@ -189,16 +179,28 @@ private fun AccessStep(
         label = "access_tint"
     )
     StepBody(
+        // «Трафарет»: микрофон в инверсном круге внутри двух тонких колец;
+        // отказ — круг в рамке цвета предупреждения.
         visual = {
+            val denied = state == MicrophoneVisualState.Denied
             Box(
                 modifier = Modifier
                     .size(visualSize)
+                    .border(BorderStroke(1.dp, colors.border), CircleShape)
+                    .padding(visualSize * 0.1f)
+                    .border(BorderStroke(1.dp, colors.border), CircleShape)
+                    .padding(visualSize * 0.1f)
                     .clip(CircleShape)
-                    .background(lerp(colors.background, colors.surface, 0.5f))
-                    .border(BorderStroke(1.5.dp, tint.copy(alpha = if (state == MicrophoneVisualState.Request) 0.10f else 1f)), CircleShape),
+                    .background(if (denied) colors.surface else colors.actionPrimary)
+                    .then(if (denied) Modifier.border(BorderStroke(1.5.dp, tint), CircleShape) else Modifier),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(OmnixMicLineIcon, contentDescription = null, tint = tint, modifier = Modifier.size(visualSize * 0.26f))
+                Icon(
+                    OmnixMicLineIcon,
+                    contentDescription = null,
+                    tint = if (denied) tint else colors.onActionPrimary,
+                    modifier = Modifier.size(visualSize * 0.24f)
+                )
             }
         },
         title = stringResource(
@@ -306,7 +308,7 @@ private fun StepBody(
         Spacer(Modifier.height(32.dp))
         Text(
             text = title,
-            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 28.sp, lineHeight = 32.sp),
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp),
             color = colors.textPrimary,
             textAlign = TextAlign.Center
         )

@@ -1,9 +1,28 @@
 package com.omnix.assistant.presentation.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.design.OmnixTheme
+import kotlin.math.abs
 
 /**
  * Voice settings (§25, §42).
@@ -95,17 +114,22 @@ fun VoiceSettingsScreen(
         }
 
         OmnixSettingsSectionHeader(stringResource(R.string.omnix_voice_title))
+        // «Трафарет»: скорость речи — три сегмента вместо ползунка.
+        Text(
+            text = stringResource(R.string.omnix_voice_speaking_speed),
+            style = OmnixTheme.typography.body,
+            color = OmnixTheme.colors.textPrimary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        SpeedSegments(
+            rate = speechRate,
+            onSelect = { rate ->
+                onSpeechRateChange(rate)
+                onCommitChanges()
+            }
+        )
+        Spacer(Modifier.height(12.dp))
         OmnixSettingsGroup {
-            OmnixSliderRow(
-                title = stringResource(R.string.omnix_voice_speaking_speed),
-                value = speechRate,
-                valueLabel = levelLabel(speechRate, 0.5f, 2.0f),
-                valueRange = 0.5f..2.0f,
-                onValueChange = onSpeechRateChange,
-                onValueChangeFinished = onCommitChanges,
-                inset = true
-            )
-            OmnixGroupDivider()
             OmnixToggleRow(
                 title = stringResource(R.string.omnix_voice_feedback),
                 checked = voiceFeedback,
@@ -139,6 +163,51 @@ fun VoiceSettingsScreen(
         }
     }
 }
+
+/** Slow / normal / fast: the chosen segment is a raised card on a filled track. */
+@Composable
+private fun SpeedSegments(rate: Float, onSelect: (Float) -> Unit) {
+    val colors = OmnixTheme.colors
+    val options = listOf(
+        SPEED_SLOW to R.string.omnix_level_low,
+        SPEED_NORMAL to R.string.omnix_level_normal,
+        SPEED_FAST to R.string.omnix_level_high
+    )
+    val current = options.minBy { (value, _) -> abs(value - rate) }.first
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.surfaceFilled, RoundedCornerShape(16.dp))
+            .padding(4.dp)
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        options.forEach { (value, label) ->
+            val selected = value == current
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .background(if (selected) colors.surface else Color.Transparent, RoundedCornerShape(12.dp))
+                    .selectable(selected = selected, role = Role.RadioButton) { onSelect(value) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(label),
+                    style = OmnixTheme.typography.subheadline.copy(
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                    ),
+                    color = if (selected) colors.textPrimary else colors.textSecondary,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+private const val SPEED_SLOW = 0.8f
+private const val SPEED_NORMAL = 1.0f
+private const val SPEED_FAST = 1.3f
 
 /**
  * Turns a raw float into a word.

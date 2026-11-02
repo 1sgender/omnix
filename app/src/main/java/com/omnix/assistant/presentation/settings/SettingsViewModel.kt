@@ -153,6 +153,15 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(userName = name) }
     }
 
+    /** Профиль: имя сохраняется сразу, без общей кнопки «Сохранить». */
+    fun saveUserName(name: String) {
+        val trimmed = name.trim()
+        _uiState.update { it.copy(userName = trimmed) }
+        viewModelScope.launch {
+            saveSettingsUseCase.saveUserName(trimmed)
+        }
+    }
+
     fun onAccessTokenChanged(token: String) {
         _uiState.update {
             it.copy(

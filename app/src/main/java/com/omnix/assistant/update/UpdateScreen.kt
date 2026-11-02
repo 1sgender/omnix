@@ -53,6 +53,7 @@ import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixSecondaryButton
 import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.design.LocalReducedMotion
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.firstrun.OmnixRingMark
@@ -152,7 +153,7 @@ internal fun UpdateScreen(
                                 .padding(horizontal = 18.dp, vertical = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            notes.forEach { note -> NoteRow(note) }
+                            notes.forEachIndexed { index, note -> NoteRow(index + 1, note) }
                         }
                     }
                     if (hint != null) {
@@ -196,15 +197,15 @@ internal fun UpdateScreen(
 }
 
 @Composable
-private fun NoteRow(note: String) {
+private fun NoteRow(number: Int, note: String) {
     val colors = OmnixTheme.colors
     Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .size(6.dp)
-                .clip(RoundedCornerShape(50))
-                .background(colors.accentBrand)
+        // «Трафарет»: пункты пронумерованы моноширинным «01», а не точкой.
+        Text(
+            text = number.toString().padStart(2, '0'),
+            style = OmnixMonoLabelStyle.copy(lineHeight = 21.sp),
+            color = colors.textTertiary,
+            modifier = Modifier.padding(top = 1.dp)
         )
         Text(
             text = note,
@@ -302,15 +303,15 @@ private fun UpdateRing(stage: UpdateStage, progress: Float?, centerLabel: String
             }
         }
         when (stage) {
-            UpdateStage.AVAILABLE -> OmnixRingMark(width = 76.dp, height = 58.dp, strokeUnits = 3.0f)
+            UpdateStage.AVAILABLE -> OmnixRingMark(width = 76.dp, height = 58.dp)
             UpdateStage.DOWNLOADING -> if (centerLabel != null) {
                 Text(
                     text = centerLabel,
-                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 30.sp),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 44.sp, letterSpacing = (-1.5).sp),
                     color = colors.textPrimary
                 )
             } else {
-                OmnixRingMark(width = 64.dp, height = 49.dp, strokeUnits = 3.0f)
+                OmnixRingMark(width = 64.dp, height = 49.dp)
             }
             UpdateStage.READY -> Unit
             UpdateStage.FAILED -> OmnixAlertIcon(color = error, size = 48.dp)

@@ -17,12 +17,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import com.omnix.assistant.presentation.design.OmnixMono
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -161,20 +163,19 @@ internal fun ActivationCodeCells(
                         if (state.isFocused) focusedIndex = index
                         else if (focusedIndex == index) focusedIndex = -1
                     }
-                    .drawBehind {
-                        val y = size.height - underline.toPx() / 2f
-                        drawLine(
-                            color = lineColor,
-                            start = Offset(0f, y),
-                            end = Offset(size.width, y),
-                            strokeWidth = underline.toPx()
-                        )
-                    },
+                    // «Трафарет»: ячейка в рамке; под фокусом рамка толще и в цвет текста.
+                    .background(colors.surface, CellShape)
+                    .border(
+                        width = if (isFocused || isError) underline else 1.dp,
+                        color = if (isFocused || isError || isComplete) lineColor else colors.border,
+                        shape = CellShape
+                    ),
                 enabled = enabled,
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = OmnixMono,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
                     color = textColor
                 ),
@@ -182,7 +183,7 @@ internal fun ActivationCodeCells(
                     keyboardType = KeyboardType.Text,
                     capitalization = KeyboardCapitalization.Characters
                 ),
-                cursorBrush = SolidColor(colors.actionLink),
+                cursorBrush = SolidColor(colors.textPrimary),
                 decorationBox = { innerTextField ->
                     Box(contentAlignment = Alignment.Center) { innerTextField() }
                 }
@@ -192,8 +193,9 @@ internal fun ActivationCodeCells(
 }
 
 // Мок: .otp input — 38×48, gap 8, подчёркивание 2px.
-private val CELL_WIDTH = 24.dp
-private val CELL_HEIGHT = 48.dp
+private val CELL_WIDTH = 28.dp
+private val CELL_HEIGHT = 52.dp
+private val CellShape = RoundedCornerShape(8.dp)
 private val CELL_GAP = 4.dp
 private val GROUP_GAP = 8.dp
 private val UNDERLINE_WIDTH = 2.dp

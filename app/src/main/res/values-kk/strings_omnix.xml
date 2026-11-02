@@ -510,4 +510,25 @@
         <item quantity="one">1 рет іске қосылды · соңғысы %2$s</item>
         <item quantity="other">%1$d рет іске қосылды · соңғысы %2$s</item>
     </plurals>
+    <string name="omnix_home_greeting_morning">Қайырлы таң</string>
+    <string name="omnix_home_greeting_day">Қайырлы күн</string>
+    <string name="omnix_home_greeting_evening">Қайырлы кеш</string>
+    <string name="omnix_home_greeting_night">Қайырлы түн</string>
+    <string name="omnix_home_example_weather">«Ертең ауа райы қандай?»</string>
+    <string name="omnix_home_example_remind">«18:00-де еске сал»</string>
+    <string name="omnix_profile_title">Профиль</string>
+    <string name="omnix_profile_edit">Атын өзгерту</string>
+    <string name="omnix_profile_save">Сақтау</string>
+    <string name="omnix_profile_name_hint">Omni сізге осылай жүгінеді</string>
+    <string name="omnix_profile_subscription">ЖАЗЫЛЫМ</string>
+    <string name="omnix_profile_active">Белсенді</string>
+    <string name="omnix_profile_active_until">%1$s дейін белсенді</string>
+    <string name="omnix_profile_inactive">Белсендірілмеген</string>
+    <string name="omnix_profile_expired">Мерзімі өтті</string>
+    <string name="omnix_profile_devices">ҚҰРЫЛҒЫЛАР</string>
+    <string name="omnix_profile_this_phone">Осы телефон</string>
+    <string name="omnix_privacy_where_device">ТЕЛЕФОНДА</string>
+    <string name="omnix_privacy_where_device_body">Жад, чат тарихы, протоколдар, дауыс</string>
+    <string name="omnix_privacy_where_cloud">БҰЛТТА</string>
+    <string name="omnix_privacy_where_cloud_body">Тек сұраудың мәтіні, дауыс жазбасынсыз</string>
 </resources>

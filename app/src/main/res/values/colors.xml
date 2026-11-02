@@ -2,7 +2,8 @@
 <resources>
     <!-- Светлая тема: тёплая бумага; тёмная (values-night) — тёплый графит
          (OmnixColors.WarmGraphite). Земля окна совпадает с первым кадром Compose. -->
-    <color name="omnix_launch_ground">#FFF6F4EF</color>
-    <color name="omnix_logo_left">#FF1B2536</color>
-    <color name="omnix_logo_right">#FF6FA800</color>
+    <color name="omnix_launch_ground">#FFF5F5F3</color>
+    <color name="omnix_logo_mark">#FF111111</color>
+    <color name="omnix_icon_mark">#FF000000</color>
+    <color name="omnix_icon_ground">#FFFFFFFF</color>
 </resources>
