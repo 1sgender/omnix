@@ -191,7 +191,6 @@
     <string name="omnix_me_license_active">Lisans etkin</string>
     <string name="omnix_me_no_name">Profiliniz</string>
     <string name="omnix_me_license_inactive">Lisans etkin değil</string>
-    <string name="omnix_me_row_voice">Ses ve “Omni”</string>
     <string name="omnix_me_row_memory">Hafıza</string>
     <string name="omnix_me_model_ready">Hazır</string>
     <string name="omnix_me_version">OMNIX %1$s</string>

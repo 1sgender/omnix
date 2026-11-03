@@ -244,7 +244,6 @@
     <string name="omnix_me_license_active">License active</string>
     <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
-    <string name="omnix_me_row_voice">Voice and “Omni”</string>
     <string name="omnix_me_row_memory">Memory</string>
     <string name="omnix_me_model_ready">Ready</string>
     <string name="omnix_me_version">OMNIX %1$s</string>

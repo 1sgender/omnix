@@ -561,7 +561,9 @@ private fun QuickActions(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        cards.chunked(2).forEach { row ->
+        // Три карточки: первая на всю ширину, две следующие парой — без дыры в сетке.
+        val rows = if (cards.size % 2 == 1) listOf(cards.take(1)) + cards.drop(1).chunked(2) else cards.chunked(2)
+        rows.forEach { row ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEach { card ->
                     QuickActionCard(

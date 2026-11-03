@@ -16,7 +16,6 @@ import com.omnix.assistant.presentation.components.OmnixLockLineIcon
 import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
 import com.omnix.assistant.presentation.components.OmnixSparkLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
-import com.omnix.assistant.presentation.components.OmnixVoiceLineIcon
 import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.presentation.design.OmnixAppearance
 import com.omnix.assistant.presentation.navigation.OmnixDestination
@@ -114,12 +113,6 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_nav_headphones),
                         value = "",
                         destination = OmnixDestination.Devices
-                    ),
-                    MeRow(
-                        icon = OmnixVoiceLineIcon,
-                        label = stringResource(R.string.omnix_me_row_voice),
-                        value = "",
-                        destination = OmnixDestination.SettingsSection(SECTION_VOICE)
                     ),
                     MeRow(
                         icon = OmnixSparkLineIcon,
