@@ -35,8 +35,6 @@
     <string name="omnix_home_card_automations">Протоколдар</string>
     <string name="omnix_home_card_translator">Аудармашы</string>
     <string name="omnix_home_card_translator_sub">Тікелей, құлаққабыңызға</string>
-    <string name="omnix_home_card_memory">Жад</string>
-    <string name="omnix_home_card_memory_sub">Сіз туралы есімде қалғандар</string>
     <string name="omnix_home_card_reminders">Еске салғыштар</string>
     <string name="omnix_home_card_reminders_sub">Оятқыштар мен істер</string>
     <string name="omnix_home_card_automations_sub">Сөз бойынша протоколдар</string>
@@ -213,7 +211,7 @@
     <string name="omnix_voice_background_action">Рұқсат беру</string>
     <string name="omnix_voice_automations">Протоколдар</string>
     <string name="omnix_voice_automations_empty">Әзірге протокол жоқ. Протоколды сөзбен сипаттаңыз, «Жаңа протокол» түймесін басыңыз немесе айтыңыз: «Омни, құлаққап қосылғанда музыка қос».</string>
-    <string name="omnix_privacy_title">Құпиялылық</string>
+    <string name="omnix_privacy_title">Баптаулар</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
     <string name="omnix_privacy_allowed">Рұқсат етілген</string>
     <string name="omnix_privacy_not_allowed">Рұқсат етілмеген</string>
@@ -531,4 +529,9 @@
     <string name="omnix_privacy_where_device_body">Жад, чат тарихы, протоколдар, дауыс</string>
     <string name="omnix_privacy_where_cloud">БҰЛТТА</string>
     <string name="omnix_privacy_where_cloud_body">Тек сұраудың мәтіні, дауыс жазбасынсыз</string>
+    <string name="omnix_protocols_subtitle">Omni мұны өзі жасайды — уақытқа, орынға немесе оқиғаға қарай</string>
+    <string name="omnix_protocols_new_label">Жаңа протокол</string>
+    <string name="omnix_protocols_yours_label">Сіздікі</string>
+    <string name="omnix_protocols_active_count">Белсенді: %d</string>
+    <string name="omnix_devices_eyebrow">Құрылғы</string>
 </resources>

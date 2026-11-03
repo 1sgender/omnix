@@ -50,8 +50,6 @@
     <string name="omnix_home_card_automations">Протоколы</string>
     <string name="omnix_home_card_translator">Переводчик</string>
     <string name="omnix_home_card_translator_sub">В наушники, вживую</string>
-    <string name="omnix_home_card_memory">Память</string>
-    <string name="omnix_home_card_memory_sub">Что я о вас помню</string>
     <string name="omnix_home_card_reminders">Напоминания</string>
     <string name="omnix_home_card_reminders_sub">Будильники и дела</string>
     <string name="omnix_home_card_automations_sub">Протоколы по фразе</string>
@@ -266,7 +264,7 @@
     <string name="omnix_voice_automations">Протоколы</string>
     <string name="omnix_voice_automations_empty">Протоколов пока нет. Опишите протокол словами, нажмите «Новый протокол» или скажите: «Омни, когда подключу наушники — включи музыку».</string>
 
-    <string name="omnix_privacy_title">Приватность</string>
+    <string name="omnix_privacy_title">Настройки</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
     <string name="omnix_privacy_allowed">Разрешён</string>
     <string name="omnix_privacy_not_allowed">Не разрешён</string>
@@ -608,4 +606,9 @@
     <string name="omnix_privacy_where_device_body">Память, история чатов, протоколы, голос</string>
     <string name="omnix_privacy_where_cloud">В ОБЛАКЕ</string>
     <string name="omnix_privacy_where_cloud_body">Только текст запроса, без записи голоса</string>
+    <string name="omnix_protocols_subtitle">Omni делает это сам — по времени, месту или событию</string>
+    <string name="omnix_protocols_new_label">Новый протокол</string>
+    <string name="omnix_protocols_yours_label">Ваши</string>
+    <string name="omnix_protocols_active_count">Активно: %d</string>
+    <string name="omnix_devices_eyebrow">Устройство</string>
 </resources>

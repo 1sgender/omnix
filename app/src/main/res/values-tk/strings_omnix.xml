@@ -50,8 +50,6 @@
     <string name="omnix_home_card_automations">Protokollar</string>
     <string name="omnix_home_card_translator">Terjimeçi</string>
     <string name="omnix_home_card_translator_sub">Gulaklyga, göni</string>
-    <string name="omnix_home_card_memory">Ýat</string>
-    <string name="omnix_home_card_memory_sub">Siz hakda näme ýadymda</string>
     <string name="omnix_home_card_reminders">Ýatlatmalar</string>
     <string name="omnix_home_card_reminders_sub">Oýardyjylar we işler</string>
     <string name="omnix_home_card_automations_sub">Söz boýunça protokollar</string>
@@ -267,7 +265,7 @@
     <string name="omnix_voice_automations">Protokollar</string>
     <string name="omnix_voice_automations_empty">Heniz protokol ýok. Protokoly sözler bilen düşündiriň, «Täze protokol» basyň ýa-da aýdyň: «Omni, gulaklyk birikende aýdym goý».</string>
 
-    <string name="omnix_privacy_title">Hususylyk</string>
+    <string name="omnix_privacy_title">Sazlamalar</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">Rugsat berlen</string>
     <string name="omnix_privacy_not_allowed">Rugsat berilmedik</string>
@@ -607,4 +605,9 @@
     <string name="omnix_privacy_where_device_body">Ýat, söhbet taryhy, protokollar, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTDA</string>
     <string name="omnix_privacy_where_cloud_body">Diňe soragyň teksti, ses ýazgysyz</string>
+    <string name="omnix_protocols_subtitle">Omni muny özi edýär — wagta, ýere ýa-da waka görä</string>
+    <string name="omnix_protocols_new_label">Täze protokol</string>
+    <string name="omnix_protocols_yours_label">Siziňkiler</string>
+    <string name="omnix_protocols_active_count">Işjeň: %d</string>
+    <string name="omnix_devices_eyebrow">Enjam</string>
 </resources>
