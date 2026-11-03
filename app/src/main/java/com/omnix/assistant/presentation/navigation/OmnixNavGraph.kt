@@ -323,9 +323,10 @@ fun OmnixNavGraph(
  */
 private fun NavHostController.navigateSingleTop(destination: OmnixDestination) {
     navigate(destination.route) {
+        // Нажатие на вкладку всегда открывает её корень: подэкраны («Язык»,
+        // «Профиль») не запоминаются, иначе «Я» открывалось бы там, где вышли.
         if (destination in OmnixDestination.primary) {
-            popUpTo(OmnixDestination.Home.route) { saveState = true }
-            restoreState = true
+            popUpTo(OmnixDestination.Home.route)
         }
         launchSingleTop = true
     }

@@ -35,8 +35,6 @@
     <string name="omnix_home_card_automations">Protokollar</string>
     <string name="omnix_home_card_translator">Tarjimon</string>
     <string name="omnix_home_card_translator_sub">Jonli, quloqchiningizga</string>
-    <string name="omnix_home_card_memory">Xotira</string>
-    <string name="omnix_home_card_memory_sub">Siz haqingizda eslab qolganlarim</string>
     <string name="omnix_home_card_reminders">Eslatmalar</string>
     <string name="omnix_home_card_reminders_sub">Budilniklar va vazifalar</string>
     <string name="omnix_home_card_automations_sub">Ibora boʻyicha protokollar</string>
@@ -213,7 +211,7 @@
     <string name="omnix_voice_background_action">Ruxsat berish</string>
     <string name="omnix_voice_automations">Protokollar</string>
     <string name="omnix_voice_automations_empty">Hozircha protokol yoʻq. Protokolni soʻzlar bilan tasvirlang, “Yangi protokol”ni bosing yoki ayting: “Omni, quloqchinim ulanganda musiqa qoʻy.”</string>
-    <string name="omnix_privacy_title">Maxfiylik</string>
+    <string name="omnix_privacy_title">Sozlamalar</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">Ruxsat berilgan</string>
     <string name="omnix_privacy_not_allowed">Ruxsat berilmagan</string>
@@ -531,4 +529,9 @@
     <string name="omnix_privacy_where_device_body">Xotira, chatlar tarixi, protokollar, ovoz</string>
     <string name="omnix_privacy_where_cloud">BULUTDA</string>
     <string name="omnix_privacy_where_cloud_body">Faqat so‘rov matni, ovoz yozuvisiz</string>
+    <string name="omnix_protocols_subtitle">Omni buni o‘zi bajaradi — vaqt, joy yoki voqeaga ko‘ra</string>
+    <string name="omnix_protocols_new_label">Yangi protokol</string>
+    <string name="omnix_protocols_yours_label">Sizniki</string>
+    <string name="omnix_protocols_active_count">Faol: %d</string>
+    <string name="omnix_devices_eyebrow">Qurilma</string>
 </resources>

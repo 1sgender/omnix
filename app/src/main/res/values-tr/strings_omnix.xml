@@ -35,8 +35,6 @@
     <string name="omnix_home_card_automations">Protokoller</string>
     <string name="omnix_home_card_translator">Çevirmen</string>
     <string name="omnix_home_card_translator_sub">Canlı, kulaklığınıza</string>
-    <string name="omnix_home_card_memory">Hafıza</string>
-    <string name="omnix_home_card_memory_sub">Sizin hakkınızda hatırladıklarım</string>
     <string name="omnix_home_card_reminders">Hatırlatıcılar</string>
     <string name="omnix_home_card_reminders_sub">Alarmlar ve yapılacaklar</string>
     <string name="omnix_home_card_automations_sub">Söze göre protokoller</string>
@@ -213,7 +211,7 @@
     <string name="omnix_voice_background_action">İzin ver</string>
     <string name="omnix_voice_automations">Protokoller</string>
     <string name="omnix_voice_automations_empty">Henüz protokol yok. Protokolü kelimelerle anlatın, “Yeni protokol”e dokunun ya da şöyle deyin: “Omni, kulaklığım bağlanınca müzik aç.”</string>
-    <string name="omnix_privacy_title">Gizlilik</string>
+    <string name="omnix_privacy_title">Ayarlar</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">İzin verildi</string>
     <string name="omnix_privacy_not_allowed">İzin verilmedi</string>
@@ -531,4 +529,9 @@
     <string name="omnix_privacy_where_device_body">Bellek, sohbet geçmişi, protokoller, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTTA</string>
     <string name="omnix_privacy_where_cloud_body">Yalnızca isteğin metni, ses kaydı yok</string>
+    <string name="omnix_protocols_subtitle">Omni bunu kendisi yapar — zamana, yere veya olaya göre</string>
+    <string name="omnix_protocols_new_label">Yeni protokol</string>
+    <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>
+    <string name="omnix_protocols_active_count">%d etkin</string>
+    <string name="omnix_devices_eyebrow">Cihaz</string>
 </resources>

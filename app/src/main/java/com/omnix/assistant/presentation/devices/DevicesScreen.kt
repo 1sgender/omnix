@@ -91,6 +91,13 @@ fun DevicesScreen(
             modifier = Modifier.padding(top = 8.dp)
         )
 
+        Text(
+            text = stringResource(R.string.omnix_devices_eyebrow).uppercase(java.util.Locale.getDefault()),
+            style = com.omnix.assistant.presentation.design.OmnixMonoLabelStyle.copy(fontSize = 11.sp),
+            color = OmnixTheme.colors.textTertiary,
+            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+        )
+
         StatusCard(clip = clip, modifier = Modifier.padding(top = 12.dp))
 
         SwitchGroup(

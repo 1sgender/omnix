@@ -1,7 +1,9 @@
 package com.omnix.assistant.presentation.chat
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,10 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.clickable
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -162,66 +164,46 @@ internal fun ChatDrawerContent(
 
     actionsFor?.let { conversation ->
         val pinned = conversation.id in pinnedIds
-        AlertDialog(
-            onDismissRequest = { actionsFor = null },
-            title = {
-                Text(
-                    text = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            },
-            text = {
-                Column {
-                    TextButton(onClick = {
-                        actionsFor = null
-                        onTogglePin(conversation.id)
-                    }) {
-                        Text(stringResource(if (pinned) R.string.omnix_chat_unpin else R.string.omnix_chat_pin))
-                    }
-                    TextButton(onClick = {
-                        actionsFor = null
-                        renameText = conversation.title.orEmpty()
-                        renaming = conversation
-                    }) {
-                        Text(stringResource(R.string.omnix_chat_rename))
-                    }
-                    TextButton(onClick = {
-                        actionsFor = null
-                        deleteArmed = conversation
-                    }) {
-                        Text(stringResource(R.string.omnix_chat_delete))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { actionsFor = null }) { Text(stringResource(R.string.omnix_cancel)) }
+        ChatDialogCard(
+            title = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
+            onDismiss = { actionsFor = null }
+        ) {
+            ChatActionRow(stringResource(if (pinned) R.string.omnix_chat_unpin else R.string.omnix_chat_pin)) {
+                actionsFor = null
+                onTogglePin(conversation.id)
             }
-        )
+            ChatActionRow(stringResource(R.string.omnix_chat_rename)) {
+                actionsFor = null
+                renameText = conversation.title.orEmpty()
+                renaming = conversation
+            }
+            ChatActionRow(stringResource(R.string.omnix_chat_delete), danger = true) {
+                actionsFor = null
+                deleteArmed = conversation
+            }
+            ChatActionRow(stringResource(R.string.omnix_cancel), muted = true) { actionsFor = null }
+        }
     }
 
     renaming?.let { conversation ->
-        AlertDialog(
-            onDismissRequest = { renaming = null },
-            title = { Text(stringResource(R.string.omnix_chat_rename)) },
-            text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it.take(80) },
-                    singleLine = true,
-                    placeholder = { Text(stringResource(R.string.omnix_chat_rename_hint)) }
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onRename(conversation.id, renameText)
-                    renaming = null
-                }) { Text(stringResource(R.string.omnix_chat_save)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { renaming = null }) { Text(stringResource(R.string.omnix_cancel)) }
+        ChatDialogCard(
+            title = stringResource(R.string.omnix_chat_rename),
+            onDismiss = { renaming = null }
+        ) {
+            OutlinedTextField(
+                value = renameText,
+                onValueChange = { renameText = it.take(80) },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                placeholder = { Text(stringResource(R.string.omnix_chat_rename_hint)) },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            ChatActionRow(stringResource(R.string.omnix_chat_save)) {
+                onRename(conversation.id, renameText)
+                renaming = null
             }
-        )
+            ChatActionRow(stringResource(R.string.omnix_cancel), muted = true) { renaming = null }
+        }
     }
 
     deleteArmed?.let { conversation ->
@@ -341,3 +323,61 @@ private fun DrawerRow(
 }
 
 private val DrawerText = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 20.sp)
+
+/** Карточка диалога в стиле «Трафарет»: скругление 24dp, заголовок, строки действий. */
+@Composable
+private fun ChatDialogCard(
+    title: String,
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(24.dp))
+                .padding(vertical = 8.dp)
+        ) {
+            Text(
+                text = title,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
+                color = colors.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
+            )
+            content()
+        }
+    }
+}
+
+@Composable
+private fun ChatActionRow(
+    text: String,
+    danger: Boolean = false,
+    muted: Boolean = false,
+    onClick: () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 20.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp),
+            color = when {
+                danger -> colors.stateError
+                muted -> colors.textSecondary
+                else -> colors.textPrimary
+            }
+        )
+    }
+}

@@ -58,7 +58,6 @@ import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
-import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.components.OmnixOnDeviceLineIcon
@@ -105,7 +104,6 @@ fun HomeScreen(
     onPowerErrorAction: (AssistantPowerError) -> Unit = {},
     onPowerErrorDismiss: () -> Unit = {},
     onTranslatorTap: () -> Unit = {},
-    onMemoryTap: (() -> Unit)? = null,
     onRemindersTap: () -> Unit = {},
     onAutomationsTap: () -> Unit = {},
     onSystemStateAction: () -> Unit = {},
@@ -183,7 +181,6 @@ fun HomeScreen(
                 Column {
                     QuickActions(
                         onTranslatorTap = onTranslatorTap,
-                        onMemoryTap = onMemoryTap,
                         onRemindersTap = onRemindersTap,
                         onAutomationsTap = onAutomationsTap
                     )
@@ -551,17 +548,12 @@ private fun OnDevicePill() {
 @Composable
 private fun QuickActions(
     onTranslatorTap: () -> Unit,
-    onMemoryTap: (() -> Unit)?,
     onRemindersTap: () -> Unit,
     onAutomationsTap: () -> Unit
 ) {
     val colors = OmnixTheme.colors
-    // Память — только для админа: у обычного пользователя в сетке три карточки.
     val cards = buildList {
         add(QuickAction(OmnixTranslatorLineIcon, colors.accentBrand, R.string.omnix_home_card_translator, R.string.omnix_home_card_translator_sub, onTranslatorTap))
-        if (onMemoryTap != null) {
-            add(QuickAction(OmnixMemoryLineIcon, colors.textPrimary, R.string.omnix_home_card_memory, R.string.omnix_home_card_memory_sub, onMemoryTap))
-        }
         add(QuickAction(OmnixAlarmLineIcon, colors.textPrimary, R.string.omnix_home_card_reminders, R.string.omnix_home_card_reminders_sub, onRemindersTap))
         add(QuickAction(OmnixBoltLineIcon, colors.textPrimary, R.string.omnix_home_card_automations, R.string.omnix_home_card_automations_sub, onAutomationsTap))
     }

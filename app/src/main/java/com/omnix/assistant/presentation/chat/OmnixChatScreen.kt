@@ -1,6 +1,16 @@
 package com.omnix.assistant.presentation.chat
 
 import androidx.compose.animation.AnimatedVisibility
+import java.util.Locale
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.firstrun.OmnixRingMark
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -39,12 +49,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -113,7 +119,6 @@ import kotlin.math.sin
  * (красный пузырь), вопрос о согласии на облако (C-02), метка приватности при
  * вводе (CR-17) и общий лист подтверждения.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OmnixChatScreen(
     state: ChatUiState,
@@ -152,20 +157,46 @@ fun OmnixChatScreen(
         )
     }
 
-    // Список чатов — шторка на пол-экрана поверх чата (дизайн «Трафарет»).
-    // Открывает и закрывает её ViewModel; смахивание вниз и «Назад» сообщаем ей.
-    if (state.showHistory) {
-        ModalBottomSheet(
-            onDismissRequest = onCloseHistory,
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            containerColor = colors.surface,
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            dragHandle = { BottomSheetDefaults.DragHandle(color = colors.surfaceFilled) }
-        ) {
+    // Список чатов — панель слева на пол-экрана поверх чата (дизайн «Трафарет»).
+    // Открывает и закрывает её ViewModel; тап по затемнению и «Назад» сообщаем ей.
+    BackHandler(enabled = state.showHistory, onBack = onCloseHistory)
+    AnimatedVisibility(
+        visible = state.showHistory,
+        enter = fadeIn(tween(HISTORY_ANIM_MS)),
+        exit = fadeOut(tween(HISTORY_ANIM_MS))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onCloseHistory
+                )
+        )
+    }
+    AnimatedVisibility(
+        visible = state.showHistory,
+        enter = slideInHorizontally(tween(HISTORY_ANIM_MS)) { -it },
+        exit = slideOutHorizontally(tween(HISTORY_ANIM_MS)) { -it }
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val panelShape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(HISTORY_SHEET_HEIGHT)
+                    .fillMaxHeight()
+                    .width(maxOf(maxWidth * HISTORY_PANEL_FRACTION, HISTORY_PANEL_MIN_WIDTH))
+                    .clip(panelShape)
+                    .background(colors.surface)
+                    .border(BorderStroke(1.dp, colors.border), panelShape)
+                    // Панель «глотает» тапы, чтобы они не доходили до затемнения.
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    )
+                    .statusBarsPadding()
             ) {
                 ChatDrawerContent(
                     conversations = state.conversations,
@@ -323,42 +354,51 @@ private fun ChatThread(
 @Composable
 private fun ChatHeader(isOnline: Boolean, onOpenHistory: () -> Unit, onNewChat: () -> Unit) {
     val colors = OmnixTheme.colors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        HeaderIconButton(
-            icon = OmnixMenuLineIcon,
-            label = stringResource(R.string.omnix_chat_history_open),
-            onClick = onOpenHistory
-        )
-        Column(
+    Column {
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .padding(start = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = stringResource(R.string.omnix_chat_title),
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
-                color = colors.textPrimary
+            HeaderIconButton(
+                icon = OmnixMenuLineIcon,
+                label = stringResource(R.string.omnix_chat_history_open),
+                onClick = onOpenHistory
             )
-            Text(
-                text = stringResource(
-                    if (isOnline) R.string.omnix_chat_subtitle_online else R.string.omnix_chat_subtitle_on_device
-                ),
-                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
-                color = colors.textTertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.omnix_chat_title),
+                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = stringResource(
+                        if (isOnline) R.string.omnix_chat_subtitle_online else R.string.omnix_chat_subtitle_on_device
+                    ).uppercase(Locale.getDefault()),
+                    style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                    color = colors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            HeaderIconButton(
+                icon = OmnixNewChatLineIcon,
+                label = stringResource(R.string.omnix_chat_new),
+                onClick = onNewChat
             )
         }
-        HeaderIconButton(
-            icon = OmnixNewChatLineIcon,
-            label = stringResource(R.string.omnix_chat_new),
-            onClick = onNewChat
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(colors.border)
         )
     }
 }
@@ -513,8 +553,13 @@ private fun MessageRow(
         return
     }
 
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+    AssistantAvatar()
+    Column(
+        modifier = Modifier.weight(1f),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         SelectionContainer(modifier = Modifier.semantics { contentDescription = description }) {
@@ -552,6 +597,21 @@ private fun MessageRow(
                 )
             }
         }
+    }
+    }
+}
+
+/** Круглый аватар OMNIX слева от ответа: знак на тёмной подложке (макет «Чат»). */
+@Composable
+private fun AssistantAvatar() {
+    Box(
+        modifier = Modifier
+            .size(26.dp)
+            .clip(CircleShape)
+            .background(OmnixTheme.colors.surfaceElevated),
+        contentAlignment = Alignment.Center
+    ) {
+        OmnixRingMark(width = 14.dp, height = 15.dp)
     }
 }
 
@@ -819,7 +879,7 @@ private fun ChatComposer(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(if (isDictating) colors.accentBrandSoft else colors.surface)
+                .background(if (isDictating) colors.accentBrandSoft else colors.actionPrimary)
                 .clickable(onClick = onToggleDictation)
                 .clearAndSetSemantics {
                     contentDescription = dictationLabel
@@ -830,7 +890,7 @@ private fun ChatComposer(
             Icon(
                 imageVector = OmnixMicLineIcon,
                 contentDescription = null,
-                tint = if (isDictating) colors.accentBrand else colors.textSecondary,
+                tint = if (isDictating) colors.accentBrand else colors.onActionPrimary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -868,7 +928,9 @@ private fun ChatComposer(
 /** Поле ввода чата; в боковом меню есть второе поле — поиск. */
 internal const val CHAT_COMPOSER_FIELD_TAG = "chat-composer-field"
 
-private const val HISTORY_SHEET_HEIGHT = 0.55f
+private const val HISTORY_PANEL_FRACTION = 0.5f
+private const val HISTORY_ANIM_MS = 220
+private val HISTORY_PANEL_MIN_WIDTH = 280.dp
 private val BubbleText =TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 24.sp)
 private val FieldText = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp, lineHeight = 22.sp)
 private val UserBubbleShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 6.dp, bottomStart = 20.dp)
