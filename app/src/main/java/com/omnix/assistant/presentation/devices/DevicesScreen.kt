@@ -38,8 +38,6 @@ import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.agent.capability.CapabilityStatus
 import com.omnix.assistant.presentation.components.OmnixDivider
-import com.omnix.assistant.presentation.components.OmnixPanel
-import com.omnix.assistant.presentation.settings.OmnixSettingRow
 import com.omnix.assistant.presentation.components.OmnixStatusDot
 import com.omnix.assistant.presentation.components.clipDotColor
 import com.omnix.assistant.presentation.components.clipLabel
@@ -133,7 +131,13 @@ fun DevicesScreen(
                 color = OmnixTheme.colors.textSecondary
             )
             Spacer(Modifier.height(8.dp))
-            OmnixPanel {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(OmnixTheme.colors.surface)
+                    .border(BorderStroke(1.dp, OmnixTheme.colors.border), RoundedCornerShape(20.dp))
+            ) {
                 needAction.forEachIndexed { index, group ->
                     if (index > 0) OmnixDivider()
                     CapabilityGroupRow(group = group, onRequestPermissions = onRequestPermissions)
@@ -359,22 +363,41 @@ private fun CapabilityGroupRow(
         is CapabilityStatus.Unsupported -> status.reason
         is CapabilityStatus.Available -> null
     }
-    OmnixSettingRow(
-        title = capabilityGroupTitle(group.capability.id),
-        subtitle = subtitle,
-        value = capabilityStatusText(labelToken),
-        inset = true,
-        onClick = if (status is CapabilityStatus.PermissionRequired) {
-            { onRequestPermissions(status.permissions) }
-        } else {
-            null
-        }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (status is CapabilityStatus.PermissionRequired) {
+                    Modifier.clickable(role = Role.Button) { onRequestPermissions(status.permissions) }
+                } else {
+                    Modifier
+                }
+            )
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OmnixStatusDot(color = when (capabilityDot(status)) {
             CapabilityDotToken.OK -> colors.stateSuccess
             CapabilityDotToken.ATTENTION -> colors.stateWarning
             CapabilityDotToken.OFF -> colors.textDisabled
         })
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = capabilityGroupTitle(group.capability.id),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
+                color = colors.textPrimary
+            )
+            subtitle?.let {
+                Text(text = it, style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp), color = colors.textSecondary)
+            }
+        }
+        Text(
+            text = capabilityStatusText(labelToken),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+            color = colors.textSecondary
+        )
     }
 }
 
