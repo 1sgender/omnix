@@ -610,6 +610,6 @@
     <string name="omnix_protocols_subtitle">Omni does it on its own — by time, place or event</string>
     <string name="omnix_protocols_new_label">New protocol</string>
     <string name="omnix_protocols_yours_label">Yours</string>
-    <string name="omnix_protocols_active_count">%d active</string>
+    <string name="omnix_protocols_active_count">Active: %d</string>
     <string name="omnix_devices_eyebrow">Device</string>
 </resources>

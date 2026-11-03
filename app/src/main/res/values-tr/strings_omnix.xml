@@ -532,6 +532,6 @@
     <string name="omnix_protocols_subtitle">Omni bunu kendisi yapar — zamana, yere veya olaya göre</string>
     <string name="omnix_protocols_new_label">Yeni protokol</string>
     <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>
-    <string name="omnix_protocols_active_count">%d etkin</string>
+    <string name="omnix_protocols_active_count">Etkin: %d</string>
     <string name="omnix_devices_eyebrow">Cihaz</string>
 </resources>
