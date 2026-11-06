@@ -132,7 +132,15 @@ fun MeRoute(
                         value = com.omnix.assistant.core.locale.AppLanguage.current().nativeName,
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
                     )
-                )
+                ) + (if (isAdmin) listOf(
+                    // Регистрация наушников OMNIX — только админ (привязка 2026-11-06).
+                    MeRow(
+                        icon = OmnixHeadphonesLineIcon,
+                        label = stringResource(R.string.omnix_headset_admin_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_HEADSETS)
+                    )
+                ) else emptyList())
             )
         ),
         modifier = modifier,

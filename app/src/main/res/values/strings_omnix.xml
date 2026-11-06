@@ -611,4 +611,23 @@
     <string name="omnix_protocols_yours_label">Yours</string>
     <string name="omnix_protocols_active_count">Active: %d</string>
     <string name="omnix_devices_eyebrow">Device</string>
+
+    <!-- Привязка к наушникам OMNIX (2026-11-06) -->
+    <string name="omnix_headset_required_title">Connect OMNIX earbuds</string>
+    <string name="omnix_headset_required_body">OMNIX works with OMNIX earbuds. Put them on and connect them over Bluetooth.</string>
+    <string name="omnix_headset_required_permission">Allow OMNIX to see nearby devices so it can recognise your OMNIX earbuds.</string>
+    <string name="omnix_headset_required_bluetooth_off">Bluetooth is off. Turn it on and connect your OMNIX earbuds.</string>
+    <string name="omnix_headset_grant_permission">Allow</string>
+    <string name="omnix_headset_open_bluetooth">Open Bluetooth settings</string>
+    <string name="omnix_headset_check_again">Check again</string>
+    <string name="omnix_headset_admin_title">OMNIX earbuds</string>
+    <string name="omnix_headset_admin_body">Earbuds registered here unlock OMNIX on this phone. A pair you add is renamed to OMNIX on this phone.</string>
+    <string name="omnix_headset_admin_add">Add earbuds</string>
+    <string name="omnix_headset_admin_paired">Earbuds added and renamed to OMNIX.</string>
+    <string name="omnix_headset_admin_pair_failed">Earbuds were not added.</string>
+    <string name="omnix_headset_admin_none">No earbuds registered yet</string>
+    <string name="omnix_headset_admin_connected">Connected</string>
+    <string name="omnix_headset_admin_remove">Remove</string>
+    <string name="omnix_headset_admin_enforce">Check earbuds for me too</string>
+    <string name="omnix_headset_admin_enforce_body">The admin passes without earbuds. Turn this on to see what users see.</string>
 </resources>

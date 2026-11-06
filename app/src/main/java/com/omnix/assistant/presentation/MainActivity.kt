@@ -25,6 +25,7 @@ import com.omnix.assistant.update.OtaDownloadMonitor
 import androidx.lifecycle.lifecycleScope
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.presentation.firstrun.FirstRunRoute
+import com.omnix.assistant.presentation.headset.OmnixHeadsetGateHost
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.settings.AppearanceViewModel
@@ -169,7 +170,11 @@ class MainActivity : ComponentActivity() {
                                 // где загрузку можно отменить.
                                 OmnixLaunchScreen(status = LaunchStatus.LoadingModel)
                             } else {
-                                OmnixNavGraph()
+                                // Привязка к наушникам OMNIX (2026-11-06): без них —
+                                // экран «Подключите наушники OMNIX», админ проходит.
+                                OmnixHeadsetGateHost {
+                                    OmnixNavGraph()
+                                }
                                 if (modelState is LocalModelState.NotInstalled &&
                                     modelConsent == ModelDownloadPolicy.CONSENT_UNASKED
                                 ) {

@@ -33,6 +33,7 @@ import com.omnix.assistant.presentation.components.OmnixPrimaryButton
 import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.presentation.design.OmnixTheme
+import com.omnix.assistant.presentation.headset.OmnixHeadsetsAdminScreen
 
 /**
  * Resolves a settings section key to its screen and wires it to the real
@@ -206,6 +207,8 @@ fun SettingsSectionRoute(
             modifier = modifier,
             onBack = onBack
         )
+
+        SECTION_HEADSETS -> OmnixHeadsetsAdminScreen(modifier = modifier, onBack = onBack)
 
         else -> SectionScaffold(stringResource(R.string.omnix_settings_title), modifier, onBack) {}
     }

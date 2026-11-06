@@ -533,4 +533,23 @@
     <string name="omnix_protocols_yours_label">Сіздікі</string>
     <string name="omnix_protocols_active_count">Белсенді: %d</string>
     <string name="omnix_devices_eyebrow">Құрылғы</string>
+
+    <!-- Привязка к наушникам OMNIX (2026-11-06) -->
+    <string name="omnix_headset_required_title">OMNIX құлаққаптарын қосыңыз</string>
+    <string name="omnix_headset_required_body">OMNIX тек OMNIX құлаққаптарымен жұмыс істейді. Оларды тағып, Bluetooth арқылы қосыңыз.</string>
+    <string name="omnix_headset_required_permission">OMNIX құлаққаптарыңызды тануы үшін OMNIX-ке жақын маңдағы құрылғыларды көруге рұқсат беріңіз.</string>
+    <string name="omnix_headset_required_bluetooth_off">Bluetooth өшірулі. Оны қосып, OMNIX құлаққаптарын жалғаңыз.</string>
+    <string name="omnix_headset_grant_permission">Рұқсат беру</string>
+    <string name="omnix_headset_open_bluetooth">Bluetooth параметрлерін ашу</string>
+    <string name="omnix_headset_check_again">Қайта тексеру</string>
+    <string name="omnix_headset_admin_title">OMNIX құлаққаптары</string>
+    <string name="omnix_headset_admin_body">Осында тіркелген құлаққаптар осы телефонда OMNIX-ті ашады. Қосылған құлаққаптың атауы осы телефонда OMNIX болады.</string>
+    <string name="omnix_headset_admin_add">Құлаққап қосу</string>
+    <string name="omnix_headset_admin_paired">Құлаққап қосылды, атауы OMNIX болды.</string>
+    <string name="omnix_headset_admin_pair_failed">Құлаққап қосылмады.</string>
+    <string name="omnix_headset_admin_none">Әзірге тіркелген құлаққап жоқ</string>
+    <string name="omnix_headset_admin_connected">Қосулы</string>
+    <string name="omnix_headset_admin_remove">Жою</string>
+    <string name="omnix_headset_admin_enforce">Мен үшін де тексеру</string>
+    <string name="omnix_headset_admin_enforce_body">Әкімші құлаққапсыз өтеді. Пайдаланушылар көретінді көру үшін қосыңыз.</string>
 </resources>

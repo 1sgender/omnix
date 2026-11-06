@@ -609,4 +609,23 @@
     <string name="omnix_protocols_yours_label">Siziňkiler</string>
     <string name="omnix_protocols_active_count">Işjeň: %d</string>
     <string name="omnix_devices_eyebrow">Enjam</string>
+
+    <!-- Привязка к наушникам OMNIX (2026-11-06) -->
+    <string name="omnix_headset_required_title">OMNIX nauşniklerini birikdiriň</string>
+    <string name="omnix_headset_required_body">OMNIX diňe OMNIX nauşnikleri bilen işleýär. Olary dakyň we Bluetooth arkaly birikdiriň.</string>
+    <string name="omnix_headset_required_permission">OMNIX nauşnikleriňizi tanar ýaly, OMNIX-e golaýdaky enjamlary görmäge rugsat beriň.</string>
+    <string name="omnix_headset_required_bluetooth_off">Bluetooth öçük. Ony açyň we OMNIX nauşniklerini birikdiriň.</string>
+    <string name="omnix_headset_grant_permission">Rugsat bermek</string>
+    <string name="omnix_headset_open_bluetooth">Bluetooth sazlamalaryny açmak</string>
+    <string name="omnix_headset_check_again">Täzeden barlamak</string>
+    <string name="omnix_headset_admin_title">OMNIX nauşnikleri</string>
+    <string name="omnix_headset_admin_body">Şu ýerde hasaba alnan nauşnikler bu telefonda OMNIX-i açýar. Goşulan nauşnikleriň ady bu telefonda OMNIX bolýar.</string>
+    <string name="omnix_headset_admin_add">Nauşnik goşmak</string>
+    <string name="omnix_headset_admin_paired">Nauşnikler goşuldy we ady OMNIX edildi.</string>
+    <string name="omnix_headset_admin_pair_failed">Nauşnikler goşulmady.</string>
+    <string name="omnix_headset_admin_none">Entek hasaba alnan nauşnik ýok</string>
+    <string name="omnix_headset_admin_connected">Birikdirildi</string>
+    <string name="omnix_headset_admin_remove">Aýyrmak</string>
+    <string name="omnix_headset_admin_enforce">Meniň üçin hem barlamak</string>
+    <string name="omnix_headset_admin_enforce_body">Admin nauşniksiz geçýär. Ulanyjylaryň görýänini görmek üçin açyň.</string>
 </resources>

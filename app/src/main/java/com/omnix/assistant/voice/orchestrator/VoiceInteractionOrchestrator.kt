@@ -22,6 +22,7 @@ import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.crash.CrashCapture
+import com.omnix.assistant.core.headset.OmnixHeadsetGate
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.domain.models.VoiceAssistantState
@@ -67,7 +68,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private val getSettingsUseCase: GetSettingsUseCase,
     private val toolExecutor: ToolExecutor,
     private val translatorEngine: LiveTranslatorEngine,
-    private val latencyMetrics: VoiceLatencyMetrics
+    private val latencyMetrics: VoiceLatencyMetrics,
+    private val headsetGate: OmnixHeadsetGate
 ) {
     companion object {
         private const val TAG = "VoiceOrchestrator"
@@ -330,7 +332,10 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 // JVM-тест): STANDBY — обычное слушание; AI_THINKING — барридж-ин.
                 when (resolveWakeDetectionAction(_currentMode.value)) {
                     WakeDetectionAction.START_LISTENING -> {
-                        if (!isHeadsetOnlyMode || bluetoothAudioRouter.isHeadsetConnected()) {
+                        // Без наушников OMNIX ассистент молчит (привязка 2026-11-06).
+                        if (!headsetGate.allowsAssistant()) {
+                            Log.i(TAG, "wakeword ignored: OMNIX headset not connected")
+                        } else if (!isHeadsetOnlyMode || bluetoothAudioRouter.isHeadsetConnected()) {
                             onWakeWordDetected(detection)
                         }
                     }
