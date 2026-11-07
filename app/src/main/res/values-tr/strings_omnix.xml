@@ -533,4 +533,23 @@
     <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>
     <string name="omnix_protocols_active_count">Etkin: %d</string>
     <string name="omnix_devices_eyebrow">Cihaz</string>
+
+    <!-- Привязка к наушникам OMNIX (2026-11-06) -->
+    <string name="omnix_headset_required_title">OMNIX kulaklığını bağlayın</string>
+    <string name="omnix_headset_required_body">OMNIX, OMNIX kulaklıklarıyla çalışır. Takın ve Bluetooth ile bağlayın.</string>
+    <string name="omnix_headset_required_permission">OMNIX kulaklığınızı tanıyabilmesi için OMNIX\'in yakındaki cihazları görmesine izin verin.</string>
+    <string name="omnix_headset_required_bluetooth_off">Bluetooth kapalı. Açın ve OMNIX kulaklığınızı bağlayın.</string>
+    <string name="omnix_headset_grant_permission">İzin ver</string>
+    <string name="omnix_headset_open_bluetooth">Bluetooth ayarlarını aç</string>
+    <string name="omnix_headset_check_again">Tekrar kontrol et</string>
+    <string name="omnix_headset_admin_title">OMNIX kulaklıkları</string>
+    <string name="omnix_headset_admin_body">Burada kayıtlı kulaklıklar bu telefonda OMNIX\'i açar. Eklenen kulaklığın adı bu telefonda OMNIX olur.</string>
+    <string name="omnix_headset_admin_add">Kulaklık ekle</string>
+    <string name="omnix_headset_admin_paired">Kulaklık eklendi ve adı OMNIX yapıldı.</string>
+    <string name="omnix_headset_admin_pair_failed">Kulaklık eklenmedi.</string>
+    <string name="omnix_headset_admin_none">Henüz kayıtlı kulaklık yok</string>
+    <string name="omnix_headset_admin_connected">Bağlı</string>
+    <string name="omnix_headset_admin_remove">Kaldır</string>
+    <string name="omnix_headset_admin_enforce">Benim için de kontrol et</string>
+    <string name="omnix_headset_admin_enforce_body">Yönetici kulaklıksız geçer. Kullanıcıların gördüğünü görmek için açın.</string>
 </resources>

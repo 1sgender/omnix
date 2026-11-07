@@ -610,4 +610,23 @@
     <string name="omnix_protocols_yours_label">Ваши</string>
     <string name="omnix_protocols_active_count">Активно: %d</string>
     <string name="omnix_devices_eyebrow">Устройство</string>
+
+    <!-- Привязка к наушникам OMNIX (2026-11-06) -->
+    <string name="omnix_headset_required_title">Подключите наушники OMNIX</string>
+    <string name="omnix_headset_required_body">OMNIX работает с наушниками OMNIX. Наденьте их и подключите по Bluetooth.</string>
+    <string name="omnix_headset_required_permission">Разрешите OMNIX видеть устройства поблизости, чтобы он узнал ваши наушники OMNIX.</string>
+    <string name="omnix_headset_required_bluetooth_off">Bluetooth выключен. Включите его и подключите наушники OMNIX.</string>
+    <string name="omnix_headset_grant_permission">Разрешить</string>
+    <string name="omnix_headset_open_bluetooth">Открыть настройки Bluetooth</string>
+    <string name="omnix_headset_check_again">Проверить снова</string>
+    <string name="omnix_headset_admin_title">Наушники OMNIX</string>
+    <string name="omnix_headset_admin_body">Зарегистрированные здесь наушники открывают OMNIX на этом телефоне. Добавленная пара получает имя OMNIX на этом телефоне.</string>
+    <string name="omnix_headset_admin_add">Добавить наушники</string>
+    <string name="omnix_headset_admin_paired">Наушники добавлены и переименованы в OMNIX.</string>
+    <string name="omnix_headset_admin_pair_failed">Наушники не добавлены.</string>
+    <string name="omnix_headset_admin_none">Наушники ещё не зарегистрированы</string>
+    <string name="omnix_headset_admin_connected">Подключены</string>
+    <string name="omnix_headset_admin_remove">Удалить</string>
+    <string name="omnix_headset_admin_enforce">Проверять наушники и для меня</string>
+    <string name="omnix_headset_admin_enforce_body">Админ проходит без наушников. Включите, чтобы увидеть то, что видят пользователи.</string>
 </resources>

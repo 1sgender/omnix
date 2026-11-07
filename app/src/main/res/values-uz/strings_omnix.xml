@@ -533,4 +533,23 @@
     <string name="omnix_protocols_yours_label">Sizniki</string>
     <string name="omnix_protocols_active_count">Faol: %d</string>
     <string name="omnix_devices_eyebrow">Qurilma</string>
+
+    <!-- Привязка к наушникам OMNIX (2026-11-06) -->
+    <string name="omnix_headset_required_title">OMNIX quloqchinlarini ulang</string>
+    <string name="omnix_headset_required_body">OMNIX faqat OMNIX quloqchinlari bilan ishlaydi. Ularni taqing va Bluetooth orqali ulang.</string>
+    <string name="omnix_headset_required_permission">OMNIX quloqchinlaringizni taniy olishi uchun OMNIXga yaqin atrofdagi qurilmalarni koʻrishga ruxsat bering.</string>
+    <string name="omnix_headset_required_bluetooth_off">Bluetooth oʻchiq. Uni yoqing va OMNIX quloqchinlarini ulang.</string>
+    <string name="omnix_headset_grant_permission">Ruxsat berish</string>
+    <string name="omnix_headset_open_bluetooth">Bluetooth sozlamalarini ochish</string>
+    <string name="omnix_headset_check_again">Qayta tekshirish</string>
+    <string name="omnix_headset_admin_title">OMNIX quloqchinlari</string>
+    <string name="omnix_headset_admin_body">Shu yerda roʻyxatdan oʻtgan quloqchinlar bu telefonda OMNIXni ochadi. Qoʻshilgan quloqchin nomi bu telefonda OMNIX boʻladi.</string>
+    <string name="omnix_headset_admin_add">Quloqchin qoʻshish</string>
+    <string name="omnix_headset_admin_paired">Quloqchin qoʻshildi va nomi OMNIX qilindi.</string>
+    <string name="omnix_headset_admin_pair_failed">Quloqchin qoʻshilmadi.</string>
+    <string name="omnix_headset_admin_none">Hali roʻyxatdan oʻtgan quloqchin yoʻq</string>
+    <string name="omnix_headset_admin_connected">Ulangan</string>
+    <string name="omnix_headset_admin_remove">Oʻchirish</string>
+    <string name="omnix_headset_admin_enforce">Men uchun ham tekshirish</string>
+    <string name="omnix_headset_admin_enforce_body">Admin quloqchinsiz oʻtadi. Foydalanuvchilar koʻradiganini koʻrish uchun yoqing.</string>
 </resources>

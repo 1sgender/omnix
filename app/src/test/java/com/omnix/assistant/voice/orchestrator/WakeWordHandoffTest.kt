@@ -4,6 +4,7 @@ import android.content.Context
 import com.omnix.assistant.agent.executor.ToolExecutor
 import com.omnix.assistant.agent.metrics.VoiceLatencyMetrics
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
+import com.omnix.assistant.core.headset.OmnixHeadsetGate
 import com.omnix.assistant.domain.models.VoiceAssistantState
 import com.omnix.assistant.domain.models.VoiceSettings
 import com.omnix.assistant.domain.usecases.GetSettingsUseCase
@@ -59,6 +60,7 @@ class WakeWordHandoffTest {
     private lateinit var toolExecutor: ToolExecutor
     private lateinit var translator: LiveTranslatorEngine
     private lateinit var latency: VoiceLatencyMetrics
+    private lateinit var headsetGate: OmnixHeadsetGate
 
     private lateinit var detections: MutableSharedFlow<WakeWordDetection>
     private lateinit var engineErrors: MutableSharedFlow<WakeWordEngineError>
@@ -77,6 +79,9 @@ class WakeWordHandoffTest {
         toolExecutor = mockk()
         translator = mockk()
         latency = mockk()
+        // Наушники OMNIX подключены: тест про маршрутизацию детекта, не про привязку.
+        headsetGate = mockk()
+        every { headsetGate.allowsAssistant() } returns true
 
         // replay=1 как в проде (там extraBufferCapacity): событие переживает
         // подписку коллектора. Строгие проверки ниже — режим и verify вызовов.
@@ -126,6 +131,7 @@ class WakeWordHandoffTest {
             toolExecutor,
             translator,
             latency,
+            headsetGate,
         )
     }
 

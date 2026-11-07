@@ -288,3 +288,6 @@ const val SECTION_ABOUT = "about"
 const val SECTION_ADVANCED = "advanced"
 const val SECTION_DIAGNOSTICS = "diagnostics"
 const val SECTION_PROFILE = "profile"
+
+/** Админ: регистрация наушников OMNIX на этом телефоне. */
+const val SECTION_HEADSETS = "omnix_headsets"
