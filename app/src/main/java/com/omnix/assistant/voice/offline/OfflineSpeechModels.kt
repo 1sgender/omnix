@@ -41,13 +41,18 @@ object OfflineSpeechModels {
     val TK_VOICE = OfflineSpeechModel(
         id = "tk-voice",
         dirName = "tk-voice",
-        url = "",
-        sizeBytes = 0L,
-        sha256 = "",
+        url = "https://omnix.144.31.14.236.sslip.io/models/tk-voice.zip",
+        sizeBytes = 67_528_197L,
+        sha256 = "265b2e52d4c325dfb96664394ad8c308cf35e9728677172da0975098af10e270",
         requiredFiles = listOf("model.onnx", "tokens.txt", "espeak-ng-data/phontab")
     )
 
-    /** Туркменское распознавание речи: Whisper base, дообученный, int8, формат sherpa-onnx. */
+    /**
+     * Туркменское распознавание речи: Whisper base, дообученный, int8, формат sherpa-onnx.
+     * Не опубликовано намеренно: после сжатия в int8 ошибка слов 55,6% (до сжатия 33%), а локальный
+     * результат стоит в приложении раньше сервера. Файл tk-asr.zip уже лежит на сервере
+     * (134 656 024 байт, sha256 b3c52b88…a173e30); включить, когда качество подтянем.
+     */
     val TK_ASR = OfflineSpeechModel(
         id = "tk-asr",
         dirName = "tk-asr",
