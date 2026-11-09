@@ -533,4 +533,20 @@
     <string name="omnix_protocols_yours_label">Sizniki</string>
     <string name="omnix_protocols_active_count">Faol: %d</string>
     <string name="omnix_devices_eyebrow">Qurilma</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Oflayn ovoz</string>
+    <string name="omnix_offline_hint">Internetsiz ishlaydigan ovoz va nutqni aniqlash. Bir marta yuklab oling.</string>
+    <string name="omnix_offline_tk_voice">OMNIX turkman ovozi</string>
+    <string name="omnix_offline_tk_asr">Turkman nutqini aniqlash</string>
+    <string name="omnix_offline_ru_asr">Rus nutqini aniqlash</string>
+    <string name="omnix_offline_state_soon">Tez orada</string>
+    <string name="omnix_offline_state_installed">Oʻrnatildi</string>
+    <string name="omnix_offline_state_not_installed">Yuklanmagan · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">Yuklanmoqda… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Oʻrnatilmoqda…</string>
+    <string name="omnix_offline_state_failed">Muvaffaqiyatsiz: %1$s</string>
+    <string name="omnix_offline_state_builtin">Oʻrnatilgan</string>
+    <string name="omnix_offline_action_download">Yuklab olish</string>
+    <string name="omnix_offline_action_remove">Oʻchirish</string>
 </resources>

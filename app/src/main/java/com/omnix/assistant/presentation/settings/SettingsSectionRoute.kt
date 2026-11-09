@@ -207,6 +207,8 @@ fun SettingsSectionRoute(
             onBack = onBack
         )
 
+        SECTION_OFFLINE_SPEECH -> OfflineSpeechScreen(modifier = modifier, onBack = onBack)
+
         else -> SectionScaffold(stringResource(R.string.omnix_settings_title), modifier, onBack) {}
     }
 }

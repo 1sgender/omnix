@@ -609,4 +609,20 @@
     <string name="omnix_protocols_yours_label">Siziňkiler</string>
     <string name="omnix_protocols_active_count">Işjeň: %d</string>
     <string name="omnix_devices_eyebrow">Enjam</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Oflaýn ses</string>
+    <string name="omnix_offline_hint">Internetsiz işleýän ses we söz tanamak. Bir gezek ýükläp alyň.</string>
+    <string name="omnix_offline_tk_voice">OMNIX türkmen sesi</string>
+    <string name="omnix_offline_tk_asr">Türkmen sözüni tanamak</string>
+    <string name="omnix_offline_ru_asr">Rus sözüni tanamak</string>
+    <string name="omnix_offline_state_soon">Basym</string>
+    <string name="omnix_offline_state_installed">Guruldy</string>
+    <string name="omnix_offline_state_not_installed">Ýüklenmedi · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">Ýüklenýär… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Gurulýar…</string>
+    <string name="omnix_offline_state_failed">Şowsuz boldy: %1$s</string>
+    <string name="omnix_offline_state_builtin">Ýerleşdirilen</string>
+    <string name="omnix_offline_action_download">Ýükläp almak</string>
+    <string name="omnix_offline_action_remove">Aýyrmak</string>
 </resources>

@@ -533,4 +533,20 @@
     <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>
     <string name="omnix_protocols_active_count">Etkin: %d</string>
     <string name="omnix_devices_eyebrow">Cihaz</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Çevrimdışı ses</string>
+    <string name="omnix_offline_hint">İnternetsiz çalışan ses ve konuşma tanıma. Bir kez indirin.</string>
+    <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
+    <string name="omnix_offline_tk_asr">Türkmence konuşma tanıma</string>
+    <string name="omnix_offline_ru_asr">Rusça konuşma tanıma</string>
+    <string name="omnix_offline_state_soon">Yakında</string>
+    <string name="omnix_offline_state_installed">Yüklendi</string>
+    <string name="omnix_offline_state_not_installed">İndirilmedi · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">İndiriliyor… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Yükleniyor…</string>
+    <string name="omnix_offline_state_failed">Başarısız: %1$s</string>
+    <string name="omnix_offline_state_builtin">Yerleşik</string>
+    <string name="omnix_offline_action_download">İndir</string>
+    <string name="omnix_offline_action_remove">Kaldır</string>
 </resources>

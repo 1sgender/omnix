@@ -611,4 +611,20 @@
     <string name="omnix_protocols_yours_label">Yours</string>
     <string name="omnix_protocols_active_count">Active: %d</string>
     <string name="omnix_devices_eyebrow">Device</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Offline voice</string>
+    <string name="omnix_offline_hint">Voice and speech recognition that work without internet. Download once.</string>
+    <string name="omnix_offline_tk_voice">Turkmen voice OMNIX</string>
+    <string name="omnix_offline_tk_asr">Turkmen speech recognition</string>
+    <string name="omnix_offline_ru_asr">Russian speech recognition</string>
+    <string name="omnix_offline_state_soon">Coming soon</string>
+    <string name="omnix_offline_state_installed">Installed</string>
+    <string name="omnix_offline_state_not_installed">Not downloaded · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">Downloading… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Installing…</string>
+    <string name="omnix_offline_state_failed">Failed: %1$s</string>
+    <string name="omnix_offline_state_builtin">Built in</string>
+    <string name="omnix_offline_action_download">Download</string>
+    <string name="omnix_offline_action_remove">Remove</string>
 </resources>
