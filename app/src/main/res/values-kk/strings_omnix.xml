@@ -533,4 +533,20 @@
     <string name="omnix_protocols_yours_label">Сіздікі</string>
     <string name="omnix_protocols_active_count">Белсенді: %d</string>
     <string name="omnix_devices_eyebrow">Құрылғы</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Офлайн дауыс</string>
+    <string name="omnix_offline_hint">Интернетсіз істейтін дауыс және сөйлеуді тану. Бір рет жүктеп алыңыз.</string>
+    <string name="omnix_offline_tk_voice">OMNIX түрікмен дауысы</string>
+    <string name="omnix_offline_tk_asr">Түрікмен сөзін тану</string>
+    <string name="omnix_offline_ru_asr">Орыс сөзін тану</string>
+    <string name="omnix_offline_state_soon">Жақында</string>
+    <string name="omnix_offline_state_installed">Орнатылды</string>
+    <string name="omnix_offline_state_not_installed">Жүктелмеген · %1$d МБ</string>
+    <string name="omnix_offline_state_downloading">Жүктелуде… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Орнатылуда…</string>
+    <string name="omnix_offline_state_failed">Сәтсіз: %1$s</string>
+    <string name="omnix_offline_state_builtin">Кірістірілген</string>
+    <string name="omnix_offline_action_download">Жүктеу</string>
+    <string name="omnix_offline_action_remove">Жою</string>
 </resources>

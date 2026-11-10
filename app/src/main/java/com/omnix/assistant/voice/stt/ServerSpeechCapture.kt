@@ -9,6 +9,7 @@ import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.data.remote.OmnixApiClient
 import com.omnix.assistant.voice.conversation.PcmWav
 import com.omnix.assistant.voice.conversation.UtteranceSegmenter
+import com.omnix.assistant.voice.offline.LocalSpeechRecognizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
@@ -23,7 +24,10 @@ import kotlin.math.sqrt
  * Конец фразы определяет [UtteranceSegmenter] по паузе, как в переводчике.
  */
 @Singleton
-class ServerSpeechCapture @Inject constructor(private val api: OmnixApiClient) {
+class ServerSpeechCapture @Inject constructor(
+    private val api: OmnixApiClient,
+    private val local: LocalSpeechRecognizer
+) {
 
     sealed interface Outcome {
         data class Heard(val text: String) : Outcome
@@ -47,14 +51,26 @@ class ServerSpeechCapture @Inject constructor(private val api: OmnixApiClient) {
         when (val captured = record(waitForSpeechMs, onLevel)) {
             Captured.Busy -> Outcome.MicrophoneBusy
             Captured.Quiet -> Outcome.Silence
-            is Captured.Speech -> when (val stt = api.transcribe(PcmWav.encode(captured.samples, SAMPLE_RATE), languageHint)) {
-                is Resource.Success -> {
-                    val text = stt.data.text.trim()
-                    if (text.length < 2) Outcome.Silence else Outcome.Heard(text)
-                }
-                is Resource.Error -> Outcome.Failed(stt.message.orEmpty())
-                else -> Outcome.Silence
+            is Captured.Speech -> recognizeOnPhoneThenServer(captured.samples, languageHint)
+        }
+    }
+
+    /**
+     * Офлайн прежде всего (решение владельца 2026-11-09): если на телефоне есть модель
+     * для языка, фраза распознаётся без интернета. Не услышала или модели нет — сервер.
+     */
+    private suspend fun recognizeOnPhoneThenServer(samples: ShortArray, languageHint: String): Outcome {
+        if (local.isReady(languageHint)) {
+            val text = local.transcribe(samples, languageHint)
+            if (text != null && text.length >= MIN_TEXT_CHARS) return Outcome.Heard(text)
+        }
+        return when (val stt = api.transcribe(PcmWav.encode(samples, SAMPLE_RATE), languageHint)) {
+            is Resource.Success -> {
+                val text = stt.data.text.trim()
+                if (text.length < MIN_TEXT_CHARS) Outcome.Silence else Outcome.Heard(text)
             }
+            is Resource.Error -> Outcome.Failed(stt.message.orEmpty())
+            else -> Outcome.Silence
         }
     }
 
@@ -120,6 +136,7 @@ class ServerSpeechCapture @Inject constructor(private val api: OmnixApiClient) {
         const val SAMPLE_RATE = 16_000
         const val FRAME = 320
         const val WAIT_FOR_SPEECH_MS = 8_000L
+        const val MIN_TEXT_CHARS = 2
         const val LEVEL_LOUD = 6_000.0
     }
 }

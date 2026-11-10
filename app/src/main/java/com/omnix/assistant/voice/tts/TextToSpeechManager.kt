@@ -2,6 +2,7 @@ package com.omnix.assistant.voice.tts
 
 import com.omnix.assistant.core.locale.AppLanguage
 import com.omnix.assistant.core.locale.SpeechLanguage
+import com.omnix.assistant.voice.offline.OfflineVoice
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -41,7 +42,8 @@ sealed interface TtsState {
  */
 @Singleton
 class TextToSpeechManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val offlineVoice: OfflineVoice
 ) {
     companion object {
         private const val TAG = "TtsManager"
@@ -255,6 +257,11 @@ class TextToSpeechManager @Inject constructor(
 
         scope.launch {
             speakMutex.withLock {
+                // Собственный офлайн-голос OMNIX (туркменский): системный движок не нужен.
+                if (offlineVoice.canSpeak(AppLanguage.current())) {
+                    speakOffline(text, speechRate, queueMode, stream)
+                    return@withLock
+                }
                 val engine = tts
                 if (engine != null && _isInitialized.value && _ttsState.value !is TtsState.Initializing) {
                     speakInternal(text, speechRate, pitch, queueMode, stream)
@@ -275,6 +282,34 @@ class TextToSpeechManager @Inject constructor(
                 }
             }
         }
+    }
+
+    /** Число фраз офлайн-голоса, поставленных и ещё не завершённых. */
+    private val offlineActive = java.util.concurrent.atomic.AtomicInteger(0)
+
+    private fun speakOffline(text: String, speechRate: Float, queueMode: Int, stream: Int?) {
+        acquireFocusIfNeeded()
+        activeUtterances.incrementAndGet()
+        offlineActive.incrementAndGet()
+        offlineVoice.speak(
+            text = text,
+            speed = speechRate,
+            flush = queueMode == TextToSpeech.QUEUE_FLUSH,
+            voiceCall = stream == AudioManager.STREAM_VOICE_CALL,
+            listener = object : OfflineVoice.Listener {
+                override fun onStart() {
+                    _ttsState.value = TtsState.Speaking
+                }
+
+                override fun onFinished(completed: Boolean) {
+                    if (offlineActive.decrementAndGet() <= 0) {
+                        offlineActive.set(0)
+                        _ttsState.value = if (completed) TtsState.Done else TtsState.Ready
+                    }
+                    onUtteranceFinished()
+                }
+            }
+        )
     }
 
     /** Внутренний вызов speak, вызывается ТОЛЬКО когда движок гарантированно готов. */
@@ -402,6 +437,7 @@ class TextToSpeechManager @Inject constructor(
             speakMutex.withLock {
                 pendingUtterance = null
                 tts?.stop()
+                offlineVoice.stop()
                 // EAR-MODE: tts.stop() шлёт onStop только для ГОВОРЯЩЕЙ фразы —
                 // стоявшие в очереди (QUEUE_ADD) не принесут callback, поэтому
                 // счётчик активных фраз сбрасываем принудительно.
@@ -418,7 +454,7 @@ class TextToSpeechManager @Inject constructor(
      * Проверяет, идёт ли сейчас воспроизведение
      */
     fun isSpeaking(): Boolean {
-        return if (disposed.get()) false else tts?.isSpeaking == true
+        return if (disposed.get()) false else tts?.isSpeaking == true || offlineActive.get() > 0
     }
 
     /**
@@ -435,6 +471,7 @@ class TextToSpeechManager @Inject constructor(
         activeUtterances.set(0)
         ttsJob.cancel()
         try {
+            offlineVoice.stop()
             tts?.stop()
             tts?.shutdown()
         } catch (e: Exception) {

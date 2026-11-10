@@ -131,6 +131,13 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_me_row_language),
                         value = com.omnix.assistant.core.locale.AppLanguage.current().nativeName,
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
+                    ),
+                    // Офлайн-голос: модели речи, которые работают без интернета.
+                    MeRow(
+                        icon = OmnixBoltLineIcon,
+                        label = stringResource(R.string.omnix_offline_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_OFFLINE_SPEECH)
                     )
                 )
             )

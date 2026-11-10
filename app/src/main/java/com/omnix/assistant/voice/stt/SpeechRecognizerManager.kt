@@ -2,6 +2,7 @@ package com.omnix.assistant.voice.stt
 
 import com.omnix.assistant.core.locale.SpeechLanguage
 import com.omnix.assistant.R
+import com.omnix.assistant.voice.offline.LocalSpeechRecognizer
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -51,7 +52,8 @@ sealed interface SpeechRecognitionEvent {
 @Singleton
 class SpeechRecognizerManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val serverCapture: ServerSpeechCapture
+    private val serverCapture: ServerSpeechCapture,
+    private val local: LocalSpeechRecognizer
 ) : RecognitionListener {
 
     companion object {
@@ -182,12 +184,12 @@ class SpeechRecognizerManager @Inject constructor(
     }
 
     /** Одна фраза через сервер: слушаем сами, отправляем в Whisper, отдаём как обычный результат. */
-    private fun startServerListening(continuous: Boolean) {
+    private fun startServerListening(continuous: Boolean, languageHint: String = SpeechLanguage.SERVER_HINT_TK) {
         val session = generation.incrementAndGet()
         isListening = true
         _speechState.value = SpeechRecognitionEvent.ReadyForSpeech
         serverJob = scope.launch {
-            val outcome = serverCapture.listen(SpeechLanguage.SERVER_HINT_TK, onLevel = {
+            val outcome = serverCapture.listen(languageHint, onLevel = {
                 if (isCurrentSession(session)) _audioLevel.value = it
             })
             if (!isCurrentSession(session)) return@launch
@@ -315,6 +317,16 @@ class SpeechRecognizerManager @Inject constructor(
         }
         Log.w(TAG, "Speech recognition error code: $error")
 
+        // Нет интернета, а на телефоне есть своя модель языка — слушаем ею (офлайн).
+        if (isNetworkError(error)) {
+            val hint = currentLanguageTag.substringBefore('-')
+            if (local.isReady(hint)) {
+                Log.d(TAG, "network error — switching to on-device recognition ($hint)")
+                startServerListening(isContinuousMode, hint)
+                return
+            }
+        }
+
         isListening = false
         _audioLevel.value = 0f
 
@@ -354,6 +366,11 @@ class SpeechRecognizerManager @Inject constructor(
             scheduleContinuousRestart(30)
         }
     }
+
+    private fun isNetworkError(error: Int): Boolean =
+        error == SpeechRecognizer.ERROR_NETWORK ||
+            error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT ||
+            error == SpeechRecognizer.ERROR_SERVER
 
     private fun scheduleContinuousRestart(delayMs: Long) {
         if (disposed.get()) return
