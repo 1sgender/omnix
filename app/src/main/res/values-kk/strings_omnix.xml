@@ -35,8 +35,6 @@
     <string name="omnix_home_card_automations">Протоколдар</string>
     <string name="omnix_home_card_translator">Аудармашы</string>
     <string name="omnix_home_card_translator_sub">Тікелей, құлаққабыңызға</string>
-    <string name="omnix_home_card_memory">Жад</string>
-    <string name="omnix_home_card_memory_sub">Сіз туралы есімде қалғандар</string>
     <string name="omnix_home_card_reminders">Еске салғыштар</string>
     <string name="omnix_home_card_reminders_sub">Оятқыштар мен істер</string>
     <string name="omnix_home_card_automations_sub">Сөз бойынша протоколдар</string>
@@ -193,7 +191,6 @@
     <string name="omnix_me_license_active">Лицензия белсенді</string>
     <string name="omnix_me_no_name">Профиліңіз</string>
     <string name="omnix_me_license_inactive">Лицензия белсенді емес</string>
-    <string name="omnix_me_row_voice">Дауыс және «Омни»</string>
     <string name="omnix_me_row_memory">Жад</string>
     <string name="omnix_me_model_ready">Дайын</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
@@ -213,7 +210,7 @@
     <string name="omnix_voice_background_action">Рұқсат беру</string>
     <string name="omnix_voice_automations">Протоколдар</string>
     <string name="omnix_voice_automations_empty">Әзірге протокол жоқ. Протоколды сөзбен сипаттаңыз, «Жаңа протокол» түймесін басыңыз немесе айтыңыз: «Омни, құлаққап қосылғанда музыка қос».</string>
-    <string name="omnix_privacy_title">Құпиялылық</string>
+    <string name="omnix_privacy_title">Баптаулар</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
     <string name="omnix_privacy_allowed">Рұқсат етілген</string>
     <string name="omnix_privacy_not_allowed">Рұқсат етілмеген</string>
@@ -531,4 +528,25 @@
     <string name="omnix_privacy_where_device_body">Жад, чат тарихы, протоколдар, дауыс</string>
     <string name="omnix_privacy_where_cloud">БҰЛТТА</string>
     <string name="omnix_privacy_where_cloud_body">Тек сұраудың мәтіні, дауыс жазбасынсыз</string>
+    <string name="omnix_protocols_subtitle">Omni мұны өзі жасайды — уақытқа, орынға немесе оқиғаға қарай</string>
+    <string name="omnix_protocols_new_label">Жаңа протокол</string>
+    <string name="omnix_protocols_yours_label">Сіздікі</string>
+    <string name="omnix_protocols_active_count">Белсенді: %d</string>
+    <string name="omnix_devices_eyebrow">Құрылғы</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Офлайн дауыс</string>
+    <string name="omnix_offline_hint">Интернетсіз істейтін дауыс және сөйлеуді тану. Бір рет жүктеп алыңыз.</string>
+    <string name="omnix_offline_tk_voice">OMNIX түрікмен дауысы</string>
+    <string name="omnix_offline_tk_asr">Түрікмен сөзін тану</string>
+    <string name="omnix_offline_ru_asr">Орыс сөзін тану</string>
+    <string name="omnix_offline_state_soon">Жақында</string>
+    <string name="omnix_offline_state_installed">Орнатылды</string>
+    <string name="omnix_offline_state_not_installed">Жүктелмеген · %1$d МБ</string>
+    <string name="omnix_offline_state_downloading">Жүктелуде… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Орнатылуда…</string>
+    <string name="omnix_offline_state_failed">Сәтсіз: %1$s</string>
+    <string name="omnix_offline_state_builtin">Кірістірілген</string>
+    <string name="omnix_offline_action_download">Жүктеу</string>
+    <string name="omnix_offline_action_remove">Жою</string>
 </resources>

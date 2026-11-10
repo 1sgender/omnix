@@ -3,6 +3,14 @@ package com.omnix.assistant.presentation.automations
 import android.app.TimePickerDialog
 import android.text.format.DateFormat as AndroidDateFormat
 import androidx.compose.foundation.BorderStroke
+import com.omnix.assistant.presentation.design.OmnixSans
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,7 +38,6 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,31 +97,91 @@ fun AutomationsScreen(
 
     SectionScaffold(stringResource(R.string.omnix_voice_automations), modifier, onBack) {
         val spacing = OmnixTheme.spacing
+        val colors = OmnixTheme.colors
+
+        Text(
+            text = stringResource(R.string.omnix_protocols_subtitle),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 14.sp, lineHeight = 20.sp),
+            color = colors.textSecondary
+        )
+        Spacer(Modifier.height(spacing.md))
 
         // Протокол можно описать словами: чат поймёт и создаст его.
         if (onDescribe != null) {
             var described by rememberSaveable { mutableStateOf("") }
-            OutlinedTextField(
-                value = described,
-                onValueChange = { described = it.take(300) },
-                placeholder = { Text(stringResource(R.string.omnix_protocols_describe_hint)) },
-                minLines = 2,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(spacing.sm))
-            OmnixPrimaryButton(
-                text = stringResource(R.string.omnix_protocols_describe_button),
-                onClick = {
-                    onDescribe(described)
-                    described = ""
-                },
-                enabled = described.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(spacing.md))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(colors.surface)
+                    .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(22.dp))
+                    .padding(14.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.omnix_protocols_new_label).uppercase(Locale.getDefault()),
+                    style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                    color = colors.textTertiary
+                )
+                Box(Modifier.padding(top = 8.dp, bottom = 12.dp).fillMaxWidth()) {
+                    if (described.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.omnix_protocols_describe_hint),
+                            style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 21.sp),
+                            color = colors.textTertiary
+                        )
+                    }
+                    BasicTextField(
+                        value = described,
+                        onValueChange = { described = it.take(300) },
+                        textStyle = TextStyle(
+                            fontFamily = OmnixSans,
+                            fontSize = 15.sp,
+                            lineHeight = 21.sp,
+                            color = colors.textPrimary
+                        ),
+                        cursorBrush = SolidColor(colors.textPrimary),
+                        minLines = 2,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                OmnixPrimaryButton(
+                    text = stringResource(R.string.omnix_protocols_describe_button),
+                    onClick = {
+                        onDescribe(described)
+                        described = ""
+                    },
+                    enabled = described.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
 
-        OmnixPrimaryButton(
+        ProtocolsDivider(
+            label = stringResource(R.string.omnix_protocols_yours_label),
+            trailing = stringResource(R.string.omnix_protocols_active_count, state.rules.count { it.isEnabled })
+        )
+
+        if (state.rules.isEmpty()) {
+            OmnixSettingsGroup {
+                OmnixSettingRow(
+                    title = stringResource(R.string.omnix_voice_automations_empty),
+                    inset = true
+                )
+            }
+        } else {
+            state.rules.forEach { rule ->
+                AutomationCard(
+                    rule = rule,
+                    onToggle = { enabled -> viewModel.toggleRule(rule.ruleId, enabled) },
+                    onDelete = { deleteArmedRuleId = rule.ruleId }
+                )
+                Spacer(Modifier.height(spacing.sm))
+            }
+        }
+
+        Spacer(Modifier.height(spacing.md))
+
+        OmnixSecondaryButton(
             text = stringResource(R.string.omnix_automations_new),
             onClick = { creating = true },
             modifier = Modifier.fillMaxWidth()
@@ -143,26 +210,6 @@ fun AutomationsScreen(
                 titleColor = if (state.briefingSucceeded == false) OmnixTheme.colors.stateError else null,
                 onClick = viewModel::runBriefingNow
             )
-        }
-
-        Spacer(Modifier.height(spacing.lg))
-
-        if (state.rules.isEmpty()) {
-            OmnixSettingsGroup {
-                OmnixSettingRow(
-                    title = stringResource(R.string.omnix_voice_automations_empty),
-                    inset = true
-                )
-            }
-        } else {
-            state.rules.forEach { rule ->
-                AutomationCard(
-                    rule = rule,
-                    onToggle = { enabled -> viewModel.toggleRule(rule.ruleId, enabled) },
-                    onDelete = { deleteArmedRuleId = rule.ruleId }
-                )
-                Spacer(Modifier.height(spacing.sm))
-            }
         }
     }
 
@@ -533,5 +580,37 @@ private fun ChoiceRow(label: String, selected: Boolean, onSelect: () -> Unit) {
             .semantics { this.selected = selected }
     ) {
         if (selected) OmnixCheckIcon(color = OmnixTheme.colors.textPrimary)
+    }
+}
+
+/** Моно-подпись раздела с линией и необязательной меткой справа (макет «Протоколы»). */
+@Composable
+private fun ProtocolsDivider(label: String, trailing: String? = null) {
+    val colors = OmnixTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 22.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = label.uppercase(Locale.getDefault()),
+            style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+            color = colors.textTertiary
+        )
+        Box(
+            Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(colors.border)
+        )
+        if (trailing != null) {
+            Text(
+                text = trailing.uppercase(Locale.getDefault()),
+                style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                color = colors.textTertiary
+            )
+        }
     }
 }

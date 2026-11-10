@@ -51,8 +51,6 @@
     <string name="omnix_home_card_automations">Protocols</string>
     <string name="omnix_home_card_translator">Translator</string>
     <string name="omnix_home_card_translator_sub">Live, into your headphones</string>
-    <string name="omnix_home_card_memory">Memory</string>
-    <string name="omnix_home_card_memory_sub">What I remember about you</string>
     <string name="omnix_home_card_reminders">Reminders</string>
     <string name="omnix_home_card_reminders_sub">Alarms and to-dos</string>
     <string name="omnix_home_card_automations_sub">Protocols by phrase</string>
@@ -246,7 +244,6 @@
     <string name="omnix_me_license_active">License active</string>
     <string name="omnix_me_no_name">Your profile</string>
     <string name="omnix_me_license_inactive">License not active</string>
-    <string name="omnix_me_row_voice">Voice and “Omni”</string>
     <string name="omnix_me_row_memory">Memory</string>
     <string name="omnix_me_model_ready">Ready</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
@@ -268,7 +265,7 @@
     <string name="omnix_voice_automations">Protocols</string>
     <string name="omnix_voice_automations_empty">No protocols yet. Describe one in words or tap “New protocol”, or say: “Omni, when my headphones connect, play music”.</string>
 
-    <string name="omnix_privacy_title">Privacy</string>
+    <string name="omnix_privacy_title">Settings</string>
     <string name="omnix_privacy_microphone">Microphone</string>
     <string name="omnix_privacy_allowed">Allowed</string>
     <string name="omnix_privacy_not_allowed">Not allowed</string>
@@ -609,4 +606,25 @@
     <string name="omnix_privacy_where_device_body">Memory, chat history, protocols, voice</string>
     <string name="omnix_privacy_where_cloud">IN THE CLOUD</string>
     <string name="omnix_privacy_where_cloud_body">Only the text of a request, never a voice recording</string>
+    <string name="omnix_protocols_subtitle">Omni does it on its own — by time, place or event</string>
+    <string name="omnix_protocols_new_label">New protocol</string>
+    <string name="omnix_protocols_yours_label">Yours</string>
+    <string name="omnix_protocols_active_count">Active: %d</string>
+    <string name="omnix_devices_eyebrow">Device</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Offline voice</string>
+    <string name="omnix_offline_hint">Voice and speech recognition that work without internet. Download once.</string>
+    <string name="omnix_offline_tk_voice">Turkmen voice OMNIX</string>
+    <string name="omnix_offline_tk_asr">Turkmen speech recognition</string>
+    <string name="omnix_offline_ru_asr">Russian speech recognition</string>
+    <string name="omnix_offline_state_soon">Coming soon</string>
+    <string name="omnix_offline_state_installed">Installed</string>
+    <string name="omnix_offline_state_not_installed">Not downloaded · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">Downloading… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Installing…</string>
+    <string name="omnix_offline_state_failed">Failed: %1$s</string>
+    <string name="omnix_offline_state_builtin">Built in</string>
+    <string name="omnix_offline_action_download">Download</string>
+    <string name="omnix_offline_action_remove">Remove</string>
 </resources>

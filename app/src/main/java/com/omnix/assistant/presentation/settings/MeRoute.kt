@@ -16,7 +16,6 @@ import com.omnix.assistant.presentation.components.OmnixLockLineIcon
 import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
 import com.omnix.assistant.presentation.components.OmnixSparkLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
-import com.omnix.assistant.presentation.components.OmnixVoiceLineIcon
 import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.presentation.design.OmnixAppearance
 import com.omnix.assistant.presentation.navigation.OmnixDestination
@@ -116,12 +115,6 @@ fun MeRoute(
                         destination = OmnixDestination.Devices
                     ),
                     MeRow(
-                        icon = OmnixVoiceLineIcon,
-                        label = stringResource(R.string.omnix_me_row_voice),
-                        value = "",
-                        destination = OmnixDestination.SettingsSection(SECTION_VOICE)
-                    ),
-                    MeRow(
                         icon = OmnixSparkLineIcon,
                         label = stringResource(R.string.omnix_ai_title),
                         value = aiValue,
@@ -138,6 +131,13 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_me_row_language),
                         value = com.omnix.assistant.core.locale.AppLanguage.current().nativeName,
                         destination = OmnixDestination.SettingsSection(SECTION_LANGUAGE)
+                    ),
+                    // Офлайн-голос: модели речи, которые работают без интернета.
+                    MeRow(
+                        icon = OmnixBoltLineIcon,
+                        label = stringResource(R.string.omnix_offline_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_OFFLINE_SPEECH)
                     )
                 )
             )

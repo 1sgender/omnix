@@ -35,8 +35,6 @@
     <string name="omnix_home_card_automations">Protokoller</string>
     <string name="omnix_home_card_translator">Çevirmen</string>
     <string name="omnix_home_card_translator_sub">Canlı, kulaklığınıza</string>
-    <string name="omnix_home_card_memory">Hafıza</string>
-    <string name="omnix_home_card_memory_sub">Sizin hakkınızda hatırladıklarım</string>
     <string name="omnix_home_card_reminders">Hatırlatıcılar</string>
     <string name="omnix_home_card_reminders_sub">Alarmlar ve yapılacaklar</string>
     <string name="omnix_home_card_automations_sub">Söze göre protokoller</string>
@@ -193,7 +191,6 @@
     <string name="omnix_me_license_active">Lisans etkin</string>
     <string name="omnix_me_no_name">Profiliniz</string>
     <string name="omnix_me_license_inactive">Lisans etkin değil</string>
-    <string name="omnix_me_row_voice">Ses ve “Omni”</string>
     <string name="omnix_me_row_memory">Hafıza</string>
     <string name="omnix_me_model_ready">Hazır</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
@@ -213,7 +210,7 @@
     <string name="omnix_voice_background_action">İzin ver</string>
     <string name="omnix_voice_automations">Protokoller</string>
     <string name="omnix_voice_automations_empty">Henüz protokol yok. Protokolü kelimelerle anlatın, “Yeni protokol”e dokunun ya da şöyle deyin: “Omni, kulaklığım bağlanınca müzik aç.”</string>
-    <string name="omnix_privacy_title">Gizlilik</string>
+    <string name="omnix_privacy_title">Ayarlar</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">İzin verildi</string>
     <string name="omnix_privacy_not_allowed">İzin verilmedi</string>
@@ -531,4 +528,25 @@
     <string name="omnix_privacy_where_device_body">Bellek, sohbet geçmişi, protokoller, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTTA</string>
     <string name="omnix_privacy_where_cloud_body">Yalnızca isteğin metni, ses kaydı yok</string>
+    <string name="omnix_protocols_subtitle">Omni bunu kendisi yapar — zamana, yere veya olaya göre</string>
+    <string name="omnix_protocols_new_label">Yeni protokol</string>
+    <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>
+    <string name="omnix_protocols_active_count">Etkin: %d</string>
+    <string name="omnix_devices_eyebrow">Cihaz</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Çevrimdışı ses</string>
+    <string name="omnix_offline_hint">İnternetsiz çalışan ses ve konuşma tanıma. Bir kez indirin.</string>
+    <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
+    <string name="omnix_offline_tk_asr">Türkmence konuşma tanıma</string>
+    <string name="omnix_offline_ru_asr">Rusça konuşma tanıma</string>
+    <string name="omnix_offline_state_soon">Yakında</string>
+    <string name="omnix_offline_state_installed">Yüklendi</string>
+    <string name="omnix_offline_state_not_installed">İndirilmedi · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">İndiriliyor… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Yükleniyor…</string>
+    <string name="omnix_offline_state_failed">Başarısız: %1$s</string>
+    <string name="omnix_offline_state_builtin">Yerleşik</string>
+    <string name="omnix_offline_action_download">İndir</string>
+    <string name="omnix_offline_action_remove">Kaldır</string>
 </resources>

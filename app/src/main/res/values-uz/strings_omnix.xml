@@ -35,8 +35,6 @@
     <string name="omnix_home_card_automations">Protokollar</string>
     <string name="omnix_home_card_translator">Tarjimon</string>
     <string name="omnix_home_card_translator_sub">Jonli, quloqchiningizga</string>
-    <string name="omnix_home_card_memory">Xotira</string>
-    <string name="omnix_home_card_memory_sub">Siz haqingizda eslab qolganlarim</string>
     <string name="omnix_home_card_reminders">Eslatmalar</string>
     <string name="omnix_home_card_reminders_sub">Budilniklar va vazifalar</string>
     <string name="omnix_home_card_automations_sub">Ibora boʻyicha protokollar</string>
@@ -193,7 +191,6 @@
     <string name="omnix_me_license_active">Litsenziya faol</string>
     <string name="omnix_me_no_name">Profilingiz</string>
     <string name="omnix_me_license_inactive">Litsenziya faol emas</string>
-    <string name="omnix_me_row_voice">Ovoz va “Omni”</string>
     <string name="omnix_me_row_memory">Xotira</string>
     <string name="omnix_me_model_ready">Tayyor</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
@@ -213,7 +210,7 @@
     <string name="omnix_voice_background_action">Ruxsat berish</string>
     <string name="omnix_voice_automations">Protokollar</string>
     <string name="omnix_voice_automations_empty">Hozircha protokol yoʻq. Protokolni soʻzlar bilan tasvirlang, “Yangi protokol”ni bosing yoki ayting: “Omni, quloqchinim ulanganda musiqa qoʻy.”</string>
-    <string name="omnix_privacy_title">Maxfiylik</string>
+    <string name="omnix_privacy_title">Sozlamalar</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">Ruxsat berilgan</string>
     <string name="omnix_privacy_not_allowed">Ruxsat berilmagan</string>
@@ -531,4 +528,25 @@
     <string name="omnix_privacy_where_device_body">Xotira, chatlar tarixi, protokollar, ovoz</string>
     <string name="omnix_privacy_where_cloud">BULUTDA</string>
     <string name="omnix_privacy_where_cloud_body">Faqat so‘rov matni, ovoz yozuvisiz</string>
+    <string name="omnix_protocols_subtitle">Omni buni o‘zi bajaradi — vaqt, joy yoki voqeaga ko‘ra</string>
+    <string name="omnix_protocols_new_label">Yangi protokol</string>
+    <string name="omnix_protocols_yours_label">Sizniki</string>
+    <string name="omnix_protocols_active_count">Faol: %d</string>
+    <string name="omnix_devices_eyebrow">Qurilma</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Oflayn ovoz</string>
+    <string name="omnix_offline_hint">Internetsiz ishlaydigan ovoz va nutqni aniqlash. Bir marta yuklab oling.</string>
+    <string name="omnix_offline_tk_voice">OMNIX turkman ovozi</string>
+    <string name="omnix_offline_tk_asr">Turkman nutqini aniqlash</string>
+    <string name="omnix_offline_ru_asr">Rus nutqini aniqlash</string>
+    <string name="omnix_offline_state_soon">Tez orada</string>
+    <string name="omnix_offline_state_installed">Oʻrnatildi</string>
+    <string name="omnix_offline_state_not_installed">Yuklanmagan · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">Yuklanmoqda… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Oʻrnatilmoqda…</string>
+    <string name="omnix_offline_state_failed">Muvaffaqiyatsiz: %1$s</string>
+    <string name="omnix_offline_state_builtin">Oʻrnatilgan</string>
+    <string name="omnix_offline_action_download">Yuklab olish</string>
+    <string name="omnix_offline_action_remove">Oʻchirish</string>
 </resources>

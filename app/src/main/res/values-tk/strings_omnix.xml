@@ -50,8 +50,6 @@
     <string name="omnix_home_card_automations">Protokollar</string>
     <string name="omnix_home_card_translator">Terjimeçi</string>
     <string name="omnix_home_card_translator_sub">Gulaklyga, göni</string>
-    <string name="omnix_home_card_memory">Ýat</string>
-    <string name="omnix_home_card_memory_sub">Siz hakda näme ýadymda</string>
     <string name="omnix_home_card_reminders">Ýatlatmalar</string>
     <string name="omnix_home_card_reminders_sub">Oýardyjylar we işler</string>
     <string name="omnix_home_card_automations_sub">Söz boýunça protokollar</string>
@@ -245,7 +243,6 @@
     <string name="omnix_me_license_active">Ygtyýarnama işjeň</string>
     <string name="omnix_me_no_name">Siziň profiliňiz</string>
     <string name="omnix_me_license_inactive">Ygtyýarnama işjeň däl</string>
-    <string name="omnix_me_row_voice">Ses we «Omni» sözi</string>
     <string name="omnix_me_row_memory">Ýat</string>
     <string name="omnix_me_model_ready">Taýýar</string>
     <string name="omnix_me_version">OMNIX %1$s</string>
@@ -267,7 +264,7 @@
     <string name="omnix_voice_automations">Protokollar</string>
     <string name="omnix_voice_automations_empty">Heniz protokol ýok. Protokoly sözler bilen düşündiriň, «Täze protokol» basyň ýa-da aýdyň: «Omni, gulaklyk birikende aýdym goý».</string>
 
-    <string name="omnix_privacy_title">Hususylyk</string>
+    <string name="omnix_privacy_title">Sazlamalar</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">Rugsat berlen</string>
     <string name="omnix_privacy_not_allowed">Rugsat berilmedik</string>
@@ -607,4 +604,25 @@
     <string name="omnix_privacy_where_device_body">Ýat, söhbet taryhy, protokollar, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTDA</string>
     <string name="omnix_privacy_where_cloud_body">Diňe soragyň teksti, ses ýazgysyz</string>
+    <string name="omnix_protocols_subtitle">Omni muny özi edýär — wagta, ýere ýa-da waka görä</string>
+    <string name="omnix_protocols_new_label">Täze protokol</string>
+    <string name="omnix_protocols_yours_label">Siziňkiler</string>
+    <string name="omnix_protocols_active_count">Işjeň: %d</string>
+    <string name="omnix_devices_eyebrow">Enjam</string>
+
+    <!-- Офлайн-голос (2026-11-09) -->
+    <string name="omnix_offline_title">Oflaýn ses</string>
+    <string name="omnix_offline_hint">Internetsiz işleýän ses we söz tanamak. Bir gezek ýükläp alyň.</string>
+    <string name="omnix_offline_tk_voice">OMNIX türkmen sesi</string>
+    <string name="omnix_offline_tk_asr">Türkmen sözüni tanamak</string>
+    <string name="omnix_offline_ru_asr">Rus sözüni tanamak</string>
+    <string name="omnix_offline_state_soon">Basym</string>
+    <string name="omnix_offline_state_installed">Guruldy</string>
+    <string name="omnix_offline_state_not_installed">Ýüklenmedi · %1$d MB</string>
+    <string name="omnix_offline_state_downloading">Ýüklenýär… %1$d%%</string>
+    <string name="omnix_offline_state_installing">Gurulýar…</string>
+    <string name="omnix_offline_state_failed">Şowsuz boldy: %1$s</string>
+    <string name="omnix_offline_state_builtin">Ýerleşdirilen</string>
+    <string name="omnix_offline_action_download">Ýükläp almak</string>
+    <string name="omnix_offline_action_remove">Aýyrmak</string>
 </resources>
