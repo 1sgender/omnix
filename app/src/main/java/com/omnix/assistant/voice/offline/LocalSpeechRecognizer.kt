@@ -6,7 +6,7 @@ import com.k2fsa.sherpa.onnx.FeatureConfig
 import com.k2fsa.sherpa.onnx.OfflineModelConfig
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
 import com.k2fsa.sherpa.onnx.OfflineRecognizerConfig
-import com.k2fsa.sherpa.onnx.OfflineWhisperModelConfig
+import com.k2fsa.sherpa.onnx.OfflineOmnilingualAsrCtcModelConfig
 import com.k2fsa.sherpa.onnx.OnlineModelConfig
 import com.k2fsa.sherpa.onnx.OnlineRecognizer
 import com.k2fsa.sherpa.onnx.OnlineRecognizerConfig
@@ -23,8 +23,8 @@ import javax.inject.Singleton
 
 /**
  * Распознавание речи на телефоне, без интернета (sherpa-onnx):
- *  - туркменский — Whisper base, дообученный на туркменской речи, скачивается
- *    отдельным пакетом ([OfflineSpeechModels.TK_ASR]);
+ *  - туркменский — Omnilingual ASR CTC 300M (Meta), скачивается отдельным пакетом
+ *    ([OfflineSpeechModels.TK_ASR]);
  *  - русский — маленькая потоковая модель Vosk, она уже лежит в APK ради слова вызова.
  *
  * Фраза записывается целиком (границы по паузе ставит UtteranceSegmenter), поэтому
@@ -96,11 +96,8 @@ class LocalSpeechRecognizer @Inject constructor(
         val config = OfflineRecognizerConfig(
             featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = FEATURE_DIM),
             modelConfig = OfflineModelConfig(
-                whisper = OfflineWhisperModelConfig(
-                    encoder = "${dir.path}/encoder.int8.onnx",
-                    decoder = "${dir.path}/decoder.int8.onnx",
-                    language = LANG_TK,
-                    task = "transcribe"
+                omnilingual = OfflineOmnilingualAsrCtcModelConfig(
+                    model = "${dir.path}/model.int8.onnx"
                 ),
                 tokens = "${dir.path}/tokens.txt",
                 numThreads = THREADS,
