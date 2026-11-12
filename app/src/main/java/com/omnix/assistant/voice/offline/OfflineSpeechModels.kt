@@ -48,18 +48,18 @@ object OfflineSpeechModels {
     )
 
     /**
-     * Туркменское распознавание речи: Whisper base, дообученный, int8, формат sherpa-onnx.
-     * Не опубликовано намеренно: после сжатия в int8 ошибка слов 55,6% (до сжатия 33%), а локальный
-     * результат стоит в приложении раньше сервера. Файл tk-asr.zip уже лежит на сервере
-     * (134 656 024 байт, sha256 b3c52b88…a173e30); включить, когда качество подтянем.
+     * Туркменское распознавание речи: Omnilingual ASR CTC 300M v2 (Meta, Apache-2.0), int8, готовая
+     * сборка sherpa-onnx. Одна проходка по звуку, без пословной генерации, поэтому не «выдумывает»
+     * фразы, как делал наш дообученный Whisper. На тестовых записях расходится с большой MMS на 5,9%
+     * по буквам. Язык задавать не нужно.
      */
     val TK_ASR = OfflineSpeechModel(
-        id = "tk-asr",
-        dirName = "tk-asr",
-        url = "",
-        sizeBytes = 0L,
-        sha256 = "",
-        requiredFiles = listOf("encoder.int8.onnx", "decoder.int8.onnx", "tokens.txt")
+        id = "tk-asr-omni",
+        dirName = "tk-asr-omni",
+        url = "https://omnix.144.31.14.236.sslip.io/models/tk-asr-omni.zip",
+        sizeBytes = 283_219_492L,
+        sha256 = "4b73dd64edd5432168bf04da87d04c36a243a98b652e095c5c70669e02bb4724",
+        requiredFiles = listOf("model.int8.onnx", "tokens.txt")
     )
 
     val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, TK_ASR)
