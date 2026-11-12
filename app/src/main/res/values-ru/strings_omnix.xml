@@ -350,8 +350,6 @@
     <string name="omnix_local_model_cancel">Отменить загрузку</string>
     <string name="omnix_local_model_delete_redownload">Удалить и скачать заново</string>
     <string name="omnix_local_fallback_notice">Офлайн-модель недоступна (%1$s). Отвечаю из облака.</string>
-    <string name="omnix_local_model_consent_title">Скачать локальную модель?</string>
-    <string name="omnix_local_model_consent_body">%1$s. Отвечает без интернета, когда облако недоступно. Пока качается — отвечаю через облако как обычно.</string>
     <string name="omnix_local_model_later">Позже</string>
 
     <string name="omnix_language_title">Язык</string>
@@ -612,8 +610,8 @@
     <string name="omnix_devices_eyebrow">Устройство</string>
 
     <!-- Офлайн-голос (2026-11-09) -->
-    <string name="omnix_offline_title">Офлайн-голос</string>
-    <string name="omnix_offline_hint">Голос и распознавание речи, которые работают без интернета. Скачайте один раз.</string>
+    <string name="omnix_offline_title">Офлайн-режим</string>
+    <string name="omnix_offline_hint">Локальный ИИ, голос и распознавание речи, которые работают без интернета. Скачайте один раз.</string>
     <string name="omnix_offline_tk_voice">Туркменский голос OMNIX</string>
     <string name="omnix_offline_tk_asr">Распознавание туркменской речи</string>
     <string name="omnix_offline_ru_asr">Распознавание русской речи</string>
@@ -626,4 +624,9 @@
     <string name="omnix_offline_state_builtin">Встроено</string>
     <string name="omnix_offline_action_download">Скачать</string>
     <string name="omnix_offline_action_remove">Удалить</string>
+    <string name="omnix_offline_local_ai">Локальный ИИ</string>
+    <string name="omnix_offline_download_all">Скачать офлайн-режим · %1$d МБ</string>
+    <string name="omnix_offline_download_wifi">Только по Wi-Fi</string>
+    <string name="omnix_offline_prompt_title">Скачать офлайн-режим?</string>
+    <string name="omnix_offline_prompt_body">OMNIX будет отвечать, говорить и понимать вас без интернета. Пакет весит около %1$d МБ, лучше по Wi-Fi. Пока он скачивается, онлайн-ответы работают как обычно.</string>
 </resources>

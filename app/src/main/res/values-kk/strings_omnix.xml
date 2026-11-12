@@ -295,8 +295,6 @@
     <string name="omnix_local_model_cancel">Жүктеуді тоқтату</string>
     <string name="omnix_local_model_delete_redownload">Жою және қайта жүктеу</string>
     <string name="omnix_local_fallback_notice">Офлайн модель қолжетімсіз (%1$s). Бұлттан жауап беремін.</string>
-    <string name="omnix_local_model_consent_title">Құрылғыдағы модель жүктелсін бе?</string>
-    <string name="omnix_local_model_consent_body">%1$s. Бұлт қолжетімсіз болғанда интернетсіз жауап береді. Жүктелу кезінде бұлт әдеттегідей жауап береді.</string>
     <string name="omnix_local_model_later">Кейінірек</string>
     <string name="omnix_language_title">Тіл</string>
     <string name="omnix_language_system">Телефондағыдай</string>
@@ -535,8 +533,8 @@
     <string name="omnix_devices_eyebrow">Құрылғы</string>
 
     <!-- Офлайн-голос (2026-11-09) -->
-    <string name="omnix_offline_title">Офлайн дауыс</string>
-    <string name="omnix_offline_hint">Интернетсіз істейтін дауыс және сөйлеуді тану. Бір рет жүктеп алыңыз.</string>
+    <string name="omnix_offline_title">Офлайн режим</string>
+    <string name="omnix_offline_hint">Интернетсіз істейтін құрылғыдағы ЖИ, дауыс және сөйлеуді тану. Бір рет жүктеп алыңыз.</string>
     <string name="omnix_offline_tk_voice">OMNIX түрікмен дауысы</string>
     <string name="omnix_offline_tk_asr">Түрікмен сөзін тану</string>
     <string name="omnix_offline_ru_asr">Орыс сөзін тану</string>
@@ -549,4 +547,9 @@
     <string name="omnix_offline_state_builtin">Кірістірілген</string>
     <string name="omnix_offline_action_download">Жүктеу</string>
     <string name="omnix_offline_action_remove">Жою</string>
+    <string name="omnix_offline_local_ai">Құрылғыдағы ЖИ</string>
+    <string name="omnix_offline_download_all">Офлайн режимді жүктеу · %1$d МБ</string>
+    <string name="omnix_offline_download_wifi">Тек Wi-Fi арқылы</string>
+    <string name="omnix_offline_prompt_title">Офлайн режимді жүктейсіз бе?</string>
+    <string name="omnix_offline_prompt_body">OMNIX интернетсіз жауап береді, сөйлейді және сізді түсінеді. Бума шамамен %1$d МБ, Wi-Fi арқылы жақсырақ. Жүктеліп жатқанда онлайн жауаптар әдеттегідей жұмыс істейді.</string>
 </resources>

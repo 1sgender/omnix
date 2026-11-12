@@ -272,6 +272,13 @@ class MediaPipeModelManager @Inject constructor(
 
     override fun isReady(): Boolean = currentState is LocalModelState.Ready && runtime != null
 
+    override suspend fun isModelInstalled(): Boolean {
+        if (runtime != null) return true
+        return withContext(dispatchers.io) {
+            modelFile.let { it.isFile && it.length() == spec.expectedSizeBytes }
+        }
+    }
+
     override suspend fun runtimeOrNull(): LocalModelRuntime? {
         runtime?.let {
             idleUnloadScheduler.noteUsed()
