@@ -295,8 +295,6 @@
     <string name="omnix_local_model_cancel">Yuklashni bekor qilish</string>
     <string name="omnix_local_model_delete_redownload">Oʻchirish va qayta yuklash</string>
     <string name="omnix_local_fallback_notice">Oflayn model mavjud emas (%1$s). Bulutdan javob beraman.</string>
-    <string name="omnix_local_model_consent_title">Qurilmadagi model yuklab olinsinmi?</string>
-    <string name="omnix_local_model_consent_body">%1$s. Bulutga ulanib boʻlmaganda internetsiz javob beradi. Yuklanayotganda bulut odatdagidek javob beradi.</string>
     <string name="omnix_local_model_later">Keyinroq</string>
     <string name="omnix_language_title">Til</string>
     <string name="omnix_language_system">Telefondagi kabi</string>
@@ -535,8 +533,8 @@
     <string name="omnix_devices_eyebrow">Qurilma</string>
 
     <!-- Офлайн-голос (2026-11-09) -->
-    <string name="omnix_offline_title">Oflayn ovoz</string>
-    <string name="omnix_offline_hint">Internetsiz ishlaydigan ovoz va nutqni aniqlash. Bir marta yuklab oling.</string>
+    <string name="omnix_offline_title">Oflayn rejim</string>
+    <string name="omnix_offline_hint">Internetsiz ishlaydigan qurilmadagi sunʻiy intellekt, ovoz va nutqni aniqlash. Bir marta yuklab oling.</string>
     <string name="omnix_offline_tk_voice">OMNIX turkman ovozi</string>
     <string name="omnix_offline_tk_asr">Turkman nutqini aniqlash</string>
     <string name="omnix_offline_ru_asr">Rus nutqini aniqlash</string>
@@ -549,4 +547,9 @@
     <string name="omnix_offline_state_builtin">Oʻrnatilgan</string>
     <string name="omnix_offline_action_download">Yuklab olish</string>
     <string name="omnix_offline_action_remove">Oʻchirish</string>
+    <string name="omnix_offline_local_ai">Qurilmadagi sunʻiy intellekt</string>
+    <string name="omnix_offline_download_all">Oflayn rejimni yuklab olish · %1$d MB</string>
+    <string name="omnix_offline_download_wifi">Faqat Wi-Fi orqali</string>
+    <string name="omnix_offline_prompt_title">Oflayn rejim yuklab olinsinmi?</string>
+    <string name="omnix_offline_prompt_body">OMNIX internetsiz javob beradi, gapiradi va sizni tushunadi. Paket taxminan %1$d MB, Wi-Fi orqali yaxshiroq. Yuklanayotganda onlayn javoblar odatdagidek ishlaydi.</string>
 </resources>

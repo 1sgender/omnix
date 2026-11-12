@@ -94,14 +94,21 @@ class OfflineSpeechModelStore @Inject constructor(
         }
     }
 
-    /** Запускает скачивание; повторный вызов во время загрузки ничего не делает. */
-    fun download(model: OfflineSpeechModel) {
+    /**
+     * Запускает скачивание; повторный вызов во время загрузки ничего не делает.
+     * [overMetered] = false — только по Wi-Fi (мобильная сеть не тратится).
+     */
+    fun download(model: OfflineSpeechModel, overMetered: Boolean = true) {
         if (!model.isPublished) return
         synchronized(jobs) {
             if (jobs[model.id]?.isActive == true) return
-            jobs[model.id] = scope.launch { runDownload(model) }
+            jobs[model.id] = scope.launch { runDownload(model, overMetered) }
         }
     }
+
+    /** Модель скачивается или распаковывается прямо сейчас. */
+    fun isBusy(model: OfflineSpeechModel): Boolean =
+        _states.value[model.id].let { it is OfflineModelState.Downloading || it is OfflineModelState.Installing }
 
     /** Удаляет модель с телефона. */
     fun remove(model: OfflineSpeechModel) {
@@ -117,7 +124,7 @@ class OfflineSpeechModelStore @Inject constructor(
 
     private fun zipOf(model: OfflineSpeechModel): File = File(root, "${model.dirName}.zip")
 
-    private suspend fun runDownload(model: OfflineSpeechModel) {
+    private suspend fun runDownload(model: OfflineSpeechModel, overMetered: Boolean) {
         val zip = zipOf(model)
         try {
             setState(model, OfflineModelState.Downloading(0))
@@ -125,7 +132,7 @@ class OfflineSpeechModelStore @Inject constructor(
                 url = model.url,
                 destFile = zip,
                 title = "OMNIX · ${model.id}",
-                allowedOverMetered = true
+                allowedOverMetered = overMetered
             )
             while (true) {
                 delay(ModelDownloadPolicy.POLL_INTERVAL_MS)

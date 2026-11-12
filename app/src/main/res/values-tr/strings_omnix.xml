@@ -295,8 +295,6 @@
     <string name="omnix_local_model_cancel">İndirmeyi iptal et</string>
     <string name="omnix_local_model_delete_redownload">Sil ve yeniden indir</string>
     <string name="omnix_local_fallback_notice">Çevrimdışı model kullanılamıyor (%1$s). Buluttan yanıtlıyorum.</string>
-    <string name="omnix_local_model_consent_title">Cihazdaki model indirilsin mi?</string>
-    <string name="omnix_local_model_consent_body">%1$s. Buluta ulaşılamadığında internetsiz yanıtlar. İnerken bulut her zamanki gibi yanıtlar.</string>
     <string name="omnix_local_model_later">Sonra</string>
     <string name="omnix_language_title">Dil</string>
     <string name="omnix_language_system">Telefondaki gibi</string>
@@ -535,8 +533,8 @@
     <string name="omnix_devices_eyebrow">Cihaz</string>
 
     <!-- Офлайн-голос (2026-11-09) -->
-    <string name="omnix_offline_title">Çevrimdışı ses</string>
-    <string name="omnix_offline_hint">İnternetsiz çalışan ses ve konuşma tanıma. Bir kez indirin.</string>
+    <string name="omnix_offline_title">Çevrimdışı mod</string>
+    <string name="omnix_offline_hint">İnternetsiz çalışan cihaz içi yapay zekâ, ses ve konuşma tanıma. Bir kez indirin.</string>
     <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
     <string name="omnix_offline_tk_asr">Türkmence konuşma tanıma</string>
     <string name="omnix_offline_ru_asr">Rusça konuşma tanıma</string>
@@ -549,4 +547,9 @@
     <string name="omnix_offline_state_builtin">Yerleşik</string>
     <string name="omnix_offline_action_download">İndir</string>
     <string name="omnix_offline_action_remove">Kaldır</string>
+    <string name="omnix_offline_local_ai">Cihaz içi yapay zekâ</string>
+    <string name="omnix_offline_download_all">Çevrimdışı modu indir · %1$d MB</string>
+    <string name="omnix_offline_download_wifi">Yalnızca Wi-Fi</string>
+    <string name="omnix_offline_prompt_title">Çevrimdışı mod indirilsin mi?</string>
+    <string name="omnix_offline_prompt_body">OMNIX internet olmadan yanıt verecek, konuşacak ve sizi anlayacak. Paket yaklaşık %1$d MB; Wi-Fi daha iyi. İndirilirken çevrimiçi yanıtlar her zamanki gibi çalışır.</string>
 </resources>
