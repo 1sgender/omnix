@@ -54,7 +54,16 @@ interface UsageRepository {
      * Наследие с feature=NULL засчитывается (консервативно, см. PlanQuotaGate).
      */
     suspend fun countSince(clientId: String, since: Instant, feature: String): Long
+
+    /**
+     * Токены успешных ответов провайдера [provider] с момента [since] по всем
+     * клиентам (учёт расхода Pro). Реализации без хранилища возвращают нули.
+     */
+    suspend fun tokenTotalsSince(provider: String, since: Instant): TokenTotals = TokenTotals(0, 0)
 }
+
+/** Сумма входных и выходных токенов; неизвестные (NULL) считаются нулём. */
+data class TokenTotals(val inputTokens: Long, val outputTokens: Long)
 
 /**
  * Bounded in-memory implementation for isolated unit/API harnesses only.
@@ -105,6 +114,17 @@ class InMemoryUsageRepository(
                 it.clientId == clientId && !it.timestamp.isBefore(since) && it.success &&
                     (it.feature == feature || it.feature == null)
             }.toLong()
+        }
+
+    override suspend fun tokenTotalsSince(provider: String, since: Instant): TokenTotals =
+        synchronized(records) {
+            val matching = records.filter {
+                it.success && it.provider == provider && !it.timestamp.isBefore(since)
+            }
+            TokenTotals(
+                inputTokens = matching.sumOf { it.inputTokens ?: 0L },
+                outputTokens = matching.sumOf { it.outputTokens ?: 0L }
+            )
         }
 
     fun size(): Int = recordCount.get()

@@ -45,9 +45,24 @@ class PlanQuotaGate(
         val quota = limits.serverQuota(feature) ?: return Verdict.Allowed
         val dayStart = LocalDate.now(clock).atStartOfDay(ZoneOffset.UTC).toInstant()
         val used = usage.countSince(client.clientId, dayStart, feature.key)
-        if (used < quota) return Verdict.Allowed
-        val retryAfter = Duration.between(clock.instant(), dayStart.plus(Duration.ofDays(1)))
-            .seconds.coerceAtLeast(1)
-        return Verdict.Limited(retryAfterSeconds = retryAfter, limit = quota, used = used)
+        if (used >= quota) {
+            val retryAfter = Duration.between(clock.instant(), dayStart.plus(Duration.ofDays(1)))
+                .seconds.coerceAtLeast(1)
+            return Verdict.Limited(retryAfterSeconds = retryAfter, limit = quota, used = used)
+        }
+        if (feature == PlanFeature.PRO_AI) {
+            // Pro дополнительно ограничен месяцем (календарный месяц UTC).
+            val monthQuota = limits.monthlyProAi
+            val monthStart = LocalDate.now(clock).withDayOfMonth(1)
+                .atStartOfDay(ZoneOffset.UTC).toInstant()
+            val monthUsed = usage.countSince(client.clientId, monthStart, feature.key)
+            if (monthUsed >= monthQuota) {
+                val nextMonth = LocalDate.now(clock).withDayOfMonth(1).plusMonths(1)
+                    .atStartOfDay(ZoneOffset.UTC).toInstant()
+                val retryAfter = Duration.between(clock.instant(), nextMonth).seconds.coerceAtLeast(1)
+                return Verdict.Limited(retryAfterSeconds = retryAfter, limit = monthQuota, used = monthUsed)
+            }
+        }
+        return Verdict.Allowed
     }
 }

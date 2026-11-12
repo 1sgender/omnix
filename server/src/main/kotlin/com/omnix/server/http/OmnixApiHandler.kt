@@ -269,7 +269,8 @@ class OmnixApiHandler(
                     text = result.text,
                     requestId = result.requestId,
                     provider = result.provider,
-                    model = result.model
+                    model = result.model,
+                    tier = result.tier
                 )
                 HttpResponseContext(
                     status = 200,

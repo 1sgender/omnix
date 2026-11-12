@@ -15,7 +15,10 @@ package com.omnix.server.license
  */
 enum class PlanFeature(val key: String) {
     VOICE_AI("voice_ai"),
-    BASE_AI("base_ai")
+    BASE_AI("base_ai"),
+
+    /** Ответы уровня Pro (Claude): отдельная корзина, считается только когда ответил Claude. */
+    PRO_AI("pro_ai")
 }
 
 data class PlanLimits(
@@ -30,13 +33,18 @@ data class PlanLimits(
     val uiControl: Boolean,
     val priorityRouting: Boolean,
     val premiumModels: Boolean,
-    val maxClips: Int
+    val maxClips: Int,
+    /** Pro-ответов в день (Claude); 0 = Pro недоступен на тарифе. */
+    val dailyProAi: Int = 0,
+    /** Pro-ответов в календарный месяц UTC; 0 = Pro недоступен. */
+    val monthlyProAi: Int = 0
 ) {
     /** Дневная квота, которую считает сервер (null = сервером не считается). */
     fun serverQuota(feature: PlanFeature): Int? =
         when (feature) {
             PlanFeature.VOICE_AI -> dailyVoiceAi
             PlanFeature.BASE_AI -> dailyBaseAi
+            PlanFeature.PRO_AI -> dailyProAi
         }
 }
 
@@ -57,7 +65,9 @@ object PlanCatalog {
         uiControl = false,
         priorityRouting = false,
         premiumModels = false,
-        maxClips = 1
+        maxClips = 1,
+        dailyProAi = 0,
+        monthlyProAi = 0
     )
 
     private val omnix = PlanLimits(
@@ -73,7 +83,9 @@ object PlanCatalog {
         uiControl = true,
         priorityRouting = true,
         premiumModels = true,
-        maxClips = 2
+        maxClips = 2,
+        dailyProAi = 50,
+        monthlyProAi = 600
     )
 
     private val pro = PlanLimits(
@@ -88,7 +100,9 @@ object PlanCatalog {
         uiControl = true,
         priorityRouting = false,
         premiumModels = false,
-        maxClips = 1
+        maxClips = 1,
+        dailyProAi = 20,
+        monthlyProAi = 250
     )
 
     fun forPlanId(planId: String): PlanLimits =
