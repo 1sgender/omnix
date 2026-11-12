@@ -75,6 +75,12 @@ interface LocalModelManager {
 
     fun isReady(): Boolean
 
+    /**
+     * Файл модели уже лежит на телефоне (загружать в память не нужно).
+     * Дёшево: без хеша, только наличие и размер.
+     */
+    suspend fun isModelInstalled(): Boolean = isReady()
+
     /** Возвращает готовый runtime или null, если модель недоступна. */
     suspend fun runtimeOrNull(): LocalModelRuntime?
 

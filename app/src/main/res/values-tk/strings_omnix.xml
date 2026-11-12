@@ -351,8 +351,6 @@
     <string name="omnix_local_model_cancel">Göçürişi ýatyr</string>
     <string name="omnix_local_model_delete_redownload">Poz we täzeden göçürip al</string>
     <string name="omnix_local_fallback_notice">Oflain model elýeterli däl (%1$s). Jogap bulutdan gelýär.</string>
-    <string name="omnix_local_model_consent_title">Enjamdaky modeli göçürip alaýaýmyňyz?</string>
-    <string name="omnix_local_model_consent_body">%1$s. Bulut elýeterli bolmasa, internsiz jogap berýär. Göçürilýän wagty bulut adaty ýaly jogap berýär.</string>
     <string name="omnix_local_model_later">Soňrak</string>
 
     <string name="omnix_language_title">Dil</string>
@@ -611,8 +609,8 @@
     <string name="omnix_devices_eyebrow">Enjam</string>
 
     <!-- Офлайн-голос (2026-11-09) -->
-    <string name="omnix_offline_title">Oflaýn ses</string>
-    <string name="omnix_offline_hint">Internetsiz işleýän ses we söz tanamak. Bir gezek ýükläp alyň.</string>
+    <string name="omnix_offline_title">Oflaýn tertip</string>
+    <string name="omnix_offline_hint">Internetsiz işleýän ýerli emeli aň, ses we söz tanamak. Bir gezek ýükläp alyň.</string>
     <string name="omnix_offline_tk_voice">OMNIX türkmen sesi</string>
     <string name="omnix_offline_tk_asr">Türkmen sözüni tanamak</string>
     <string name="omnix_offline_ru_asr">Rus sözüni tanamak</string>
@@ -625,4 +623,9 @@
     <string name="omnix_offline_state_builtin">Ýerleşdirilen</string>
     <string name="omnix_offline_action_download">Ýükläp almak</string>
     <string name="omnix_offline_action_remove">Aýyrmak</string>
+    <string name="omnix_offline_local_ai">Ýerli emeli aň</string>
+    <string name="omnix_offline_download_all">Oflaýn tertibi ýükläp almak · %1$d MB</string>
+    <string name="omnix_offline_download_wifi">Diňe Wi-Fi arkaly</string>
+    <string name="omnix_offline_prompt_title">Oflaýn tertibi ýükläp alýarsyňyzmy?</string>
+    <string name="omnix_offline_prompt_body">OMNIX internetsiz jogap berer, gürlär we sizi düşüner. Bukjanyň göwrümi takmynan %1$d MB, Wi-Fi arkaly gowy. Ýüklenýän wagty onlaýn jogaplar adaty işleýär.</string>
 </resources>

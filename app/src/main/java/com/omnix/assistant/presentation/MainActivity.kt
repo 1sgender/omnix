@@ -7,15 +7,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelState
-import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
 import com.omnix.assistant.core.license.LicenseManager
-import com.omnix.assistant.data.preferences.SettingsDataStore
 import com.omnix.assistant.domain.chat.ChatConversationStore
 import com.omnix.assistant.presentation.activation.ActivationScreen
-import com.omnix.assistant.presentation.localmodel.LocalModelConsentDialog
+import com.omnix.assistant.presentation.localmodel.OfflinePackDialog
+import com.omnix.assistant.voice.offline.OfflinePack
+import com.omnix.assistant.voice.offline.OfflineSpeechModelStore
 import com.omnix.assistant.presentation.launch.LaunchStatus
 import com.omnix.assistant.presentation.launch.OmnixLaunchScreen
 import com.omnix.assistant.core.license.LicenseRefreshResult
@@ -44,8 +45,12 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var localModelManager: LocalModelManager
 
+    /** Офлайн-режим: локальный ИИ + голос + распознавание одним пакетом. */
     @Inject
-    lateinit var settingsDataStore: SettingsDataStore
+    lateinit var offlinePack: OfflinePack
+
+    @Inject
+    lateinit var speechModelStore: OfflineSpeechModelStore
 
     /** Ход OTA-загрузки для дуги ядра (см. AppUpdatePrompt). */
     @Inject
@@ -149,15 +154,19 @@ class MainActivity : ComponentActivity() {
                             ActivationScreen(onActivationSuccess = { serverCheckComplete = true })
                         }
                         else -> {
-                            // Одноразовый вопрос про локальную модель: только
-                            // после активации, только если файла нет и пользователя
-                            // ещё не спрашивали. Ответ записывается сразу —
-                            // диалог не всплывёт повторно ни при каких рекомпозициях.
+                            // Вопрос про офлайн-режим (локальный ИИ + голос +
+                            // распознавание): только после активации, при каждом
+                            // запуске, пока пакет не на телефоне и не качается
+                            // (решение владельца 2026-11-12). «Позже» — до
+                            // следующего запуска.
                             val modelState by localModelManager.stateFlow.collectAsState(
                                 initial = LocalModelState.NotInitialized
                             )
-                            val modelConsent by settingsDataStore.localModelConsentFlow
-                                .collectAsState(initial = ModelDownloadPolicy.CONSENT_UNASKED)
+                            val speechStates by speechModelStore.states.collectAsState()
+                            val packInstalled by produceState<Boolean?>(null, modelState, speechStates) {
+                                value = offlinePack.isInstalled()
+                            }
+                            var packPromptDismissed by rememberSaveable { mutableStateOf(false) }
                             if (modelState is LocalModelState.Loading) {
                                 // Первый запрос: модель грузится в память. Спокойный
                                 // экран загрузки на весь период Loading — навграф
@@ -170,33 +179,20 @@ class MainActivity : ComponentActivity() {
                                 OmnixLaunchScreen(status = LaunchStatus.LoadingModel)
                             } else {
                                 OmnixNavGraph()
-                                if (modelState is LocalModelState.NotInstalled &&
-                                    modelConsent == ModelDownloadPolicy.CONSENT_UNASKED
+                                if (packInstalled == false && !packPromptDismissed &&
+                                    !offlinePack.isDownloading(modelState)
                                 ) {
-                                    LocalModelConsentDialog(
+                                    OfflinePackDialog(
+                                        totalSizeMb = offlinePack.totalSizeMb,
                                         onDownloadAny = {
-                                            lifecycleScope.launch {
-                                                settingsDataStore.setLocalModelConsent(
-                                                    ModelDownloadPolicy.CONSENT_ANY_NETWORK
-                                                )
-                                                localModelManager.ensureModel()
-                                            }
+                                            packPromptDismissed = true
+                                            lifecycleScope.launch { offlinePack.downloadAll(overMetered = true) }
                                         },
                                         onDownloadWifi = {
-                                            lifecycleScope.launch {
-                                                settingsDataStore.setLocalModelConsent(
-                                                    ModelDownloadPolicy.CONSENT_WIFI_ONLY
-                                                )
-                                                localModelManager.ensureModel()
-                                            }
+                                            packPromptDismissed = true
+                                            lifecycleScope.launch { offlinePack.downloadAll(overMetered = false) }
                                         },
-                                        onLater = {
-                                            lifecycleScope.launch {
-                                                settingsDataStore.setLocalModelConsent(
-                                                    ModelDownloadPolicy.CONSENT_LATER
-                                                )
-                                            }
-                                        }
+                                        onLater = { packPromptDismissed = true }
                                     )
                                 }
                             }

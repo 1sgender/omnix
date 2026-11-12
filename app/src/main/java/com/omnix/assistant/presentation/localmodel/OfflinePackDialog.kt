@@ -9,24 +9,22 @@ import androidx.compose.ui.res.stringResource
 import com.omnix.assistant.R
 
 /**
- * Одноразовый вопрос после активации: качать ли локальную модель (521 МБ).
+ * Вопрос при запуске: скачать офлайн-режим (локальный ИИ, голос, распознавание).
  *
- * Показывается один раз — дальше выбор хранится в настройках, а управление
- * переезжает в AI-раздел (повтор, отмена, докачка). «Позже» ничего не
- * запускает и больше не спрашивает: пользователь сам зайдёт в настройки.
+ * Решение владельца 2026-11-12: спрашиваем при каждом входе, пока пакет не на
+ * телефоне. «Позже» закрывает вопрос только до следующего запуска.
  */
 @Composable
-fun LocalModelConsentDialog(
+fun OfflinePackDialog(
+    totalSizeMb: Int,
     onDownloadAny: () -> Unit,
     onDownloadWifi: () -> Unit,
     onLater: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onLater,
-        title = { Text(stringResource(R.string.omnix_local_model_consent_title)) },
-        text = {
-            Text(stringResource(R.string.omnix_local_model_consent_body, localModelSizeLabel(rememberLocalModelSpec())))
-        },
+        title = { Text(stringResource(R.string.omnix_offline_prompt_title)) },
+        text = { Text(stringResource(R.string.omnix_offline_prompt_body, totalSizeMb)) },
         confirmButton = {
             Row {
                 TextButton(onClick = onDownloadWifi) {
