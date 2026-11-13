@@ -201,7 +201,8 @@ fun OmnixNavGraph(
                     onRequestPermissions = { permissions ->
                         permissionLauncher.launch(permissions.toTypedArray())
                     },
-                    onBack = navController::popBackStack
+                    onBack = navController::popBackStack,
+                    pairsSection = { com.omnix.assistant.presentation.devices.MyEarbudsSection() }
                 )
             }
 

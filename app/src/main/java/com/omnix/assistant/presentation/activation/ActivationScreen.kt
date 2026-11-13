@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixPrimaryButton
+import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 
@@ -137,6 +138,14 @@ fun ActivationScreen(
             // Мок: выключенная кнопка — заливка fill-уровня, приглушённый текст.
             disabledContainerColor = colors.surfaceFilled,
             disabledContentColor = colors.textSecondary,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Без кода: подключённые наушники OMNIX сами активируют приложение.
+        OmnixTextButton(
+            text = stringResource(R.string.omnix_pair_activate_cta),
+            onClick = viewModel::activateWithPair,
+            enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         )
 

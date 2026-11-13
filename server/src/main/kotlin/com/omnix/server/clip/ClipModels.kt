@@ -12,12 +12,28 @@ import java.time.Instant
  *
  * Сервер знает: Clip #serial, Public Key, Owner, License(=account), Status.
  */
-enum class ClipDeviceStatus { PROVISIONED, ACTIVE, REVOKED }
+/**
+ * PROVISIONED — зарегистрирована, ничья; ACTIVE — привязана к аккаунту;
+ * RELEASED — владелец сам отвязал (передача/продажа), снова привязываемая;
+ * REVOKED — заблокирована, не привязывается и не работает никогда.
+ */
+enum class ClipDeviceStatus { PROVISIONED, ACTIVE, RELEASED, REVOKED }
+
+/**
+ * Режим идентичности записи реестра (V012).
+ *
+ * MAC — ВРЕМЕННЫЙ режим: пара опознаётся по BT-адресу, который владелец
+ * зарегистрировал при упаковке. Адрес подделывается на root-телефоне.
+ * KEY — целевой режим V008 (ключ в прошивке, challenge-response); когда
+ * появится прошивка, записи переводятся в KEY без смены реестра и привязок.
+ */
+enum class ClipIdentityMode { MAC, KEY }
 
 data class ClipDevice(
     val id: java.util.UUID,
     val clipSerial: String,
-    val publicKey: ByteArray,
+    /** null — запись режима MAC (V012), ключа нет. */
+    val publicKey: ByteArray?,
     val ownerAccountId: java.util.UUID?,
     val status: ClipDeviceStatus,
     val boundAt: Instant?,

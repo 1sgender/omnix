@@ -44,11 +44,20 @@ data class PlanEntitlements(
 /**
  * Soft-привязка Clip из validate-ответа.
  * Информативно: отсутствие клипа AI и tools НЕ блокирует.
+ * V012: при [pairRequired] облачный ИИ гейтит ClientPlanGate (isCloudChatUnlocked / isCloudVoiceUnlocked).
  */
 @Serializable
 data class ClipBindingState(
     @SerialName("has_bound_clip") val hasBoundClip: Boolean = false,
-    @SerialName("bound_clip_count") val boundClipCount: Int = 0
+    @SerialName("bound_clip_count") val boundClipCount: Int = 0,
+    /**
+     * Сервер требует подключённую привязанную пару OMNIX для облачного ИИ
+     * (CLIP_PAIR_REQUIRED). Старый сервер поля не шлёт → false, гейта нет.
+     */
+    @SerialName("pair_required") val pairRequired: Boolean = false,
+    /** Собственные ACTIVE-пары аккаунта — единственный источник «чьи это наушники». */
+    @SerialName("pairs") val pairs: List<ClipPairInfo> = emptyList(),
+    @SerialName("max_pairs") val maxPairs: Int? = null
 ) {
     companion object {
         /** Старый сервер (без поля clip) → считаем, что клипа нет. */

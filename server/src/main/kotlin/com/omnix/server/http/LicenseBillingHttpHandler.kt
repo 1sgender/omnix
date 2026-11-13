@@ -32,6 +32,7 @@ import com.omnix.server.billing.HeleketWebhookVerifier
 import com.omnix.server.billing.PaddleWebhookVerifier
 import com.omnix.server.billing.WebhookVerificationResult
 import com.omnix.server.clip.JdbcClipDeviceRepository
+import com.omnix.server.clip.toPairDto
 import com.omnix.server.config.ValidationConfig
 import com.omnix.server.license.IssueLicenseCommand
 import com.omnix.server.license.LicenseCrypto
@@ -75,6 +76,8 @@ class LicenseBillingHttpHandler(
     private val clipDevices: JdbcClipDeviceRepository? = null,
     /** Тест моделей админом: validate сообщает админу, какие модели доступны. */
     private val adminAccess: AdminModelAccess? = null,
+    /** V012: реестр пар OMNIX Clip (обязательность пары, лимит пар на аккаунт). */
+    private val clipPairConfig: com.omnix.server.clip.ClipPairConfig = com.omnix.server.clip.ClipPairConfig(),
     /**
      * Учёт ответов ИИ для поля usage в validate-ответе (экран «Сегодня осталось»).
      * null = не подключён (юнит-тесты) → usage=null.
@@ -277,7 +280,13 @@ class LicenseBillingHttpHandler(
                 val entitlements = PlanCatalog.forPlanId(result.planId).toDto()
                 val clip = clipDevices?.let { repo ->
                     val count = repo.countActiveForAccount(accountId)
-                    ClipBindingDto(hasBoundClip = count > 0, boundClipCount = count)
+                    ClipBindingDto(
+                        hasBoundClip = count > 0,
+                        boundClipCount = count,
+                        pairRequired = clipPairConfig.pairRequired,
+                        pairs = repo.pairsForAccount(accountId).map { it.toPairDto() },
+                        maxPairs = clipPairConfig.maxPairsPerAccount
+                    )
                 }
                 val usage = usageFor(client.clientId)
                 HttpResponseContext(
