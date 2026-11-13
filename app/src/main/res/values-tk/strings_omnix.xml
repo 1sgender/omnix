@@ -280,10 +280,10 @@
     <string name="omnix_ai_title">EA modeli</string>
     <string name="omnix_ai_model_auto">Awto</string>
     <string name="omnix_ai_model_auto_body">Gysga ýönekeý jogaplar — telefonda, galanlary — OMNIX bulutynda.</string>
-    <string name="omnix_ai_model_on_device">Telefonda</string>
+    <string name="omnix_ai_model_on_device">Lokal</string>
     <string name="omnix_ai_model_on_device_body">%1$s. Internetsiz işleýär, soraglar telefondan çykmaýar. Bulutdan ýönekeý jogap berýär.</string>
-    <string name="omnix_ai_model_cloud">OMNIX buluty</string>
-    <string name="omnix_ai_model_cloud_body">OMNIX serwerindäki model: has doly jogap berýär. Internet gerek.</string>
+    <string name="omnix_ai_model_cloud">Flash</string>
+    <string name="omnix_ai_model_cloud_body">OMNIX buluty: çalt we telefondakydan has doly jogap. Internet gerek.</string>
     <string name="omnix_admin_models_title">Modelleri synag (admin)</string>
     <string name="omnix_admin_models_body">Diňe size görünýär. Saýlanan model ähli soraglara jogap berýär, jogabyň aşagynda kimiň jogap berendigi ýazylýar.</string>
     <string name="omnix_admin_models_default">Hemmeler ýaly</string>

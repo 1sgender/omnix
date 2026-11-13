@@ -455,7 +455,8 @@ object ServerBootstrap {
             json = json,
             clipDevices = clipDevices,
             adminAccess = adminAccess,
-            clipPairConfig = config.clipPairs
+            clipPairConfig = config.clipPairs,
+            usageRepository = usageRepository
         )
 
         // CR-15: health-лямбда и metrics-лямбда вынесены в явные функции для

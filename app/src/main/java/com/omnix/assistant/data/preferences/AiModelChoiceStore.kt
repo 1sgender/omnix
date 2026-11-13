@@ -2,7 +2,12 @@ package com.omnix.assistant.data.preferences
 
 import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.agent.decision.AiModelChoiceSource
+import com.omnix.assistant.agent.decision.AiProAccess
+import com.omnix.assistant.agent.decision.AiTier
+import com.omnix.assistant.agent.decision.AiTierPreference
+import com.omnix.assistant.agent.decision.AiTierSwitch
 import com.omnix.assistant.core.admin.AdminModelTesting
+import com.omnix.assistant.core.license.LicenseManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,12 +25,16 @@ import javax.inject.Singleton
  * держится в памяти и обновляется при каждой записи. До первого чтения
  * DataStore (доли секунды после холодного старта) действует «Авто» —
  * прежнее поведение, без ухода в непредусмотренный маршрут.
+ *
+ * Отсюда же облачный клиент узнаёт, просить ли у сервера Pro: только если
+ * выбран Pro и он есть в тарифе (см. [AiProAccess]).
  */
 @Singleton
 class AiModelChoiceStore @Inject constructor(
     private val settings: SettingsDataStore,
-    private val adminModels: AdminModelTesting
-) : AiModelChoiceSource {
+    private val adminModels: AdminModelTesting,
+    private val licenseManager: LicenseManager
+) : AiModelChoiceSource, AiTierPreference, AiTierSwitch {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -35,6 +44,16 @@ class AiModelChoiceStore @Inject constructor(
 
     /** Модель, закреплённая админом для теста, требует своего маршрута. */
     override fun current(): AiModelChoice = adminModels.pin().routing ?: choice.value
+
+    override fun requestedTier(): AiTier =
+        AiProAccess.requestedTier(current(), licenseManager.getLicenseInfo().entitlements)
+
+    override fun proInPlan(): Boolean = AiProAccess.isAvailable(licenseManager.getLicenseInfo().entitlements)
+
+    /** Кончился лимит Pro: одно нажатие — и дальше отвечает Flash. */
+    override suspend fun switchToFlash() {
+        if (choice.value == AiModelChoice.PRO) set(AiModelChoice.CLOUD)
+    }
 
     suspend fun set(choice: AiModelChoice) {
         settings.setAiModelChoice(choice.storageKey)

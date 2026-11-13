@@ -29,7 +29,11 @@ data class PlanEntitlements(
     @SerialName("ui_control") val uiControl: Boolean = false,
     @SerialName("priority_routing") val priorityRouting: Boolean = false,
     @SerialName("premium_models") val premiumModels: Boolean = false,
-    @SerialName("max_clips") val maxClips: Int = 1
+    @SerialName("max_clips") val maxClips: Int = 1,
+    /** Pro-ответов (Claude) в день; 0 = Pro на тарифе нет (fail-closed: старый сервер → 0). */
+    @SerialName("daily_pro_ai") val dailyProAi: Int = 0,
+    /** Pro-ответов в календарный месяц UTC; 0 = Pro на тарифе нет. */
+    @SerialName("monthly_pro_ai") val monthlyProAi: Int = 0
 ) {
     companion object {
         /** Fail-closed дефолт: нет validate-ответа → лимиты FREE. */

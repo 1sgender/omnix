@@ -1,9 +1,12 @@
 package com.omnix.assistant.data.remote
 
 import android.util.Log
+import com.omnix.assistant.agent.decision.AiTier
 import com.omnix.assistant.core.admin.AdminModelPin
 import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.constants.AppConstants
+import com.omnix.assistant.core.license.AiTierLedger
+import com.omnix.assistant.core.license.QuotaExceeded
 import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.ResponseBodyTooLargeException
 import com.omnix.assistant.core.network.readUtf8Bounded
@@ -64,7 +67,9 @@ data class OmniAiRequestDto(
     @SerialName("systemContext") val systemContext: String? = null,
     @SerialName("history") val history: List<MessageDto> = emptyList(),
     /** Тест моделей: провайдер, закреплённый админом; сервер учтёт его только для админа. */
-    @SerialName("adminProvider") val adminProvider: String? = null
+    @SerialName("adminProvider") val adminProvider: String? = null,
+    /** "pro" — просим Claude (выбран Pro и он есть в тарифе); null — Flash, как раньше. */
+    @SerialName("tier") val tier: String? = null
 )
 
 @Serializable
@@ -75,7 +80,9 @@ data class OmniAiResponseDto(
     @SerialName("requestId") val requestId: String = "",
     /** Кто ответил — сервер называет только админу (тест моделей). */
     @SerialName("provider") val provider: String? = null,
-    @SerialName("model") val model: String? = null
+    @SerialName("model") val model: String? = null,
+    /** Кто ответил: "pro" (Claude) или "flash"; старый сервер поле не шлёт — значит Flash. */
+    @SerialName("tier") val tier: String? = null
 )
 
 /** Фраза для распознавания на сервере. Зеркалит server `SttRequest`. */
@@ -110,7 +117,9 @@ data class OmnixApiErrorResponseDto(
 class OmnixApiException(
     val code: String,
     val requestId: String,
-    userMessage: String
+    userMessage: String,
+    /** QUOTA_EXCEEDED: какая корзина кончилась и когда обновится; иначе null. */
+    val quota: QuotaExceeded? = null
 ) : Exception(userMessage)
 
 @Singleton
@@ -119,7 +128,9 @@ class OmnixApiClient @Inject constructor(
     private val securityManager: SecurityManager,
     private val json: Json,
     private val cloudMonitor: CloudProcessingMonitor,
-    private val adminModels: AdminModelTesting = AdminModelTesting.OFF
+    private val adminModels: AdminModelTesting = AdminModelTesting.OFF,
+    /** Кто ответил (Pro/Flash), засчитанные ответы и отказы по лимиту — для чата и «Сегодня осталось». */
+    private val tierLedger: AiTierLedger = AiTierLedger()
 ) {
     companion object {
         private const val TAG = "OmnixApiClient"
@@ -142,6 +153,10 @@ class OmnixApiClient @Inject constructor(
          * без внятного ответа.
          */
         const val CALL_TIMEOUT_SECONDS: Long = 30L
+
+        private const val SOURCE_VOICE = "VOICE"
+        private const val HEADER_RETRY_AFTER = "Retry-After"
+        private const val HEADER_QUOTA_SCOPE = "X-Quota-Scope"
     }
 
     private val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -172,7 +187,9 @@ class OmnixApiClient @Inject constructor(
          * ai_usage_records и возвращает эхом. Legacy-вызовы без id получают
          * свежий omx-id здесь.
          */
-        requestId: String = RequestIds.newId()
+        requestId: String = RequestIds.newId(),
+        /** Flash (по умолчанию) или Pro. Pro — пожелание: сервер может ответить Flash. */
+        tier: AiTier = AiTier.FLASH
     ): Resource<String> = withContext(Dispatchers.IO) {
         val token = securityManager.getAccessToken()
         if (!AccessTokenPolicy.isValid(token)) {
@@ -202,8 +219,14 @@ class OmnixApiClient @Inject constructor(
                 // CR-03: отсылаем только непустые сообщения. Роли подгоняем под
                 // OpenAI-каноничный вид (user/assistant/system).
                 history = history.filter { it.content.isNotBlank() },
-                adminProvider = (adminModels.pin() as? AdminModelPin.Cloud)?.provider
+                adminProvider = (adminModels.pin() as? AdminModelPin.Cloud)?.provider,
+                tier = tier.takeIf { it == AiTier.PRO }?.wireValue
             )
+        )
+        val callContext = CallContext(
+            requestId = effectiveRequestId,
+            requestedPro = tier == AiTier.PRO,
+            voice = source.equals(SOURCE_VOICE, ignoreCase = true)
         )
 
         val request = Request.Builder()
@@ -253,7 +276,7 @@ class OmnixApiClient @Inject constructor(
                                 response.use { resp ->
                                     val body = resp.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
                                     Log.i(TAG, "api response | requestId=$effectiveRequestId | http=${resp.code}")
-                                    cont.resume(parseHttpResponse(resp, body, effectiveRequestId))
+                                    cont.resume(parseHttpResponse(resp, body, callContext))
                                 }
                             } catch (t: Throwable) {
                                 if (cont.isActive) cont.resumeWithException(t) else throw t
@@ -356,12 +379,19 @@ class OmnixApiClient @Inject constructor(
     }
 
     /** CR-05: разбор ответа вынесен из enqueue-callback для читаемости. */
-    private fun parseHttpResponse(response: Response, body: String, requestId: String): Resource<String> {
+    private fun parseHttpResponse(response: Response, body: String, call: CallContext): Resource<String> {
+        val requestId = call.requestId
         if (response.isSuccessful) {
             val parsed = json.decodeFromString(OmniAiResponseDto.serializer(), body)
             if (parsed.success && parsed.text.isNotBlank()) {
                 Log.d(TAG, "ai request ok | requestId=${parsed.requestId}")
                 adminModels.onCloudAnswer(parsed.provider, parsed.model)
+                tierLedger.onAnswered(
+                    requestId = requestId,
+                    requestedPro = call.requestedPro,
+                    servedPro = AiTier.fromWire(parsed.tier) == AiTier.PRO,
+                    voice = call.voice
+                )
                 return Resource.Success(parsed.text)
             }
             return Resource.Error(
@@ -375,11 +405,23 @@ class OmnixApiClient @Inject constructor(
             OmnixApiErrorDto(code = "HTTP_${response.code}", requestId = requestId)
         }
         Log.w(TAG, "ai request failed | code=${error.code} | requestId=${error.requestId}")
+        val quota = QuotaExceeded.parse(
+            code = error.code,
+            scopeHeader = response.header(HEADER_QUOTA_SCOPE),
+            retryAfterHeader = response.header(HEADER_RETRY_AFTER),
+            requestedPro = call.requestedPro,
+            voice = call.voice,
+            nowMs = System.currentTimeMillis()
+        )
+        quota?.let { tierLedger.onQuotaExceeded(requestId, it) }
         return Resource.Error(
-            OmnixApiException(error.code, error.requestId, error.message),
+            OmnixApiException(error.code, error.requestId, error.message, quota),
             userMessageFor(error.code)
         )
     }
+
+    /** Что нужно разбору ответа о самом запросе: id, просили ли Pro, голос ли это. */
+    private data class CallContext(val requestId: String, val requestedPro: Boolean, val voice: Boolean)
 
     /** CR-05: маппинг сетевых исключений на Resource.Error (вызывается из onFailure). */
     private fun exceptionToResource(e: IOException, requestId: String): Resource<String> {

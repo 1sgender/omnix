@@ -373,6 +373,16 @@ abstract class ExecutionDecisionModule {
     @Singleton
     abstract fun bindAiModelChoiceSource(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiModelChoiceSource
 
+    /** Уровень облачного ответа (Flash/Pro) — по тому же выбору и тарифу. */
+    @Binds
+    @Singleton
+    abstract fun bindAiTierPreference(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierPreference
+
+    /** «Переключиться на Flash» в чате, когда кончился лимит Pro. */
+    @Binds
+    @Singleton
+    abstract fun bindAiTierSwitch(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierSwitch
+
     @Binds
     @Singleton
     abstract fun bindAgentExecutor(impl: CognitiveAgentExecutor): AgentExecutor

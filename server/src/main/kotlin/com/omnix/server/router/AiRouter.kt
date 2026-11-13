@@ -40,6 +40,12 @@ private val PRO_CHAIN = listOf(ProviderId.ANTHROPIC, ProviderId.GEMINI, Provider
 private val FLASH_PROVIDERS: Set<ProviderId> = ProviderId.entries.toSet() - ProviderId.ANTHROPIC
 
 /** Результат работы роутера — уже нормализован для отдачи клиенту. */
+/** Кончилась квота Pro (Claude): клиент может предложить переключиться на Flash. */
+const val QUOTA_SCOPE_PRO = "pro"
+
+/** Кончилась дневная квота Flash (голос или текст). */
+const val QUOTA_SCOPE_FLASH = "flash"
+
 sealed class RouterResult {
     data class Success(
         val text: String,
@@ -50,7 +56,14 @@ sealed class RouterResult {
         /** Фактический уровень ответа: "pro" только если ответил Claude, иначе "flash". */
         val tier: String = "flash"
     ) : RouterResult()
-    data class Failure(val code: ApiErrorCode, val requestId: String) : RouterResult()
+    data class Failure(
+        val code: ApiErrorCode,
+        val requestId: String,
+        /** QUOTA_EXCEEDED: через сколько секунд квота обновится (заголовок Retry-After). */
+        val retryAfterSeconds: Long? = null,
+        /** QUOTA_EXCEEDED: какая корзина кончилась — "pro" или "flash" (заголовок X-Quota-Scope). */
+        val quotaScope: String? = null
+    ) : RouterResult()
 }
 
 /**
@@ -159,7 +172,12 @@ class AiRouter(
                         "retryAfter" to quota.retryAfterSeconds.toString()
                     )
                     metrics.recordFailure()
-                    return RouterResult.Failure(ApiErrorCode.QUOTA_EXCEEDED, requestId)
+                    return RouterResult.Failure(
+                        ApiErrorCode.QUOTA_EXCEEDED,
+                        requestId,
+                        retryAfterSeconds = quota.retryAfterSeconds,
+                        quotaScope = QUOTA_SCOPE_FLASH
+                    )
                 }
                 PlanQuotaGate.Verdict.Allowed -> Unit
             }
@@ -182,7 +200,12 @@ class AiRouter(
                     "retryAfter" to proVerdict.retryAfterSeconds.toString()
                 )
                 metrics.recordFailure()
-                return RouterResult.Failure(ApiErrorCode.QUOTA_EXCEEDED, requestId)
+                return RouterResult.Failure(
+                    ApiErrorCode.QUOTA_EXCEEDED,
+                    requestId,
+                    retryAfterSeconds = proVerdict.retryAfterSeconds,
+                    quotaScope = QUOTA_SCOPE_PRO
+                )
             }
             if (proBudgetGuard?.shouldDowngrade() == true) {
                 logger.warn(

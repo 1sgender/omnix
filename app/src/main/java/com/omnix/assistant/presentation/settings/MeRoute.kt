@@ -60,6 +60,7 @@ fun MeRoute(
             AiModelChoice.AUTO -> R.string.omnix_ai_model_auto
             AiModelChoice.ON_DEVICE -> R.string.omnix_ai_model_on_device
             AiModelChoice.CLOUD -> R.string.omnix_ai_model_cloud
+            AiModelChoice.PRO -> R.string.omnix_tier_pro
         }
     )
 

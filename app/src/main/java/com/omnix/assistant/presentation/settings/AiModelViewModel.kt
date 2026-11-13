@@ -10,6 +10,15 @@ import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.core.admin.AdminModelPin
 import com.omnix.assistant.core.admin.AdminModelState
 import com.omnix.assistant.core.admin.AdminModelStore
+import com.omnix.assistant.agent.decision.AiProAccess
+import com.omnix.assistant.core.license.AiQuotaCalculator
+import com.omnix.assistant.core.license.AiQuotaRemaining
+import com.omnix.assistant.core.license.AiTierLedger
+import com.omnix.assistant.core.license.LicenseInfo
+import com.omnix.assistant.core.license.LicenseManager
+import com.omnix.assistant.core.license.LocalAnswer
+import com.omnix.assistant.core.license.QuotaExceeded
+import kotlinx.coroutines.flow.combine
 import com.omnix.assistant.core.network.ServerHealthProbe
 import com.omnix.assistant.data.preferences.AiModelChoiceStore
 import com.omnix.assistant.data.preferences.SettingsDataStore
@@ -37,11 +46,41 @@ class AiModelViewModel @Inject constructor(
     private val localModelManager: LocalModelManager,
     private val serverHealth: ServerHealthProbe,
     private val adminModels: AdminModelStore,
-    private val settings: SettingsDataStore
+    private val settings: SettingsDataStore,
+    private val licenseManager: LicenseManager,
+    private val tierLedger: AiTierLedger
 ) : ViewModel() {
 
     val choice: StateFlow<AiModelChoice> = store.choice
     val localModelState: StateFlow<LocalModelState> = localModelManager.stateFlow
+
+    private fun proInPlanNow(): Boolean = AiProAccess.isAvailable(licenseManager.getLicenseInfo().entitlements)
+
+    /** Pro есть в тарифе (daily_pro_ai > 0); нет — вариант с замком «Доступно в Pro и Max». */
+    val proAvailable: StateFlow<Boolean> = licenseManager.licenseFlow
+        .map { AiProAccess.isAvailable(it.entitlements) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), proInPlanNow())
+
+    private fun remainingOf(info: LicenseInfo, answers: List<LocalAnswer>, exhausted: List<QuotaExceeded>) =
+        AiQuotaCalculator.remaining(
+            entitlements = info.entitlements,
+            usage = info.aiUsage,
+            usageAtMs = info.verifiedAt,
+            localAnswers = answers,
+            exhausted = exhausted,
+            nowMs = System.currentTimeMillis()
+        )
+
+    /** «Сегодня осталось»: снимок сервера из validate плюс ответы после него. */
+    val remaining: StateFlow<AiQuotaRemaining> = combine(
+        licenseManager.licenseFlow,
+        tierLedger.answers,
+        tierLedger.exhausted
+    ) { info, answers, exhausted -> remainingOf(info, answers, exhausted) }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+        remainingOf(licenseManager.getLicenseInfo(), tierLedger.answers.value, tierLedger.exhausted.value)
+    )
 
     private val _applying = MutableStateFlow<AiModelChoice?>(null)
 
@@ -59,7 +98,8 @@ class AiModelViewModel @Inject constructor(
                 ?: LocalModelState.Failed("timeout")
         },
         serverReachable = { serverHealth.isReachable() },
-        save = store::set
+        save = store::set,
+        proAvailable = ::proInPlanNow
     )
 
     fun select(target: AiModelChoice) {

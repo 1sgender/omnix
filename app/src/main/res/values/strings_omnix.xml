@@ -281,10 +281,10 @@
     <string name="omnix_ai_title">AI model</string>
     <string name="omnix_ai_model_auto">Auto</string>
     <string name="omnix_ai_model_auto_body">Short simple answers on the phone, the rest in the OMNIX cloud.</string>
-    <string name="omnix_ai_model_on_device">On the phone</string>
+    <string name="omnix_ai_model_on_device">Local</string>
     <string name="omnix_ai_model_on_device_body">%1$s. Works offline, requests never leave the phone. Simpler answers than the cloud.</string>
-    <string name="omnix_ai_model_cloud">OMNIX cloud</string>
-    <string name="omnix_ai_model_cloud_body">The model on the OMNIX server: fuller answers. Needs the internet.</string>
+    <string name="omnix_ai_model_cloud">Flash</string>
+    <string name="omnix_ai_model_cloud_body">OMNIX cloud: quick, fuller answers than the phone. Needs the internet.</string>
     <string name="omnix_admin_models_title">Model testing (admin)</string>
     <string name="omnix_admin_models_body">Only you see this. The chosen model answers every request, and each answer says who answered.</string>
     <string name="omnix_admin_models_default">As for everyone</string>

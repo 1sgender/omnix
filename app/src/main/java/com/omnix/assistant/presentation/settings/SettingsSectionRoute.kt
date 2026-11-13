@@ -89,6 +89,8 @@ fun SettingsSectionRoute(
             val aiFailure by aiModelViewModel.failure.collectAsState()
             val adminModels by aiModelViewModel.admin.collectAsState()
             val wakeListening by aiModelViewModel.wakeListening.collectAsState()
+            val proAvailable by aiModelViewModel.proAvailable.collectAsState()
+            val aiRemaining by aiModelViewModel.remaining.collectAsState()
             AiSettingsScreen(
                 modifier = modifier,
                 onBack = onBack,
@@ -98,7 +100,9 @@ fun SettingsSectionRoute(
                         applying = aiApplying,
                         failure = aiFailure,
                         localModelState = modelState,
-                        onSelect = aiModelViewModel::select
+                        onSelect = aiModelViewModel::select,
+                        proAvailable = proAvailable,
+                        remaining = aiRemaining
                     )
                     if (adminModels.isAdmin) {
                         AdminModelSection(

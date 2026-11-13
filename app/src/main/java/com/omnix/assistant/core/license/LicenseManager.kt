@@ -40,7 +40,12 @@ data class LicenseInfo(
      * в этом процессе — FREE (fail-closed, см. ClientPlanGate).
      */
     val entitlements: PlanEntitlements = PlanEntitlements.FREE,
-    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN
+    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN,
+    /**
+     * Использованные ответы ИИ по последнему validate (момент — [verifiedAt]).
+     * Только в памяти процесса: null до первого успешного validate или от старого сервера.
+     */
+    val aiUsage: PlanAiUsage? = null
 )
 
 sealed interface ActivationResult {
@@ -309,7 +314,7 @@ class LicenseManagerImpl @Inject constructor(
                 .remove(LEGACY_KEY_CODE)
                 .commit()
         ) { "Could not persist server license state" }
-        return loadCachedInfo().copy(isActivated = true).also { _licenseFlow.value = it }
+        return loadCachedInfo().copy(isActivated = true, aiUsage = record.aiUsage).also { _licenseFlow.value = it }
     }
 
     private fun invalidateProcessState(expired: Boolean) {

@@ -17,7 +17,10 @@ enum class AiModelActivationError {
     LOCAL_LOAD_FAILED,
 
     /** Сервер OMNIX не ответил: облачная модель сейчас недоступна. */
-    SERVER_UNREACHABLE
+    SERVER_UNREACHABLE,
+
+    /** Pro нет в тарифе (Free): доступно в Pro и Max. */
+    PRO_NOT_IN_PLAN
 }
 
 /** Итог попытки сменить модель. */
@@ -37,7 +40,9 @@ sealed interface AiModelActivation {
 class AiModelActivator(
     private val loadLocalModel: suspend () -> LocalModelState,
     private val serverReachable: suspend () -> Boolean,
-    private val save: suspend (AiModelChoice) -> Unit
+    private val save: suspend (AiModelChoice) -> Unit,
+    /** Есть ли Pro в тарифе; по умолчанию нет (fail-closed). */
+    private val proAvailable: () -> Boolean = { false }
 ) {
 
     suspend fun activate(target: AiModelChoice): AiModelActivation {
@@ -46,6 +51,11 @@ class AiModelActivator(
             AiModelRequirement.LOCAL_MODEL -> checkLocal(loadLocalModel())
             AiModelRequirement.SERVER -> if (serverReachable()) null else {
                 AiModelActivation.Failed(AiModelActivationError.SERVER_UNREACHABLE)
+            }
+            AiModelRequirement.PRO_PLAN -> when {
+                !proAvailable() -> AiModelActivation.Failed(AiModelActivationError.PRO_NOT_IN_PLAN)
+                !serverReachable() -> AiModelActivation.Failed(AiModelActivationError.SERVER_UNREACHABLE)
+                else -> null
             }
         }
         if (failure != null) return failure

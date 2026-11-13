@@ -83,7 +83,33 @@ data class LicenseValidateResponse(
      */
     @SerialName("admin") val admin: Boolean = false,
     /** Облачные модели для теста; только админу, иначе null. */
-    @SerialName("admin_models") val adminModels: List<AdminCloudModelDto>? = null
+    @SerialName("admin_models") val adminModels: List<AdminCloudModelDto>? = null,
+    /**
+     * Сколько ответов ИИ уже засчитано (экран «Сегодня осталось» в приложении).
+     * Считается тем же UsageRepository.countSince, что и PlanQuotaGate, поэтому
+     * остаток на экране совпадает с тем, что пропустит сервер.
+     * null = счётчик не подключён (юнит-тесты) — клиент тогда не показывает остаток.
+     */
+    @SerialName("usage") val usage: PlanUsageDto? = null
+)
+
+/** Использованные ответы ИИ: сутки UTC по корзинам и календарный месяц UTC для Pro. */
+@Serializable
+data class PlanUsageDto(
+    @SerialName("used_today") val usedToday: UsedTodayDto,
+    @SerialName("used_month") val usedMonth: UsedMonthDto
+)
+
+@Serializable
+data class UsedTodayDto(
+    @SerialName("voice_ai") val voiceAi: Long,
+    @SerialName("base_ai") val baseAi: Long,
+    @SerialName("pro_ai") val proAi: Long
+)
+
+@Serializable
+data class UsedMonthDto(
+    @SerialName("pro_ai") val proAi: Long
 )
 
 /** Зеркало PlanLimits для validate-ответа (см. PlanCatalog). */
