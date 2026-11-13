@@ -191,7 +191,7 @@ class HttpLicenseServerValidator @Inject constructor(
             val requestId = UUID.randomUUID().toString()
             val body = json.encodeToString(ValidateRequest(hardwareId, requestId))
             val request = Request.Builder()
-                .url("$BASE_URL/v1/license/validate")
+                .url("$baseUrl/v1/license/validate")
                 .header("Authorization", "Bearer $token")
                 .post(body.toRequestBody(mediaType))
                 .build()
