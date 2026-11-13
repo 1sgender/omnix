@@ -1,5 +1,6 @@
 package com.omnix.assistant.core.clip
 
+import androidx.annotation.VisibleForTesting
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.license.ClipModelInfo
 import com.omnix.assistant.core.network.readUtf8Bounded
@@ -103,7 +104,13 @@ private data class ErrorBody(@SerialName("code") val code: String = "")
 class HttpClipPairApi @Inject constructor(
     private val securityManager: SecurityManager
 ) {
-    private val baseUrl: String = AppConstants.OMNIX_LICENSE_BASE_URL
+    // Hilt идёт через primary-конструктор; baseUrl переопределяется только в тестах.
+    private var baseUrl: String = AppConstants.OMNIX_LICENSE_BASE_URL
+
+    @VisibleForTesting
+    constructor(securityManager: SecurityManager, baseUrl: String) : this(securityManager) {
+        this.baseUrl = baseUrl
+    }
     private val json = Json { ignoreUnknownKeys = true }
     private val mediaType = "application/json; charset=utf-8".toMediaType()
     private val client = OkHttpClient.Builder()
