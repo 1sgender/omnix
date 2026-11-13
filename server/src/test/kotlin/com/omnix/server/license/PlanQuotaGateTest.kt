@@ -57,7 +57,7 @@ class PlanQuotaGateTest {
     @Test
     fun `free voice quota allows under limit`() = runBlocking {
         val usage = InMemoryUsageRepository()
-        repeat(29) { usage.record(record("acct-1", "voice_ai")) }
+        repeat(9) { usage.record(record("acct-1", "voice_ai")) }
         val gate = PlanQuotaGate(usage, clock)
 
         assertTrue(gate.check(client("free"), PlanFeature.VOICE_AI) is PlanQuotaGate.Verdict.Allowed)
@@ -66,14 +66,14 @@ class PlanQuotaGateTest {
     @Test
     fun `free voice quota limits at boundary`() = runBlocking {
         val usage = InMemoryUsageRepository()
-        repeat(30) { usage.record(record("acct-1", "voice_ai")) }
+        repeat(10) { usage.record(record("acct-1", "voice_ai")) }
         val gate = PlanQuotaGate(usage, clock)
 
         val verdict = gate.check(client("free"), PlanFeature.VOICE_AI)
         assertTrue(verdict is PlanQuotaGate.Verdict.Limited)
         val limited = verdict as PlanQuotaGate.Verdict.Limited
-        assertEquals(30, limited.limit)
-        assertEquals(30, limited.used)
+        assertEquals(10, limited.limit)
+        assertEquals(10, limited.used)
         assertTrue(limited.retryAfterSeconds > 0)
     }
 
@@ -99,11 +99,14 @@ class PlanQuotaGateTest {
     @Test
     fun `legacy rows without feature count conservatively`() = runBlocking {
         val usage = InMemoryUsageRepository()
-        repeat(30) { usage.record(record("acct-1", null)) }
+        repeat(10) { usage.record(record("acct-1", null)) }
         val gate = PlanQuotaGate(usage, clock)
 
+        // Строки без feature засчитываются в КАЖДУЮ корзину: обе исчерпаны.
         assertTrue(gate.check(client("free"), PlanFeature.VOICE_AI) is PlanQuotaGate.Verdict.Limited)
-        assertTrue(gate.check(client("free"), PlanFeature.BASE_AI) is PlanQuotaGate.Verdict.Allowed)
+        assertTrue(gate.check(client("free"), PlanFeature.BASE_AI) is PlanQuotaGate.Verdict.Limited)
+        // Платный тариф с большей квотой те же строки не исчерпывают.
+        assertTrue(gate.check(client("pro"), PlanFeature.BASE_AI) is PlanQuotaGate.Verdict.Allowed)
     }
 
     @Test
