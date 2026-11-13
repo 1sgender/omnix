@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пары OMNIX Clip (реестр по BT-адресу, V012). -->
+<resources>
+    <string name="omnix_pair_required_message">OMNIX kulaklığınızı bağlayın — bulut yapay zekâ yalnızca onunla çalışır. Çevrimdışı özellikler çalışmaya devam eder.</string>
+    <string name="omnix_pair_activate_cta">OMNIX kulaklıkla etkinleştir</string>
+    <string name="omnix_pair_none_connected">Bağlı kulaklık yok. OMNIX Clip’i Bluetooth ayarlarından bağlayıp tekrar deneyin.</string>
+    <string name="omnix_pair_unknown">Bu kulaklık OMNIX değil veya henüz kaydedilmemiş.</string>
+    <string name="omnix_pair_taken">Bu kulaklık başka bir hesaba bağlı.</string>
+    <string name="omnix_pair_revoked">Bu kulaklık engellendi.</string>
+    <string name="omnix_pair_limit">Bu hesap için kulaklık sınırına ulaşıldı.</string>
+    <string name="omnix_pair_failed">Sunucuya ulaşılamadı. Daha sonra tekrar deneyin.</string>
+    <string name="omnix_pair_my_title">Kulaklıklarım</string>
+    <string name="omnix_pair_none_bound">Henüz bağlı OMNIX kulaklık yok.</string>
+    <string name="omnix_pair_last_seen">Son bağlantı: %1$s</string>
+    <string name="omnix_pair_never_seen">Henüz bağlanmadı</string>
+    <string name="omnix_pair_connected_badge">Bağlı</string>
+    <string name="omnix_pair_release">Bağlantıyı kaldır</string>
+    <string name="omnix_pair_release_confirm">%1$s bağlantısı kaldırılsın mı? Kulaklık yapay zekâya erişim vermeyi bırakır ve başka birine verilebilir.</string>
+    <string name="omnix_pair_released">Kulaklık bağlantısı kaldırıldı</string>
+    <string name="omnix_pair_found_new">Yeni OMNIX kulaklık bulundu: %1$s. Eklensin mi?</string>
+    <string name="omnix_pair_add">Ekle</string>
+    <string name="omnix_pair_cancel">Şimdi değil</string>
+    <string name="omnix_pair_added">Kulaklık eklendi</string>
+    <string name="omnix_pair_operator_title">Operatör modu: kulaklık kaydı</string>
+    <string name="omnix_pair_operator_serial">Seri numarası</string>
+    <string name="omnix_pair_operator_register">Bağlı kulaklığı kaydet</string>
+    <string name="omnix_pair_operator_done">Kulaklık kaydedildi</string>
+    <string name="omnix_pair_operator_exists">Bu kulaklık zaten kayıtlı</string>
+    <string name="omnix_pair_trial_until">7 gün Pro hediye — %1$s tarihine kadar</string>
+</resources>

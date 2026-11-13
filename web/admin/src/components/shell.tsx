@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   Activity, BadgeDollarSign, Boxes, Flag, Gauge, KeyRound, LogOut, Menu,
-  ScrollText, ServerCog, Settings2, ShieldCheck, Users, Radio
+  ScrollText, ServerCog, Settings2, ShieldCheck, Users, Radio, Headphones
 } from 'lucide-react'
 import type { AdminPermission } from '../api/types'
 import { useAuth } from '../state/auth'
@@ -28,6 +28,7 @@ const NAV: { section: string; items: NavEntry[] }[] = [
       { to: '/licenses', label: 'Лицензии', icon: <KeyRound size={16} />, permission: 'LICENSES_READ' },
       { to: '/users', label: 'Пользователи', icon: <Users size={16} />, permission: 'USERS_READ' },
       { to: '/devices', label: 'Устройства', icon: <Radio size={16} />, permission: 'DEVICES_READ' },
+      { to: '/earbuds', label: 'Наушники', icon: <Headphones size={16} />, permission: 'DEVICES_READ' },
       { to: '/subscriptions', label: 'Подписки', icon: <BadgeDollarSign size={16} />, permission: 'SUBSCRIPTIONS_READ' }
     ]
   },
@@ -61,6 +62,7 @@ const PAGE_TITLES: Record<string, [string, string]> = {
   '/licenses': ['Лицензии', 'Выдача, активация и жизненный цикл'],
   '/users': ['Пользователи', 'Аккаунты и их лицензии'],
   '/devices': ['Устройства', 'API-токены устройств'],
+  '/earbuds': ['Наушники', 'Реестр пар OMNIX Clip и каталог моделей'],
   '/subscriptions': ['Подписки', 'Платёжные заказы'],
   '/providers': ['AI-провайдеры', 'Роутинг и состояние провайдеров'],
   '/usage': ['Использование', 'Запросы, токены и стоимость'],

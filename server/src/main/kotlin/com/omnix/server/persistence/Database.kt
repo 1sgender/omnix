@@ -64,7 +64,8 @@ class DatabaseMigrator(private val dataSource: DataSource) {
         Migration(8, "clip device identity", "/db/migration/V008__clip_device_identity.sql"),
         Migration(9, "AI usage feature bucket", "/db/migration/V009__usage_feature.sql"),
         Migration(10, "usage record identity", "/db/migration/V010__usage_record_identity.sql"),
-        Migration(11, "admin account notes", "/db/migration/V011__admin_account_notes.sql")
+        Migration(11, "admin account notes", "/db/migration/V011__admin_account_notes.sql"),
+        Migration(12, "clip MAC registry and model catalog", "/db/migration/V012__clip_mac_registry.sql")
     )
 
     fun migrate() {

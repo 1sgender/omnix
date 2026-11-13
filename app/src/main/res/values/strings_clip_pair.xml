@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пары OMNIX Clip (реестр по BT-адресу, V012). -->
+<resources>
+    <string name="omnix_pair_required_message">Connect your OMNIX earbuds — cloud AI works only with them. Offline features keep working.</string>
+    <string name="omnix_pair_activate_cta">Activate with OMNIX earbuds</string>
+    <string name="omnix_pair_none_connected">No earbuds connected. Connect your OMNIX Clip in Bluetooth settings and try again.</string>
+    <string name="omnix_pair_unknown">These earbuds are not OMNIX or are not registered yet.</string>
+    <string name="omnix_pair_taken">These earbuds are linked to another account.</string>
+    <string name="omnix_pair_revoked">These earbuds are blocked.</string>
+    <string name="omnix_pair_limit">You have reached the earbud limit for this account.</string>
+    <string name="omnix_pair_failed">Could not reach the server. Try again later.</string>
+    <string name="omnix_pair_my_title">My earbuds</string>
+    <string name="omnix_pair_none_bound">No OMNIX earbuds linked yet.</string>
+    <string name="omnix_pair_last_seen">Last connected: %1$s</string>
+    <string name="omnix_pair_never_seen">Not connected yet</string>
+    <string name="omnix_pair_connected_badge">Connected</string>
+    <string name="omnix_pair_release">Unlink</string>
+    <string name="omnix_pair_release_confirm">Unlink %1$s? They will stop giving access to AI and can be passed to another person.</string>
+    <string name="omnix_pair_released">Earbuds unlinked</string>
+    <string name="omnix_pair_found_new">New OMNIX earbuds found: %1$s. Add them?</string>
+    <string name="omnix_pair_add">Add</string>
+    <string name="omnix_pair_cancel">Not now</string>
+    <string name="omnix_pair_added">Earbuds added</string>
+    <string name="omnix_pair_operator_title">Operator mode: register earbuds</string>
+    <string name="omnix_pair_operator_serial">Serial number</string>
+    <string name="omnix_pair_operator_register">Register connected earbuds</string>
+    <string name="omnix_pair_operator_done">Earbuds registered</string>
+    <string name="omnix_pair_operator_exists">These earbuds are already registered</string>
+    <string name="omnix_pair_trial_until">Pro for 7 days as a gift — until %1$s</string>
+</resources>

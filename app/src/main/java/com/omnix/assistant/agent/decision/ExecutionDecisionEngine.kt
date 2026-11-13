@@ -493,9 +493,11 @@ class ExecutionDecisionEngine @Inject constructor(
         }
 
         if (!cloudAi.isAvailable()) {
-            Log.i(TAG, "route=BLOCKED reason=OFFLINE")
+            // Сеть есть, но нет подключённой пары OMNIX — своё сообщение.
+            val blocked = cloudAi.unavailableMessage()
+            Log.i(TAG, "route=BLOCKED reason=${if (blocked == null) "OFFLINE" else "NO_OMNIX_PAIR"}")
             return ExecutionResult.Error(
-                message = OFFLINE_MESSAGE,
+                message = blocked ?: OFFLINE_MESSAGE,
                 reason = DecisionReason.CLOUD_FAILED
             )
         }

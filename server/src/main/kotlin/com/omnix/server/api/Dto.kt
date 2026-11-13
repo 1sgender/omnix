@@ -210,6 +210,8 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     CLIP_CHALLENGE_INVALID(401, "Attestation challenge expired, used or unknown"),
     CLIP_BAD_SIGNATURE(401, "Attestation signature verification failed"),
     CLIP_OWNER_MISMATCH(403, "Clip is bound to another account"),
+    CLIP_PAIR_LIMIT(409, "Earbud pair limit reached for this account"),
+    CLIP_ALREADY_REGISTERED(409, "Earbuds with this serial or address are already registered"),
     INTERNAL_ERROR(500, "Internal server error");
 
     fun toResponse(requestId: String, overrideMessage: String? = null) = ApiErrorResponse(

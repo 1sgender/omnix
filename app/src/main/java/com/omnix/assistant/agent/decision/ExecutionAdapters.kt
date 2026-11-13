@@ -42,14 +42,20 @@ class RepositoryCloudAiExecutor @Inject constructor(
     private val aiRepository: AIRepository,
     private val settingsRepository: SettingsRepository,
     private val toolRegistry: ToolRegistry,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    /** Гейт пары OMNIX (V012); в тестах — всегда открыт. */
+    private val pairAccess: CloudPairAccess = CloudPairAccess.OPEN
 ) : CloudAiExecutor {
 
     private companion object {
         const val TAG = "CloudAiExecutor"
     }
 
-    override fun isAvailable(): Boolean = networkMonitor.isCurrentlyOnline()
+    override fun isAvailable(): Boolean =
+        networkMonitor.isCurrentlyOnline() && pairAccess.blockedMessage() == null
+
+    override fun unavailableMessage(): String? =
+        if (networkMonitor.isCurrentlyOnline()) pairAccess.blockedMessage() else null
 
     override suspend fun complete(request: ExecutionRequest): Resource<String> {
         val baseSystemPrompt = settingsRepository.systemPromptFlow.first()

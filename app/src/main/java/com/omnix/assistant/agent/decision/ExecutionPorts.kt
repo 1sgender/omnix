@@ -59,8 +59,17 @@ sealed class LocalAiOutcome {
  */
 interface CloudAiExecutor {
 
-    /** Доступна ли сеть прямо сейчас (существующий NetworkMonitor). */
+    /**
+     * Можно ли идти в облако прямо сейчас: есть сеть и (если сервер требует)
+     * подключена привязанная пара OMNIX.
+     */
     fun isAvailable(): Boolean
+
+    /**
+     * Почему облако недоступно, если причина не «нет сети»: например
+     * «Подключите наушники OMNIX». null — обычное офлайн-сообщение.
+     */
+    fun unavailableMessage(): String? = null
 
     suspend fun complete(request: ExecutionRequest): Resource<String>
 }

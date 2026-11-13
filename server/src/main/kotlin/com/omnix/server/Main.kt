@@ -410,6 +410,14 @@ object ServerBootstrap {
         // composite authenticator; challenge/attest привязывают клип к аккаунту.
         // Репозиторий общий: attest-путь + soft-привязка в validate-ответе.
         val clipDevices = com.omnix.server.clip.JdbcClipDeviceRepository(dataSource)
+        // V012: реестр пар по BT-адресу (временная схема до прошивки с ключом)
+        // и каталог моделей. Тот же LicenseCrypto: привязка пары выдаёт
+        // лицензию и omx_-токен так же, как redeem кода.
+        val clipPairRegistry = com.omnix.server.clip.ClipPairRegistry(
+            dataSource = dataSource,
+            crypto = licenseCrypto,
+            config = config.clipPairs
+        )
         val clipHttpHandler = com.omnix.server.clip.ClipHttpHandler(
             authenticator = authenticator,
             authorizer = authorizer,
@@ -421,7 +429,10 @@ object ServerBootstrap {
             ),
             validation = config.validation,
             logger = logger,
-            json = json
+            json = json,
+            pairRegistry = clipPairRegistry,
+            isOperatorAccount = adminAccess::isAdmin,
+            adminAudit = com.omnix.server.admin.AdminAuditLog(dataSource)
         )
         val licenseHttpHandler = LicenseBillingHttpHandler(
             authenticator = authenticator,
@@ -443,7 +454,8 @@ object ServerBootstrap {
             logger = logger,
             json = json,
             clipDevices = clipDevices,
-            adminAccess = adminAccess
+            adminAccess = adminAccess,
+            clipPairConfig = config.clipPairs
         )
 
         // CR-15: health-лямбда и metrics-лямбда вынесены в явные функции для
@@ -503,6 +515,15 @@ object ServerBootstrap {
             overrides = providerOverrides,
             json = json
         )
+        // Экран «Наушники» (V012): свой префикс /v1/admin/earbuds, ставится
+        // ПЕРЕД adminHttpHandler — тот отвечает 404 на неизвестные /v1/admin/….
+        val clipAdminHandler = com.omnix.server.clip.ClipAdminHttpHandler(
+            auth = adminAuthService,
+            staticAuthenticator = staticAuthenticator,
+            registry = clipPairRegistry,
+            audit = adminAuditLog,
+            json = json
+        )
         // Control Plane SPA: issue/revoke лицензий из панели под админ-сессией
         // (раньше — только static-токен).
         licenseHttpHandler.adminAuthService = adminAuthService
@@ -548,6 +569,7 @@ object ServerBootstrap {
             // лицензионные (issue/revoke, redeem, checkout, webhooks) — следом.
             extensionHandler = { request ->
                 adminSpaHandler.handle(request) ?:
+                    clipAdminHandler.handle(request) ?:
                     adminHttpHandler.handle(request) ?:
                     licenseHttpHandler.handle(request) ?:
                     appUpdateHandler.handle(request) ?:
