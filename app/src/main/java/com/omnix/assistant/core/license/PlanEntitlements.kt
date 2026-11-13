@@ -18,8 +18,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class PlanEntitlements(
-    @SerialName("daily_voice_ai") val dailyVoiceAi: Int = 30,
-    @SerialName("daily_base_ai") val dailyBaseAi: Int = 50,
+    @SerialName("daily_voice_ai") val dailyVoiceAi: Int = 10,
+    @SerialName("daily_base_ai") val dailyBaseAi: Int = 10,
     @SerialName("daily_agent_actions") val dailyAgentActions: Int = 5,
     @SerialName("daily_web_search") val dailyWebSearch: Int = 10,
     @SerialName("daily_translation_units") val dailyTranslationUnits: Int = 15,

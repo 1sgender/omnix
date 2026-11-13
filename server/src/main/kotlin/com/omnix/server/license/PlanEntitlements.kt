@@ -1,11 +1,15 @@
 package com.omnix.server.license
 
 /**
- * Тарифы OMNIX: FREE / PRO / OMNIX (средний — PRO, флагман — OMNIX).
+ * Тарифы OMNIX: FREE / PRO / OMNIX (в продукте «Max»; id `omnix` сохранён,
+ * на нём уже выданы лицензии).
  *
- * Утверждено фаундером (лимиты):
- * - голосовой AI: 30 / 500 / 2000 в день;
- * - базовый AI (чат): 50 / 500 / 2000 в день;
+ * Утверждено владельцем 2026-11-13 (цены в BILLING_PLANS: 0 / 149 / 299 TMT в мес.):
+ * - Free идёт с наушниками навсегда и должен стоить нам ~0 (бесплатные ключи Gemini);
+ * - голосовой AI (Flash): 10 / 300 / 1000 в день;
+ * - базовый AI (Flash, чат): 10 / 300 / 1000 в день;
+ * - Pro (Claude): 0 / 20 в день и 250 в мес. / 50 в день и 600 в мес.;
+ * - 7 дней Pro бесплатно при первой привязке наушников (пробная лицензия plan=pro);
  * - сервер считает ТОЛЬКО voice/base (они идут через AiRouter);
  *   остальные квоты (agent/web/translation/ear/automations) и boolean-гейты
  *   везёт клиент: он получает их из validate-ответа (часть 2).
@@ -54,8 +58,8 @@ object PlanCatalog {
     const val PRO = "pro"
 
     private val free = PlanLimits(
-        dailyVoiceAi = 30,
-        dailyBaseAi = 50,
+        dailyVoiceAi = 10,
+        dailyBaseAi = 10,
         dailyAgentActions = 5,
         dailyWebSearch = 10,
         dailyTranslationUnits = 15,
@@ -71,8 +75,8 @@ object PlanCatalog {
     )
 
     private val omnix = PlanLimits(
-        dailyVoiceAi = 2000,
-        dailyBaseAi = 2000,
+        dailyVoiceAi = 1000,
+        dailyBaseAi = 1000,
         dailyAgentActions = 500,
         dailyWebSearch = 500,
         dailyTranslationUnits = 1000,
@@ -89,8 +93,8 @@ object PlanCatalog {
     )
 
     private val pro = PlanLimits(
-        dailyVoiceAi = 500,
-        dailyBaseAi = 500,
+        dailyVoiceAi = 300,
+        dailyBaseAi = 300,
         dailyAgentActions = 100,
         dailyWebSearch = 100,
         dailyTranslationUnits = 300,
