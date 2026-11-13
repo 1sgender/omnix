@@ -16,8 +16,8 @@ class EntitlementsDtoTest {
     fun `free entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.FREE).toDto()
 
-        assertEquals(30, dto.dailyVoiceAi)
-        assertEquals(50, dto.dailyBaseAi)
+        assertEquals(10, dto.dailyVoiceAi)
+        assertEquals(10, dto.dailyBaseAi)
         assertEquals(5, dto.dailyAgentActions)
         assertEquals(10, dto.dailyWebSearch)
         assertEquals(15, dto.dailyTranslationUnits)
@@ -36,8 +36,8 @@ class EntitlementsDtoTest {
     fun `omnix entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.OMNIX).toDto()
 
-        assertEquals(2000, dto.dailyVoiceAi)
-        assertEquals(2000, dto.dailyBaseAi)
+        assertEquals(1000, dto.dailyVoiceAi)
+        assertEquals(1000, dto.dailyBaseAi)
         assertEquals(500, dto.dailyAgentActions)
         assertEquals(500, dto.dailyWebSearch)
         assertEquals(1000, dto.dailyTranslationUnits)
@@ -56,8 +56,8 @@ class EntitlementsDtoTest {
     fun `pro entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.PRO).toDto()
 
-        assertEquals(500, dto.dailyVoiceAi)
-        assertEquals(500, dto.dailyBaseAi)
+        assertEquals(300, dto.dailyVoiceAi)
+        assertEquals(300, dto.dailyBaseAi)
         assertEquals(100, dto.dailyAgentActions)
         assertEquals(100, dto.dailyWebSearch)
         assertEquals(300, dto.dailyTranslationUnits)
