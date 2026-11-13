@@ -40,7 +40,7 @@ data class PlanEntitlements(
 /**
  * Soft-привязка Clip из validate-ответа.
  * Информативно: отсутствие клипа AI и tools НЕ блокирует.
- * V012: при [pairRequired] облачный ИИ гейтит ClientPlanGate.isCloudAiUnlocked.
+ * V012: при [pairRequired] облачный ИИ гейтит ClientPlanGate (isCloudChatUnlocked / isCloudVoiceUnlocked).
  */
 @Serializable
 data class ClipBindingState(

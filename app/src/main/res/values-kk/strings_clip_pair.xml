@@ -27,4 +27,6 @@
     <string name="omnix_pair_operator_done">Жұп тіркелді</string>
     <string name="omnix_pair_operator_exists">Бұл жұп бұрыннан тіркелген</string>
     <string name="omnix_pair_trial_until">7 күндік Pro сыйлық — %1$s дейін</string>
+    <string name="omnix_pair_chat_only_message">OMNIX құлаққабын қосыңыз — оларсыз тек чат қолжетімді.</string>
+    <string name="omnix_pair_recovery_limit">Бүгін құлаққап телефондар арасында тым көп ауыстырылды. Ертең қайталаңыз.</string>
 </resources>

@@ -28,10 +28,13 @@ data class ClipPairConfig(
     val defaultPlanId: String = DEFAULT_PLAN_ID,
     /** Пробный период при первой в истории привязке пары («7 дней Pro»). */
     val trialPlanId: String = DEFAULT_TRIAL_PLAN_ID,
-    val trialDays: Long = DEFAULT_TRIAL_DAYS
+    val trialDays: Long = DEFAULT_TRIAL_DAYS,
+    /** CLIP_MAX_RECOVERIES_PER_DAY: переносов пары между телефонами за сутки. */
+    val maxRecoveriesPerDay: Int = DEFAULT_MAX_RECOVERIES_PER_DAY
 ) {
     init {
         require(maxPairsPerAccount in 1..100) { "CLIP_MAX_PAIRS_PER_ACCOUNT must be in 1..100" }
+        require(maxRecoveriesPerDay in 1..100) { "CLIP_MAX_RECOVERIES_PER_DAY must be in 1..100" }
     }
 
     companion object {
@@ -39,6 +42,7 @@ data class ClipPairConfig(
         const val DEFAULT_PLAN_ID = "free"
         const val DEFAULT_TRIAL_PLAN_ID = "pro"
         const val DEFAULT_TRIAL_DAYS = 7L
+        const val DEFAULT_MAX_RECOVERIES_PER_DAY = 3
     }
 }
 
@@ -149,7 +153,9 @@ data class ClipRegistryEntry(
     val statusReason: String?,
     val boundAt: Instant?,
     val lastSeenAt: Instant?,
-    val createdAt: Instant
+    val createdAt: Instant,
+    /** Когда пара выдала пробный Pro; null — ещё не выдавала (или админ сбросил). */
+    val trialGrantedAt: Instant? = null
 )
 
 /** Регистрация пары при упаковке. */
@@ -189,14 +195,18 @@ sealed interface ClipPairBindOutcome {
         val expiresAt: Instant,
         val billingStatus: LicenseBillingStatus,
         /** Конец пробного Pro, если этот вызов его выдал; иначе null. */
-        val trialExpiresAt: Instant? = null
+        val trialExpiresAt: Instant? = null,
+        /** Пара перенесена на этот телефон (восстановление доступа владельца). */
+        val recovered: Boolean = false
     ) : ClipPairBindOutcome
 
     data object InvalidRequest : ClipPairBindOutcome
     data object UnknownPair : ClipPairBindOutcome
     data object Revoked : ClipPairBindOutcome
-    data object OwnedByAnotherAccount : ClipPairBindOutcome
     data object PairLimitReached : ClipPairBindOutcome
+
+    /** Слишком частый перенос пары между телефонами (CLIP_MAX_RECOVERIES_PER_DAY). */
+    data object RecoveryLimited : ClipPairBindOutcome
     data object InvalidPlan : ClipPairBindOutcome
     data object AccountDisabled : ClipPairBindOutcome
 

@@ -168,8 +168,12 @@ class ClipPairRegistryIntegrationTest : PostgresTestSupport() {
     private fun register(serial: String, address: String, extra: String = ""): HttpResponseContext =
         admin("POST", ClipAdminHttpHandler.PREFIX, """{"clipSerial":"$serial","btAddress":"$address"$extra}""")
 
-    private fun bind(address: String, deviceId: String, token: String? = null) =
-        clip(ClipHttpHandler.PATH_PAIR_BIND, token, """{"bt_address":"$address","device_id":"$deviceId","request_id":"bind-1"}""")
+    private fun bind(address: String, deviceId: String, token: String? = null, phone: String? = null) =
+        clip(
+            ClipHttpHandler.PATH_PAIR_BIND, token,
+            """{"bt_address":"$address","device_id":"$deviceId"""" +
+                (phone?.let { ""","phone_hash":"$it"""" } ?: "") + ""","request_id":"bind-1"}"""
+        )
 
     private fun tokenOf(response: HttpResponseContext): String = obj(response)["access_token"]!!.jsonPrimitive.content
 
@@ -250,7 +254,7 @@ class ClipPairRegistryIntegrationTest : PostgresTestSupport() {
     }
 
     @Test
-    fun `repeat bind by same account is idempotent and foreign or revoked pairs are refused`() {
+    fun `repeat bind is idempotent, other phone recovers the owner and revoked pairs are refused`() {
         register("OMX-I-1", "10:20:30:40:51:01")
         val first = bind("10:20:30:40:51:01", "device-owner-0001")
         val token = tokenOf(first)
@@ -268,23 +272,24 @@ class ClipPairRegistryIntegrationTest : PostgresTestSupport() {
         }
         assertEquals(2, licenses)
 
-        // Чужой телефон без токена и чужой аккаунт — отказ.
-        val stranger = bind("10:20:30:40:51:01", "device-strange-01")
-        assertEquals(403, stranger.status)
-        assertEquals("CLIP_OWNER_MISMATCH", errorCode(stranger))
-        register("OMX-I-2", "10:20:30:40:51:02")
-        val otherToken = tokenOf(bind("10:20:30:40:51:02", "device-other-0001"))
-        val foreign = bind("10:20:30:40:51:01", "device-other-0001", otherToken)
-        assertEquals("CLIP_OWNER_MISMATCH", errorCode(foreign))
+        // Другой телефон без токена — наушники = ключ: вход в ТОТ ЖЕ аккаунт.
+        val ownerAccount = accountOf(token)
+        val moved = bind("10:20:30:40:51:01", "device-moved-0001")
+        assertEquals(200, moved.status)
+        assertEquals("true", obj(moved)["recovered"]!!.jsonPrimitive.content)
+        val movedToken = tokenOf(moved)
+        assertEquals(ownerAccount, accountOf(movedToken))
+        // Старые токены пары отозваны: одна пара — один активный телефон.
+        assertNull(licenseService.authenticateAccessToken(token))
 
         // REVOKED — отказ всегда, и AI-путь владельца закрывается.
         assertEquals(200, admin("POST", "${ClipAdminHttpHandler.PREFIX}/${entryId("OMX-I-1")}/revoke", """{"reason":"stolen"}""").status)
-        val revoked = bind("10:20:30:40:51:01", "device-owner-0001", token)
+        val revoked = bind("10:20:30:40:51:01", "device-moved-0001", movedToken)
         assertEquals(403, revoked.status)
         assertEquals("CLIP_REVOKED", errorCode(revoked))
-        assertNull(licenseService.authenticateAccessToken(token, "device-owner-0001"))
+        assertNull(licenseService.authenticateAccessToken(movedToken, "device-moved-0001"))
         // validate (без устройства на уровне токена) продолжает работать: клиент видит аккаунт.
-        assertEquals(200, validate(token, "device-owner-0001").status)
+        assertEquals(200, validate(movedToken, "device-moved-0001").status)
 
         // Неизвестная пара.
         assertEquals("CLIP_UNKNOWN", errorCode(bind("10:20:30:40:59:99", "device-owner-0001")))
@@ -336,6 +341,93 @@ class ClipPairRegistryIntegrationTest : PostgresTestSupport() {
             }
         }
         assertNull(flag)
+    }
+
+    @Test
+    fun `cleared app data recovers the same account without a new trial`() {
+        register("OMX-X-1", "10:20:30:40:61:01")
+        val phone = "a".repeat(64)
+        val first = bind("10:20:30:40:61:01", "device-clear-0001", phone = phone)
+        assertNotNull(trialOf(first))
+        val account = accountOf(tokenOf(first))
+        val licensesBefore = licenseCount()
+
+        // Очистка данных: новый device_id, без токена, тот же телефон.
+        val restored = bind("10:20:30:40:61:01", "device-clear-0002", phone = phone)
+        assertEquals(200, restored.status)
+        assertEquals("true", obj(restored)["recovered"]!!.jsonPrimitive.content)
+        assertNull(trialOf(restored))
+        val newToken = tokenOf(restored)
+        assertEquals(account, accountOf(newToken))
+        assertEquals(licensesBefore, licenseCount())
+        // Лицензии переехали на новый device_id: validate и AI-путь работают, пробный Pro сохранён.
+        val validated = validate(newToken, "device-clear-0002")
+        assertEquals(200, validated.status)
+        assertEquals("pro", obj(validated)["plan_id"]!!.jsonPrimitive.content)
+        assertNotNull(licenseService.authenticateAccessToken(newToken, "device-clear-0002"))
+        assertEquals(1, licenseAuditCount("CLIP_PAIR_RECOVERED"))
+    }
+
+    @Test
+    fun `recovery is limited per pair per day`() {
+        register("OMX-L-1", "10:20:30:40:62:01")
+        bind("10:20:30:40:62:01", "device-hop-00000")
+        // По умолчанию 3 переноса в сутки.
+        (1..3).forEach { n -> assertEquals(200, bind("10:20:30:40:62:01", "device-hop-0000$n").status) }
+        val limited = bind("10:20:30:40:62:01", "device-hop-00009")
+        assertEquals(429, limited.status)
+        assertEquals("CLIP_RECOVERY_LIMIT", errorCode(limited))
+        // Повтор с текущего телефона пары — не перенос, не лимитируется.
+        assertEquals(200, bind("10:20:30:40:62:01", "device-hop-00003").status)
+    }
+
+    @Test
+    fun `phone that already had a trial gets none on another pair or account`() {
+        val phone = "b".repeat(64)
+        register("OMX-F-1", "10:20:30:40:63:01")
+        register("OMX-F-2", "10:20:30:40:63:02")
+        assertNotNull(trialOf(bind("10:20:30:40:63:01", "device-phone-0001", phone = phone)))
+        // Новый аккаунт (другой device_id, без токена), новая пара, тот же телефон.
+        val second = bind("10:20:30:40:63:02", "device-phone-0002", phone = phone)
+        assertEquals(200, second.status)
+        assertNull(trialOf(second))
+        // Битый phone_hash — отказ запроса, а не тихий обход.
+        assertEquals(400, bind("10:20:30:40:63:02", "device-phone-0003", phone = "xyz").status)
+    }
+
+    @Test
+    fun `released pair keeps its trial flag and admin can reset it explicitly`() {
+        register("OMX-Z-1", "10:20:30:40:64:01")
+        val first = bind("10:20:30:40:64:01", "device-reset-0001")
+        assertNotNull(trialOf(first))
+        clip(ClipHttpHandler.PATH_PAIR_RELEASE, tokenOf(first), """{"clip_serial":"OMX-Z-1"}""")
+        assertNull(trialOf(bind("10:20:30:40:64:01", "device-reset-0002")))
+        // Админ-отвязка → PROVISIONED тоже не сбрасывает флаг.
+        val id = entryId("OMX-Z-1")
+        admin("POST", "${ClipAdminHttpHandler.PREFIX}/$id/unbind", """{"reason":"возврат"}""")
+        assertNull(trialOf(bind("10:20:30:40:64:01", "device-reset-0003")))
+        admin("POST", "${ClipAdminHttpHandler.PREFIX}/$id/unbind", """{"reason":"возврат"}""")
+
+        // Явный сброс: причина обязательна, аудит пишется, VIEWER не может.
+        val viewer = sessionToken("viewer-trial", AdminRole.VIEWER)
+        assertEquals(403, admin("POST", "${ClipAdminHttpHandler.PREFIX}/$id/reset-trial", """{"reason":"x"}""", token = viewer).status)
+        assertEquals(400, admin("POST", "${ClipAdminHttpHandler.PREFIX}/$id/reset-trial", "{}").status)
+        assertEquals(200, admin("POST", "${ClipAdminHttpHandler.PREFIX}/$id/reset-trial", """{"reason":"брак, замена"}""").status)
+        assertEquals(1, auditCount("clip.trial.reset"))
+        assertEquals(409, admin("POST", "${ClipAdminHttpHandler.PREFIX}/$id/reset-trial", """{"reason":"again"}""").status)
+        // Флаг пары сброшен — новый аккаунт без пробного в истории получает пробный.
+        assertNotNull(trialOf(bind("10:20:30:40:64:01", "device-reset-0004")))
+    }
+
+    private fun licenseCount(): Int = dataSource.connection.use { c ->
+        c.prepareStatement("SELECT COUNT(*) FROM licenses").use { it.executeQuery().use { r -> r.next(); r.getInt(1) } }
+    }
+
+    private fun licenseAuditCount(action: String): Int = dataSource.connection.use { c ->
+        c.prepareStatement("SELECT COUNT(*) FROM license_audit_log WHERE action = ?").use {
+            it.setString(1, action)
+            it.executeQuery().use { r -> r.next(); r.getInt(1) }
+        }
     }
 
     private fun accountOf(token: String): UUID = checkNotNull(licenseService.authenticateAccessToken(token)).accountId

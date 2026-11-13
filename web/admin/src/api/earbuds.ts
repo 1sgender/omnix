@@ -24,6 +24,8 @@ export interface EarbudRow {
   boundAt: string | null
   lastSeenAt: string | null
   createdAt: string
+  /** Когда пара выдала пробный Pro; null — ещё не выдавала. */
+  trialGrantedAt: string | null
 }
 
 export interface EarbudModel {
@@ -75,6 +77,7 @@ export const earbudsApi = {
     api.post<BulkResult>(`${BASE}/bulk`, { lines, modelId, planId }),
   unbind: (id: string, reason: string) => api.post<{ earbud: EarbudRow }>(`${BASE}/${id}/unbind`, { reason }),
   revoke: (id: string, reason: string) => api.post<{ earbud: EarbudRow }>(`${BASE}/${id}/revoke`, { reason }),
+  resetTrial: (id: string, reason: string) => api.post<{ earbud: EarbudRow }>(`${BASE}/${id}/reset-trial`, { reason }),
   models: () => api.get<{ models: EarbudModel[] }>(`${BASE}/models`),
   createModel: (body: SaveModelBody) => api.post<{ model: EarbudModel }>(`${BASE}/models`, body),
   updateModel: (id: string, body: SaveModelBody) => api.put<{ model: EarbudModel }>(`${BASE}/models/${id}`, body)

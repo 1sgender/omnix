@@ -58,7 +58,7 @@ function Pairs() {
   const [q, setQ] = useState('')
   const [registerOpen, setRegisterOpen] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
-  const [action, setAction] = useState<{ row: EarbudRow; kind: 'unbind' | 'revoke' } | null>(null)
+  const [action, setAction] = useState<{ row: EarbudRow; kind: ActionKind } | null>(null)
 
   const list = useQuery({
     queryKey: ['earbuds', status, q],
@@ -100,7 +100,7 @@ function Pairs() {
         list.data.earbuds.length === 0 ? (
           <div className="table-wrap"><EmptyState title="Пар нет" desc="Зарегистрируйте пару при упаковке" /></div>
         ) : (
-          <DataTable headers={['Серийник', 'Адрес', 'Модель', 'Статус', 'Владелец', 'Привязан', 'Последний раз', '']}>
+          <DataTable headers={['Серийник', 'Адрес', 'Модель', 'Статус', 'Владелец', 'Привязан', 'Последний раз', 'Пробный Pro', '']}>
             {list.data.earbuds.map((row) => (
               <tr key={row.id}>
                 <td className="mono">{row.clipSerial}</td>
@@ -110,7 +110,13 @@ function Pairs() {
                 <td className="mono dim">{row.ownerAccountId ? `${row.ownerAccountId.slice(0, 8)}…` : '—'}</td>
                 <td className="dim">{formatDateTime(row.boundAt)}</td>
                 <td className="dim">{formatDateTime(row.lastSeenAt)}</td>
+                <td className="dim">{row.trialGrantedAt ? `выдан ${formatDateTime(row.trialGrantedAt)}` : '—'}</td>
                 <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  {canWrite && row.trialGrantedAt ? (
+                    <Button size="sm" style={{ marginRight: 6 }} onClick={() => setAction({ row, kind: 'reset-trial' })}>
+                      Разрешить пробный повторно
+                    </Button>
+                  ) : null}
                   {canWrite && row.status !== 'PROVISIONED' ? (
                     <Button size="sm" onClick={() => setAction({ row, kind: 'unbind' })}>
                       {row.status === 'REVOKED' ? 'Разблокировать' : 'Отвязать'}
@@ -248,22 +254,34 @@ function BulkModal({ models, onClose }: { models: EarbudModel[]; onClose: () => 
   )
 }
 
+type ActionKind = 'unbind' | 'revoke' | 'reset-trial'
+
 function ActionModal({ row, kind, onClose, onDone, onError }: {
-  row: EarbudRow; kind: 'unbind' | 'revoke'; onClose: () => void
+  row: EarbudRow; kind: ActionKind; onClose: () => void
   onDone: (message: string) => void; onError: (message: string) => void
 }) {
   const [reason, setReason] = useState('')
   const mutation = useMutation({
-    mutationFn: () => (kind === 'unbind' ? earbudsApi.unbind(row.id, reason.trim()) : earbudsApi.revoke(row.id, reason.trim())),
-    onSuccess: () => onDone(kind === 'unbind' ? `Пара ${row.clipSerial} снова на складе` : `Пара ${row.clipSerial} заблокирована`),
+    mutationFn: () => {
+      if (kind === 'unbind') return earbudsApi.unbind(row.id, reason.trim())
+      if (kind === 'revoke') return earbudsApi.revoke(row.id, reason.trim())
+      return earbudsApi.resetTrial(row.id, reason.trim())
+    },
+    onSuccess: () => onDone(
+      kind === 'unbind' ? `Пара ${row.clipSerial} снова на складе`
+        : kind === 'revoke' ? `Пара ${row.clipSerial} заблокирована`
+          : `Пара ${row.clipSerial} снова может дать пробный Pro`
+    ),
     onError: (e) => onError(errorText(e, 'Действие не выполнено'))
   })
   const title = kind === 'unbind'
     ? (row.status === 'REVOKED' ? 'Разблокировать пару?' : 'Отвязать пару?')
-    : 'Заблокировать пару?'
+    : kind === 'revoke' ? 'Заблокировать пару?' : 'Разрешить пробный повторно?'
   const sub = kind === 'unbind'
     ? `${row.clipSerial} вернётся в статус «на складе» и сможет быть привязана к любому аккаунту`
-    : `${row.clipSerial} перестанет давать доступ к ИИ и не привяжется ни к одному аккаунту`
+    : kind === 'revoke'
+      ? `${row.clipSerial} перестанет давать доступ к ИИ и не привяжется ни к одному аккаунту`
+      : `Сбрасывается только отметка пары. Аккаунт или телефон, уже получавшие пробный, его не получат`
   return (
     <Modal title={title} sub={sub} onClose={onClose}>
       <Field label="Причина" htmlFor="eb-reason">
@@ -277,7 +295,7 @@ function ActionModal({ row, kind, onClose, onDone, onError }: {
           disabled={!reason.trim()}
           onClick={() => mutation.mutate()}
         >
-          {kind === 'unbind' ? (row.status === 'REVOKED' ? 'Разблокировать' : 'Отвязать') : 'Заблокировать'}
+          {kind === 'unbind' ? (row.status === 'REVOKED' ? 'Разблокировать' : 'Отвязать') : kind === 'revoke' ? 'Заблокировать' : 'Разрешить'}
         </Button>
       </div>
     </Modal>

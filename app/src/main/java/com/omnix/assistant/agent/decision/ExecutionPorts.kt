@@ -66,10 +66,22 @@ interface CloudAiExecutor {
     fun isAvailable(): Boolean
 
     /**
+     * То же для конкретного источника: текстовый чат без подключённых
+     * наушников разрешён (если у аккаунта есть пара), голос — нет.
+     */
+    fun isAvailableFor(source: RequestSource): Boolean = isAvailable()
+
+    /**
      * Почему облако недоступно, если причина не «нет сети»: например
      * «Подключите наушники OMNIX». null — обычное офлайн-сообщение.
      */
-    fun unavailableMessage(): String? = null
+    fun unavailableMessage(source: RequestSource): String? = null
+
+    /**
+     * Можно ли исполнять инструменты, предложенные облаком (агент): null —
+     * можно; иначе текст. Без подключённой пары — только чат, без инструментов.
+     */
+    fun toolsBlockedMessage(): String? = null
 
     suspend fun complete(request: ExecutionRequest): Resource<String>
 }

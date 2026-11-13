@@ -84,6 +84,8 @@ private data class ClipRevokeRequest(
 private data class ClipPairBindRequest(
     @SerialName("bt_address") val btAddress: String,
     @SerialName("device_id") val deviceId: String,
+    /** V013: солёный SHA-256 от ANDROID_ID; старый клиент не шлёт. */
+    @SerialName("phone_hash") val phoneHash: String? = null,
     @SerialName("request_id") val requestId: String? = null
 )
 
@@ -103,6 +105,8 @@ private data class ClipPairBindResponse(
     @SerialName("bound_now") val boundNow: Boolean,
     /** «7 дней Pro»: конец пробного периода, если эта привязка его выдала. */
     @SerialName("trial_expires_at") val trialExpiresAt: String? = null,
+    /** Пара перенесена на этот телефон: вход в аккаунт владельца. */
+    @SerialName("recovered") val recovered: Boolean = false,
     @SerialName("request_id") val requestId: String
 )
 
@@ -369,7 +373,8 @@ class ClipHttpHandler(
             deviceId = parsed.deviceId,
             accountId = client?.accountId,
             requestId = requestId,
-            remoteAddress = request.remoteAddress
+            remoteAddress = request.remoteAddress,
+            phoneHash = parsed.phoneHash
         )
         return when (outcome) {
             is ClipPairBindOutcome.Bound -> {
@@ -378,6 +383,7 @@ class ClipHttpHandler(
                     "requestId" to requestId,
                     "clipSerial" to outcome.clipSerial,
                     "boundNow" to outcome.boundNow.toString(),
+                    "recovered" to outcome.recovered.toString(),
                     "licenseGranted" to outcome.licenseGranted.toString(),
                     "trialGranted" to (outcome.trialExpiresAt != null).toString()
                 )
@@ -396,6 +402,7 @@ class ClipHttpHandler(
                             model = outcome.model?.toModelDto(),
                             boundNow = outcome.boundNow,
                             trialExpiresAt = outcome.trialExpiresAt?.toString(),
+                            recovered = outcome.recovered,
                             requestId = requestId
                         )
                     ),
@@ -418,7 +425,7 @@ class ClipHttpHandler(
         ClipPairBindOutcome.InvalidRequest -> ApiErrorCode.INVALID_REQUEST
         ClipPairBindOutcome.UnknownPair -> ApiErrorCode.CLIP_UNKNOWN
         ClipPairBindOutcome.Revoked -> ApiErrorCode.CLIP_REVOKED
-        ClipPairBindOutcome.OwnedByAnotherAccount -> ApiErrorCode.CLIP_OWNER_MISMATCH
+        ClipPairBindOutcome.RecoveryLimited -> ApiErrorCode.CLIP_RECOVERY_LIMIT
         ClipPairBindOutcome.PairLimitReached -> ApiErrorCode.CLIP_PAIR_LIMIT
         ClipPairBindOutcome.InvalidPlan -> ApiErrorCode.LICENSE_INVALID_STATE
         ClipPairBindOutcome.AccountDisabled -> ApiErrorCode.LICENSE_REVOKED

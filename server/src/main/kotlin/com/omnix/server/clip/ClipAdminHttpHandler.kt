@@ -11,6 +11,7 @@ import com.omnix.server.http.HttpRequestContext
 import com.omnix.server.http.HttpResponseContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -73,6 +74,8 @@ class ClipAdminHttpHandler(
                 AdminPermission.DEVICES_REVOKE to { transition(principal, request, parts[0], unbind = true) }
             parts.size == 2 && parts[1] == "revoke" && method == "POST" ->
                 AdminPermission.DEVICES_REVOKE to { transition(principal, request, parts[0], unbind = false) }
+            parts.size == 2 && parts[1] == "reset-trial" && method == "POST" ->
+                AdminPermission.DEVICES_REVOKE to { resetTrial(principal, request, parts[0]) }
             else -> return plain(404, errorBody("not_found"))
         }
         if (!AdminRbac.can(principal.role, route.first)) {
@@ -205,6 +208,34 @@ class ClipAdminHttpHandler(
         }
     }
 
+    /** «Разрешить пробный повторно»: сбрасывает флаг пары, с причиной и аудитом. */
+    private fun resetTrial(principal: AdminPrincipal, request: HttpRequestContext, rawId: String): HttpResponseContext {
+        val id = runCatching { UUID.fromString(rawId) }.getOrNull() ?: throw BadRequest("invalid id")
+        val reason = bodyJson(request).string("reason")?.trim().orEmpty()
+        if (reason.isEmpty()) throw BadRequest("reason is required")
+        return when (val outcome = registry.adminResetTrial(id)) {
+            is ClipAdminActionOutcome.Done -> {
+                audit.append(
+                    actor = principal.actor,
+                    action = "clip.trial.reset",
+                    entityType = "CLIP",
+                    entityId = id.toString(),
+                    oldValue = buildJsonObject { put("trialGrantedAt", outcome.before.trialGrantedAt?.toString()) }.toString(),
+                    newValue = buildJsonObject {
+                        put("trialGrantedAt", JsonNull)
+                        put("reason", reason.take(256))
+                    }.toString(),
+                    remoteAddress = request.remoteAddress,
+                    sessionId = principal.sessionId,
+                    requestId = null
+                )
+                plain(200, buildJsonObject { put("earbud", entryJson(outcome.after, null)) })
+            }
+            ClipAdminActionOutcome.NotFound -> plain(404, errorBody("not_found"))
+            ClipAdminActionOutcome.InvalidState -> plain(409, errorBody("trial_not_granted"))
+        }
+    }
+
     /* -------------------------------------------------------------- models */
 
     private fun models(): HttpResponseContext = plain(
@@ -315,6 +346,7 @@ class ClipAdminHttpHandler(
         put("boundAt", entry.boundAt?.toString())
         put("lastSeenAt", entry.lastSeenAt?.toString())
         put("createdAt", entry.createdAt.toString())
+        put("trialGrantedAt", entry.trialGrantedAt?.toString())
     }
 
     private fun modelJson(model: ClipEarbudModel): JsonObject = buildJsonObject {

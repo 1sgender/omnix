@@ -36,9 +36,18 @@ object ClipPairGate {
     }
 
     /**
-     * true — облачный ИИ разрешён: сервер пару не требует, либо подключена
+     * Текстовый облачный чат (base_ai): сервер пару не требует, либо у
+     * аккаунта есть хотя бы одна ACTIVE-пара (человек зарегистрирован
+     * наушниками). Подключение наушников для чата не нужно.
+     */
+    fun isCloudChatUnlocked(binding: ClipBindingState): Boolean =
+        !binding.pairRequired || binding.pairs.isNotEmpty()
+
+    /**
+     * Голос и остальное облачное (переводчик, инструменты из облака,
+     * серверное распознавание): сервер пару не требует, либо подключена
      * ЛЮБАЯ из ACTIVE-пар аккаунта.
      */
-    fun isCloudUnlocked(binding: ClipBindingState, connectedAddresses: Collection<String>): Boolean =
+    fun isCloudVoiceUnlocked(binding: ClipBindingState, connectedAddresses: Collection<String>): Boolean =
         !binding.pairRequired || connectedOwnPair(binding, connectedAddresses) != null
 }

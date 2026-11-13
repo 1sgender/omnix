@@ -27,4 +27,6 @@
     <string name="omnix_pair_operator_done">Jübüt hasaba alyndy</string>
     <string name="omnix_pair_operator_exists">Bu jübüt eýýäm hasaba alnan</string>
     <string name="omnix_pair_trial_until">7 günlük Pro sowgat — %1$s senesine çenli</string>
+    <string name="omnix_pair_chat_only_message">OMNIX gulaklyklaryny birikdiriň — olarsyz diňe çat elýeterli.</string>
+    <string name="omnix_pair_recovery_limit">Bu gün gulaklyklar telefonlaryň arasynda gaty köp geçirildi. Ertir synanyşyň.</string>
 </resources>

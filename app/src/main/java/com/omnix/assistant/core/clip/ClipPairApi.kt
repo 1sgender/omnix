@@ -61,6 +61,8 @@ data class ClipPairStatus(
 private data class BindRequest(
     @SerialName("bt_address") val btAddress: String,
     @SerialName("device_id") val deviceId: String,
+    /** Солёный SHA-256 от ANDROID_ID (см. PhoneIdentity); null — не отправляем. */
+    @SerialName("phone_hash") val phoneHash: String? = null,
     @SerialName("request_id") val requestId: String
 )
 
@@ -126,8 +128,16 @@ class HttpClipPairApi @Inject constructor(
      * Привязать подключённую пару. С токеном — к своему аккаунту; без токена
      * (ещё не активирован) — сервер создаёт аккаунт, как при вводе кода.
      */
-    suspend fun bind(btAddress: String, deviceId: String, withAccount: Boolean): ClipPairCallResult<ClipPairBound> {
-        val body = json.encodeToString(BindRequest.serializer(), BindRequest(btAddress, deviceId, requestId()))
+    suspend fun bind(
+        btAddress: String,
+        deviceId: String,
+        withAccount: Boolean,
+        phoneHash: String? = null
+    ): ClipPairCallResult<ClipPairBound> {
+        val body = json.encodeToString(
+            BindRequest.serializer(),
+            BindRequest(btAddress = btAddress, deviceId = deviceId, phoneHash = phoneHash, requestId = requestId())
+        )
         return post("/v1/clip/pair/bind", body, authorized = withAccount, serializer = ClipPairBound.serializer())
     }
 
@@ -177,6 +187,9 @@ class HttpClipPairApi @Inject constructor(
                     response.isSuccessful ->
                         runCatching { ClipPairCallResult.Ok(json.decodeFromString(serializer, text)) }
                             .getOrElse { ClipPairCallResult.Unavailable }
+                    // Лимит переносов пары между телефонами — вердикт, а не сбой.
+                    response.code == 429 && errorCode(text) == RECOVERY_LIMIT ->
+                        ClipPairCallResult.Refused(RECOVERY_LIMIT, 429)
                     response.code == 429 || response.code >= 500 -> ClipPairCallResult.Unavailable
                     else -> ClipPairCallResult.Refused(errorCode(text), response.code)
                 }
@@ -196,5 +209,6 @@ class HttpClipPairApi @Inject constructor(
 
     private companion object {
         const val MAX_RESPONSE_BYTES = 64L * 1024
+        const val RECOVERY_LIMIT = "CLIP_RECOVERY_LIMIT"
     }
 }

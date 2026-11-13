@@ -27,4 +27,6 @@
     <string name="omnix_pair_operator_done">Juftlik roʻyxatga olindi</string>
     <string name="omnix_pair_operator_exists">Bu juftlik allaqachon roʻyxatda</string>
     <string name="omnix_pair_trial_until">7 kunlik Pro sovgʻa — %1$s gacha</string>
+    <string name="omnix_pair_chat_only_message">OMNIX quloqchinlarini ulang — ularsiz faqat chat mavjud.</string>
+    <string name="omnix_pair_recovery_limit">Bugun quloqchinlar telefonlar orasida juda koʻp koʻchirildi. Ertaga urinib koʻring.</string>
 </resources>

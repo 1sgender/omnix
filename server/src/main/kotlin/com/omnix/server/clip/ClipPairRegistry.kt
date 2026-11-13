@@ -221,29 +221,34 @@ class ClipPairRegistry(
         deviceId: String,
         accountId: UUID?,
         requestId: String,
-        remoteAddress: String?
+        remoteAddress: String?,
+        /** Солёный SHA-256 от ANDROID_ID (64 hex); null — старый клиент. */
+        phoneHash: String? = null
     ): ClipPairBindOutcome {
         val address = BtAddress.normalize(rawAddress) ?: return ClipPairBindOutcome.InvalidRequest
         val deviceHash = runCatching { crypto.deviceHash(deviceId) }.getOrElse {
             return ClipPairBindOutcome.InvalidRequest
+        }
+        val phoneKey = phoneHash?.trim()?.lowercase(Locale.ROOT)?.let { raw ->
+            if (!PHONE_HASH.matches(raw)) return ClipPairBindOutcome.InvalidRequest
+            crypto.deviceHash("phone:$raw")
         }
         val now = clock.instant()
         return transaction { connection ->
             val pair = lockPair(connection, address) ?: return@transaction ClipPairBindOutcome.UnknownPair
             if (pair.status == ClipDeviceStatus.REVOKED) return@transaction ClipPairBindOutcome.Revoked
             val retry = pair.status == ClipDeviceStatus.ACTIVE
-            if (retry) {
-                val sameAccount = accountId != null && pair.ownerAccountId == accountId
-                // Без токена (переустановка) повтор допустим только с того же телефона.
-                val boundHash = pair.boundDeviceHash
-                val sameDevice = accountId == null && boundHash != null &&
-                    crypto.constantTimeEquals(boundHash, deviceHash)
-                if (!sameAccount && !sameDevice) {
-                    return@transaction ClipPairBindOutcome.OwnedByAnotherAccount
-                }
+            val boundHash = pair.boundDeviceHash
+            val sameDevice = boundHash != null && crypto.constantTimeEquals(boundHash, deviceHash)
+            // Наушники — ключ: ACTIVE-пара на другом телефоне (очистка данных,
+            // новый телефон, чужой токен) = вход в ТОТ ЖЕ аккаунт-владелец с
+            // переносом пары на этот телефон. Повтор с того же телефона — retry.
+            val recovery = retry && !sameDevice
+            if (recovery && !allowRecovery(pair, now)) {
+                return@transaction ClipPairBindOutcome.RecoveryLimited
             }
             // PROVISIONED/RELEASED — свободна: владельцем станет вызывающий
-            // (или новый аккаунт); ACTIVE-повтор — прежний владелец.
+            // (или новый аккаунт); ACTIVE — прежний владелец.
             val owner: UUID? = if (retry) pair.ownerAccountId else accountId
             if (owner != null) {
                 if (!accountActive(connection, owner)) return@transaction ClipPairBindOutcome.AccountDisabled
@@ -251,11 +256,16 @@ class ClipPairRegistry(
                     return@transaction ClipPairBindOutcome.PairLimitReached
                 }
             }
-            // Лицензия: действующая этого телефона, иначе (если у аккаунта нет
-            // никакой) — новая тарифа пары. Решаем ДО записей: отказ ничего не меняет.
+            // Лицензия: действующая этого телефона (при переносе — и прежнего
+            // телефона пары, она переедет), иначе (если у аккаунта нет никакой) —
+            // новая тарифа пары. Решаем ДО записей: отказ ничего не меняет.
+            val previousHash = if (recovery) boundHash else null
             val existing = owner?.let { activeLicenses(connection, it, now) }.orEmpty()
             val forDevice = existing.firstOrNull { grant ->
-                grant.deviceHash?.let { crypto.constantTimeEquals(it, deviceHash) } == true
+                grant.deviceHash?.let {
+                    crypto.constantTimeEquals(it, deviceHash) ||
+                        (previousHash != null && crypto.constantTimeEquals(it, previousHash))
+                } == true
             }
             if (forDevice == null && existing.isNotEmpty()) return@transaction ClipPairBindOutcome.NoLicenseForDevice
             val grantPlanId = pair.planId ?: config.defaultPlanId
@@ -282,6 +292,8 @@ class ClipPairRegistry(
                     it.setObject(6, pair.id)
                     check(it.executeUpdate() == 1) { "clip pair changed concurrently" }
                 }
+            } else if (recovery) {
+                transferPair(connection, pair, checkNotNull(owner), previousHash, deviceHash, now)
             } else {
                 touchSeen(connection, pair.id, now)
             }
@@ -292,7 +304,7 @@ class ClipPairRegistry(
             // «7 дней Pro при первом подключении»: только новая привязка, пара
             // ни разу не давала пробный, у аккаунта его не было, платного нет.
             val trialExpiresAt = if (!retry && pair.trialGrantedAt == null) {
-                grantTrialIfEligible(connection, account, pair, deviceHash, now)
+                grantTrialIfEligible(connection, account, pair, deviceHash, phoneKey, now)
             } else {
                 null
             }
@@ -314,7 +326,13 @@ class ClipPairRegistry(
                 it.executeUpdate()
             }
             licenseAudit(
-                connection, if (retry) "CLIP_PAIR_BIND_RETRY" else "CLIP_PAIR_BOUND", pair.id,
+                connection,
+                when {
+                    recovery -> "CLIP_PAIR_RECOVERED"
+                    retry -> "CLIP_PAIR_BIND_RETRY"
+                    else -> "CLIP_PAIR_BOUND"
+                },
+                pair.id,
                 requestId, remoteAddress,
                 """{"clip_serial":"${pair.clipSerial}","bt_address":"${BtAddress.mask(address)}","license_granted":${forDevice == null},"trial_granted":${trialExpiresAt != null}}""",
                 now
@@ -331,9 +349,93 @@ class ClipPairRegistry(
                 startsAt = license.startsAt,
                 expiresAt = license.expiresAt,
                 billingStatus = license.billingStatus,
-                trialExpiresAt = trialExpiresAt
+                trialExpiresAt = trialExpiresAt,
+                recovered = recovery
             )
         }
+    }
+
+    /**
+     * Лимит переносов пары между телефонами: не больше
+     * [ClipPairConfig.maxRecoveriesPerDay] за скользящие сутки (окно
+     * сбрасывается через 24 ч от первого переноса). Счётчик меняется вместе
+     * с переносом в той же транзакции.
+     */
+    private fun allowRecovery(pair: LockedPair, now: Instant): Boolean {
+        val windowStart = pair.recoveryWindowStart
+        val fresh = windowStart == null || !windowStart.plus(1, ChronoUnit.DAYS).isAfter(now)
+        return fresh || pair.recoveryCount < config.maxRecoveriesPerDay
+    }
+
+    /**
+     * Перенос ACTIVE-пары на новый телефон владельца: одна пара — один
+     * активный телефон. Старые токены этой пары отзываются, лицензии
+     * аккаунта, привязанные к прежнему телефону пары, переезжают на новый.
+     */
+    private fun transferPair(
+        connection: Connection,
+        pair: LockedPair,
+        ownerId: UUID,
+        previousHash: ByteArray?,
+        deviceHash: ByteArray,
+        now: Instant
+    ) {
+        val windowStart = pair.recoveryWindowStart
+        val fresh = windowStart == null || !windowStart.plus(1, ChronoUnit.DAYS).isAfter(now)
+        connection.prepareStatement(
+            """
+            UPDATE clip_devices SET bound_device_hash = ?, last_verified_at = ?, updated_at = ?,
+                   recovery_window_start = ?, recovery_count = ?
+            WHERE id = ?
+            """.trimIndent()
+        ).use {
+            it.setBytes(1, deviceHash)
+            it.setInstant(2, now)
+            it.setInstant(3, now)
+            it.setInstant(4, if (fresh) now else windowStart)
+            it.setInt(5, if (fresh) 1 else pair.recoveryCount + 1)
+            it.setObject(6, pair.id)
+            it.executeUpdate()
+        }
+        connection.prepareStatement(
+            "UPDATE api_tokens SET status = 'REVOKED', revoked_at = ? WHERE clip_device_id = ? AND status = 'ACTIVE'"
+        ).use {
+            it.setInstant(1, now)
+            it.setObject(2, pair.id)
+            it.executeUpdate()
+        }
+        if (previousHash != null) {
+            connection.prepareStatement(
+                """
+                UPDATE licenses SET redeemed_device_hash = ?, updated_at = ?, version = version + 1
+                WHERE account_id = ? AND redeemed_device_hash = ?
+                """.trimIndent()
+            ).use {
+                it.setBytes(1, deviceHash)
+                it.setInstant(2, now)
+                it.setObject(3, ownerId)
+                it.setBytes(4, previousHash)
+                it.executeUpdate()
+            }
+        }
+    }
+
+    /**
+     * Админ: «Разрешить пробный повторно» — сбрасывает только флаг пары.
+     * Правила «один раз на аккаунт» и «один раз на телефон» продолжают действовать.
+     */
+    fun adminResetTrial(id: UUID): ClipAdminActionOutcome = transaction { connection ->
+        val before = findEntry(connection, "d.id = ?", id, forUpdate = true)
+            ?: return@transaction ClipAdminActionOutcome.NotFound
+        if (before.trialGrantedAt == null) return@transaction ClipAdminActionOutcome.InvalidState
+        connection.prepareStatement(
+            "UPDATE clip_devices SET trial_granted_at = NULL, updated_at = ? WHERE id = ?"
+        ).use {
+            it.setInstant(1, clock.instant())
+            it.setObject(2, id)
+            it.executeUpdate()
+        }
+        ClipAdminActionOutcome.Done(before, checkNotNull(findEntry(connection, "d.id = ?", id)))
     }
 
     /**
@@ -350,8 +452,19 @@ class ClipPairRegistry(
         accountId: UUID,
         pair: LockedPair,
         deviceHash: ByteArray,
+        phoneKey: ByteArray?,
         now: Instant
     ): Instant? {
+        // V013: телефон (ANDROID_ID), уже получавший пробный на любой паре/аккаунте.
+        if (phoneKey != null) {
+            val phoneUsed = connection.prepareStatement(
+                "SELECT EXISTS(SELECT 1 FROM clip_trial_phones WHERE phone_hash = ?)"
+            ).use {
+                it.setBytes(1, phoneKey)
+                it.executeQuery().use { result -> result.next(); result.getBoolean(1) }
+            }
+            if (phoneUsed) return null
+        }
         val hadTrial = connection.prepareStatement(
             "SELECT EXISTS(SELECT 1 FROM licenses WHERE account_id = ? AND metadata->>'trial' = 'true')"
         ).use {
@@ -384,6 +497,20 @@ class ClipPairRegistry(
             it.setInstant(1, now)
             it.setObject(2, pair.id)
             it.executeUpdate()
+        }
+        if (phoneKey != null) {
+            connection.prepareStatement(
+                """
+                INSERT INTO clip_trial_phones(phone_hash, account_id, clip_device_id, granted_at)
+                VALUES (?, ?, ?, ?) ON CONFLICT (phone_hash) DO NOTHING
+                """.trimIndent()
+            ).use {
+                it.setBytes(1, phoneKey)
+                it.setObject(2, accountId)
+                it.setObject(3, pair.id)
+                it.setInstant(4, now)
+                it.executeUpdate()
+            }
         }
         return trial.expiresAt
     }
@@ -460,7 +587,9 @@ class ClipPairRegistry(
         val boundDeviceHash: ByteArray?,
         val planId: String?,
         val modelId: String?,
-        val trialGrantedAt: Instant?
+        val trialGrantedAt: Instant?,
+        val recoveryWindowStart: Instant?,
+        val recoveryCount: Int
     )
 
     private data class LicenseGrant(
@@ -478,7 +607,7 @@ class ClipPairRegistry(
         connection.prepareStatement(
             """
             SELECT id, clip_serial, status, owner_account_id, bound_device_hash, plan_id, model_id,
-                   trial_granted_at
+                   trial_granted_at, recovery_window_start, recovery_count
             FROM clip_devices WHERE bt_address = ? FOR UPDATE
             """.trimIndent()
         ).use {
@@ -493,7 +622,9 @@ class ClipPairRegistry(
                     boundDeviceHash = result.getBytes("bound_device_hash"),
                     planId = result.getString("plan_id"),
                     modelId = result.getString("model_id"),
-                    trialGrantedAt = result.getInstant("trial_granted_at")
+                    trialGrantedAt = result.getInstant("trial_granted_at"),
+                    recoveryWindowStart = result.getInstant("recovery_window_start"),
+                    recoveryCount = result.getInt("recovery_count")
                 )
             }
         }
@@ -726,7 +857,8 @@ class ClipPairRegistry(
         statusReason = getString("status_reason"),
         boundAt = getInstant("bound_at"),
         lastSeenAt = getInstant("last_verified_at"),
-        createdAt = checkNotNull(getInstant("created_at"))
+        createdAt = checkNotNull(getInstant("created_at")),
+        trialGrantedAt = getInstant("trial_granted_at")
     )
 
     private fun <T> transaction(block: (Connection) -> T): T = dataSource.connection.use { connection ->
@@ -746,6 +878,8 @@ class ClipPairRegistry(
     companion object {
         /** Серийник: безопасный набор символов (попадает в JSON аудита без экранирования). */
         val SERIAL = Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+        /** Солёный SHA-256 от ANDROID_ID с клиента. */
+        private val PHONE_HASH = Regex("[0-9a-f]{64}")
         private val MODEL_ID = Regex("[a-z0-9][a-z0-9_-]{0,63}")
         private val COLOR_HEX = Regex("#[0-9A-F]{6}")
         private const val UNIQUE_VIOLATION = "23505"
@@ -753,7 +887,8 @@ class ClipPairRegistry(
 
         private val ENTRY_SELECT = """
             SELECT d.id, d.clip_serial, d.bt_address, d.identity_mode, d.status, d.owner_account_id,
-                   d.model_id, d.plan_id, d.bt_name, d.status_reason, d.bound_at, d.last_verified_at, d.created_at
+                   d.model_id, d.plan_id, d.bt_name, d.status_reason, d.bound_at, d.last_verified_at, d.created_at,
+                   d.trial_granted_at
             FROM clip_devices d
         """.trimIndent()
     }

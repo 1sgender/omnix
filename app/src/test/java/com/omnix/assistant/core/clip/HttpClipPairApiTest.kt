@@ -94,6 +94,16 @@ class HttpClipPairApiTest {
     }
 
     @Test
+    fun `phone hash is sent and recovery limit is a verdict not an outage`(): Unit = runBlocking {
+        server.enqueue(MockResponse().setResponseCode(429).setBody("""{"error":{"code":"CLIP_RECOVERY_LIMIT"}}"""))
+        val result = api().bind("AA:BB:CC:DD:EE:01", "device-0001", withAccount = false, phoneHash = "ab".repeat(32))
+        assertTrue(server.takeRequest().body.readUtf8().contains("\"phone_hash\":\"" + "ab".repeat(32)))
+        assertEquals(ClipPairCallResult.Refused("CLIP_RECOVERY_LIMIT", 429), result)
+        assertEquals(64, PhoneIdentity.hash("0123456789abcdef").length)
+        assertTrue(PhoneIdentity.hash("a") != PhoneIdentity.hash("b"))
+    }
+
+    @Test
     fun `missing token refuses authorized call without network`(): Unit = runBlocking {
         assertEquals(ClipPairCallResult.Refused("UNAUTHORIZED", 401), api(storedToken = "").status("AA:BB:CC:DD:EE:01"))
         assertEquals(0, server.requestCount)

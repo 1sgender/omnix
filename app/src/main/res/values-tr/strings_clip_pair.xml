@@ -27,4 +27,6 @@
     <string name="omnix_pair_operator_done">Kulaklık kaydedildi</string>
     <string name="omnix_pair_operator_exists">Bu kulaklık zaten kayıtlı</string>
     <string name="omnix_pair_trial_until">7 gün Pro hediye — %1$s tarihine kadar</string>
+    <string name="omnix_pair_chat_only_message">OMNIX kulaklığınızı bağlayın — onsuz yalnızca sohbet kullanılabilir.</string>
+    <string name="omnix_pair_recovery_limit">Bugün kulaklık telefonlar arasında çok fazla taşındı. Yarın tekrar deneyin.</string>
 </resources>

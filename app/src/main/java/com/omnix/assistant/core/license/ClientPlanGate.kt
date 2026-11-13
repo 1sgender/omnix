@@ -51,14 +51,16 @@ class ClientPlanGate @Inject constructor(
     fun clipState(): ClipBindingState = licenseManager.getLicenseInfo().clipBinding
 
     /**
-     * Облачный ИИ: открыт, только пока подключена одна из привязанных пар
-     * OMNIX (если сервер этого требует). Единое место решения — здесь же,
-     * где остальные гейты тарифа; список пар — из validate-ответа сервера.
-     *
-     * @param connectedAddresses BT-адреса подключённых сейчас аудиоустройств.
+     * Облако и наушники OMNIX — здесь же, где остальные гейты тарифа; список
+     * пар — из validate-ответа сервера. Текстовый чат открыт, если у аккаунта
+     * есть ACTIVE-пара; голос и прочее облачное — только с подключённой парой.
      */
-    fun isCloudAiUnlocked(connectedAddresses: Collection<String>): Boolean =
-        com.omnix.assistant.core.clip.ClipPairGate.isCloudUnlocked(clipState(), connectedAddresses)
+    fun isCloudChatUnlocked(): Boolean =
+        com.omnix.assistant.core.clip.ClipPairGate.isCloudChatUnlocked(clipState())
+
+    /** @param connectedAddresses BT-адреса подключённых сейчас аудиоустройств. */
+    fun isCloudVoiceUnlocked(connectedAddresses: Collection<String>): Boolean =
+        com.omnix.assistant.core.clip.ClipPairGate.isCloudVoiceUnlocked(clipState(), connectedAddresses)
 
     /** Boolean-гейт тарифа для tool. true = разрешён. */
     fun isToolAllowed(toolId: String): Boolean {

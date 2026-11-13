@@ -13,12 +13,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * V012: облачный исполнитель закрыт без подключённой пары OMNIX и говорит
- * почему; без сети — обычное офлайн-сообщение (null), а не «подключите наушники».
+ * V012: без подключённой пары OMNIX текстовый чат идёт в облако, а голос и
+ * инструменты из облака — нет (со своим сообщением); без сети — обычное
+ * офлайн-сообщение (null).
  */
 class CloudPairAccessTest {
 
     private val network: NetworkMonitor = mockk()
+
+    /** Аккаунт с парой, наушники не подключены: чат можно, остальное нельзя. */
+    private val chatOnly = CloudPairAccess { use -> if (use == CloudUse.CHAT) null else "chat only" }
 
     private fun executor(access: CloudPairAccess) = RepositoryCloudAiExecutor(
         mockk<AIRepository>(), mockk<SettingsRepository>(), mockk<ToolRegistry>(), network, access
@@ -29,22 +33,28 @@ class CloudPairAccessTest {
         every { network.isCurrentlyOnline() } returns true
         val cloud = executor(CloudPairAccess.OPEN)
         assertTrue(cloud.isAvailable())
-        assertNull(cloud.unavailableMessage())
+        assertTrue(cloud.isAvailableFor(RequestSource.VOICE))
+        assertNull(cloud.unavailableMessage(RequestSource.VOICE))
+        assertNull(cloud.toolsBlockedMessage())
     }
 
     @Test
-    fun `missing pair closes cloud with its own message`() {
+    fun `without connected earbuds only chat reaches the cloud`() {
         every { network.isCurrentlyOnline() } returns true
-        val cloud = executor { "connect OMNIX" }
+        val cloud = executor(chatOnly)
+        assertTrue(cloud.isAvailableFor(RequestSource.CHAT))
+        assertNull(cloud.unavailableMessage(RequestSource.CHAT))
+        assertFalse(cloud.isAvailableFor(RequestSource.VOICE))
         assertFalse(cloud.isAvailable())
-        assertEquals("connect OMNIX", cloud.unavailableMessage())
+        assertEquals("chat only", cloud.unavailableMessage(RequestSource.VOICE))
+        assertEquals("chat only", cloud.toolsBlockedMessage())
     }
 
     @Test
     fun `offline is reported as offline even without a pair`() {
         every { network.isCurrentlyOnline() } returns false
-        val cloud = executor { "connect OMNIX" }
-        assertFalse(cloud.isAvailable())
-        assertNull(cloud.unavailableMessage())
+        val cloud = executor(chatOnly)
+        assertFalse(cloud.isAvailableFor(RequestSource.CHAT))
+        assertNull(cloud.unavailableMessage(RequestSource.VOICE))
     }
 }

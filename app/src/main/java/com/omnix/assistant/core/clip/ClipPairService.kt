@@ -22,6 +22,7 @@ enum class ClipPairOutcome(@StringRes val messageRes: Int) {
     REVOKED(R.string.omnix_pair_revoked),
     LIMIT(R.string.omnix_pair_limit),
     ALREADY_REGISTERED(R.string.omnix_pair_operator_exists),
+    RECOVERY_LIMIT(R.string.omnix_pair_recovery_limit),
     FAILED(R.string.omnix_pair_failed)
 }
 
@@ -47,7 +48,8 @@ sealed interface ConnectedPair {
 class ClipPairService @Inject constructor(
     private val api: HttpClipPairApi,
     private val licenseManager: LicenseManager,
-    private val bluetoothAudioRouter: BluetoothAudioRouter
+    private val bluetoothAudioRouter: BluetoothAudioRouter,
+    private val phoneIdentity: PhoneIdentity
 ) {
     /** Адрес подключённых сейчас наушников (нормализованный) или null. */
     fun connectedAddress(): String? =
@@ -61,7 +63,7 @@ class ClipPairService @Inject constructor(
      */
     suspend fun bindConnected(withAccount: Boolean): ClipPairBindResult {
         val address = connectedAddress() ?: return ClipPairBindResult(ClipPairOutcome.NOT_CONNECTED)
-        return when (val result = api.bind(address, licenseManager.getDeviceId(), withAccount)) {
+        return when (val result = api.bind(address, licenseManager.getDeviceId(), withAccount, phoneIdentity.phoneHash())) {
             is ClipPairCallResult.Ok -> when (licenseManager.adoptPairAccessToken(result.value.accessToken)) {
                 is LicenseRefreshResult.Valid, is LicenseRefreshResult.OfflineGrace -> ClipPairBindResult(
                     ClipPairOutcome.ADDED,
@@ -118,6 +120,7 @@ class ClipPairService @Inject constructor(
         "CLIP_REVOKED" -> ClipPairOutcome.REVOKED
         "CLIP_PAIR_LIMIT" -> ClipPairOutcome.LIMIT
         "CLIP_ALREADY_REGISTERED" -> ClipPairOutcome.ALREADY_REGISTERED
+        "CLIP_RECOVERY_LIMIT" -> ClipPairOutcome.RECOVERY_LIMIT
         else -> ClipPairOutcome.FAILED
     }
 }

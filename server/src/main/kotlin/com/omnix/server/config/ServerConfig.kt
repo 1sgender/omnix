@@ -519,7 +519,11 @@ data class ServerConfig(
                         "CLIP_MAX_PAIRS_PER_ACCOUNT",
                         com.omnix.server.clip.ClipPairConfig.DEFAULT_MAX_PAIRS_PER_ACCOUNT
                     ),
-                    pairRequired = bool("CLIP_PAIR_REQUIRED", true)
+                    pairRequired = bool("CLIP_PAIR_REQUIRED", true),
+                    maxRecoveriesPerDay = int(
+                        "CLIP_MAX_RECOVERIES_PER_DAY",
+                        com.omnix.server.clip.ClipPairConfig.DEFAULT_MAX_RECOVERIES_PER_DAY
+                    )
                 ),
                 staticClientTokens = tokens
             )

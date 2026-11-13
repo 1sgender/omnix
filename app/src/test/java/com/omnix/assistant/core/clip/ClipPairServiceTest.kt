@@ -22,7 +22,8 @@ class ClipPairServiceTest {
     private val api = mockk<HttpClipPairApi>()
     private val license = mockk<LicenseManager>(relaxed = true)
     private val router = mockk<BluetoothAudioRouter>()
-    private val service = ClipPairService(api, license, router)
+    private val phone = mockk<PhoneIdentity> { every { phoneHash() } returns "f".repeat(64) }
+    private val service = ClipPairService(api, license, router, phone)
     private val token = "omx_" + "A".repeat(43)
     private val model = ClipModelInfo("clip-1", "OMNIX Clip", "Black", "#111111")
 
@@ -43,7 +44,7 @@ class ClipPairServiceTest {
     fun `successful bind adopts token and returns trial end`(): Unit = runBlocking {
         connected("aa-bb-cc-dd-ee-01")
         every { license.getDeviceId() } returns "device-0001"
-        coEvery { api.bind("AA:BB:CC:DD:EE:01", "device-0001", false) } returns
+        coEvery { api.bind("AA:BB:CC:DD:EE:01", "device-0001", false, "f".repeat(64)) } returns
             ClipPairCallResult.Ok(ClipPairBound(token, "OMX-1", model, true, "2026-11-20T00:00:00Z"))
         coEvery { license.adoptPairAccessToken(token) } returns LicenseRefreshResult.Valid(LicenseInfo(isActivated = true))
         val result = service.bindConnected(withAccount = false)
@@ -61,16 +62,17 @@ class ClipPairServiceTest {
             "CLIP_REVOKED" to ClipPairOutcome.REVOKED,
             "CLIP_PAIR_LIMIT" to ClipPairOutcome.LIMIT,
             "CLIP_ALREADY_REGISTERED" to ClipPairOutcome.ALREADY_REGISTERED,
+            "CLIP_RECOVERY_LIMIT" to ClipPairOutcome.RECOVERY_LIMIT,
             "SOMETHING_ELSE" to ClipPairOutcome.FAILED
         )
         codes.forEach { (code, expected) ->
-            coEvery { api.bind(any(), any(), any()) } returns ClipPairCallResult.Refused(code, 403)
+            coEvery { api.bind(any(), any(), any(), any()) } returns ClipPairCallResult.Refused(code, 403)
             assertEquals(code, expected, service.bindConnected(withAccount = true).outcome)
         }
-        coEvery { api.bind(any(), any(), any()) } returns ClipPairCallResult.Unavailable
+        coEvery { api.bind(any(), any(), any(), any()) } returns ClipPairCallResult.Unavailable
         assertEquals(ClipPairOutcome.FAILED, service.bindConnected(withAccount = true).outcome)
         // Токен выдан, но validate не прошёл — это не успех.
-        coEvery { api.bind(any(), any(), any()) } returns ClipPairCallResult.Ok(ClipPairBound(token, "OMX-1"))
+        coEvery { api.bind(any(), any(), any(), any()) } returns ClipPairCallResult.Ok(ClipPairBound(token, "OMX-1"))
         coEvery { license.adoptPairAccessToken(token) } returns LicenseRefreshResult.ServiceUnavailable
         val failed = service.bindConnected(withAccount = true)
         assertEquals(ClipPairOutcome.FAILED, failed.outcome)

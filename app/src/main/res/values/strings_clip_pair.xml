@@ -27,4 +27,6 @@
     <string name="omnix_pair_operator_done">Earbuds registered</string>
     <string name="omnix_pair_operator_exists">These earbuds are already registered</string>
     <string name="omnix_pair_trial_until">Pro for 7 days as a gift — until %1$s</string>
+    <string name="omnix_pair_chat_only_message">Connect your OMNIX earbuds — without them only chat is available.</string>
+    <string name="omnix_pair_recovery_limit">Too many earbud transfers between phones today. Try again tomorrow.</string>
 </resources>

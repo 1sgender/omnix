@@ -27,4 +27,6 @@
     <string name="omnix_pair_operator_done">Пара зарегистрирована</string>
     <string name="omnix_pair_operator_exists">Эта пара уже зарегистрирована</string>
     <string name="omnix_pair_trial_until">Pro на 7 дней в подарок — до %1$s</string>
+    <string name="omnix_pair_chat_only_message">Подключите наушники OMNIX — без них доступен только чат.</string>
+    <string name="omnix_pair_recovery_limit">Слишком много переносов наушников между телефонами сегодня. Попробуйте завтра.</string>
 </resources>

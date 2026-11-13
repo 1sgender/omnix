@@ -9,17 +9,30 @@ import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 
+/** Какое облачное использование проверяется. */
+enum class CloudUse {
+    /** Текстовый чат (base_ai): достаточно ACTIVE-пары у аккаунта. */
+    CHAT,
+
+    /** Всё остальное облачное (голос, переводчик, инструменты из облака): нужна подключённая своя пара. */
+    FULL
+}
+
 /**
- * Облачный ИИ только с подключёнными наушниками OMNIX (V012).
+ * Облачный ИИ с наушниками OMNIX (V012).
  *
- * Не второй источник истины: решение принимает [ClientPlanGate.isCloudAiUnlocked]
- * по списку пар из validate-ответа сервера; здесь лишь подставляются адреса
- * реально подключённых устройств. Офлайн-путь (локальный ИИ, сценарии) не
- * трогается — закрыто только облако.
+ * Не второй источник истины: решения принимает [ClientPlanGate]
+ * (isCloudChatUnlocked / isCloudVoiceUnlocked) по списку пар из
+ * validate-ответа сервера; здесь лишь подставляются адреса реально
+ * подключённых устройств. Офлайн-путь (локальный ИИ, сценарии) не трогается.
+ *
+ * Сервер подключение наушников видеть не может: он режет токен привязки,
+ * только когда у аккаунта нет ни одной ACTIVE-пары. Разделение «без наушников
+ * только чат» — клиентский гейт.
  */
 fun interface CloudPairAccess {
-    /** null — облако разрешено; иначе текст для пользователя. */
-    fun blockedMessage(): String?
+    /** null — использование разрешено; иначе текст для пользователя. */
+    fun blockedMessage(use: CloudUse): String?
 
     companion object {
         val OPEN = CloudPairAccess { null }
@@ -34,10 +47,14 @@ class ClipPairCloudAccess @Inject constructor(
     private val planGate: Provider<ClientPlanGate>,
     private val bluetoothAudioRouter: Provider<BluetoothAudioRouter>
 ) : CloudPairAccess {
-    override fun blockedMessage(): String? =
-        if (planGate.get().isCloudAiUnlocked(bluetoothAudioRouter.get().connectedAudioAddresses())) {
-            null
-        } else {
-            context.getString(R.string.omnix_pair_required_message)
+    override fun blockedMessage(use: CloudUse): String? {
+        val gate = planGate.get()
+        val chatOpen = gate.isCloudChatUnlocked()
+        return when {
+            !chatOpen -> context.getString(R.string.omnix_pair_required_message)
+            use == CloudUse.CHAT -> null
+            gate.isCloudVoiceUnlocked(bluetoothAudioRouter.get().connectedAudioAddresses()) -> null
+            else -> context.getString(R.string.omnix_pair_chat_only_message)
         }
+    }
 }
