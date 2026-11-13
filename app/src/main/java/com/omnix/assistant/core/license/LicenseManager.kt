@@ -83,6 +83,13 @@ interface LicenseManager {
      * хранит хеш и решает сам.
      */
     fun getDeviceId(): String = ""
+
+    /**
+     * Принять omx_-токен, выданный сервером за привязку пары OMNIX Clip
+     * (без кода), и сразу перепроверить лицензию у сервера: тариф,
+     * квоты и список своих пар приходят из validate.
+     */
+    suspend fun adoptPairAccessToken(token: String): LicenseRefreshResult = LicenseRefreshResult.ServiceUnavailable
 }
 
 /**
@@ -245,6 +252,20 @@ class LicenseManagerImpl @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    override suspend fun adoptPairAccessToken(token: String): LicenseRefreshResult {
+        if (!AccessTokenPolicy.isValid(token)) return LicenseRefreshResult.Invalid
+        return try {
+            securityManager.saveAccessToken(token)
+            refreshFromServer()
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (t: Throwable) {
+            // Токен в лог не пишем.
+            Log.e(TAG, "failed to persist pair access token", t)
+            LicenseRefreshResult.ServiceUnavailable
         }
     }
 

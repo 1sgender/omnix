@@ -128,7 +128,34 @@ fun PlanLimits.toDto(): PlanEntitlementsDto = PlanEntitlementsDto(
 @Serializable
 data class ClipBindingDto(
     @SerialName("has_bound_clip") val hasBoundClip: Boolean,
-    @SerialName("bound_clip_count") val boundClipCount: Int
+    @SerialName("bound_clip_count") val boundClipCount: Int,
+    /**
+     * V012: клиент закрывает облачный ИИ, пока не подключена одна из [pairs]
+     * (CLIP_PAIR_REQUIRED). Старый сервер поля не шлёт → клиент не гейтит.
+     */
+    @SerialName("pair_required") val pairRequired: Boolean = false,
+    /** Собственные ACTIVE-пары аккаунта (адреса — только свои). */
+    @SerialName("pairs") val pairs: List<ClipPairDto> = emptyList(),
+    @SerialName("max_pairs") val maxPairs: Int? = null
+)
+
+/** Публичные поля модели наушников из серверного каталога. */
+@Serializable
+data class ClipModelDto(
+    @SerialName("id") val id: String,
+    @SerialName("display_name") val displayName: String,
+    @SerialName("color_name") val colorName: String,
+    @SerialName("color_hex") val colorHex: String,
+    @SerialName("image_url") val imageUrl: String? = null
+)
+
+@Serializable
+data class ClipPairDto(
+    @SerialName("clip_serial") val clipSerial: String,
+    @SerialName("bt_address") val btAddress: String,
+    @SerialName("model") val model: ClipModelDto? = null,
+    @SerialName("bound_at") val boundAt: String? = null,
+    @SerialName("last_seen_at") val lastSeenAt: String? = null
 )
 
 @Serializable

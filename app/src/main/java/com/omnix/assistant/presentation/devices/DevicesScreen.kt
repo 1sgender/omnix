@@ -74,7 +74,9 @@ fun DevicesScreen(
     onFind: () -> Unit = {},
     onOpenSystemBluetooth: () -> Unit = {},
     onRequestPermissions: (List<String>) -> Unit = {},
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    /** «Мои наушники» (пары OMNIX аккаунта); в превью/тестах пусто. */
+    pairsSection: @Composable () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -97,6 +99,9 @@ fun DevicesScreen(
         )
 
         StatusCard(clip = clip, modifier = Modifier.padding(top = 12.dp))
+
+        Spacer(Modifier.height(12.dp))
+        pairsSection()
 
         SwitchGroup(
             translatorToHeadphones = translatorToHeadphones,

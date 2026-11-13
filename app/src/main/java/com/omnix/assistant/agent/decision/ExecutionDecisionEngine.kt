@@ -220,7 +220,7 @@ class ExecutionDecisionEngine @Inject constructor(
         // пользователя. Приватный запрос без согласия остаётся на телефоне.
         val preferCloud = choice == AiModelChoice.AUTO &&
             config.autoPrefersCloud &&
-            cloudAi.isAvailable() &&
+            cloudAi.isAvailableFor(request.source) &&
             (request.effectivePrivacyLevel == PrivacyLevel.NORMAL || request.cloudExplicitlyAllowed)
         recordLaneStage(VoiceLatencyMetrics.VoiceLane.LOCAL, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
         val localAiStartedAt = latency.nowMs()
@@ -492,10 +492,12 @@ class ExecutionDecisionEngine @Inject constructor(
             return privacyBlocked(DecisionReason.CLOUD_BLOCKED_BY_PRIVACY)
         }
 
-        if (!cloudAi.isAvailable()) {
-            Log.i(TAG, "route=BLOCKED reason=OFFLINE")
+        if (!cloudAi.isAvailableFor(request.source)) {
+            // Сеть есть, но нет подключённой пары OMNIX — своё сообщение.
+            val blocked = cloudAi.unavailableMessage(request.source)
+            Log.i(TAG, "route=BLOCKED reason=${if (blocked == null) "OFFLINE" else "NO_OMNIX_PAIR"}")
             return ExecutionResult.Error(
-                message = OFFLINE_MESSAGE,
+                message = blocked ?: OFFLINE_MESSAGE,
                 reason = DecisionReason.CLOUD_FAILED
             )
         }
@@ -525,6 +527,13 @@ class ExecutionDecisionEngine @Inject constructor(
                 // Ответ модели может содержать tool_calls — тогда исполняет агент
                 // (существующее поведение AgentPipeline).
                 val llmPlan = agentExecutor.planFor(request, rawOutput)
+                // Без подключённой пары OMNIX облако — только чат: инструменты,
+                // предложенные моделью, не исполняются.
+                val toolsBlocked = llmPlan?.let { cloudAi.toolsBlockedMessage() }
+                if (toolsBlocked != null) {
+                    Log.i(TAG, "route=BLOCKED reason=NO_OMNIX_PAIR_FOR_TOOLS")
+                    return ExecutionResult.Error(message = toolsBlocked, reason = DecisionReason.CLOUD_FAILED)
+                }
                 if (llmPlan != null) {
                     // AGENT-CORE принцип: «не использовать агента там, где
                     // достаточно Tool». Ровно ОДИН tool_call из ответа модели —

@@ -10,6 +10,7 @@ import Licenses from './pages/Licenses'
 import Users from './pages/Users'
 import UserDetail from './pages/UserDetail'
 import Devices from './pages/Devices'
+import Earbuds from './pages/Earbuds'
 import Subscriptions from './pages/Subscriptions'
 import Providers from './pages/Providers'
 import Usage from './pages/Usage'
@@ -41,6 +42,7 @@ export default function App() {
       <Route path="/users" element={<RequireAuth><Users /></RequireAuth>} />
       <Route path="/users/:id" element={<RequireAuth><UserDetail /></RequireAuth>} />
       <Route path="/devices" element={<RequireAuth><Devices /></RequireAuth>} />
+      <Route path="/earbuds" element={<RequireAuth><Earbuds /></RequireAuth>} />
       <Route path="/subscriptions" element={<RequireAuth><Subscriptions /></RequireAuth>} />
       <Route path="/providers" element={<RequireAuth><Providers /></RequireAuth>} />
       <Route path="/usage" element={<RequireAuth><Usage /></RequireAuth>} />

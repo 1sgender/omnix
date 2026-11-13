@@ -237,6 +237,8 @@ data class ServerConfig(
      * запятую). Пусто — админов нет. См. AdminModelAccess.
      */
     val adminAccountIds: Set<java.util.UUID> = emptySet(),
+    /** V012: реестр пар OMNIX Clip (CLIP_MAX_PAIRS_PER_ACCOUNT, CLIP_PAIR_REQUIRED). */
+    val clipPairs: com.omnix.server.clip.ClipPairConfig = com.omnix.server.clip.ClipPairConfig(),
     /**
      * Токены клиентов: token → clientId.
      * В проде заменяется на БД/Secret Manager (см. AuthService).
@@ -512,6 +514,17 @@ data class ServerConfig(
                 ),
                 licenseSubsystem = licenseSubsystem,
                 adminAccountIds = com.omnix.server.admin.AdminModelAccess.parseAccountIds(str("ADMIN_ACCOUNT_IDS")),
+                clipPairs = com.omnix.server.clip.ClipPairConfig(
+                    maxPairsPerAccount = int(
+                        "CLIP_MAX_PAIRS_PER_ACCOUNT",
+                        com.omnix.server.clip.ClipPairConfig.DEFAULT_MAX_PAIRS_PER_ACCOUNT
+                    ),
+                    pairRequired = bool("CLIP_PAIR_REQUIRED", true),
+                    maxRecoveriesPerDay = int(
+                        "CLIP_MAX_RECOVERIES_PER_DAY",
+                        com.omnix.server.clip.ClipPairConfig.DEFAULT_MAX_RECOVERIES_PER_DAY
+                    )
+                ),
                 staticClientTokens = tokens
             )
         }

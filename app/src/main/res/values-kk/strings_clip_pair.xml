@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пары OMNIX Clip (реестр по BT-адресу, V012). -->
+<resources>
+    <string name="omnix_pair_required_message">OMNIX құлаққабын қосыңыз — бұлттық ЖИ тек солармен жұмыс істейді. Офлайн мүмкіндіктер әдеттегідей жұмыс істейді.</string>
+    <string name="omnix_pair_activate_cta">OMNIX құлаққабымен белсендіру</string>
+    <string name="omnix_pair_none_connected">Құлаққап қосылмаған. OMNIX Clip-ті Bluetooth баптауларында қосып, қайталаңыз.</string>
+    <string name="omnix_pair_unknown">Бұл OMNIX құлаққабы емес немесе әлі тіркелмеген.</string>
+    <string name="omnix_pair_taken">Бұл құлаққап басқа аккаунтқа байланған.</string>
+    <string name="omnix_pair_revoked">Бұл құлаққап бұғатталған.</string>
+    <string name="omnix_pair_limit">Аккаунттағы құлаққап шегіне жетті.</string>
+    <string name="omnix_pair_failed">Сервермен байланысу мүмкін болмады. Кейінірек қайталаңыз.</string>
+    <string name="omnix_pair_my_title">Менің құлаққаптарым</string>
+    <string name="omnix_pair_none_bound">OMNIX құлаққаптары әлі байланбаған.</string>
+    <string name="omnix_pair_last_seen">Соңғы қосылу: %1$s</string>
+    <string name="omnix_pair_never_seen">Әлі қосылмаған</string>
+    <string name="omnix_pair_connected_badge">Қосылған</string>
+    <string name="omnix_pair_release">Ажырату</string>
+    <string name="omnix_pair_release_confirm">%1$s ажыратылсын ба? Құлаққап ЖИ-ге қол жеткізуді тоқтатады, оны басқа адамға беруге болады.</string>
+    <string name="omnix_pair_released">Құлаққап ажыратылды</string>
+    <string name="omnix_pair_found_new">Жаңа OMNIX жұбы табылды: %1$s. Қосу керек пе?</string>
+    <string name="omnix_pair_add">Қосу</string>
+    <string name="omnix_pair_cancel">Қазір емес</string>
+    <string name="omnix_pair_added">Құлаққап қосылды</string>
+    <string name="omnix_pair_operator_title">Оператор режимі: жұпты тіркеу</string>
+    <string name="omnix_pair_operator_serial">Сериялық нөмір</string>
+    <string name="omnix_pair_operator_register">Қосылған жұпты тіркеу</string>
+    <string name="omnix_pair_operator_done">Жұп тіркелді</string>
+    <string name="omnix_pair_operator_exists">Бұл жұп бұрыннан тіркелген</string>
+    <string name="omnix_pair_trial_until">7 күндік Pro сыйлық — %1$s дейін</string>
+    <string name="omnix_pair_chat_only_message">OMNIX құлаққабын қосыңыз — оларсыз тек чат қолжетімді.</string>
+    <string name="omnix_pair_recovery_limit">Бүгін құлаққап телефондар арасында тым көп ауыстырылды. Ертең қайталаңыз.</string>
+</resources>

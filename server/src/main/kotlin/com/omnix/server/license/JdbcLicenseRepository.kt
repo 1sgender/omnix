@@ -294,7 +294,11 @@ class JdbcLicenseRepository(
         return transaction { connection ->
             connection.prepareStatement(
                 """
-                SELECT t.id, t.account_id, a.external_ref, t.device_hash
+                SELECT t.id, t.account_id, a.external_ref, t.device_hash,
+                       (t.clip_device_id IS NULL OR EXISTS(
+                           SELECT 1 FROM clip_devices c
+                           WHERE c.owner_account_id = t.account_id AND c.status = 'ACTIVE'
+                       )) AS clip_pair_ok
                 FROM api_tokens t
                 JOIN accounts a ON a.id = t.account_id
                 WHERE t.token_hash = ? AND t.status = 'ACTIVE' AND a.status = 'ACTIVE'
@@ -310,6 +314,13 @@ class JdbcLicenseRepository(
                         (rowDeviceHash == null ||
                             !crypto.constantTimeEquals(rowDeviceHash, expectedDeviceHash))
                     ) {
+                        return@transaction null
+                    }
+                    // V012: токен, выданный привязкой пары OMNIX Clip, на
+                    // enforcement-пути (AI) работает, только пока у аккаунта
+                    // есть хотя бы одна ACTIVE-пара. validate (deviceId == null)
+                    // не режем: клиент должен видеть аккаунт и привязать пару заново.
+                    if (expectedDeviceHash != null && !result.getBoolean("clip_pair_ok")) {
                         return@transaction null
                     }
                     val tokenId = result.getObject("id", UUID::class.java)
@@ -350,7 +361,10 @@ class JdbcLicenseRepository(
                 FROM licenses l
                 JOIN billing_plans p ON p.id = l.plan_id
                 WHERE l.account_id = ?
-                ORDER BY l.expires_at DESC NULLS LAST, l.issued_at DESC
+                -- V012: действующий пробный Pro (при первой привязке пары)
+                -- важнее длинной базовой лицензии; истёкший пропускается ниже.
+                ORDER BY CASE WHEN l.metadata->>'trial' = 'true' THEN 0 ELSE 1 END,
+                         l.expires_at DESC NULLS LAST, l.issued_at DESC
                 FOR UPDATE OF l
                 """.trimIndent()
             ).use { statement ->
@@ -459,7 +473,7 @@ class JdbcLicenseRepository(
                 WHERE l.account_id = ? AND l.status = 'ACTIVE' AND a.status = 'ACTIVE'
                   AND p.active = TRUE AND l.starts_at <= ? AND l.expires_at > ?
                   AND l.billing_status IN ('GRANTED', 'PAID', 'CANCELED')
-                ORDER BY l.expires_at DESC
+                ORDER BY CASE WHEN l.metadata->>'trial' = 'true' THEN 0 ELSE 1 END, l.expires_at DESC
                 LIMIT 1
                 """.trimIndent()
             ).use { statement ->
