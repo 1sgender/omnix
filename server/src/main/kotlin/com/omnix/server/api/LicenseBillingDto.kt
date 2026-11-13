@@ -100,7 +100,11 @@ data class PlanEntitlementsDto(
     @SerialName("ui_control") val uiControl: Boolean,
     @SerialName("priority_routing") val priorityRouting: Boolean,
     @SerialName("premium_models") val premiumModels: Boolean,
-    @SerialName("max_clips") val maxClips: Int
+    @SerialName("max_clips") val maxClips: Int,
+    /** Pro-ответов (Claude) в день; 0 = Pro на тарифе недоступен. */
+    @SerialName("daily_pro_ai") val dailyProAi: Int = 0,
+    /** Pro-ответов в месяц; 0 = Pro на тарифе недоступен. */
+    @SerialName("monthly_pro_ai") val monthlyProAi: Int = 0
 )
 
 /** Маппинг PlanLimits → DTO (api зависит от license, не наоборот). */
@@ -116,7 +120,9 @@ fun PlanLimits.toDto(): PlanEntitlementsDto = PlanEntitlementsDto(
     uiControl = uiControl,
     priorityRouting = priorityRouting,
     premiumModels = premiumModels,
-    maxClips = maxClips
+    maxClips = maxClips,
+    dailyProAi = dailyProAi,
+    monthlyProAi = monthlyProAi
 )
 
 @Serializable

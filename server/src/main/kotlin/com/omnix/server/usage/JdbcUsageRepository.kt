@@ -115,6 +115,24 @@ class JdbcUsageRepository(
             }
         }
 
+    override suspend fun tokenTotalsSince(provider: String, since: Instant): TokenTotals =
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                """
+                SELECT COALESCE(SUM(input_tokens), 0), COALESCE(SUM(output_tokens), 0)
+                FROM ai_usage_records
+                WHERE provider = ? AND occurred_at >= ? AND success = TRUE
+                """.trimIndent()
+            ).use { statement ->
+                statement.setString(1, provider)
+                statement.setInstant(2, since)
+                statement.executeQuery().use { result ->
+                    result.next()
+                    TokenTotals(result.getLong(1), result.getLong(2))
+                }
+            }
+        }
+
     private fun <T> transaction(block: (Connection) -> T): T = dataSource.connection.use { connection ->
         connection.autoCommit = false
         try {

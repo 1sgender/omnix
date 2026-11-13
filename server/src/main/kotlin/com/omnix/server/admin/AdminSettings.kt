@@ -57,7 +57,7 @@ data class AiRoutingSettings(
 ) {
     init {
         providers.keys.forEach { key ->
-            require(key in setOf("GROQ", "GEMINI", "OPENROUTER")) {
+            require(key in setOf("GROQ", "GEMINI", "OPENROUTER", "ANTHROPIC")) {
                 "unknown provider id: $key"
             }
         }
@@ -100,7 +100,7 @@ data class CostSettings(
 ) {
     init {
         providers.forEach { (id, entry) ->
-            require(id in setOf("GROQ", "GEMINI", "OPENROUTER")) { "unknown provider id: $id" }
+            require(id in setOf("GROQ", "GEMINI", "OPENROUTER", "ANTHROPIC")) { "unknown provider id: $id" }
             require(entry.usdPerMillionInput == null || entry.usdPerMillionInput >= 0) {
                 "usdPerMillionInput must be non-negative"
             }

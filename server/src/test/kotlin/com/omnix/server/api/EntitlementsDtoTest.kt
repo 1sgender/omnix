@@ -28,6 +28,8 @@ class EntitlementsDtoTest {
         assertFalse(dto.priorityRouting)
         assertFalse(dto.premiumModels)
         assertEquals(1, dto.maxClips)
+        assertEquals(0, dto.dailyProAi)
+        assertEquals(0, dto.monthlyProAi)
     }
 
     @Test
@@ -46,6 +48,8 @@ class EntitlementsDtoTest {
         assertTrue(dto.priorityRouting)
         assertTrue(dto.premiumModels)
         assertEquals(2, dto.maxClips)
+        assertEquals(50, dto.dailyProAi)
+        assertEquals(600, dto.monthlyProAi)
     }
 
     @Test
@@ -64,6 +68,8 @@ class EntitlementsDtoTest {
         assertFalse(dto.priorityRouting)
         assertFalse(dto.premiumModels)
         assertEquals(1, dto.maxClips)
+        assertEquals(20, dto.dailyProAi)
+        assertEquals(250, dto.monthlyProAi)
     }
 
     @Test

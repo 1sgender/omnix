@@ -11,6 +11,7 @@ import com.omnix.server.config.PrivacyPolicyConfig
 import com.omnix.server.config.ValidationConfig
 import com.omnix.server.license.PlanFeature
 import com.omnix.server.license.PlanQuotaGate
+import com.omnix.server.license.ProBudgetGuard
 import com.omnix.server.observability.LogSanitizer
 import com.omnix.server.observability.Metrics
 import com.omnix.server.observability.StructuredLogger
@@ -32,6 +33,12 @@ import java.time.Instant
 /** Rough characters-per-token ratio used only when a provider reports no token usage. */
 private const val APPROX_CHARS_PER_TOKEN = 4
 
+/** Цепочка Pro: Claude, затем запасные каналы. */
+private val PRO_CHAIN = listOf(ProviderId.ANTHROPIC, ProviderId.GEMINI, ProviderId.GROQ)
+
+/** Flash никогда не включает Claude сам. */
+private val FLASH_PROVIDERS: Set<ProviderId> = ProviderId.entries.toSet() - ProviderId.ANTHROPIC
+
 /** Результат работы роутера — уже нормализован для отдачи клиенту. */
 sealed class RouterResult {
     data class Success(
@@ -39,7 +46,9 @@ sealed class RouterResult {
         val requestId: String,
         /** Только для админа (тест моделей); обычному клиенту — null. */
         val provider: String? = null,
-        val model: String? = null
+        val model: String? = null,
+        /** Фактический уровень ответа: "pro" только если ответил Claude, иначе "flash". */
+        val tier: String = "flash"
     ) : RouterResult()
     data class Failure(val code: ApiErrorCode, val requestId: String) : RouterResult()
 }
@@ -73,7 +82,9 @@ class AiRouter(
     /** Дневные квоты тарифа; null = гейт отключён (тесты без квот). */
     private val planQuotaGate: PlanQuotaGate? = null,
     /** Тест моделей админом; null = админов нет, поле запроса игнорируется. */
-    private val adminAccess: AdminModelAccess? = null
+    private val adminAccess: AdminModelAccess? = null,
+    /** Предохранитель месячного бюджета Pro; null = без понижения по бюджету. */
+    private val proBudgetGuard: ProBudgetGuard? = null
 ) {
     init {
         require(usageRepository != null || usageTracker != null) {
@@ -124,6 +135,8 @@ class AiRouter(
             }
         }
 
+        val pinned = pinnedProvider(request, client, requestId)
+
         // Дневная квота тарифа (voice_ai / base_ai по source запроса).
         // После AR-05 (fail-fast дешёвых проверок), до privacy: отклонённые
         // здесь запросы НЕ пишутся в usage и НЕ тратят квоту.
@@ -149,6 +162,36 @@ class AiRouter(
                     return RouterResult.Failure(ApiErrorCode.QUOTA_EXCEEDED, requestId)
                 }
                 PlanQuotaGate.Verdict.Allowed -> Unit
+            }
+        }
+
+        // Уровень Pro (Claude): отдельная квота (день + месяц) и предохранитель
+        // месячного бюджета. Админский pin провайдера обходит уровни: это тест
+        // конкретной модели, а не продуктовый запрос.
+        var servePro = false
+        if (pinned == null && request.tier?.trim()?.equals("pro", ignoreCase = true) == true) {
+            val proVerdict = planQuotaGate?.check(client, PlanFeature.PRO_AI)
+            if (proVerdict is PlanQuotaGate.Verdict.Limited) {
+                logger.warn(
+                    "pro quota exceeded",
+                    "requestId" to requestId,
+                    "clientId" to client.clientId,
+                    "planId" to (client.planId ?: "free"),
+                    "used" to proVerdict.used.toString(),
+                    "limit" to proVerdict.limit.toString(),
+                    "retryAfter" to proVerdict.retryAfterSeconds.toString()
+                )
+                metrics.recordFailure()
+                return RouterResult.Failure(ApiErrorCode.QUOTA_EXCEEDED, requestId)
+            }
+            if (proBudgetGuard?.shouldDowngrade() == true) {
+                logger.warn(
+                    "pro monthly budget threshold reached; serving as flash",
+                    "requestId" to requestId,
+                    "clientId" to client.clientId
+                )
+            } else {
+                servePro = true
             }
         }
 
@@ -213,7 +256,13 @@ class AiRouter(
         val requirements = ProviderRequirements(
             requiresWeb = request.requiresWeb,
             costClass = costClass,
-            pinnedProvider = pinnedProvider(request, client, requestId)
+            pinnedProvider = pinned,
+            allowedProviders = when {
+                pinned != null -> null
+                servePro -> PRO_CHAIN.toSet()
+                else -> FLASH_PROVIDERS
+            },
+            chain = if (servePro && pinned == null) PRO_CHAIN else null
         )
 
         logger.info(
@@ -253,6 +302,9 @@ class AiRouter(
 
         return when (outcome) {
             is ManagerOutcome.Success -> {
+                // Pro засчитывается и показывается клиенту, только если
+                // ответил именно Claude; при запасном канале это обычный Flash.
+                val servedPro = servePro && outcome.providerId == ProviderId.ANTHROPIC
                 metrics.recordSuccess(outcome.totalTokens)
                 // Feed the in-memory daily caps (requests / tokens / cost) that preflight()
                 // reads at the top of execute(). Without this call the counters stay at zero
@@ -276,7 +328,8 @@ class AiRouter(
                     tokens = Triple(outcome.inputTokens, outcome.outputTokens, outcome.totalTokens),
                     request = request,
                     responseChars = outcome.text.length,
-                    errorCode = null
+                    errorCode = null,
+                    proBucket = servedPro
                 )
                 logger.info(
                     "ai request completed",
@@ -292,7 +345,8 @@ class AiRouter(
                     text = outcome.text,
                     requestId = requestId,
                     provider = if (isAdmin) outcome.providerId.name else null,
-                    model = if (isAdmin) outcome.model else null
+                    model = if (isAdmin) outcome.model else null,
+                    tier = if (servedPro) "pro" else "flash"
                 )
             }
 
@@ -475,7 +529,8 @@ class AiRouter(
         tokens: Triple<Long?, Long?, Long?>?,
         request: AiExecutionRequest,
         responseChars: Int,
-        errorCode: String?
+        errorCode: String?,
+        proBucket: Boolean = false
     ) {
         val record = AiUsageRecord(
             requestId = requestId,
@@ -493,10 +548,10 @@ class AiRouter(
             responseChars = responseChars,
             timestamp = Instant.ofEpochMilli(clock()),
             // Корзина квоты: голос и чат считаются раздельно.
-            feature = if (request.source == ApiRequestSource.VOICE) {
-                PlanFeature.VOICE_AI.key
-            } else {
-                PlanFeature.BASE_AI.key
+            feature = when {
+                proBucket -> PlanFeature.PRO_AI.key
+                request.source == ApiRequestSource.VOICE -> PlanFeature.VOICE_AI.key
+                else -> PlanFeature.BASE_AI.key
             }
         )
         // AR-05: предпочитаем асинхронный pipeline; если он не подключён

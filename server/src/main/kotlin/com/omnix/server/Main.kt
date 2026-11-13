@@ -271,6 +271,8 @@ object ServerBootstrap {
                     GeminiProvider(providerConfig, transport, json, logger)
                 com.omnix.server.provider.ProviderId.OPENROUTER ->
                     OpenRouterProvider(providerConfig, transport, json, logger)
+                com.omnix.server.provider.ProviderId.ANTHROPIC ->
+                    com.omnix.server.provider.AnthropicProvider(providerConfig, transport, json, logger)
             }
         }
 
@@ -344,7 +346,8 @@ object ServerBootstrap {
             metrics = metrics,
             // Дневные квоты тарифа поверх Postgres (authoritative подсчёт).
             planQuotaGate = PlanQuotaGate(usageRepository),
-            adminAccess = adminAccess
+            adminAccess = adminAccess,
+            proBudgetGuard = com.omnix.server.license.ProBudgetGuard(usageRepository, config.pro)
         )
 
         val licenseCrypto = LicenseCrypto(licenseConfig.codePepper)
@@ -841,7 +844,7 @@ fun main() {
     if (configuredProviders.isEmpty()) {
         logger.error(
             "no AI provider configured; all requests will fail",
-            "hint" to "set GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY"
+            "hint" to "set GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY / ANTHROPIC_API_KEY"
         )
     } else {
         logger.info(

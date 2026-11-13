@@ -97,7 +97,16 @@ data class AiExecutionRequest(
      * ADMIN_ACCOUNT_IDS ([com.omnix.server.admin.AdminModelAccess]); для всех
      * остальных модель по-прежнему выбирает сервер, а поле игнорируется.
      */
-    @SerialName("adminProvider") val adminProvider: String? = null
+    @SerialName("adminProvider") val adminProvider: String? = null,
+
+    /**
+     * Уровень ответа: "flash" (быстрый, по умолчанию) или "pro" (сильная модель).
+     * Это пожелание клиента, а не право: Pro доступен только по тарифу и
+     * внутри месячного бюджета, иначе сервер вернёт QUOTA_EXCEEDED или
+     * ответит уровнем Flash. Фактический уровень приходит в [AiExecutionResponse.tier].
+     * Неизвестное значение трактуется как "flash".
+     */
+    @SerialName("tier") val tier: String? = null
 ) {
     companion object {
         // P2-cleanup (Этап 5): компактный memory-контекст (AR-04) был полуготовым
@@ -124,7 +133,9 @@ data class AiExecutionResponse(
     @SerialName("requestId") val requestId: String,
     /** Только для админа (тест моделей): какой провайдер и модель ответили. */
     @SerialName("provider") val provider: String? = null,
-    @SerialName("model") val model: String? = null
+    @SerialName("model") val model: String? = null,
+    /** Фактический уровень ответа: "flash" или "pro" (Pro засчитывается, только если ответил Claude). */
+    @SerialName("tier") val tier: String = "flash"
 )
 
 /** Одна фраза для распознавания: WAV PCM 16 кГц моно в base64. */
