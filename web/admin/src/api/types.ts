@@ -76,10 +76,13 @@ export interface DeviceRow {
   battery: string
 }
 
+export interface UserNote { id: string; author: string; note: string; createdAt: string }
+
 export interface UserDetailResponse {
   account: { id: string; externalRef: string | null; status: string; createdAt: string; lastActiveAt: string | null }
   licenses: LicenseRow[]
   devices: DeviceRow[]
+  notes: UserNote[]
   usage: { requests: number; errors: number; inputTokens: number; outputTokens: number; promptChars: string }
 }
 

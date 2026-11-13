@@ -15,6 +15,7 @@ import { useAuth } from '../state/auth'
 type LicenseDialog =
   | { kind: 'extend' | 'plan' | 'disable' | 'revoke'; license: LicenseRow }
   | { kind: 'issue' }
+  | { kind: 'block' | 'unblock' | 'bonus' }
   | { kind: 'device'; tokenId: string }
   | null
 
@@ -29,6 +30,7 @@ export default function UserDetail() {
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
+  const [noteText, setNoteText] = useState('')
 
   const query = useQuery({
     queryKey: ['user', id],
@@ -64,6 +66,23 @@ export default function UserDetail() {
     onSuccess: () => { ok('Устройство отключено, токен отозван'); refresh(); close() },
     onError: fail
   })
+  const userAction = useMutation({
+    mutationFn: async (a: { kind: 'block' | 'unblock' | 'bonus'; reason: string; days?: number }) => {
+      if (a.kind === 'block') await endpoints.blockUser(id!, a.reason)
+      else if (a.kind === 'unblock') await endpoints.unblockUser(id!, a.reason)
+      else await endpoints.userBonus(id!, a.days ?? 0, a.reason)
+    },
+    onSuccess: (_r, a) => {
+      ok(a.kind === 'block' ? 'Аккаунт заблокирован' : a.kind === 'unblock' ? 'Аккаунт разблокирован' : `Бонус: +${a.days} дн.`)
+      refresh(); close()
+    },
+    onError: fail
+  })
+  const addNote = useMutation({
+    mutationFn: (note: string) => endpoints.addUserNote(id!, note),
+    onSuccess: () => { ok('Заметка добавлена'); setNoteText(''); refresh() },
+    onError: (e: unknown) => err(isApiError(e) ? e.message : 'Не удалось добавить заметку')
+  })
   const issue = useMutation({
     mutationFn: (a: { planId: string; accountRef: string }) =>
       endpoints.issueLicense({ plan_id: a.planId, one_time: true, account_ref: a.accountRef }),
@@ -75,7 +94,8 @@ export default function UserDetail() {
   if (query.isError) return <ErrorState error={query.error} retry={() => void query.refetch()} />
   if (!query.data) return null
 
-  const { account, licenses, devices, usage } = query.data
+  const { account, licenses, devices, usage, notes } = query.data
+  const blocked = account.status === 'DISABLED'
   const canLicense = can('LICENSES_WRITE')
   const canDevice = can('DEVICES_REVOKE')
   const live = (l: LicenseRow) => l.status === 'ACTIVE' || l.status === 'ISSUED'
@@ -89,6 +109,14 @@ export default function UserDetail() {
           <StatusBadge status={account.status} />
           <span className="dim mono" style={{ fontSize: 12 }}>{account.id}</span>
           <div style={{ flex: 1 }} />
+          {canLicense ? (
+            <Button size="sm" onClick={() => { setDays('7'); setDialog({ kind: 'bonus' }) }}>Бонус-дни</Button>
+          ) : null}
+          {canLicense ? (
+            blocked
+              ? <Button size="sm" onClick={() => setDialog({ kind: 'unblock' })}>Разблокировать</Button>
+              : <Button size="sm" variant="danger" onClick={() => setDialog({ kind: 'block' })}>Блокировать</Button>
+          ) : null}
           {canLicense ? (
             <Button
               variant="primary" size="sm"
@@ -156,9 +184,78 @@ export default function UserDetail() {
         ))}
       </DataTable>
 
+      <h2 className="section-title">Заметки ({notes.length})</h2>
+      {canLicense ? (
+        <form
+          style={{ display: 'flex', gap: 8, marginBottom: 12 }}
+          onSubmit={(e) => {
+            e.preventDefault()
+            const t = noteText.trim()
+            if (t.length < 1 || t.length > 2000) { err('Заметка: 1–2000 символов'); return }
+            addNote.mutate(t)
+          }}
+        >
+          <Input
+            aria-label="Новая заметка" placeholder="Заметка об аккаунте…" value={noteText} maxLength={2000}
+            onChange={(e) => setNoteText(e.target.value)}
+          />
+          <Button type="submit" variant="primary" loading={addNote.isPending} disabled={!noteText.trim()}>Добавить</Button>
+        </form>
+      ) : null}
+      {notes.length === 0 ? <p className="dim" style={{ fontSize: 13 }}>Заметок пока нет</p> : null}
+      {notes.map((n) => (
+        <div key={n.id} className="card" style={{ marginBottom: 8 }}>
+          <div className="dim" style={{ fontSize: 12, marginBottom: 4 }}>{n.author} · {formatDateTime(n.createdAt)}</div>
+          <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{n.note}</div>
+        </div>
+      ))}
+
       <p style={{ marginTop: 14 }}>
         <Link to="/users" className="btn ghost sm">← Все пользователи</Link>
       </p>
+
+      {dialog?.kind === 'block' || dialog?.kind === 'unblock' || dialog?.kind === 'bonus' ? (
+        <Modal
+          title={dialog.kind === 'block' ? 'Заблокировать аккаунт?' : dialog.kind === 'unblock' ? 'Разблокировать аккаунт?' : 'Бонус-дни'}
+          sub={dialog.kind === 'block'
+            ? 'Доступ по токенам и лицензиям будет закрыт немедленно; можно разблокировать обратно'
+            : dialog.kind === 'unblock' ? 'Аккаунт снова получит доступ' : 'Добавить дни к действующей лицензии аккаунта'}
+          onClose={close}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const r = reason.trim()
+              if (r.length < 3 || r.length > 256) { setFormError('Причина: 3–256 символов'); return }
+              if (dialog.kind === 'bonus') {
+                const n = Number(days)
+                if (!Number.isInteger(n) || n < 1 || n > 3650) { setFormError('Дней: целое от 1 до 3650'); return }
+                setFormError(null)
+                userAction.mutate({ kind: 'bonus', reason: r, days: n })
+                return
+              }
+              setFormError(null)
+              userAction.mutate({ kind: dialog.kind, reason: r })
+            }}
+          >
+            {formError ? <div className="form-error" role="alert">{formError}</div> : null}
+            {dialog.kind === 'bonus' ? (
+              <Field label="Дней" htmlFor="u-bonus" hint="1–3650">
+                <Input id="u-bonus" type="number" min={1} max={3650} value={days} onChange={(e) => setDays(e.target.value)} />
+              </Field>
+            ) : null}
+            <Field label="Причина" htmlFor="u-reason" hint="Записывается в аудит">
+              <Input id="u-reason" value={reason} maxLength={256} required onChange={(e) => setReason(e.target.value)} />
+            </Field>
+            <div className="modal-actions">
+              <Button type="button" onClick={close}>Отмена</Button>
+              <Button type="submit" variant={dialog.kind === 'block' ? 'danger' : 'primary'} loading={userAction.isPending}>
+                {dialog.kind === 'block' ? 'Заблокировать' : dialog.kind === 'unblock' ? 'Разблокировать' : 'Начислить'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      ) : null}
 
       {dialog?.kind === 'extend' ? (
         <Modal title="Продлить лицензию" sub={`••••${dialog.license.codeHint} · добавить дни к сроку`} onClose={close}>

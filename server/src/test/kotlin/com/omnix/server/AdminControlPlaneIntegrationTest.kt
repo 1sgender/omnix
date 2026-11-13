@@ -280,6 +280,105 @@ class AdminControlPlaneIntegrationTest : PostgresTestSupport() {
         assertTrue(audit.find(AdminAuditQuery(action = "license.change-plan")).isEmpty())
     }
 
+    /* ── Управление пользователем: block/unblock, заметки, бонус-дни ───────── */
+
+    private fun accountStatusOf(accountId: UUID): String = dataSource.connection.use { c ->
+        c.prepareStatement("SELECT status FROM accounts WHERE id = ?").use { ps ->
+            ps.setObject(1, accountId)
+            ps.executeQuery().use { rs -> rs.next(); rs.getString(1) }
+        }
+    }
+
+    @Test
+    fun `block and unblock change account status require reason and audit`() {
+        val accountId = seedPlanAndLicense()
+        createAdmin("block-admin", AdminRole.ADMIN)
+        val token = login("block-admin", "bootstrap-pass-123")!!
+
+        // Причина обязательна и ограничена 3..256 символами.
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/block", "{}").status)
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/block", """{"reason":"ab"}""").status)
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/block", """{"reason":"${"x".repeat(257)}"}""").status)
+        assertEquals("ACTIVE", accountStatusOf(accountId))
+
+        val blocked = post(token, "/v1/admin/users/$accountId/block", """{"reason":"abuse of free tier"}""")
+        assertEquals("block body=${blocked.body}", 200, blocked.status)
+        assertEquals("DISABLED", accountStatusOf(accountId))
+        // Повторная блокировка идемпотентна и не пишет второй аудит.
+        assertTrue(post(token, "/v1/admin/users/$accountId/block", """{"reason":"abuse of free tier"}""").body.contains("\"changed\":false"))
+
+        assertEquals(200, post(token, "/v1/admin/users/$accountId/unblock", """{"reason":"appeal accepted"}""").status)
+        assertEquals("ACTIVE", accountStatusOf(accountId))
+
+        assertEquals(1, audit.find(AdminAuditQuery(action = "user.block")).size)
+        assertEquals(1, audit.find(AdminAuditQuery(action = "user.unblock")).size)
+        assertEquals(404, post(token, "/v1/admin/users/${UUID.randomUUID()}/block", """{"reason":"no such user"}""").status)
+    }
+
+    @Test
+    fun `notes can be added and are listed with author`() {
+        val accountId = seedPlanAndLicense()
+        createAdmin("note-admin", AdminRole.SUPPORT)
+        val token = login("note-admin", "bootstrap-pass-123")!!
+
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/note", """{"note":"   "}""").status)
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/note", "{}").status)
+        assertEquals(200, post(token, "/v1/admin/users/$accountId/note", """{"note":"called the customer"}""").status)
+
+        val list = get(token, "/v1/admin/users/$accountId/notes")
+        assertEquals(200, list.status)
+        assertTrue(list.body.contains("called the customer"))
+        assertTrue(list.body.contains("admin:note-admin"))
+        assertTrue(get(token, "/v1/admin/users/$accountId").body.contains("called the customer"))
+        assertTrue(audit.find(AdminAuditQuery(action = "user.note")).isNotEmpty())
+    }
+
+    @Test
+    fun `bonus days extends the active license with reason and audit`() {
+        val (accountId, licenseId) = seedPlanAndLicenseBoth()
+        createAdmin("bonus-admin", AdminRole.ADMIN)
+        val token = login("bonus-admin", "bootstrap-pass-123")!!
+        val before = expiresAtOf(licenseId)
+
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/bonus", """{"days":7}""").status)
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/bonus", """{"days":0,"reason":"compensation"}""").status)
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/bonus", """{"reason":"compensation"}""").status)
+
+        val response = post(token, "/v1/admin/users/$accountId/bonus", """{"days":7,"reason":"compensation for outage"}""")
+        assertEquals("bonus body=${response.body}", 200, response.status)
+        val after = expiresAtOf(licenseId)
+        assertEquals(7L * 86_400L, after.epochSecond - before.epochSecond)
+        assertTrue(audit.find(AdminAuditQuery(action = "user.bonus")).isNotEmpty())
+    }
+
+    @Test
+    fun `bonus without active license is 400`() {
+        val (accountId, licenseId) = seedPlanAndLicenseBoth()
+        createAdmin("bonus-admin2", AdminRole.ADMIN)
+        val token = login("bonus-admin2", "bootstrap-pass-123")!!
+        assertEquals(200, post(token, "/v1/admin/licenses/$licenseId/disable").status)
+        assertEquals(400, post(token, "/v1/admin/users/$accountId/bonus", """{"days":7,"reason":"compensation"}""").status)
+    }
+
+    @Test
+    fun `viewer cannot manage users but can read notes`() {
+        val accountId = seedPlanAndLicense()
+        createAdmin("view-users", AdminRole.VIEWER)
+        val token = login("view-users", "bootstrap-pass-123")!!
+        assertEquals(403, post(token, "/v1/admin/users/$accountId/block", """{"reason":"not allowed"}""").status)
+        assertEquals(403, post(token, "/v1/admin/users/$accountId/note", """{"note":"x"}""").status)
+        assertEquals(403, post(token, "/v1/admin/users/$accountId/bonus", """{"days":1,"reason":"not allowed"}""").status)
+        assertEquals(200, get(token, "/v1/admin/users/$accountId/notes").status)
+        assertEquals("ACTIVE", accountStatusOf(accountId))
+    }
+
+    private fun expiresAtOf(licenseId: UUID): Instant = dataSource.connection.use { c ->
+        c.prepareStatement("SELECT expires_at FROM licenses WHERE id = ?").use { ps ->
+            ps.setObject(1, licenseId)
+            ps.executeQuery().use { rs -> rs.next(); rs.getTimestamp(1).toInstant() }
+        }
+    }
+
     /* ── Settings: validate → persist → audit → apply (ТЗ §12/§20) ────────── */
 
     @Test

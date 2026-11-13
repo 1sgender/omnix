@@ -165,6 +165,69 @@ class AdminQueries(private val dataSource: DataSource) {
         )
     }
 
+    /**
+     * Смена статуса аккаунта ACTIVE <-> DISABLED. Статус DISABLED реально
+     * запрещает доступ: authenticateAccessToken и валидация лицензии требуют
+     * accounts.status = 'ACTIVE'. true, если строка изменилась.
+     */
+    fun setAccountStatus(accountId: UUID, from: String, to: String, now: Instant): Boolean =
+        dataSource.connection.use { c ->
+            c.prepareStatement("UPDATE accounts SET status = ?, updated_at = ? WHERE id = ? AND status = ?").use { ps ->
+                ps.setString(1, to)
+                ps.setTimestamp(2, Timestamp.from(now))
+                ps.setObject(3, accountId)
+                ps.setString(4, from)
+                ps.executeUpdate() > 0
+            }
+        }
+
+    /* ── Admin notes ──────────────────────────────────────────────────────── */
+
+    data class NoteRow(
+        val id: UUID,
+        val author: String,
+        val note: String,
+        val createdAt: Instant
+    )
+
+    fun addAccountNote(accountId: UUID, author: String, note: String, now: Instant): UUID {
+        val id = UUID.randomUUID()
+        dataSource.connection.use { c ->
+            c.prepareStatement(
+                "INSERT INTO admin_account_notes (id, account_id, author, note, created_at) VALUES (?, ?, ?, ?, ?)"
+            ).use { ps ->
+                ps.setObject(1, id)
+                ps.setObject(2, accountId)
+                ps.setString(3, author.take(128))
+                ps.setString(4, note)
+                ps.setTimestamp(5, Timestamp.from(now))
+                ps.executeUpdate()
+            }
+        }
+        return id
+    }
+
+    fun accountNotes(accountId: UUID): List<NoteRow> = dataSource.connection.use { c ->
+        c.prepareStatement(
+            "SELECT id, author, note, created_at FROM admin_account_notes " +
+                "WHERE account_id = ? ORDER BY created_at DESC LIMIT 200"
+        ).use { ps ->
+            ps.setObject(1, accountId)
+            ps.executeQuery().use { rs ->
+                val out = mutableListOf<NoteRow>()
+                while (rs.next()) {
+                    out += NoteRow(
+                        id = rs.getObject("id", UUID::class.java),
+                        author = rs.getString("author"),
+                        note = rs.getString("note"),
+                        createdAt = rs.getTimestamp("created_at").toInstant()
+                    )
+                }
+                out
+            }
+        }
+    }
+
     /* ── Devices (= api_tokens + license device binding) ──────────────────── */
 
     data class DeviceRow(

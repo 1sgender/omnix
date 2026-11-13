@@ -33,6 +33,14 @@ export const endpoints = {
       size: String(PAGE_SIZE)
     })}`),
   user: (id: string) => api.get<UserDetailResponse>(`/v1/admin/users/${id}`),
+  blockUser: (id: string, reason: string) =>
+    api.post<{ changed: boolean; status: string }>(`/v1/admin/users/${id}/block`, { reason }),
+  unblockUser: (id: string, reason: string) =>
+    api.post<{ changed: boolean; status: string }>(`/v1/admin/users/${id}/unblock`, { reason }),
+  addUserNote: (id: string, note: string) =>
+    api.post<{ id: string }>(`/v1/admin/users/${id}/note`, { note }),
+  userBonus: (id: string, days: number, reason: string) =>
+    api.post<{ changed: boolean; licenseId: string }>(`/v1/admin/users/${id}/bonus`, { days, reason }),
 
   // ── устройства ──
   devices: (page: number) =>
