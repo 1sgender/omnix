@@ -278,8 +278,14 @@ class OmnixApiHandler(
                 )
             }
 
-            is RouterResult.Failure -> error(result.code, result.requestId)
+            is RouterResult.Failure -> error(result.code, result.requestId, headers = quotaHeaders(result))
         }
+    }
+
+    /** QUOTA_EXCEEDED: когда обновится и какая корзина кончилась — для понятного сообщения в приложении. */
+    private fun quotaHeaders(result: RouterResult.Failure): Map<String, String> = buildMap {
+        result.retryAfterSeconds?.let { put("Retry-After", it.toString()) }
+        result.quotaScope?.let { put("X-Quota-Scope", it) }
     }
 
     private fun handleAdminMetrics(

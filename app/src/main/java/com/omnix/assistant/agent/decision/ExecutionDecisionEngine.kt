@@ -208,10 +208,10 @@ class ExecutionDecisionEngine @Inject constructor(
         }
 
         // ------------------------------------------------ PRIORITY 2: LOCAL AI
-        // Выбор пользователя: «Облако» — локальный слой пропускаем;
+        // Выбор пользователя: «Flash» и «Pro» — локальный слой пропускаем;
         // «На телефоне» — локальный слой отвечает без ухода в облако.
         val choice = modelChoice.current()
-        if (choice == AiModelChoice.CLOUD) {
+        if (choice.cloudOnly) {
             recordLaneStage(VoiceLatencyMetrics.VoiceLane.CLOUD, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
             return runCloud(request, routing, trace)
         }

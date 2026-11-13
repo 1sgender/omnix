@@ -1,6 +1,7 @@
 package com.omnix.assistant.core.license
 
 import com.omnix.assistant.core.security.SecurityManager
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
@@ -79,6 +80,47 @@ class HttpLicenseServerValidatorTest {
         val result = validator().redeem("OMX-ABCDE-FGHJK-LMNPQ-RSTUV", "OMX-TEST-DEVICE-ABCDEF")
         assertEquals(ServerRedemptionResult.NotRedeemable, result)
         assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun `validate reads pro limits and used answers`(): Unit = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"valid":true,"plan_id":"omnix","product_id":"omnix","starts_at":"2026-09-16T00:00:00Z",""" +
+                    """"expires_at":"2026-12-16T00:00:00Z","billing_status":"PAID",""" +
+                    """"entitlements":{"daily_voice_ai":1000,"daily_base_ai":1000,"daily_pro_ai":50,"monthly_pro_ai":600},""" +
+                    """"usage":{"used_today":{"voice_ai":3,"base_ai":7,"pro_ai":2},"used_month":{"pro_ai":41}}}"""
+            )
+        )
+        val security = mockk<SecurityManager>(relaxed = true)
+        every { security.getAccessToken() } returns "omx_" + "A".repeat(43)
+
+        val result = HttpLicenseServerValidator(security, baseUrlFor(server)).validate("OMX-TEST-DEVICE-ABCDEF")
+
+        assertTrue("result=$result", result is ServerLicenseValidationResult.Valid)
+        val license = (result as ServerLicenseValidationResult.Valid).license
+        assertEquals(50, license.entitlements.dailyProAi)
+        assertEquals(600, license.entitlements.monthlyProAi)
+        assertEquals(PlanAiUsage.UsedToday(voiceAi = 3, baseAi = 7, proAi = 2), license.aiUsage?.usedToday)
+        assertEquals(41L, license.aiUsage?.usedMonth?.proAi)
+    }
+
+    @Test
+    fun `validate from an old server has no usage and no pro`(): Unit = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"valid":true,"plan_id":"omnix","product_id":"omnix","starts_at":"2026-09-16T00:00:00Z",""" +
+                    """"expires_at":"2026-12-16T00:00:00Z","billing_status":"PAID","entitlements":{"daily_voice_ai":300}}"""
+            )
+        )
+        val security = mockk<SecurityManager>(relaxed = true)
+        every { security.getAccessToken() } returns "omx_" + "A".repeat(43)
+
+        val license = (HttpLicenseServerValidator(security, baseUrlFor(server)).validate("OMX-TEST-DEVICE-ABCDEF")
+            as ServerLicenseValidationResult.Valid).license
+
+        assertEquals(0, license.entitlements.dailyProAi)
+        assertEquals(null, license.aiUsage)
     }
 
     private companion object {

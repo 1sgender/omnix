@@ -443,7 +443,8 @@ object ServerBootstrap {
             logger = logger,
             json = json,
             clipDevices = clipDevices,
-            adminAccess = adminAccess
+            adminAccess = adminAccess,
+            usageRepository = usageRepository
         )
 
         // CR-15: health-лямбда и metrics-лямбда вынесены в явные функции для

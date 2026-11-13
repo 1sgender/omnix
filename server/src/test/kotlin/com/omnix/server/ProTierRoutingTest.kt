@@ -25,6 +25,7 @@ import com.omnix.server.provider.ProviderId
 import com.omnix.server.provider.ProviderManager
 import com.omnix.server.provider.ProviderResult
 import com.omnix.server.router.AiRouter
+import com.omnix.server.router.QUOTA_SCOPE_PRO
 import com.omnix.server.router.RouterResult
 import com.omnix.server.usage.AiUsageRecord
 import com.omnix.server.usage.InMemoryUsageRepository
@@ -169,6 +170,9 @@ class ProTierRoutingTest {
 
         assertTrue(result is RouterResult.Failure)
         assertEquals(ApiErrorCode.QUOTA_EXCEEDED, (result as RouterResult.Failure).code)
+        // Приложение по этим полям пишет «обновится через N ч» и предлагает Flash.
+        assertEquals(QUOTA_SCOPE_PRO, result.quotaScope)
+        assertTrue((result.retryAfterSeconds ?: 0L) > 0L)
         assertEquals(0, claude.calls.get())
         assertEquals(0, gemini.calls.get())
     }

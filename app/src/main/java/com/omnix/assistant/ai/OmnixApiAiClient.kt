@@ -1,5 +1,6 @@
 package com.omnix.assistant.ai
 
+import com.omnix.assistant.agent.decision.AiTierPreference
 import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.data.remote.OmnixApiClient
@@ -50,7 +51,9 @@ interface ContextualCloudAIClient {
 
 @Singleton
 class OmnixApiAiClient @Inject constructor(
-    private val apiClient: OmnixApiClient
+    private val apiClient: OmnixApiClient,
+    /** Выбор Flash/Pro: только для запросов движка решений, не для legacy-вызовов (переводчик). */
+    private val tierPreference: AiTierPreference = AiTierPreference.FLASH
 ) : AIClient, ContextualCloudAIClient {
 
     override suspend fun complete(
@@ -109,6 +112,7 @@ class OmnixApiAiClient @Inject constructor(
             systemContext = systemPrompt.ifBlank { null },
             cloudExplicitlyAllowed = cloudExplicitlyAllowed,
             requestId = requestId,
+            tier = tierPreference.requestedTier(),
             // CR-03: преобразуем доменные Message → DTO, исключаем SYSTEM
             // (systemPrompt отправляется отдельно и серверный базовый промпт
             // не должен дублироваться через историю).

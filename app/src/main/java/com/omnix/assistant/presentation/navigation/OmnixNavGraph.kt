@@ -150,7 +150,8 @@ fun OmnixNavGraph(
                     onRename = pinnedViewModel::rename,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
-                    onToggleDictation = chatViewModel::toggleVoiceDictation
+                    onToggleDictation = chatViewModel::toggleVoiceDictation,
+                    onSwitchToFlash = chatViewModel::switchToFlash
                 )
             }
 

@@ -16,11 +16,13 @@ class AiModelActivatorTest {
 
     private fun activator(
         local: LocalModelState = LocalModelState.Ready("qwen", 10),
-        server: Boolean = true
+        server: Boolean = true,
+        pro: Boolean = false
     ) = AiModelActivator(
         loadLocalModel = { local },
         serverReachable = { server },
-        save = { saved += it }
+        save = { saved += it },
+        proAvailable = { pro }
     )
 
     @Test
@@ -62,5 +64,33 @@ class AiModelActivatorTest {
 
         assertEquals(AiModelActivation.Applied, activator(server = true).activate(AiModelChoice.CLOUD))
         assertEquals(listOf(AiModelChoice.CLOUD), saved)
+    }
+
+    @Test
+    fun `pro is refused on a plan without pro and nothing is saved`() = runBlocking {
+        val result = activator(server = true, pro = false).activate(AiModelChoice.PRO)
+        assertEquals(AiModelActivation.Failed(AiModelActivationError.PRO_NOT_IN_PLAN), result)
+        assertTrue(saved.isEmpty())
+    }
+
+    @Test
+    fun `pro on a pro plan still needs the server`() = runBlocking {
+        val offline = activator(server = false, pro = true).activate(AiModelChoice.PRO)
+        assertEquals(AiModelActivation.Failed(AiModelActivationError.SERVER_UNREACHABLE), offline)
+        assertTrue(saved.isEmpty())
+
+        assertEquals(AiModelActivation.Applied, activator(server = true, pro = true).activate(AiModelChoice.PRO))
+        assertEquals(listOf(AiModelChoice.PRO), saved)
+    }
+
+    @Test
+    fun `pro is locked by default when the plan is unknown`() = runBlocking {
+        val result = AiModelActivator(
+            loadLocalModel = { LocalModelState.Ready("qwen", 10) },
+            serverReachable = { true },
+            save = { saved += it }
+        ).activate(AiModelChoice.PRO)
+        assertEquals(AiModelActivation.Failed(AiModelActivationError.PRO_NOT_IN_PLAN), result)
+        assertTrue(saved.isEmpty())
     }
 }

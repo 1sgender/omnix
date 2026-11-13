@@ -1,6 +1,9 @@
 package com.omnix.assistant.data.remote
 
+import com.omnix.assistant.agent.decision.AiTier
 import com.omnix.assistant.agent.decision.ExecutionType
+import com.omnix.assistant.core.license.AiQuotaBucket
+import com.omnix.assistant.core.license.AiTierLedger
 import com.omnix.assistant.core.admin.AdminCloudModel
 import com.omnix.assistant.core.admin.AdminModelPin
 import com.omnix.assistant.core.admin.AdminModelTesting
@@ -405,6 +408,107 @@ class OmnixApiClientTest {
         assertTrue(result is Resource.Error)
         assertFalse(cloudMonitor.active.first())
         assertEquals(0, server.requestCount)
+    }
+
+    // ------------------------------------------------ уровни Flash / Pro
+
+    private fun tierClient(ledger: AiTierLedger) = OmnixApiClient(
+        OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val original = chain.request()
+                chain.proceed(original.newBuilder().url(server.url(original.url.encodedPath)).build())
+            }
+            .build(),
+        security,
+        Json { ignoreUnknownKeys = true; isLenient = false },
+        cloudMonitor,
+        AdminModelTesting.OFF,
+        ledger
+    )
+
+    @Test
+    fun `pro choice sends tier pro and flash sends no tier`() = runBlocking {
+        val ok = """{"success":true,"text":"ok","executionType":"CLOUD_AI","requestId":"r","tier":"pro"}"""
+        server.enqueue(MockResponse().setResponseCode(200).setBody(ok))
+        server.enqueue(MockResponse().setResponseCode(200).setBody(ok))
+        val api = tierClient(AiTierLedger())
+
+        api.execute("вопрос", "CHAT", "NORMAL", requiresWeb = false, tier = AiTier.PRO)
+        api.execute("вопрос", "CHAT", "NORMAL", requiresWeb = false)
+
+        assertTrue(server.takeRequest().body.readUtf8().contains("\"tier\":\"pro\""))
+        assertFalse(server.takeRequest().body.readUtf8().contains("\"tier\""))
+    }
+
+    @Test
+    fun `flash answer to a pro request is marked as a downgrade`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"success":true,"text":"ok","executionType":"CLOUD_AI","requestId":"r","tier":"flash"}"""
+            )
+        )
+        val ledger = AiTierLedger()
+
+        val result = tierClient(ledger).execute(
+            "вопрос", "VOICE", "NORMAL", requiresWeb = false, requestId = "omx_req_1", tier = AiTier.PRO
+        )
+
+        assertEquals(Resource.Success("ok"), result)
+        assertTrue(ledger.takeDowngrade("omx_req_1"))
+        assertEquals(listOf(AiQuotaBucket.FLASH_VOICE), ledger.answers.value.map { it.bucket })
+    }
+
+    @Test
+    fun `old server without tier field is a flash answer`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(200).setBody(
+                """{"success":true,"text":"ok","executionType":"CLOUD_AI","requestId":"r"}"""
+            )
+        )
+        val ledger = AiTierLedger()
+
+        tierClient(ledger).execute("вопрос", "CHAT", "NORMAL", requiresWeb = false, requestId = "omx_req_2", tier = AiTier.PRO)
+
+        assertTrue(ledger.takeDowngrade("omx_req_2"))
+        assertEquals(listOf(AiQuotaBucket.FLASH_TEXT), ledger.answers.value.map { it.bucket })
+    }
+
+    @Test
+    fun `quota exceeded carries the bucket and reset time`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(429)
+                .addHeader("Retry-After", "7200")
+                .addHeader("X-Quota-Scope", "pro")
+                .setBody("""{"success":false,"error":{"code":"QUOTA_EXCEEDED","message":"Daily plan quota exceeded","requestId":"r"}}""")
+        )
+        val ledger = AiTierLedger()
+
+        val result = tierClient(ledger).execute(
+            "вопрос", "CHAT", "NORMAL", requiresWeb = false, requestId = "omx_req_3", tier = AiTier.PRO
+        )
+
+        assertTrue(result is Resource.Error)
+        val exception = (result as Resource.Error).exception as OmnixApiException
+        assertEquals("QUOTA_EXCEEDED", exception.code)
+        assertEquals(AiQuotaBucket.PRO, exception.quota?.bucket)
+        assertEquals(7_200L, exception.quota?.retryAfterSeconds)
+        assertEquals(AiQuotaBucket.PRO, ledger.takeQuotaExceeded("omx_req_3")?.bucket)
+        assertTrue("отказ не засчитывается как ответ", ledger.answers.value.isEmpty())
+    }
+
+    @Test
+    fun `other errors are not quota refusals`() = runBlocking {
+        server.enqueue(
+            MockResponse().setResponseCode(429)
+                .addHeader("Retry-After", "5")
+                .setBody("""{"success":false,"error":{"code":"RATE_LIMITED","message":"x","requestId":"r"}}""")
+        )
+        val ledger = AiTierLedger()
+
+        val result = tierClient(ledger).execute("вопрос", "CHAT", "NORMAL", requiresWeb = false, requestId = "omx_req_4")
+
+        assertEquals(null, ((result as Resource.Error).exception as OmnixApiException).quota)
+        assertEquals(null, ledger.takeQuotaExceeded("omx_req_4"))
     }
 
     private companion object {

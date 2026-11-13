@@ -225,10 +225,10 @@
     <string name="omnix_ai_title">Sunʼiy intellekt modeli</string>
     <string name="omnix_ai_model_auto">Avtomatik</string>
     <string name="omnix_ai_model_auto_body">Qisqa oddiy javoblar telefonda, qolgani OMNIX bulutida.</string>
-    <string name="omnix_ai_model_on_device">Telefonda</string>
+    <string name="omnix_ai_model_on_device">Lokal</string>
     <string name="omnix_ai_model_on_device_body">%1$s. Oflayn ishlaydi, soʻrovlar telefondan chiqmaydi. Javoblar bulutdagidan soddaroq.</string>
-    <string name="omnix_ai_model_cloud">OMNIX buluti</string>
-    <string name="omnix_ai_model_cloud_body">OMNIX serveridagi model: toʻliqroq javoblar. Internet kerak.</string>
+    <string name="omnix_ai_model_cloud">Flash</string>
+    <string name="omnix_ai_model_cloud_body">OMNIX buluti: tezkor va telefondagidan toʻliqroq javoblar. Internet kerak.</string>
     <string name="omnix_admin_models_title">Modelni sinash (admin)</string>
     <string name="omnix_admin_models_body">Buni faqat siz koʻrasiz. Tanlangan model har bir soʻrovga javob beradi va har javobda kim javob bergani yoziladi.</string>
     <string name="omnix_admin_models_default">Hammaga boʻlgani kabi</string>
