@@ -97,7 +97,7 @@ private fun PlanCard(
                 text = if (plan.isFree) {
                     stringResource(R.string.pay_price_free)
                 } else {
-                    stringResource(R.string.pay_price_period, formatPrice(plan.priceMinor, plan.currency), plan.durationDays)
+                    stringResource(R.string.pay_price_period, formatPrice(plan.priceMinor, plan.currency), plan.durationDays.toString())
                 },
                 style = typography.body,
                 color = colors.textSecondary

@@ -4,7 +4,7 @@
     <string name="pay_title">Plans</string>
     <string name="pay_loading">Loading plans…</string>
     <string name="pay_price_free">Free</string>
-    <string name="pay_price_period">%1$s for %2$d days</string>
+    <string name="pay_price_period">%1$s for %2$s days</string>
     <string name="pay_current">Your current plan</string>
     <string name="pay_free_note">Comes with your OMNIX earbuds</string>
     <string name="pay_line_voice">Voice AI answers: %1$d a day</string>

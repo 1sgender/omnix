@@ -4,7 +4,7 @@
     <string name="pay_title">Тарифтер</string>
     <string name="pay_loading">Тарифтер жүктелуде…</string>
     <string name="pay_price_free">Тегін</string>
-    <string name="pay_price_period">%2$d күнге %1$s</string>
+    <string name="pay_price_period">%2$s күнге %1$s</string>
     <string name="pay_current">Ағымдағы тарифіңіз</string>
     <string name="pay_free_note">OMNIX құлаққаптарымен бірге беріледі</string>
     <string name="pay_line_voice">Дауыстық ЖИ жауаптары: күніне %1$d</string>

@@ -4,7 +4,7 @@
     <string name="pay_title">Tariflar</string>
     <string name="pay_loading">Tariflar yuklanmoqda…</string>
     <string name="pay_price_free">Bepul</string>
-    <string name="pay_price_period">%2$d kun uchun %1$s</string>
+    <string name="pay_price_period">%2$s kun uchun %1$s</string>
     <string name="pay_current">Joriy tarifingiz</string>
     <string name="pay_free_note">OMNIX quloqchinlari bilan birga beriladi</string>
     <string name="pay_line_voice">Ovozli AI javoblari: kuniga %1$d ta</string>

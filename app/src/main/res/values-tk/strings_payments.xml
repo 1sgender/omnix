@@ -4,7 +4,7 @@
     <string name="pay_title">Tarifler</string>
     <string name="pay_loading">Tarifler ýüklenýär…</string>
     <string name="pay_price_free">Mugt</string>
-    <string name="pay_price_period">%2$d gün üçin %1$s</string>
+    <string name="pay_price_period">%2$s gün üçin %1$s</string>
     <string name="pay_current">Häzirki tarifiňiz</string>
     <string name="pay_free_note">OMNIX gulaklyklary bilen berilýär</string>
     <string name="pay_line_voice">Sesli AI jogaplary: günde %1$d</string>

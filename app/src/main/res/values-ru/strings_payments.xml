@@ -4,7 +4,7 @@
     <string name="pay_title">Тарифы</string>
     <string name="pay_loading">Загружаем тарифы…</string>
     <string name="pay_price_free">Бесплатно</string>
-    <string name="pay_price_period">%1$s за %2$d дн.</string>
+    <string name="pay_price_period">%1$s за %2$s дн.</string>
     <string name="pay_current">Ваш текущий тариф</string>
     <string name="pay_free_note">Идёт с наушниками OMNIX</string>
     <string name="pay_line_voice">Голосовые ответы ИИ: %1$d в день</string>

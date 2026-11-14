@@ -4,7 +4,7 @@
     <string name="pay_title">Planlar</string>
     <string name="pay_loading">Planlar yükleniyor…</string>
     <string name="pay_price_free">Ücretsiz</string>
-    <string name="pay_price_period">%2$d gün için %1$s</string>
+    <string name="pay_price_period">%2$s gün için %1$s</string>
     <string name="pay_current">Mevcut planınız</string>
     <string name="pay_free_note">OMNIX kulaklıkla birlikte gelir</string>
     <string name="pay_line_voice">Sesli yapay zeka yanıtları: günde %1$d</string>
