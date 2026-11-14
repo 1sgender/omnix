@@ -603,7 +603,7 @@
     <string name="omnix_privacy_where_device">ON THE PHONE</string>
     <string name="omnix_privacy_where_device_body">Memory, chat history, protocols, voice</string>
     <string name="omnix_privacy_where_cloud">IN THE CLOUD</string>
-    <string name="omnix_privacy_where_cloud_body">Only the text of a request, never a voice recording</string>
+    <string name="omnix_privacy_where_cloud_body">The text of a request. Turkmen and interpreter phrases also go as short audio for recognition</string>
     <string name="omnix_protocols_subtitle">Omni does it on its own — by time, place or event</string>
     <string name="omnix_protocols_new_label">New protocol</string>
     <string name="omnix_protocols_yours_label">Yours</string>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gizlinlik syýasaty salgysy we model ekranyndaky bulut kartoçkasy. Tekstler docs/PRIVACY_POLICY.md bilen gabat gelýär. -->
+<resources>
+    <string name="omnix_privacy_policy_link">Gizlinlik syýasaty</string>
+    <string name="omnix_privacy_policy_link_body">Doly tekst brauzerde açylar</string>
+    <string name="omnix_privacy_policy_open_failed">Gizlinlik syýasatyny açmak üçin brauzer tapylmady</string>
+    <string name="omnix_privacy_card_title">Bulutda näme ugradylýar</string>
+    <string name="omnix_privacy_card_local">Lokal: telefondan hiç zat çykmaýar, enjamdaky model jogap berýär.</string>
+    <string name="omnix_privacy_card_flash">Flash: soragyň teksti we soňky habarlar OMNIX serwerine, ondan hem AI üpjünçisine (Google, Groq ýa-da OpenRouter) gidýär.</string>
+    <string name="omnix_privacy_card_pro">Pro: şol bir zat, ýöne üpjünçi Anthropic (Claude). Şahsy soraglar bulutda diňe siziň razylygyňyz bilen işlenýär.</string>
+    <string name="omnix_privacy_card_speech">Ses: türkmen sözleri we terjimeçi sözlemleri tanamak üçin gysga ses hökmünde serwere we Groq-a ugradylýar.</string>
+</resources>

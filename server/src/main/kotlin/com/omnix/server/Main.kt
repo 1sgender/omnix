@@ -522,6 +522,8 @@ object ServerBootstrap {
             json = json
         )
         val adminSpaHandler = com.omnix.server.admin.AdminSpaHandler()
+        // Публичная политика конфиденциальности (GET /privacy): без авторизации.
+        val privacyPageHandler = com.omnix.server.privacy.PrivacyPageHandler(System.getenv("PRIVACY_CONTACT_EMAIL"))
         val adminHttpHandler = com.omnix.server.admin.AdminHttpHandler(
             auth = adminAuthService,
             staticAuthenticator = staticAuthenticator,
@@ -589,7 +591,8 @@ object ServerBootstrap {
             // Control Plane: admin-маршруты /v1/admin/… первым слоем,
             // лицензионные (issue/revoke, redeem, checkout, webhooks) — следом.
             extensionHandler = { request ->
-                adminSpaHandler.handle(request) ?:
+                privacyPageHandler.handle(request) ?:
+                    adminSpaHandler.handle(request) ?:
                     clipAdminHandler.handle(request) ?:
                     adminHttpHandler.handle(request) ?:
                     manualPaymentHandler.handle(request) ?:

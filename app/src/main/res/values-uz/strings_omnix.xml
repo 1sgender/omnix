@@ -525,7 +525,7 @@
     <string name="omnix_privacy_where_device">TELEFONDA</string>
     <string name="omnix_privacy_where_device_body">Xotira, chatlar tarixi, protokollar, ovoz</string>
     <string name="omnix_privacy_where_cloud">BULUTDA</string>
-    <string name="omnix_privacy_where_cloud_body">Faqat so‘rov matni, ovoz yozuvisiz</string>
+    <string name="omnix_privacy_where_cloud_body">So‘rov matni. Turkman tilidagi nutq va tarjimon tanish uchun qisqa audio ham yuboradi</string>
     <string name="omnix_protocols_subtitle">Omni buni o‘zi bajaradi — vaqt, joy yoki voqeaga ko‘ra</string>
     <string name="omnix_protocols_new_label">Yangi protokol</string>
     <string name="omnix_protocols_yours_label">Sizniki</string>
