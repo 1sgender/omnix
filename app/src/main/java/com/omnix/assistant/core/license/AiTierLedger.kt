@@ -23,6 +23,7 @@ class AiTierLedger @Inject constructor() {
     private val lock = Any()
     private val downgraded = LinkedHashSet<String>()
     private val quotaByRequest = LinkedHashMap<String, QuotaExceeded>()
+    private val busyByRequest = LinkedHashMap<String, ServerBusy>()
 
     private val _answers = MutableStateFlow<List<LocalAnswer>>(emptyList())
 
@@ -73,6 +74,19 @@ class AiTierLedger @Inject constructor() {
     /** Отказ QUOTA_EXCEEDED по этому запросу, если был. Запись забирается. */
     fun takeQuotaExceeded(requestId: String): QuotaExceeded? = synchronized(lock) { quotaByRequest.remove(requestId) }
 
+    /** Сервер перегружен / ИИ-провайдеры недоступны по этому запросу. */
+    fun onServerBusy(requestId: String, busy: ServerBusy) {
+        if (requestId.isBlank()) return
+        synchronized(lock) {
+            busyByRequest.remove(requestId)
+            busyByRequest[requestId] = busy
+            while (busyByRequest.size > MAX_REQUESTS) busyByRequest.remove(busyByRequest.keys.first())
+        }
+    }
+
+    /** Отказ «перегружено» по этому запросу, если был. Запись забирается. */
+    fun takeServerBusy(requestId: String): ServerBusy? = synchronized(lock) { busyByRequest.remove(requestId) }
+
     private fun LinkedHashSet<String>.addBounded(id: String) {
         add(id)
         while (size > MAX_REQUESTS) remove(first())
@@ -82,5 +96,34 @@ class AiTierLedger @Inject constructor() {
         const val MAX_REQUESTS = 64
         const val MAX_ANSWERS = 5_000
         const val MONTH_MS = 32L * AiQuotaClock.DAY_MS
+    }
+}
+
+/**
+ * Отказ SERVER_BUSY / ALL_PROVIDERS_UNAVAILABLE: [retryAfterSeconds] — подсказка сервера (Retry-After
+ * или retry_after в теле), [aiOverloaded] — перегружены именно ИИ-провайдеры, а не сам сервер.
+ */
+data class ServerBusy(val retryAfterSeconds: Int?, val aiOverloaded: Boolean) {
+    /** Через сколько секунд просить пользователя повторить: подсказка сервера в разумных границах. */
+    fun waitSeconds(): Int = (retryAfterSeconds ?: DEFAULT_WAIT_SECONDS).coerceIn(1, MAX_WAIT_SECONDS)
+
+    companion object {
+        const val CODE_SERVER_BUSY = "SERVER_BUSY"
+        const val CODE_PROVIDERS = "ALL_PROVIDERS_UNAVAILABLE"
+        const val CODE_PROVIDER = "PROVIDER_UNAVAILABLE"
+        private const val DEFAULT_WAIT_SECONDS = 5
+        private const val MAX_WAIT_SECONDS = 120
+
+        /** null — код не про перегрузку. */
+        fun parse(code: String, retryAfterHeader: String?, retryAfterBody: Int?): ServerBusy? {
+            val aiOverloaded = when (code) {
+                CODE_SERVER_BUSY -> false
+                CODE_PROVIDERS, CODE_PROVIDER -> true
+                else -> return null
+            }
+            val retry = retryAfterHeader?.trim()?.toIntOrNull()?.takeIf { it > 0 }
+                ?: retryAfterBody?.takeIf { it > 0 }
+            return ServerBusy(retry, aiOverloaded)
+        }
     }
 }

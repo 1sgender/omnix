@@ -531,7 +531,9 @@ class AiRouter(
 
         return when (failure.lastKind) {
             ProviderFailureKind.TIMEOUT -> ApiErrorCode.PROVIDER_TIMEOUT
-            ProviderFailureKind.RATE_LIMITED -> ApiErrorCode.RATE_LIMITED
+            // 429 от облачного провайдера (квота ключа) — не вина клиента:
+            // для приложения это «ИИ перегружен», а не «вы шлёте слишком часто».
+            ProviderFailureKind.RATE_LIMITED,
             ProviderFailureKind.CONNECTION,
             ProviderFailureKind.SERVER_ERROR,
             ProviderFailureKind.NOT_CONFIGURED -> ApiErrorCode.PROVIDER_UNAVAILABLE

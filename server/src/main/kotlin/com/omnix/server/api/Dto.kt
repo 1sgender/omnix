@@ -1,5 +1,7 @@
 package com.omnix.server.api
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -163,12 +165,18 @@ data class AdminCloudModelDto(
     @SerialName("model") val model: String
 )
 
-/** Тело ошибки — единый формат для всех сбоев. */
+/**
+ * Тело ошибки — единый формат для всех сбоев. [retryAfter] (секунды) заполняется
+ * только для перегрузки/квот и в остальных ответах в JSON не попадает.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class ApiErrorBody(
     @SerialName("code") val code: String,
     @SerialName("message") val message: String,
-    @SerialName("requestId") val requestId: String
+    @SerialName("requestId") val requestId: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    @SerialName("retry_after") val retryAfter: Int? = null
 )
 
 @Serializable
@@ -203,6 +211,8 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     PROVIDER_TIMEOUT(504, "AI provider timeout"),
     PROVIDER_ERROR(502, "AI provider error"),
     ALL_PROVIDERS_UNAVAILABLE(503, "No AI provider is currently available"),
+    /** Сервер перегружен (bulkhead/пул БД): быстрый отказ вместо очереди, повторить позже. */
+    SERVER_BUSY(503, "Server is busy, retry later"),
     PAYLOAD_TOO_LARGE(413, "Request payload too large"),
     CLIP_UNKNOWN(404, "Clip is not provisioned"),
     CLIP_ALREADY_PROVISIONED(409, "Clip identity is already provisioned"),
@@ -215,11 +225,12 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     CLIP_ALREADY_REGISTERED(409, "Earbuds with this serial or address are already registered"),
     INTERNAL_ERROR(500, "Internal server error");
 
-    fun toResponse(requestId: String, overrideMessage: String? = null) = ApiErrorResponse(
+    fun toResponse(requestId: String, overrideMessage: String? = null, retryAfterSeconds: Int? = null) = ApiErrorResponse(
         error = ApiErrorBody(
             code = name,
             message = overrideMessage ?: safeMessage,
-            requestId = requestId
+            requestId = requestId,
+            retryAfter = retryAfterSeconds
         )
     )
 }

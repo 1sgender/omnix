@@ -116,6 +116,7 @@ class OmnixApiHandler(
         const val PATH_HEALTH = "/v1/health"
         const val PATH_ADMIN_METRICS = "/v1/admin/metrics"
         const val PATH_ADMIN_METRICS_PROMETHEUS = "/v1/admin/metrics/prometheus"
+        private const val PROVIDERS_RETRY_AFTER_SECONDS = 30
     }
 
     private fun HttpRequestContext.deviceIdHeader(): String? =
@@ -285,6 +286,12 @@ class OmnixApiHandler(
     /** QUOTA_EXCEEDED: когда обновится и какая корзина кончилась — для понятного сообщения в приложении. */
     private fun quotaHeaders(result: RouterResult.Failure): Map<String, String> = buildMap {
         result.retryAfterSeconds?.let { put("Retry-After", it.toString()) }
+        // Квоты облачных провайдеров исчерпаны/недоступны: подсказываем, когда пробовать снова.
+        if (result.code == ApiErrorCode.ALL_PROVIDERS_UNAVAILABLE ||
+            result.code == ApiErrorCode.PROVIDER_UNAVAILABLE
+        ) {
+            putIfAbsent("Retry-After", PROVIDERS_RETRY_AFTER_SECONDS.toString())
+        }
         result.quotaScope?.let { put("X-Quota-Scope", it) }
     }
 
@@ -348,7 +355,7 @@ class OmnixApiHandler(
         status = statusOverride ?: code.httpStatus,
         body = json.encodeToString(
             com.omnix.server.api.ApiErrorResponse.serializer(),
-            code.toResponse(requestId)
+            code.toResponse(requestId, retryAfterSeconds = headers["Retry-After"]?.toIntOrNull())
         ),
         headers = mapOf("Cache-Control" to "no-store") + headers
     )

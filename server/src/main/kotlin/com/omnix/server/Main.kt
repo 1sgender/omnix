@@ -54,7 +54,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import java.net.InetSocketAddress
@@ -166,12 +165,16 @@ object ServerBootstrap {
         // защищается AtomicReference (чтение/запись из корутин healthScope).
         val cachedHealth = AtomicReference<Pair<Long, String>?>(null)
 
-        val maxInFlight = Runtime.getRuntime().availableProcessors() * 4
-        val inFlight = Semaphore(maxInFlight)
-        logger.info("server backpressure configured", "maxInFlight" to maxInFlight.toString())
+        val bulkheads = com.omnix.server.http.RequestBulkheads(config.concurrency)
+        logger.info(
+            "server backpressure configured",
+            "maxInFlight" to config.concurrency.maxInFlight.toString(),
+            "maxAiInFlight" to config.concurrency.maxAiInFlight.toString(),
+            "maxSttInFlight" to config.concurrency.maxSttInFlight.toString()
+        )
 
         val server = HttpServer.create(
-            InetSocketAddress(config.deployment.bindHost, port), 64
+            InetSocketAddress(config.deployment.bindHost, port), 512
         )
         val kickoffExecutor = Executors.newCachedThreadPool { r ->
             Thread(r, "omnix-kickoff").apply { isDaemon = true }
@@ -224,24 +227,16 @@ object ServerBootstrap {
 
         server.createContext("/") { exchange: HttpExchange ->
             requestScope.launch {
-                val acquired = inFlight.tryAcquire()
-                if (!acquired) {
-                    logger.warn("server overloaded: in-flight limit reached", "limit" to maxInFlight.toString())
-                    val body = """{"success":false,"error":{"code":"RATE_LIMITED","message":"Server is overloaded, retry later","requestId":"-"}}"""
-                    respond(
-                        exchange,
-                        HttpResponseContext(
-                            status = 503,
-                            body = body,
-                            headers = mapOf("Retry-After" to "1", "Cache-Control" to "no-store")
-                        )
-                    )
+                val permit = bulkheads.tryEnter(exchange.requestURI.path)
+                if (permit == null) {
+                    logger.warn("server overloaded: concurrency limit reached", "path" to exchange.requestURI.path)
+                    respond(exchange, bulkheads.busyResponse())
                     return@launch
                 }
                 try {
                     handleExchange(exchange, handler, proxySecurity, config, logger)
                 } finally {
-                    inFlight.release()
+                    permit.close()
                 }
             }
         }
@@ -836,6 +831,13 @@ private suspend fun handleExchange(
         // Клиент отвалился или мы сами отменили — не пишем ответ.
         logger.info("request cancelled by client or shutdown")
     } catch (e: Throwable) {
+        if (com.omnix.server.http.RequestBulkheads.isDatabaseOverload(e)) {
+            // Пул соединений БД исчерпан: честный 503 вместо «внутренней ошибки».
+            logger.warn("database pool exhausted", "path" to exchange.requestURI.path)
+            val busy = com.omnix.server.http.RequestBulkheads.busyResponse(DB_BUSY_RETRY_AFTER_SECONDS)
+            runCatching { respond(busy.status, busy.body, busy.headers) }
+            return
+        }
         logger.error("unhandled request failure", "error" to e.javaClass.simpleName)
         runCatching {
             respond(
@@ -864,6 +866,7 @@ private suspend fun handleExchange(
 private const val SERVER_REQUEST_DEADLINE_MS = 28_000L
 private const val X_REQUEST_DEADLINE_HEADER = "X-Request-Deadline"
 private const val HEALTH_RESPONSE_CACHE_MS = 2_000L
+private const val DB_BUSY_RETRY_AFTER_SECONDS = 5
 
 fun main() {
     val config = ServerConfig.fromEnv()

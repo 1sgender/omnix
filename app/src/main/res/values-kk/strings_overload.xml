@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Server overload: friendly messages instead of an error. -->
+<resources>
+    <string name="omnix_overload_busy">Қазір қолданушылар көп. %1$d секундтан кейін қайталап көріңіз.</string>
+    <string name="omnix_overload_ai">ЖИ қазір шамадан тыс жүктелген, бір минуттан кейін қайталап көріңіз.</string>
+</resources>

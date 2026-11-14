@@ -147,6 +147,30 @@ data class ProTierConfig(
 }
 
 /** Валидация входа (пункт 30 ТЗ). */
+/**
+ * Ограничители одновременных запросов (bulkhead). При превышении сервер сразу
+ * отвечает 503 SERVER_BUSY + Retry-After вместо накопления очереди.
+ * Тяжёлые эндпоинты (ИИ, распознавание речи) имеют свои лимиты, чтобы долгие
+ * вызовы провайдеров не вытесняли лёгкие license/health-запросы.
+ */
+data class ConcurrencyConfig(
+    /** Всего одновременных запросов (кроме /v1/health). */
+    val maxInFlight: Int = 128,
+    /** Одновременные /v1/ai/execute. */
+    val maxAiInFlight: Int = 32,
+    /** Одновременные /v1/stt/transcribe. */
+    val maxSttInFlight: Int = 8,
+    /** Что сказать клиенту в Retry-After при отказе, секунды. */
+    val busyRetryAfterSeconds: Int = 3
+) {
+    init {
+        require(maxInFlight in 1..10_000) { "maxInFlight must be in 1..10000" }
+        require(maxAiInFlight in 1..10_000) { "maxAiInFlight must be in 1..10000" }
+        require(maxSttInFlight in 1..10_000) { "maxSttInFlight must be in 1..10000" }
+        require(busyRetryAfterSeconds in 1..120) { "busyRetryAfterSeconds must be in 1..120" }
+    }
+}
+
 data class ValidationConfig(
     val maxTextLength: Int = 8_000,
     val maxBodyBytes: Long = 32 * 1024,
@@ -229,6 +253,7 @@ data class ServerConfig(
     val privacy: PrivacyPolicyConfig,
     val generation: AiGenerationConfig,
     val deployment: DeploymentSecurityConfig = DeploymentSecurityConfig(),
+    val concurrency: ConcurrencyConfig = ConcurrencyConfig(),
     val pro: ProTierConfig = ProTierConfig(),
     /** Persistent licensing/billing; null is accepted only by isolated legacy tests. */
     val licenseSubsystem: LicenseSubsystemConfig? = null,
@@ -491,6 +516,12 @@ data class ServerConfig(
                     maxProviderAttempts = int("MAX_PROVIDER_ATTEMPTS", 2),
                     maxRetriesPerProvider = int("MAX_RETRIES_PER_PROVIDER", 0),
                     retryBackoffMs = long("RETRY_BACKOFF_MS", 200)
+                ),
+                concurrency = ConcurrencyConfig(
+                    maxInFlight = int("OMNIX_MAX_IN_FLIGHT", 128),
+                    maxAiInFlight = int("OMNIX_MAX_AI_IN_FLIGHT", 32),
+                    maxSttInFlight = int("OMNIX_MAX_STT_IN_FLIGHT", 8),
+                    busyRetryAfterSeconds = int("OMNIX_BUSY_RETRY_AFTER_SECONDS", 3)
                 ),
                 validation = ValidationConfig(
                     maxTextLength = int("MAX_TEXT_LENGTH", 8_000),

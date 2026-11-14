@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Server overload: friendly messages instead of an error. -->
+<resources>
+    <string name="omnix_overload_busy">Häzir gelýänler köp. %1$d sekuntdan gaýtalap görüň.</string>
+    <string name="omnix_overload_ai">AI häzir aşa ýüklenen, bir minutdan gaýtalap görüň.</string>
+</resources>
