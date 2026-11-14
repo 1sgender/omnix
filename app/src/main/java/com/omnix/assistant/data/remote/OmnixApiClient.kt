@@ -7,6 +7,7 @@ import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.license.AiTierLedger
 import com.omnix.assistant.core.license.QuotaExceeded
+import com.omnix.assistant.core.license.ServerBusy
 import com.omnix.assistant.core.network.CloudProcessingMonitor
 import com.omnix.assistant.core.network.ResponseBodyTooLargeException
 import com.omnix.assistant.core.network.readUtf8Bounded
@@ -104,7 +105,9 @@ data class SttResultDto(
 data class OmnixApiErrorDto(
     @SerialName("code") val code: String = "INTERNAL_ERROR",
     @SerialName("message") val message: String = "",
-    @SerialName("requestId") val requestId: String = ""
+    @SerialName("requestId") val requestId: String = "",
+    /** Секунды до повтора при перегрузке (SERVER_BUSY и др.); null — сервер не подсказал. */
+    @SerialName("retry_after") val retryAfter: Int? = null
 )
 
 @Serializable
@@ -414,6 +417,8 @@ class OmnixApiClient @Inject constructor(
             nowMs = System.currentTimeMillis()
         )
         quota?.let { tierLedger.onQuotaExceeded(requestId, it) }
+        ServerBusy.parse(error.code, response.header(HEADER_RETRY_AFTER), error.retryAfter)
+            ?.let { tierLedger.onServerBusy(requestId, it) }
         return Resource.Error(
             OmnixApiException(error.code, error.requestId, error.message, quota),
             userMessageFor(error.code)
@@ -448,8 +453,9 @@ class OmnixApiClient @Inject constructor(
         "PRIVACY_POLICY_VIOLATION" ->
             "Этот запрос помечен как приватный и не может быть обработан в облаке."
         "PROVIDER_TIMEOUT" -> "Сервер AI не ответил вовремя. Попробуйте ещё раз."
+        "SERVER_BUSY" -> "Сейчас много желающих. Попробуйте через несколько секунд."
         "PROVIDER_UNAVAILABLE",
-        "ALL_PROVIDERS_UNAVAILABLE" -> "Сервис AI временно недоступен. Попробуйте позже."
+        "ALL_PROVIDERS_UNAVAILABLE" -> "ИИ сейчас перегружен, попробуйте через минуту."
         "PROVIDER_ERROR" -> "Ошибка на стороне сервиса AI."
         "INVALID_REQUEST" -> "Некорректный запрос."
         "PAYLOAD_TOO_LARGE" -> "Запрос слишком длинный."

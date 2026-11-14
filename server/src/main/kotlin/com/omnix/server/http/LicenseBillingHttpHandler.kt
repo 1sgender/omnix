@@ -101,6 +101,8 @@ class LicenseBillingHttpHandler(
         const val PATH_PADDLE_WEBHOOK = "/v1/billing/webhooks/paddle"
         const val PATH_HELEKET_WEBHOOK = "/v1/billing/webhooks/heleket"
 
+        private const val DB_BUSY_RETRY_AFTER_SECONDS = 5
+
         private val PATHS = setOf(
             PATH_ISSUE, PATH_REVOKE, PATH_REDEEM, PATH_VALIDATE, PATH_CHECKOUT,
             PATH_PADDLE_WEBHOOK, PATH_HELEKET_WEBHOOK
@@ -129,6 +131,10 @@ class LicenseBillingHttpHandler(
                 else -> null
             }
         } catch (failure: Exception) {
+            if (RequestBulkheads.isDatabaseOverload(failure)) {
+                logger.warn("license/billing: database pool exhausted", "path" to request.path)
+                return RequestBulkheads.busyResponse(DB_BUSY_RETRY_AFTER_SECONDS)
+            }
             logger.error(
                 "license/billing request failed",
                 "path" to request.path,

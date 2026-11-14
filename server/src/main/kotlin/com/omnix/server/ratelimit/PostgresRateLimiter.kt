@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.sql.Connection
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicLong
 import javax.sql.DataSource
 
 /** Multi-instance-safe limiter for license, redemption and billing endpoints. */
@@ -19,6 +20,18 @@ class PostgresRateLimiter(
     companion object {
         private const val MINUTE_MS = 60_000L
         private const val DAY_MS = 86_400_000L
+
+        /** Глобальная чистка устаревших событий не чаще раза в минуту на экземпляр. */
+        private const val CLEANUP_INTERVAL_MS = 60_000L
+    }
+
+    private val lastCleanupMs = AtomicLong(Long.MIN_VALUE)
+
+    /** true, если пора чистить: под нагрузкой DELETE на каждый запрос был бы лишним ходом в БД. */
+    private fun shouldCleanup(nowMs: Long): Boolean {
+        val last = lastCleanupMs.get()
+        return (last == Long.MIN_VALUE || nowMs - last >= CLEANUP_INTERVAL_MS) &&
+            lastCleanupMs.compareAndSet(last, nowMs)
     }
 
     init {
@@ -40,9 +53,12 @@ class PostgresRateLimiter(
                 it.execute()
             }
             // Indexed global cleanup bounds storage even for one-shot attacker keys.
-            connection.prepareStatement("DELETE FROM license_rate_limit_events WHERE occurred_at < ?").use {
-                it.setInstant(1, dayStart)
-                it.executeUpdate()
+            // Окно считается по occurred_at >= dayStart, поэтому редкая чистка не влияет на точность.
+            if (shouldCleanup(nowMs)) {
+                connection.prepareStatement("DELETE FROM license_rate_limit_events WHERE occurred_at < ?").use {
+                    it.setInstant(1, dayStart)
+                    it.executeUpdate()
+                }
             }
             val stats = connection.prepareStatement(
                 """

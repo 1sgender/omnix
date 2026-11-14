@@ -12,6 +12,7 @@ import com.omnix.assistant.core.license.AiQuotaBucket
 import com.omnix.assistant.core.license.AiTierLedger
 import com.omnix.assistant.core.license.QuotaNotice
 import com.omnix.assistant.core.license.QuotaResetUnit
+import com.omnix.assistant.core.license.ServerBusy
 import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.agent.decision.RequestSource
 import com.omnix.assistant.agent.pipeline.AgentPipeline
@@ -26,8 +27,10 @@ import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.io.IOException
+import kotlin.random.Random
 import javax.inject.Inject
 
 /**
@@ -171,7 +174,7 @@ class SendPromptUseCase @Inject constructor(
 
         // 4. Единый агентский конвейер — вызывается только после privacy gate
         //    и получает запрос с УЖЕ заполненной privacyClassification.
-        val result = agentPipeline.process(effectiveRequest)
+        val result = processWithBusyRetry(effectiveRequest, requestId, source)
 
         // 4. Сохраняем ответ ассистента.
         if (result is Resource.Success) {
@@ -222,6 +225,12 @@ class SendPromptUseCase @Inject constructor(
                 if (exceeded.bucket == AiQuotaBucket.PRO) answerOriginStore.markProQuota(messageId)
                 return result.copy(message = text)
             }
+            // Перегрузка сервера / ИИ: человеческая фраза вместо «ошибки». В голос уходит та же короткая фраза.
+            tierLedger.takeServerBusy(requestId)?.let { busy ->
+                val text = busyText(busy)
+                saveErrorMessage(text)
+                return result.copy(message = text)
+            }
             // Авария сохраняется СОБСТВЕННОЙ ролью (mock 2026-09-26), чтобы чат
             // отрисовал её ошибочным пузырём, а не обычным ответом OMNIX.
             saveErrorMessage(errorTextFor(result.message, result.exception))
@@ -229,6 +238,36 @@ class SendPromptUseCase @Inject constructor(
 
         return result
     }
+
+    /**
+     * Вызов конвейера с ОДНИМ автоповтором для текстового чата, если сервер сказал «перегружен»
+     * и просит подождать недолго. Задержка с jitter; голос не повторяем (не тянем с ответом),
+     * бесконечных повторов нет — не усугубляем нагрузку.
+     */
+    private suspend fun processWithBusyRetry(
+        request: ExecutionRequest,
+        requestId: String,
+        source: RequestSource
+    ): Resource<PromptExecutionResult> {
+        val first = agentPipeline.process(request)
+        if (first !is Resource.Error || source != RequestSource.CHAT) return first
+        val busy = tierLedger.takeServerBusy(requestId) ?: return first
+        val waitSeconds = busy.waitSeconds()
+        if (waitSeconds > MAX_AUTO_RETRY_WAIT_SECONDS) {
+            tierLedger.onServerBusy(requestId, busy)
+            return first
+        }
+        delay(waitSeconds * 1_000L + Random.nextLong(MAX_RETRY_JITTER_MS))
+        return agentPipeline.process(request)
+    }
+
+    /** «Сейчас много желающих — через N сек» или «ИИ перегружен — через минуту». */
+    private fun busyText(busy: ServerBusy): String =
+        if (busy.aiOverloaded) {
+            context.getString(R.string.omnix_overload_ai)
+        } else {
+            context.getString(R.string.omnix_overload_busy, busy.waitSeconds())
+        }
 
     /** «Лимит на сегодня исчерпан, обновится через N ч» (+ подсказка тарифа для Free). */
     private fun quotaText(notice: QuotaNotice): String {
@@ -292,3 +331,9 @@ class SendPromptUseCase @Inject constructor(
             )
         )
 }
+
+/** Автоповтор чата при «перегружено» только если сервер просит подождать не дольше этого. */
+private const val MAX_AUTO_RETRY_WAIT_SECONDS = 10
+
+/** Случайная добавка к задержке автоповтора, чтобы клиенты не пришли одновременно. */
+private const val MAX_RETRY_JITTER_MS = 1_500L
