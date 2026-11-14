@@ -566,18 +566,7 @@ object ServerBootstrap {
             metrics = metrics,
             json = json,
             healthProvider = healthProvider,
-            speechToText = config.providers
-                .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GROQ && it.enabled }
-                ?.apiKey
-                ?.takeIf { it.isNotBlank() }
-                ?.let { key ->
-                    com.omnix.server.stt.GroqWhisperSpeechToText(
-                        transport = transport,
-                        apiKey = key,
-                        model = System.getenv("GROQ_STT_MODEL")?.takeIf { it.isNotBlank() }
-                            ?: com.omnix.server.stt.GroqWhisperSpeechToText.DEFAULT_MODEL
-                    )
-                },
+            speechToText = buildSpeechToText(config, transport, logger),
             metricsProvider = { renderMetrics(metrics) },
             prometheusMetricsProvider = { metrics.prometheus() },
             // AR-06: выбор реализации чекера — production-по-умолчанию через
@@ -952,4 +941,48 @@ fun main() {
     // server.start() уже вызван внутри bindServer(); поток main() паркуется
     // на ожидании завершения JVM (shutdown hook закроет running).
     Thread.currentThread().join()
+}
+
+/**
+ * Распознавание речи: Groq (по умолчанию) и/или Gemini, порядок и запасной
+ * вариант из STT_PROVIDERS ("groq", "groq,gemini", "gemini,groq"). Идёт мимо
+ * ProviderManager. Модель Gemini: STT_GEMINI_MODEL, иначе GEMINI_MODEL.
+ */
+private fun buildSpeechToText(
+    config: ServerConfig,
+    transport: com.omnix.server.provider.HttpTransport,
+    logger: StructuredLogger
+): com.omnix.server.stt.SpeechToText? {
+    fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+    val available = buildMap<String, com.omnix.server.stt.SpeechToText> {
+        config.providers
+            .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GROQ && it.enabled }
+            ?.apiKey?.takeIf { it.isNotBlank() }
+            ?.let { key ->
+                put(
+                    "groq",
+                    com.omnix.server.stt.GroqWhisperSpeechToText(
+                        transport = transport,
+                        apiKey = key,
+                        model = env("GROQ_STT_MODEL")
+                            ?: com.omnix.server.stt.GroqWhisperSpeechToText.DEFAULT_MODEL
+                    )
+                )
+            }
+        config.providers
+            .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GEMINI && it.enabled }
+            ?.takeIf { it.apiKeys.any { key -> key.isNotBlank() } }
+            ?.let { gemini ->
+                put(
+                    "gemini",
+                    com.omnix.server.stt.GeminiSpeechToText(
+                        transport = transport,
+                        keys = com.omnix.server.provider.ApiKeyPool(gemini.apiKeys),
+                        model = env("STT_GEMINI_MODEL") ?: gemini.model,
+                        baseUrl = gemini.baseUrl
+                    )
+                )
+            }
+    }
+    return com.omnix.server.stt.ChainedSpeechToText.fromConfig(env("STT_PROVIDERS"), available, logger)
 }
