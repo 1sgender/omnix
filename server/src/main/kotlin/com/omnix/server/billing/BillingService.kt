@@ -37,7 +37,7 @@ class BillingService(
             BillingProviderId.HELEKET -> if (plan.heleketCurrency.isNullOrBlank()) {
                 return CreateCheckoutOutcome.UnknownPlan
             }
-            BillingProviderId.LOCAL_TMT -> Unit
+            BillingProviderId.LOCAL_TMT, BillingProviderId.MANUAL -> Unit
         }
 
         val now = clock.instant()

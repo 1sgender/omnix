@@ -479,7 +479,11 @@ object ServerBootstrap {
         val adminAccountRepository = com.omnix.server.admin.AdminAccountRepository(dataSource)
         val adminSessionRepository = com.omnix.server.admin.AdminSessionRepository(dataSource)
         val adminAuditLog = com.omnix.server.admin.AdminAuditLog(dataSource)
-        val adminSettings = com.omnix.server.admin.AdminSettingsService(dataSource, json)
+        val adminSettings = com.omnix.server.admin.AdminSettingsService(
+            dataSource,
+            json,
+            com.omnix.server.admin.PaymentSettings.fromEnv(System.getenv("PAYMENT_CONTACTS"))
+        )
         // Smart Router: цены провайдеров теперь читаются из admin settings
         // (USD за 1М токенов, секция cost) — обновления подхватываются на
         // каждый отбор без рестарта.
@@ -502,6 +506,21 @@ object ServerBootstrap {
             policy = adminPolicy
         )
         val adminQueries = com.omnix.server.admin.AdminQueries(dataSource)
+        // Ручная оплата тарифов (пока нет договора с банком): заявки поверх billing_orders.
+        val manualOrders = com.omnix.server.billing.ManualOrderRepository(dataSource, billingRepository)
+        val manualPaymentAdminApi = com.omnix.server.admin.ManualPaymentAdminApi(manualOrders, adminAuditLog)
+        val manualPaymentHandler = com.omnix.server.http.ManualPaymentHttpHandler(
+            authenticator = authenticator,
+            authorizer = authorizer,
+            orders = manualOrders,
+            paymentSettings = adminSettings::payments,
+            rateLimiter = PostgresRateLimiter(
+                dataSource, "manual_payment", licenseConfig.authenticatedRateLimit
+            ),
+            validation = config.validation,
+            logger = logger,
+            json = json
+        )
         val adminSpaHandler = com.omnix.server.admin.AdminSpaHandler()
         val adminHttpHandler = com.omnix.server.admin.AdminHttpHandler(
             auth = adminAuthService,
@@ -514,6 +533,7 @@ object ServerBootstrap {
             queries = adminQueries,
             providerManager = providerManager,
             overrides = providerOverrides,
+            manualPayments = manualPaymentAdminApi,
             json = json
         )
         // Экран «Наушники» (V012): свой префикс /v1/admin/earbuds, ставится
@@ -572,6 +592,7 @@ object ServerBootstrap {
                 adminSpaHandler.handle(request) ?:
                     clipAdminHandler.handle(request) ?:
                     adminHttpHandler.handle(request) ?:
+                    manualPaymentHandler.handle(request) ?:
                     licenseHttpHandler.handle(request) ?:
                     appUpdateHandler.handle(request) ?:
                     clipHttpHandler.handle(request)

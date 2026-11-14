@@ -9,6 +9,7 @@ import type {
   DeviceRow, FlagRow, HealthResponse, IssueLicenseResponse, LicenseRow,
   LicensesResponse, LimitsSettings, LogRow, LoginResponse, MeResponse,
   OrderRow, PlanRow, ProvidersResponse, SecuritySettings, SettingsResponse,
+  PaymentMethod, PaymentRequestRow, PaymentSettings,
   SystemSettings, UsageCostResponse, UsageResponse, UserDetailResponse, UserRow
 } from './types'
 
@@ -67,6 +68,17 @@ export const endpoints = {
   // ── подписки / провайдеры ──
   subscriptions: (page: number) =>
     api.get<{ orders: OrderRow[] }>(`/v1/admin/subscriptions?page=${page}&size=${PAGE_SIZE}`),
+  paymentRequests: (params: { status?: string; q?: string; page?: number }) =>
+    api.get<{ requests: PaymentRequestRow[] }>(`/v1/admin/payment-requests?${new URLSearchParams({
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.q ? { q: params.q } : {}),
+      page: String(params.page ?? 0),
+      size: String(PAGE_SIZE)
+    })}`),
+  confirmPayment: (id: string, body: { paidAmountMinor: number; method: PaymentMethod; note?: string }) =>
+    api.post<{ request: PaymentRequestRow }>(`/v1/admin/payment-requests/${id}/confirm`, body),
+  cancelPayment: (id: string, reason: string) =>
+    api.post<{ request: PaymentRequestRow }>(`/v1/admin/payment-requests/${id}/cancel`, { reason }),
   providers: () => api.get<ProvidersResponse>('/v1/admin/providers'),
   configureProvider: (id: string, body: { enabled?: boolean; priority?: number }) =>
     api.post<{ applied: boolean; version: number }>(`/v1/admin/providers/${id}/configure`, body),
@@ -107,7 +119,8 @@ export const endpoints = {
     ai: () => api.get<SettingsResponse<AiRoutingSettings>>('/v1/admin/settings/ai'),
     limits: () => api.get<SettingsResponse<LimitsSettings>>('/v1/admin/settings/limits'),
     cost: () => api.get<SettingsResponse<CostSettings>>('/v1/admin/settings/cost'),
-    put: (section: 'system' | 'security' | 'ai' | 'limits' | 'cost', value: unknown) =>
+    payments: () => api.get<SettingsResponse<PaymentSettings>>('/v1/admin/settings/payments'),
+    put: (section: 'system' | 'security' | 'ai' | 'limits' | 'cost' | 'payments', value: unknown) =>
       api.put<{ applied: boolean; version: number }>(`/v1/admin/settings/${section}`, value)
   }
 }

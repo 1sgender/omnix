@@ -58,7 +58,8 @@ class AdminQueries(private val dataSource: DataSource) {
                 it.setTimestamp(1, midnight)
             },
             ordersPending = scalar(
-                "SELECT count(*) FROM billing_orders WHERE status IN ('CREATED','PROCESSING','RECONCILIATION_REQUIRED','PENDING')"
+                "SELECT count(*) FROM billing_orders WHERE status IN ('CREATED','PROCESSING','RECONCILIATION_REQUIRED','PENDING') " +
+                    "AND (expires_at IS NULL OR expires_at > now())"
             )
         )
     }

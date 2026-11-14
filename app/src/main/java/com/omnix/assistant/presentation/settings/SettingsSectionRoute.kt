@@ -213,6 +213,18 @@ fun SettingsSectionRoute(
 
         SECTION_OFFLINE_SPEECH -> OfflineSpeechScreen(modifier = modifier, onBack = onBack)
 
+        SECTION_TARIFFS -> {
+            val tariffsViewModel: TariffsViewModel = hiltViewModel()
+            val tariffsState by tariffsViewModel.state.collectAsState()
+            TariffsScreen(
+                state = tariffsState,
+                onRequest = tariffsViewModel::request,
+                onRefresh = tariffsViewModel::refresh,
+                modifier = modifier,
+                onBack = onBack
+            )
+        }
+
         else -> SectionScaffold(stringResource(R.string.omnix_settings_title), modifier, onBack) {}
     }
 }

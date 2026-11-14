@@ -13,6 +13,7 @@ import javax.sql.DataSource
 class JdbcBillingRepository(private val dataSource: DataSource) {
     companion object {
         const val DEFAULT_STALE_SCAN_LIMIT: Int = 50
+        private const val CODE_HASH_BYTES = 32
     }
 
     fun createOrGetOrder(
@@ -186,7 +187,7 @@ class JdbcBillingRepository(private val dataSource: DataSource) {
         }
 
         val result = when (event.kind) {
-            BillingEventKind.PAID -> applyPaid(connection, order, event, now)
+            BillingEventKind.PAID -> applyPaidInTransaction(connection, order, event.providerSubscriptionId, now)
             BillingEventKind.PAYMENT_FAILED -> {
                 if (order.status !in setOf(BillingOrderStatus.PAID, BillingOrderStatus.REFUNDED)) {
                     updateOrderStatus(connection, order.id, "FAILED", now)
@@ -271,17 +272,20 @@ class JdbcBillingRepository(private val dataSource: DataSource) {
         }
     }
 
-    private fun applyPaid(
+    /**
+     * Единая точка «заказ оплачен → тариф выдан». Её вызывают и webhook'и
+     * провайдеров, и ручное подтверждение оператором (провайдер MANUAL).
+     */
+    internal fun applyPaidInTransaction(
         connection: Connection,
         order: BillingOrder,
-        event: VerifiedBillingEvent,
+        providerSubscriptionId: String?,
         now: Instant
     ): BillingEventApplyResult {
         // Different Paddle event types may describe the same transaction. The
         // order transition, not only event ID, is the fulfillment idempotency guard.
         if (order.status == BillingOrderStatus.PAID) return BillingEventApplyResult.PROCESSED
         if (order.status == BillingOrderStatus.REFUNDED) return BillingEventApplyResult.INVALID_STATE
-        val licenseId = order.licenseId ?: return BillingEventApplyResult.INVALID_STATE
 
         val planDuration = connection.prepareStatement(
             "SELECT duration_days FROM billing_plans WHERE id = ? AND active = TRUE"
@@ -290,6 +294,39 @@ class JdbcBillingRepository(private val dataSource: DataSource) {
             it.executeQuery().use { result -> if (result.next()) result.getInt(1) else null }
         } ?: return BillingEventApplyResult.INVALID_STATE
 
+        if (order.provider == BillingProviderId.MANUAL) {
+            if (!fulfillManualOrderLicense(connection, order, planDuration, now)) {
+                return BillingEventApplyResult.INVALID_STATE
+            }
+        } else {
+            val licenseId = order.licenseId ?: return BillingEventApplyResult.INVALID_STATE
+            if (!extendOrderLicense(connection, order, licenseId, planDuration, now)) {
+                return BillingEventApplyResult.INVALID_STATE
+            }
+        }
+        connection.prepareStatement(
+            """
+            UPDATE billing_orders SET status = 'PAID', paid_at = ?, updated_at = ?,
+                provider_subscription_id = COALESCE(?, provider_subscription_id)
+            WHERE id = ?
+            """.trimIndent()
+        ).use {
+            it.setInstant(1, now)
+            it.setInstant(2, now)
+            it.setString(3, providerSubscriptionId)
+            it.setObject(4, order.id)
+            it.executeUpdate()
+        }
+        return BillingEventApplyResult.PROCESSED
+    }
+
+    private fun extendOrderLicense(
+        connection: Connection,
+        order: BillingOrder,
+        licenseId: UUID,
+        planDuration: Int,
+        now: Instant
+    ): Boolean {
         val license = connection.prepareStatement(
             "SELECT status, expires_at FROM licenses WHERE id = ? AND account_id = ? FOR UPDATE"
         ).use {
@@ -298,8 +335,8 @@ class JdbcBillingRepository(private val dataSource: DataSource) {
             it.executeQuery().use { result ->
                 if (!result.next()) null else result.getString("status") to result.getInstant("expires_at")
             }
-        } ?: return BillingEventApplyResult.INVALID_STATE
-        if (license.first in setOf("REVOKED", "DISABLED")) return BillingEventApplyResult.INVALID_STATE
+        } ?: return false
+        if (license.first in setOf("REVOKED", "DISABLED")) return false
 
         val base = license.second?.takeIf { it.isAfter(now) } ?: now
         val newExpiry = base.plus(planDuration.toLong(), ChronoUnit.DAYS)
@@ -314,20 +351,97 @@ class JdbcBillingRepository(private val dataSource: DataSource) {
             it.setObject(3, licenseId)
             it.executeUpdate()
         }
-        connection.prepareStatement(
+        return true
+    }
+
+    /**
+     * Выдача тарифа по ручной оплате. Если у аккаунта уже действует (не пробная)
+     * лицензия ТОГО ЖЕ плана, она продлевается от текущей даты окончания; иначе
+     * создаётся новая лицензия плана заказа на срок плана от сейчас (validate
+     * выбирает старший тариф, см. JdbcLicenseRepository.validate).
+     */
+    private fun fulfillManualOrderLicense(
+        connection: Connection,
+        order: BillingOrder,
+        planDuration: Int,
+        now: Instant
+    ): Boolean {
+        val account = connection.prepareStatement("SELECT status FROM accounts WHERE id = ? FOR UPDATE").use {
+            it.setObject(1, order.accountId)
+            it.executeQuery().use { result -> if (result.next()) result.getString(1) else null }
+        }
+        if (account != "ACTIVE") return false
+        val same = connection.prepareStatement(
             """
-            UPDATE billing_orders SET status = 'PAID', paid_at = ?, updated_at = ?,
-                provider_subscription_id = COALESCE(?, provider_subscription_id)
-            WHERE id = ?
+            SELECT id, expires_at FROM licenses
+            WHERE account_id = ? AND plan_id = ? AND status = 'ACTIVE'
+              AND billing_status IN ('GRANTED', 'PAID') AND expires_at > ?
+              AND (metadata->>'trial') IS DISTINCT FROM 'true'
+            ORDER BY expires_at DESC LIMIT 1 FOR UPDATE
             """.trimIndent()
         ).use {
-            it.setInstant(1, now)
-            it.setInstant(2, now)
-            it.setString(3, event.providerSubscriptionId)
-            it.setObject(4, order.id)
+            it.setObject(1, order.accountId)
+            it.setString(2, order.planId)
+            it.setInstant(3, now)
+            it.executeQuery().use { result ->
+                if (result.next()) result.getObject("id", UUID::class.java) to result.getInstant("expires_at") else null
+            }
+        }
+        if (same != null) {
+            val base = same.second?.takeIf { it.isAfter(now) } ?: now
+            connection.prepareStatement(
+                """
+                UPDATE licenses SET billing_status = 'PAID', expires_at = ?,
+                    updated_at = ?, version = version + 1 WHERE id = ?
+                """.trimIndent()
+            ).use {
+                it.setInstant(1, base.plus(planDuration.toLong(), ChronoUnit.DAYS))
+                it.setInstant(2, now)
+                it.setObject(3, same.first)
+                it.executeUpdate()
+            }
+            return true
+        }
+        val deviceHash = connection.prepareStatement(
+            """
+            SELECT redeemed_device_hash FROM licenses
+            WHERE account_id = ? AND redeemed_device_hash IS NOT NULL
+            ORDER BY issued_at DESC LIMIT 1
+            """.trimIndent()
+        ).use {
+            it.setObject(1, order.accountId)
+            it.executeQuery().use { result -> if (result.next()) result.getBytes(1) else null }
+        } ?: return false
+        val productId = connection.prepareStatement("SELECT product_id FROM billing_plans WHERE id = ?").use {
+            it.setString(1, order.planId)
+            it.executeQuery().use { result -> if (result.next()) result.getString(1) else null }
+        } ?: return false
+        val codeHash = ByteArray(CODE_HASH_BYTES).also { java.security.SecureRandom().nextBytes(it) }
+        connection.prepareStatement(
+            """
+            INSERT INTO licenses(
+                id, code_hash, code_hint, status, billing_status, issued_at, starts_at, expires_at,
+                product_id, plan_id, account_id, one_time, redeemed_at, redeemed_device_hash,
+                metadata, created_at, updated_at
+            ) VALUES (?, ?, 'MANUAL', 'ACTIVE', 'PAID', ?, ?, ?, ?, ?, ?, TRUE, ?, ?, CAST(? AS jsonb), ?, ?)
+            """.trimIndent()
+        ).use {
+            it.setObject(1, UUID.randomUUID())
+            it.setBytes(2, codeHash)
+            it.setInstant(3, now)
+            it.setInstant(4, now)
+            it.setInstant(5, now.plus(planDuration.toLong(), ChronoUnit.DAYS))
+            it.setString(6, productId)
+            it.setString(7, order.planId)
+            it.setObject(8, order.accountId)
+            it.setInstant(9, now)
+            it.setBytes(10, deviceHash)
+            it.setString(11, """{"source":"manual_payment","order_id":"${order.id}"}""")
+            it.setInstant(12, now)
+            it.setInstant(13, now)
             it.executeUpdate()
         }
-        return BillingEventApplyResult.PROCESSED
+        return true
     }
 
     private fun applyRefund(connection: Connection, order: BillingOrder, now: Instant): BillingEventApplyResult {
