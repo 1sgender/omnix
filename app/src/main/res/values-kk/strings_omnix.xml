@@ -525,7 +525,7 @@
     <string name="omnix_privacy_where_device">ТЕЛЕФОНДА</string>
     <string name="omnix_privacy_where_device_body">Жад, чат тарихы, протоколдар, дауыс</string>
     <string name="omnix_privacy_where_cloud">БҰЛТТА</string>
-    <string name="omnix_privacy_where_cloud_body">Тек сұраудың мәтіні, дауыс жазбасынсыз</string>
+    <string name="omnix_privacy_where_cloud_body">Сұрау мәтіні. Түрікмен сөзі мен аудармашы танылу үшін қысқа аудионы да жібереді</string>
     <string name="omnix_protocols_subtitle">Omni мұны өзі жасайды — уақытқа, орынға немесе оқиғаға қарай</string>
     <string name="omnix_protocols_new_label">Жаңа протокол</string>
     <string name="omnix_protocols_yours_label">Сіздікі</string>

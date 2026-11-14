@@ -56,6 +56,7 @@ services:
       CLIP_MAX_RECOVERIES_PER_DAY: ${CLIP_MAX_RECOVERIES_PER_DAY:-3}
       # Ручная оплата тарифов: контакты владельца, JSON [{"type":"phone|telegram|imo|whatsapp","value":"...","label":"..."}]; правится в админке (Настройки → payments).
       PAYMENT_CONTACTS: ${PAYMENT_CONTACTS:-}
+      PRIVACY_CONTACT_EMAIL: ${PRIVACY_CONTACT_EMAIL:-}
 
       DATABASE_URL: jdbc:postgresql://postgres:5432/omnix
       DATABASE_USER: ${DATABASE_USER:?Set DATABASE_USER}

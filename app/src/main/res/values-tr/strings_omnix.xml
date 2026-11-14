@@ -525,7 +525,7 @@
     <string name="omnix_privacy_where_device">TELEFONDA</string>
     <string name="omnix_privacy_where_device_body">Bellek, sohbet geçmişi, protokoller, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTTA</string>
-    <string name="omnix_privacy_where_cloud_body">Yalnızca isteğin metni, ses kaydı yok</string>
+    <string name="omnix_privacy_where_cloud_body">İsteğin metni. Türkmence konuşma ve çevirmen, tanıma için kısa ses parçaları da gönderir</string>
     <string name="omnix_protocols_subtitle">Omni bunu kendisi yapar — zamana, yere veya olaya göre</string>
     <string name="omnix_protocols_new_label">Yeni protokol</string>
     <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>

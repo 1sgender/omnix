@@ -105,6 +105,7 @@ fun AiModelSection(
         if (remaining != null) {
             QuotaCard(remaining = remaining, modifier = Modifier.padding(top = 10.dp))
         }
+        PrivacyCloudCard()
     }
 }
 

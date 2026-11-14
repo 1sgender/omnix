@@ -602,7 +602,7 @@
     <string name="omnix_privacy_where_device">НА ТЕЛЕФОНЕ</string>
     <string name="omnix_privacy_where_device_body">Память, история чатов, протоколы, голос</string>
     <string name="omnix_privacy_where_cloud">В ОБЛАКЕ</string>
-    <string name="omnix_privacy_where_cloud_body">Только текст запроса, без записи голоса</string>
+    <string name="omnix_privacy_where_cloud_body">Текст запроса. Туркменская речь и переводчик также отправляют короткие фразы аудио на распознавание</string>
     <string name="omnix_protocols_subtitle">Omni делает это сам — по времени, месту или событию</string>
     <string name="omnix_protocols_new_label">Новый протокол</string>
     <string name="omnix_protocols_yours_label">Ваши</string>

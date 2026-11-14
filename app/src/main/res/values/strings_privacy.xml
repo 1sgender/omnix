@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Privacy policy link and the cloud card on the model screen. Wording matches docs/PRIVACY_POLICY.md. -->
+<resources>
+    <string name="omnix_privacy_policy_link">Privacy policy</string>
+    <string name="omnix_privacy_policy_link_body">Opens the full policy in the browser</string>
+    <string name="omnix_privacy_policy_open_failed">No browser found to open the privacy policy</string>
+    <string name="omnix_privacy_card_title">What goes to the cloud</string>
+    <string name="omnix_privacy_card_local">Local: nothing leaves the phone, the model on the device answers.</string>
+    <string name="omnix_privacy_card_flash">Flash: the text of the request and the latest messages go to the OMNIX server and then to an AI provider (Google, Groq or OpenRouter).</string>
+    <string name="omnix_privacy_card_pro">Pro: the same, but the provider is Anthropic (Claude). Private requests go to the cloud only with your consent.</string>
+    <string name="omnix_privacy_card_speech">Speech: Turkmen and interpreter phrases are sent as short audio to the server and to Groq for recognition.</string>
+</resources>

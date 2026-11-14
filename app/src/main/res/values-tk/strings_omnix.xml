@@ -601,7 +601,7 @@
     <string name="omnix_privacy_where_device">TELEFONDA</string>
     <string name="omnix_privacy_where_device_body">Ýat, söhbet taryhy, protokollar, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTDA</string>
-    <string name="omnix_privacy_where_cloud_body">Diňe soragyň teksti, ses ýazgysyz</string>
+    <string name="omnix_privacy_where_cloud_body">Soragyň teksti. Türkmen sözleri we terjimeçi gysga ses bölekleri hökmünde tanamak üçin hem iberilýär</string>
     <string name="omnix_protocols_subtitle">Omni muny özi edýär — wagta, ýere ýa-da waka görä</string>
     <string name="omnix_protocols_new_label">Täze protokol</string>
     <string name="omnix_protocols_yours_label">Siziňkiler</string>

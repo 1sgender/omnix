@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gizlilik politikası bağlantısı ve model ekranındaki bulut kartı. Metinler docs/PRIVACY_POLICY.md ile aynıdır. -->
+<resources>
+    <string name="omnix_privacy_policy_link">Gizlilik politikası</string>
+    <string name="omnix_privacy_policy_link_body">Tam metni tarayıcıda açar</string>
+    <string name="omnix_privacy_policy_open_failed">Gizlilik politikasını açacak bir tarayıcı bulunamadı</string>
+    <string name="omnix_privacy_card_title">Buluta ne gider</string>
+    <string name="omnix_privacy_card_local">Yerel: telefondan hiçbir şey çıkmaz, cihazdaki model yanıtlar.</string>
+    <string name="omnix_privacy_card_flash">Flash: isteğin metni ve son mesajlar OMNIX sunucusuna, oradan da bir yapay zeka sağlayıcısına (Google, Groq veya OpenRouter) gider.</string>
+    <string name="omnix_privacy_card_pro">Pro: aynısı, ancak sağlayıcı Anthropic (Claude). Özel istekler buluta yalnızca onayınla gider.</string>
+    <string name="omnix_privacy_card_speech">Konuşma: Türkmence ve çevirmen cümleleri tanıma için kısa ses olarak sunucuya ve Groq a gönderilir.</string>
+</resources>
