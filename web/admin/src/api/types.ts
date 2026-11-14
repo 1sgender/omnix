@@ -155,7 +155,7 @@ export interface CostSettings {
   providers: Record<string, { usdPerMillionInput: number | null; usdPerMillionOutput: number | null }>
 }
 
-export type SettingsSection = 'system' | 'security' | 'ai' | 'limits' | 'cost'
+export type SettingsSection = 'system' | 'security' | 'ai' | 'limits' | 'cost' | 'payments'
 
 export interface SettingsResponse<T> { section: string; version?: number; value: T; note?: string }
 
@@ -165,3 +165,18 @@ export interface ApiError {
   message: string
   code?: string
 }
+
+/** Заявка на ручную оплату тарифа (страница «Заявки»). */
+export interface PaymentRequestRow {
+  id: string; number: string; accountId: string; accountRef: string | null
+  planId: string; status: 'PENDING' | 'PAID' | 'CANCELED' | 'EXPIRED' | string
+  amountMinor: number; currency: string
+  createdAt: string; expiresAt: string; paidAt: string | null
+  paidAmountMinor: number | null; method: string | null; note: string | null; resolvedBy: string | null
+}
+
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'card_terminal' | 'mobile_wallet' | 'other'
+
+export interface PaymentContact { type: 'phone' | 'telegram' | 'imo' | 'whatsapp'; value: string; label: string }
+
+export interface PaymentSettings { contacts: PaymentContact[]; orderTtlHours: number }

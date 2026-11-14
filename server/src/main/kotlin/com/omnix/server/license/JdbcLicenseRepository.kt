@@ -363,7 +363,8 @@ class JdbcLicenseRepository(
                 WHERE l.account_id = ?
                 -- V012: действующий пробный Pro (при первой привязке пары)
                 -- важнее длинной базовой лицензии; истёкший пропускается ниже.
-                ORDER BY CASE WHEN l.metadata->>'trial' = 'true' THEN 0 ELSE 1 END,
+                ORDER BY CASE l.plan_id WHEN 'omnix' THEN 0 WHEN 'pro' THEN 1 ELSE 2 END,
+                         CASE WHEN l.metadata->>'trial' = 'true' THEN 0 ELSE 1 END,
                          l.expires_at DESC NULLS LAST, l.issued_at DESC
                 FOR UPDATE OF l
                 """.trimIndent()
@@ -473,7 +474,8 @@ class JdbcLicenseRepository(
                 WHERE l.account_id = ? AND l.status = 'ACTIVE' AND a.status = 'ACTIVE'
                   AND p.active = TRUE AND l.starts_at <= ? AND l.expires_at > ?
                   AND l.billing_status IN ('GRANTED', 'PAID', 'CANCELED')
-                ORDER BY CASE WHEN l.metadata->>'trial' = 'true' THEN 0 ELSE 1 END, l.expires_at DESC
+                ORDER BY CASE l.plan_id WHEN 'omnix' THEN 0 WHEN 'pro' THEN 1 ELSE 2 END,
+                         CASE WHEN l.metadata->>'trial' = 'true' THEN 0 ELSE 1 END, l.expires_at DESC
                 LIMIT 1
                 """.trimIndent()
             ).use { statement ->

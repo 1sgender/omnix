@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pay_row_title">Tariflar</string>
+    <string name="pay_title">Tariflar</string>
+    <string name="pay_loading">Tariflar yuklanmoqda…</string>
+    <string name="pay_price_free">Bepul</string>
+    <string name="pay_price_period">%2$s kun uchun %1$s</string>
+    <string name="pay_current">Joriy tarifingiz</string>
+    <string name="pay_free_note">OMNIX quloqchinlari bilan birga beriladi</string>
+    <string name="pay_line_voice">Ovozli AI javoblari: kuniga %1$d ta</string>
+    <string name="pay_line_base">Chatdagi AI javoblari: kuniga %1$d ta</string>
+    <string name="pay_line_pro">Pro javoblari: kuniga %1$d ta, oyiga %2$d ta</string>
+    <string name="pay_line_pro_none">Pro javoblari: kirmaydi</string>
+    <string name="pay_line_agent">Agent amallari: kuniga %1$d ta</string>
+    <string name="pay_line_automations">Avtomatlashtirishlar: %1$s</string>
+    <string name="pay_unlimited">cheklovsiz</string>
+    <string name="pay_get">%1$s olish</string>
+    <string name="pay_creating">Ariza yaratilmoqda…</string>
+    <string name="pay_order_number">Ariza %1$s</string>
+    <string name="pay_order_amount">To‘lov summasi: %1$s</string>
+    <string name="pay_instruction">Shu summani egasiga to‘lang va ariza raqamini ayting: %1$s. Ega to‘lovni tasdiqlagach, tarif yoqiladi, ilova o‘zi yangilanadi.</string>
+    <string name="pay_contacts_title">Qanday to‘lash mumkin</string>
+    <string name="pay_contacts_later">Aloqa maʼlumotlari keyinroq paydo bo‘ladi</string>
+    <string name="pay_contact_phone">Telefon</string>
+    <string name="pay_contact_telegram">Telegram</string>
+    <string name="pay_contact_imo">imo</string>
+    <string name="pay_contact_whatsapp">WhatsApp</string>
+    <string name="pay_contact_other">Aloqa</string>
+    <string name="pay_status_pending">To‘lov kutilmoqda</string>
+    <string name="pay_status_paid">To‘landi, tarif yoqildi</string>
+    <string name="pay_status_canceled">Bekor qilindi</string>
+    <string name="pay_status_expired">Muddati tugadi</string>
+    <string name="pay_status_unknown">Holat nomaʼlum</string>
+    <string name="pay_error_connection">Aloqa yo‘q. Internetni tekshirib, qayta urining.</string>
+    <string name="pay_error_server">Server javob bermadi. Bir daqiqadan keyin qayta urining.</string>
+    <string name="pay_error_no_license">Avval OMNIX ni faollashtiring, keyin tarif olasiz.</string>
+    <string name="pay_error_busy">Urinishlar juda ko‘p. Bir daqiqadan keyin qayta urining.</string>
+    <string name="pay_retry">Qayta urinish</string>
+    <string name="pay_refresh">Holatni yangilash</string>
+</resources>

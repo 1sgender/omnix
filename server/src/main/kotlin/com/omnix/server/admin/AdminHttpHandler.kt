@@ -39,6 +39,7 @@ class AdminHttpHandler(
     private val queries: AdminQueries,
     private val providerManager: ProviderManager,
     private val overrides: com.omnix.server.admin.ProviderRuntimeOverrides,
+    private val manualPayments: ManualPaymentAdminApi? = null,
     private val json: Json = Json
 ) {
 
@@ -122,6 +123,21 @@ class AdminHttpHandler(
                 requirePermission(principal, AdminPermission.LICENSES_WRITE) { handleLicenseAction(principal, request, parts[1], parts[2]) }
             parts.size == 1 && parts[0] == "subscriptions" && method == "GET" ->
                 requirePermission(principal, AdminPermission.SUBSCRIPTIONS_READ) { handleSubscriptions(request) }
+            parts.size == 1 && parts[0] == "payment-requests" && method == "GET" ->
+                requirePermission(principal, AdminPermission.SUBSCRIPTIONS_READ) {
+                    val (size, offset) = pagination(request)
+                    manualPayments?.list(queryParam(request, "status"), queryParam(request, "q"), size, offset)
+                        ?: plain(404, buildJsonObject { put("error", "not_found") })
+                }
+            parts.size == 3 && parts[0] == "payment-requests" && method == "POST" &&
+                (parts[2] == "confirm" || parts[2] == "cancel") ->
+                requirePermission(principal, AdminPermission.LICENSES_WRITE) {
+                    when {
+                        manualPayments == null -> plain(404, buildJsonObject { put("error", "not_found") })
+                        parts[2] == "confirm" -> manualPayments.confirm(principal, request, parts[1], bodyJson(request))
+                        else -> manualPayments.cancel(principal, request, parts[1], bodyJson(request))
+                    }
+                }
             parts.size == 1 && parts[0] == "plans" && method == "GET" ->
                 requirePermission(principal, AdminPermission.LICENSES_READ) { handlePlans() }
             parts.size == 1 && parts[0] == "providers" && method == "GET" ->
@@ -815,6 +831,7 @@ class AdminHttpHandler(
             }
             "limits" -> settings.updateLimits(principal.actor, decodeSettings(body, "limits", LimitsSettings.serializer()))
             "cost" -> settings.updateCost(principal.actor, decodeSettings(body, "cost", CostSettings.serializer()))
+            "payments" -> settings.updatePayments(principal.actor, decodeSettings(body, "payments", PaymentSettings.serializer()))
             else -> return plain(404, buildJsonObject { put("error", "unknown_section") })
         }
         audit.append(
@@ -835,6 +852,9 @@ class AdminHttpHandler(
         "ai" -> settings.ai().let { json.encodeToString(AiRoutingSettings.serializer(), it) to settings.versionOf("ai") }
         "limits" -> settings.limits().let { json.encodeToString(LimitsSettings.serializer(), it) to settings.versionOf("limits") }
         "cost" -> settings.cost().let { json.encodeToString(CostSettings.serializer(), it) to settings.versionOf("cost") }
+        "payments" -> settings.payments().let {
+            json.encodeToString(PaymentSettings.serializer(), it) to settings.versionOf("payments")
+        }
         else -> null
     }
 

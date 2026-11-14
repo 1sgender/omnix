@@ -122,6 +122,12 @@ fun MeRoute(
                         destination = OmnixDestination.SettingsSection(SECTION_AI)
                     ),
                     MeRow(
+                        icon = OmnixBoltLineIcon,
+                        label = stringResource(R.string.pay_row_title),
+                        value = license?.planId.orEmpty().replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                        destination = OmnixDestination.SettingsSection(SECTION_TARIFFS)
+                    ),
+                    MeRow(
                         icon = OmnixAppearanceLineIcon,
                         label = stringResource(R.string.omnix_settings_appearance),
                         value = appearanceValue,

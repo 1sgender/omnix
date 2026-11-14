@@ -148,6 +148,10 @@ abstract class SecurityAndNetworkBindingModule {
 
     @Binds
     @Singleton
+    abstract fun bindManualPaymentApi(impl: com.omnix.assistant.core.payments.HttpManualPaymentApi): com.omnix.assistant.core.payments.ManualPaymentApi
+
+    @Binds
+    @Singleton
     abstract fun bindAdminModelTesting(
         impl: com.omnix.assistant.core.admin.AdminModelStore
     ): com.omnix.assistant.core.admin.AdminModelTesting

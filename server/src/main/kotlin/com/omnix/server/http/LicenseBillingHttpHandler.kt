@@ -362,7 +362,7 @@ class LicenseBillingHttpHandler(
         val requestId = validRequestId(parsed.requestId) ?: fallbackRequestId
         val provider = runCatching { BillingProviderId.valueOf(parsed.provider.uppercase()) }.getOrNull()
             ?: return error(ApiErrorCode.INVALID_REQUEST, requestId)
-        if (provider == BillingProviderId.LOCAL_TMT) {
+        if (provider == BillingProviderId.LOCAL_TMT || provider == BillingProviderId.MANUAL) {
             return error(ApiErrorCode.BILLING_PROVIDER_UNAVAILABLE, requestId)
         }
         return when (val result = billingService.createCheckout(

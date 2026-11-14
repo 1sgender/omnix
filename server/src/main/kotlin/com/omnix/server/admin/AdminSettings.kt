@@ -123,13 +123,18 @@ data class SettingsUpdate<T>(
  * Централизованное хранилище настроек (ТЗ §20): validate → persist → audit → apply.
  * Кэш в памяти обновляется атомарно; каждое значение версионируется (optimistic).
  */
-class AdminSettingsService(private val dataSource: DataSource, private val json: Json = Json) {
+class AdminSettingsService(
+    private val dataSource: DataSource,
+    private val json: Json = Json,
+    defaultPayments: PaymentSettings = PaymentSettings()
+) {
 
     private val systemCache = AtomicReference(SystemSettings())
     private val securityCache = AtomicReference(SecuritySettings())
     private val aiCache = AtomicReference(AiRoutingSettings())
     private val limitsCache = AtomicReference(LimitsSettings())
     private val costCache = AtomicReference(CostSettings())
+    private val paymentsCache = AtomicReference(defaultPayments)
 
     init {
         loadFromDatabase()
@@ -140,6 +145,7 @@ class AdminSettingsService(private val dataSource: DataSource, private val json:
     fun ai(): AiRoutingSettings = aiCache.get()
     fun limits(): LimitsSettings = limitsCache.get()
     fun cost(): CostSettings = costCache.get()
+    fun payments(): PaymentSettings = paymentsCache.get()
 
     fun updateSystem(actor: String, next: SystemSettings): SettingsUpdate<SystemSettings> =
         update("system", SystemSettings.serializer(), next, systemCache, actor)
@@ -155,6 +161,9 @@ class AdminSettingsService(private val dataSource: DataSource, private val json:
 
     fun updateCost(actor: String, next: CostSettings): SettingsUpdate<CostSettings> =
         update("cost", CostSettings.serializer(), next, costCache, actor)
+
+    fun updatePayments(actor: String, next: PaymentSettings): SettingsUpdate<PaymentSettings> =
+        update("payments", PaymentSettings.serializer(), next, paymentsCache, actor)
 
     /* Валидация отделена от записи: require-исключения (init-блоки data-классов)
        ловятся handler'ом и превращаются в 400; в БД попадает только валидное. */
@@ -195,7 +204,8 @@ class AdminSettingsService(private val dataSource: DataSource, private val json:
             "security" to { raw -> securityCache.set(json.decodeFromString(SecuritySettings.serializer(), raw)) },
             "ai" to { raw -> aiCache.set(json.decodeFromString(AiRoutingSettings.serializer(), raw)) },
             "limits" to { raw -> limitsCache.set(json.decodeFromString(LimitsSettings.serializer(), raw)) },
-            "cost" to { raw -> costCache.set(json.decodeFromString(CostSettings.serializer(), raw)) }
+            "cost" to { raw -> costCache.set(json.decodeFromString(CostSettings.serializer(), raw)) },
+            "payments" to { raw -> paymentsCache.set(json.decodeFromString(PaymentSettings.serializer(), raw)) }
         )
         loaders.forEach { (key, apply) ->
             // Повреждённая строка в БД не роняет старт: откат к дефолту.
