@@ -279,10 +279,10 @@
     <string name="omnix_ai_title">ИИ-модель</string>
     <string name="omnix_ai_model_auto">Авто</string>
     <string name="omnix_ai_model_auto_body">Короткие простые ответы — на телефоне, остальное — в облаке OMNIX.</string>
-    <string name="omnix_ai_model_on_device">На телефоне</string>
+    <string name="omnix_ai_model_on_device">Локально</string>
     <string name="omnix_ai_model_on_device_body">%1$s. Работает без интернета, запросы не покидают телефон. Отвечает проще облака.</string>
-    <string name="omnix_ai_model_cloud">Облако OMNIX</string>
-    <string name="omnix_ai_model_cloud_body">Модель на сервере OMNIX: отвечает подробнее. Нужен интернет.</string>
+    <string name="omnix_ai_model_cloud">Flash</string>
+    <string name="omnix_ai_model_cloud_body">Облако OMNIX: быстро и подробнее, чем на телефоне. Нужен интернет.</string>
     <string name="omnix_admin_models_title">Тест моделей (админ)</string>
     <string name="omnix_admin_models_body">Видно только вам. Выбранная модель отвечает на все запросы, под ответом подписано, кто ответил.</string>
     <string name="omnix_admin_models_default">Как у всех</string>
@@ -602,7 +602,7 @@
     <string name="omnix_privacy_where_device">НА ТЕЛЕФОНЕ</string>
     <string name="omnix_privacy_where_device_body">Память, история чатов, протоколы, голос</string>
     <string name="omnix_privacy_where_cloud">В ОБЛАКЕ</string>
-    <string name="omnix_privacy_where_cloud_body">Только текст запроса, без записи голоса</string>
+    <string name="omnix_privacy_where_cloud_body">Текст запроса. Туркменская речь и переводчик также отправляют короткие фразы аудио на распознавание</string>
     <string name="omnix_protocols_subtitle">Omni делает это сам — по времени, месту или событию</string>
     <string name="omnix_protocols_new_label">Новый протокол</string>
     <string name="omnix_protocols_yours_label">Ваши</string>

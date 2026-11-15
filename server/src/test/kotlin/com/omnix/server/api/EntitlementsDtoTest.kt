@@ -16,8 +16,8 @@ class EntitlementsDtoTest {
     fun `free entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.FREE).toDto()
 
-        assertEquals(30, dto.dailyVoiceAi)
-        assertEquals(50, dto.dailyBaseAi)
+        assertEquals(10, dto.dailyVoiceAi)
+        assertEquals(10, dto.dailyBaseAi)
         assertEquals(5, dto.dailyAgentActions)
         assertEquals(10, dto.dailyWebSearch)
         assertEquals(15, dto.dailyTranslationUnits)
@@ -28,14 +28,16 @@ class EntitlementsDtoTest {
         assertFalse(dto.priorityRouting)
         assertFalse(dto.premiumModels)
         assertEquals(1, dto.maxClips)
+        assertEquals(0, dto.dailyProAi)
+        assertEquals(0, dto.monthlyProAi)
     }
 
     @Test
     fun `omnix entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.OMNIX).toDto()
 
-        assertEquals(2000, dto.dailyVoiceAi)
-        assertEquals(2000, dto.dailyBaseAi)
+        assertEquals(1000, dto.dailyVoiceAi)
+        assertEquals(1000, dto.dailyBaseAi)
         assertEquals(500, dto.dailyAgentActions)
         assertEquals(500, dto.dailyWebSearch)
         assertEquals(1000, dto.dailyTranslationUnits)
@@ -46,14 +48,16 @@ class EntitlementsDtoTest {
         assertTrue(dto.priorityRouting)
         assertTrue(dto.premiumModels)
         assertEquals(2, dto.maxClips)
+        assertEquals(50, dto.dailyProAi)
+        assertEquals(600, dto.monthlyProAi)
     }
 
     @Test
     fun `pro entitlements match approved matrix`() {
         val dto = PlanCatalog.forPlanId(PlanCatalog.PRO).toDto()
 
-        assertEquals(500, dto.dailyVoiceAi)
-        assertEquals(500, dto.dailyBaseAi)
+        assertEquals(300, dto.dailyVoiceAi)
+        assertEquals(300, dto.dailyBaseAi)
         assertEquals(100, dto.dailyAgentActions)
         assertEquals(100, dto.dailyWebSearch)
         assertEquals(300, dto.dailyTranslationUnits)
@@ -64,6 +68,8 @@ class EntitlementsDtoTest {
         assertFalse(dto.priorityRouting)
         assertFalse(dto.premiumModels)
         assertEquals(1, dto.maxClips)
+        assertEquals(20, dto.dailyProAi)
+        assertEquals(250, dto.monthlyProAi)
     }
 
     @Test

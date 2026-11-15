@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pay_row_title">Planlar</string>
+    <string name="pay_title">Planlar</string>
+    <string name="pay_loading">Planlar yükleniyor…</string>
+    <string name="pay_price_free">Ücretsiz</string>
+    <string name="pay_price_period">%2$s gün için %1$s</string>
+    <string name="pay_current">Mevcut planınız</string>
+    <string name="pay_free_note">OMNIX kulaklıkla birlikte gelir</string>
+    <string name="pay_line_voice">Sesli yapay zeka yanıtları: günde %1$d</string>
+    <string name="pay_line_base">Sohbet yapay zeka yanıtları: günde %1$d</string>
+    <string name="pay_line_pro">Pro yanıtları: günde %1$d, ayda %2$d</string>
+    <string name="pay_line_pro_none">Pro yanıtları: dahil değil</string>
+    <string name="pay_line_agent">Ajan eylemleri: günde %1$d</string>
+    <string name="pay_line_automations">Otomasyonlar: %1$s</string>
+    <string name="pay_unlimited">sınırsız</string>
+    <string name="pay_get">%1$s planını al</string>
+    <string name="pay_creating">Talep oluşturuluyor…</string>
+    <string name="pay_order_number">Talep %1$s</string>
+    <string name="pay_order_amount">Ödenecek tutar: %1$s</string>
+    <string name="pay_instruction">Bu tutarı sahibine ödeyin ve talep numarasını söyleyin: %1$s. Sahibi ödemeyi onaylayınca planınız açılır, uygulama kendiliğinden güncellenir.</string>
+    <string name="pay_contacts_title">Nasıl ödenir</string>
+    <string name="pay_contacts_later">İletişim bilgileri daha sonra eklenecek</string>
+    <string name="pay_contact_phone">Telefon</string>
+    <string name="pay_contact_telegram">Telegram</string>
+    <string name="pay_contact_imo">imo</string>
+    <string name="pay_contact_whatsapp">WhatsApp</string>
+    <string name="pay_contact_other">İletişim</string>
+    <string name="pay_status_pending">Ödeme bekleniyor</string>
+    <string name="pay_status_paid">Ödendi, plan açıldı</string>
+    <string name="pay_status_canceled">İptal edildi</string>
+    <string name="pay_status_expired">Süresi doldu</string>
+    <string name="pay_status_unknown">Durum bilinmiyor</string>
+    <string name="pay_error_connection">Bağlantı yok. İnterneti kontrol edip tekrar deneyin.</string>
+    <string name="pay_error_server">Sunucu yanıt vermedi. Bir dakika sonra tekrar deneyin.</string>
+    <string name="pay_error_no_license">Önce OMNIX etkinleştirin, sonra plan alabilirsiniz.</string>
+    <string name="pay_error_busy">Çok fazla deneme. Bir dakika sonra tekrar deneyin.</string>
+    <string name="pay_retry">Tekrar dene</string>
+    <string name="pay_refresh">Durumu yenile</string>
+</resources>

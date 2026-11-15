@@ -118,7 +118,59 @@ data class ExecutionPolicyConfig(
     }
 }
 
+/**
+ * Уровень Pro (Claude): бюджет и цены для учёта расхода.
+ *
+ * Расход считается по токенам успешных ответов Claude за календарный месяц
+ * UTC. Когда он доходит до [downgradeAtPercent] от [monthlyBudgetUsd], Pro-запросы
+ * автоматически обслуживаются как Flash (квота Pro при этом не тратится).
+ * [monthlyBudgetUsd] = 0 — бюджет не ограничен (расход всё равно считается).
+ */
+data class ProTierConfig(
+    val monthlyBudgetUsd: Double = 0.0,
+    val downgradeAtPercent: Int = 90,
+    /** USD за 1 млн входных токенов модели Pro (Sonnet 5.5: 2.0). */
+    val inputUsdPerMillion: Double = 2.0,
+    /** USD за 1 млн выходных токенов модели Pro (Sonnet 5.5: 10.0). */
+    val outputUsdPerMillion: Double = 10.0
+) {
+    init {
+        require(monthlyBudgetUsd.isFinite() && monthlyBudgetUsd >= 0) { "monthlyBudgetUsd must be non-negative" }
+        require(downgradeAtPercent in 1..100) { "downgradeAtPercent must be in 1..100" }
+        require(inputUsdPerMillion.isFinite() && inputUsdPerMillion >= 0) { "inputUsdPerMillion must be non-negative" }
+        require(outputUsdPerMillion.isFinite() && outputUsdPerMillion >= 0) { "outputUsdPerMillion must be non-negative" }
+    }
+
+    /** Порог (USD), с которого Pro понижается до Flash; null — бюджет не задан. */
+    val downgradeThresholdUsd: Double?
+        get() = if (monthlyBudgetUsd > 0) monthlyBudgetUsd * downgradeAtPercent / 100.0 else null
+}
+
 /** Валидация входа (пункт 30 ТЗ). */
+/**
+ * Ограничители одновременных запросов (bulkhead). При превышении сервер сразу
+ * отвечает 503 SERVER_BUSY + Retry-After вместо накопления очереди.
+ * Тяжёлые эндпоинты (ИИ, распознавание речи) имеют свои лимиты, чтобы долгие
+ * вызовы провайдеров не вытесняли лёгкие license/health-запросы.
+ */
+data class ConcurrencyConfig(
+    /** Всего одновременных запросов (кроме /v1/health). */
+    val maxInFlight: Int = 128,
+    /** Одновременные /v1/ai/execute. */
+    val maxAiInFlight: Int = 32,
+    /** Одновременные /v1/stt/transcribe. */
+    val maxSttInFlight: Int = 8,
+    /** Что сказать клиенту в Retry-After при отказе, секунды. */
+    val busyRetryAfterSeconds: Int = 3
+) {
+    init {
+        require(maxInFlight in 1..10_000) { "maxInFlight must be in 1..10000" }
+        require(maxAiInFlight in 1..10_000) { "maxAiInFlight must be in 1..10000" }
+        require(maxSttInFlight in 1..10_000) { "maxSttInFlight must be in 1..10000" }
+        require(busyRetryAfterSeconds in 1..120) { "busyRetryAfterSeconds must be in 1..120" }
+    }
+}
+
 data class ValidationConfig(
     val maxTextLength: Int = 8_000,
     val maxBodyBytes: Long = 32 * 1024,
@@ -201,6 +253,8 @@ data class ServerConfig(
     val privacy: PrivacyPolicyConfig,
     val generation: AiGenerationConfig,
     val deployment: DeploymentSecurityConfig = DeploymentSecurityConfig(),
+    val concurrency: ConcurrencyConfig = ConcurrencyConfig(),
+    val pro: ProTierConfig = ProTierConfig(),
     /** Persistent licensing/billing; null is accepted only by isolated legacy tests. */
     val licenseSubsystem: LicenseSubsystemConfig? = null,
     /**
@@ -208,6 +262,8 @@ data class ServerConfig(
      * запятую). Пусто — админов нет. См. AdminModelAccess.
      */
     val adminAccountIds: Set<java.util.UUID> = emptySet(),
+    /** V012: реестр пар OMNIX Clip (CLIP_MAX_PAIRS_PER_ACCOUNT, CLIP_PAIR_REQUIRED). */
+    val clipPairs: com.omnix.server.clip.ClipPairConfig = com.omnix.server.clip.ClipPairConfig(),
     /**
      * Токены клиентов: token → clientId.
      * В проде заменяется на БД/Secret Manager (см. AuthService).
@@ -319,6 +375,21 @@ data class ServerConfig(
                     baseUrl = str("OPENROUTER_BASE_URL") ?: "https://openrouter.ai/api/v1/chat/completions",
                     connectTimeoutMs = long("OPENROUTER_CONNECT_TIMEOUT_MS", 2_000),
                     requestTimeoutMs = long("OPENROUTER_REQUEST_TIMEOUT_MS", 10_000)
+                ),
+                // Claude: движок уровня Pro. Выбирается только для запросов Pro
+                // (цепочка Claude → Gemini → Groq), в обычный Flash не попадает.
+                // Таймаут 13 с (2 попытки укладываются в дедлайн 28 с): после него остаётся ≥10 с серверного
+                // дедлайна на запасной канал.
+                ProviderConfig(
+                    id = ProviderId.ANTHROPIC,
+                    enabled = bool("ANTHROPIC_ENABLED", true),
+                    priority = int("ANTHROPIC_PRIORITY", 4),
+                    apiKey = keyList("ANTHROPIC_API_KEY").firstOrNull(),
+                    apiKeys = keyList("ANTHROPIC_API_KEY"),
+                    model = str("ANTHROPIC_MODEL") ?: "claude-sonnet-5-5",
+                    baseUrl = str("ANTHROPIC_BASE_URL") ?: "https://api.anthropic.com/v1/messages",
+                    connectTimeoutMs = long("ANTHROPIC_CONNECT_TIMEOUT_MS", 2_000),
+                    requestTimeoutMs = long("ANTHROPIC_REQUEST_TIMEOUT_MS", 13_000)
                 )
             )
 
@@ -446,6 +517,12 @@ data class ServerConfig(
                     maxRetriesPerProvider = int("MAX_RETRIES_PER_PROVIDER", 0),
                     retryBackoffMs = long("RETRY_BACKOFF_MS", 200)
                 ),
+                concurrency = ConcurrencyConfig(
+                    maxInFlight = int("OMNIX_MAX_IN_FLIGHT", 128),
+                    maxAiInFlight = int("OMNIX_MAX_AI_IN_FLIGHT", 32),
+                    maxSttInFlight = int("OMNIX_MAX_STT_IN_FLIGHT", 8),
+                    busyRetryAfterSeconds = int("OMNIX_BUSY_RETRY_AFTER_SECONDS", 3)
+                ),
                 validation = ValidationConfig(
                     maxTextLength = int("MAX_TEXT_LENGTH", 8_000),
                     maxBodyBytes = long("MAX_BODY_BYTES", 32 * 1024)
@@ -460,8 +537,25 @@ data class ServerConfig(
                     temperature = str("AI_TEMPERATURE")?.toDoubleOrNull() ?: 0.6
                 ),
                 deployment = deployment,
+                pro = ProTierConfig(
+                    monthlyBudgetUsd = str("PRO_MONTHLY_BUDGET_USD")?.toDoubleOrNull() ?: 0.0,
+                    downgradeAtPercent = int("PRO_DOWNGRADE_AT_PERCENT", 90),
+                    inputUsdPerMillion = str("PRO_INPUT_USD_PER_MILLION")?.toDoubleOrNull() ?: 2.0,
+                    outputUsdPerMillion = str("PRO_OUTPUT_USD_PER_MILLION")?.toDoubleOrNull() ?: 10.0
+                ),
                 licenseSubsystem = licenseSubsystem,
                 adminAccountIds = com.omnix.server.admin.AdminModelAccess.parseAccountIds(str("ADMIN_ACCOUNT_IDS")),
+                clipPairs = com.omnix.server.clip.ClipPairConfig(
+                    maxPairsPerAccount = int(
+                        "CLIP_MAX_PAIRS_PER_ACCOUNT",
+                        com.omnix.server.clip.ClipPairConfig.DEFAULT_MAX_PAIRS_PER_ACCOUNT
+                    ),
+                    pairRequired = bool("CLIP_PAIR_REQUIRED", true),
+                    maxRecoveriesPerDay = int(
+                        "CLIP_MAX_RECOVERIES_PER_DAY",
+                        com.omnix.server.clip.ClipPairConfig.DEFAULT_MAX_RECOVERIES_PER_DAY
+                    )
+                ),
                 staticClientTokens = tokens
             )
         }

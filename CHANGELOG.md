@@ -8,6 +8,17 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Added (manual tariff payments)
+
+- Ручная оплата тарифов, пока нет договора с банком: экран «Я → Тарифы» (Free / Pro / Max,
+  цены и лимиты с сервера), кнопка «Получить» создаёт заявку (номер OMX-NNNN, 72 часа, одна
+  открытая на аккаунт и план) и показывает сумму и контакты владельца. Контакты: env
+  `PAYMENT_CONTACTS` (JSON) или админка → Настройки → «Оплата».
+- Админка: страница «Заявки» (фильтр PENDING / PAID / CANCELED / EXPIRED, поиск по номеру),
+  «Оплачено» (сумма, способ, комментарий, двойное подтверждение) выдаёт или продлевает тариф
+  на 30 дней тем же путём, что оплаченный заказ; «Отменить» с причиной; всё в аудите.
+  Миграция V014 (провайдер MANUAL в billing_orders).
+
 ### Added (six languages)
 
 - Интерфейс на шести языках: туркменский, русский, английский, турецкий, узбекский, казахский

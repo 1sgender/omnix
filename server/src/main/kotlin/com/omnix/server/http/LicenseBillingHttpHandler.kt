@@ -13,6 +13,9 @@ import com.omnix.server.api.LicenseRedeemResponse
 import com.omnix.server.api.LicenseRevokeRequest
 import com.omnix.server.api.LicenseValidateRequest
 import com.omnix.server.api.LicenseValidateResponse
+import com.omnix.server.api.PlanUsageDto
+import com.omnix.server.api.UsedMonthDto
+import com.omnix.server.api.UsedTodayDto
 import com.omnix.server.api.toDto
 import com.omnix.server.auth.AuthResult
 import com.omnix.server.auth.ClientTier
@@ -29,22 +32,28 @@ import com.omnix.server.billing.HeleketWebhookVerifier
 import com.omnix.server.billing.PaddleWebhookVerifier
 import com.omnix.server.billing.WebhookVerificationResult
 import com.omnix.server.clip.JdbcClipDeviceRepository
+import com.omnix.server.clip.toPairDto
 import com.omnix.server.config.ValidationConfig
 import com.omnix.server.license.IssueLicenseCommand
 import com.omnix.server.license.LicenseCrypto
 import com.omnix.server.license.LicenseService
 import com.omnix.server.license.LicenseValidationOutcome
 import com.omnix.server.license.PlanCatalog
+import com.omnix.server.license.PlanFeature
 import com.omnix.server.license.RedeemOutcome
 import com.omnix.server.license.ValidationFailure
 import com.omnix.server.observability.StructuredLogger
 import com.omnix.server.ratelimit.RateLimitDecision
 import com.omnix.server.ratelimit.RateLimiter
 import com.omnix.server.ratelimit.SourceKey
+import com.omnix.server.usage.UsageRepository
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import java.nio.charset.StandardCharsets
+import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.UUID
 
 class LicenseBillingHttpHandler(
@@ -66,7 +75,15 @@ class LicenseBillingHttpHandler(
      */
     private val clipDevices: JdbcClipDeviceRepository? = null,
     /** Тест моделей админом: validate сообщает админу, какие модели доступны. */
-    private val adminAccess: AdminModelAccess? = null
+    private val adminAccess: AdminModelAccess? = null,
+    /** V012: реестр пар OMNIX Clip (обязательность пары, лимит пар на аккаунт). */
+    private val clipPairConfig: com.omnix.server.clip.ClipPairConfig = com.omnix.server.clip.ClipPairConfig(),
+    /**
+     * Учёт ответов ИИ для поля usage в validate-ответе (экран «Сегодня осталось»).
+     * null = не подключён (юнит-тесты) → usage=null.
+     */
+    private val usageRepository: UsageRepository? = null,
+    private val clock: Clock = Clock.systemUTC()
 ) {
     /**
      * Admin-сессии Control Plane для issue/revoke (см. authenticate).
@@ -83,6 +100,8 @@ class LicenseBillingHttpHandler(
         const val PATH_CHECKOUT = "/v1/billing/checkout"
         const val PATH_PADDLE_WEBHOOK = "/v1/billing/webhooks/paddle"
         const val PATH_HELEKET_WEBHOOK = "/v1/billing/webhooks/heleket"
+
+        private const val DB_BUSY_RETRY_AFTER_SECONDS = 5
 
         private val PATHS = setOf(
             PATH_ISSUE, PATH_REVOKE, PATH_REDEEM, PATH_VALIDATE, PATH_CHECKOUT,
@@ -112,6 +131,10 @@ class LicenseBillingHttpHandler(
                 else -> null
             }
         } catch (failure: Exception) {
+            if (RequestBulkheads.isDatabaseOverload(failure)) {
+                logger.warn("license/billing: database pool exhausted", "path" to request.path)
+                return RequestBulkheads.busyResponse(DB_BUSY_RETRY_AFTER_SECONDS)
+            }
             logger.error(
                 "license/billing request failed",
                 "path" to request.path,
@@ -244,7 +267,7 @@ class LicenseBillingHttpHandler(
         }
     }
 
-    private fun validate(request: HttpRequestContext, fallbackRequestId: String): HttpResponseContext {
+    private suspend fun validate(request: HttpRequestContext, fallbackRequestId: String): HttpResponseContext {
         val client = authenticate(request, fallbackRequestId) ?: return unauthorized(fallbackRequestId)
         val accountId = client.accountId ?: return error(ApiErrorCode.FORBIDDEN, fallbackRequestId)
         rateLimit(authenticatedRateLimiter, "validate:$accountId", fallbackRequestId)?.let { return it }
@@ -263,8 +286,15 @@ class LicenseBillingHttpHandler(
                 val entitlements = PlanCatalog.forPlanId(result.planId).toDto()
                 val clip = clipDevices?.let { repo ->
                     val count = repo.countActiveForAccount(accountId)
-                    ClipBindingDto(hasBoundClip = count > 0, boundClipCount = count)
+                    ClipBindingDto(
+                        hasBoundClip = count > 0,
+                        boundClipCount = count,
+                        pairRequired = clipPairConfig.pairRequired,
+                        pairs = repo.pairsForAccount(accountId).map { it.toPairDto() },
+                        maxPairs = clipPairConfig.maxPairsPerAccount
+                    )
                 }
+                val usage = usageFor(client.clientId)
                 HttpResponseContext(
                     200,
                     json.encodeToString(
@@ -279,13 +309,43 @@ class LicenseBillingHttpHandler(
                             entitlements = entitlements,
                             clip = clip,
                             admin = adminAccess?.isAdmin(accountId) == true,
-                            adminModels = adminAccess?.takeIf { it.isAdmin(accountId) }?.models()
+                            adminModels = adminAccess?.takeIf { it.isAdmin(accountId) }?.models(),
+                            usage = usage
                         )
                     ),
                     headers = mapOf("Cache-Control" to "no-store")
                 )
             }
             is LicenseValidationOutcome.Invalid -> error(mapValidationFailure(result.reason), requestId)
+        }
+    }
+
+    /**
+     * Использованные ответы ИИ тем же счётом, что у PlanQuotaGate (сутки и месяц UTC).
+     * Сбой хранилища не ломает validate: лицензия важнее счётчика, клиент
+     * просто не покажет остаток.
+     */
+    private suspend fun usageFor(clientId: String): PlanUsageDto? {
+        val repo = usageRepository ?: return null
+        val today = LocalDate.now(clock)
+        val dayStart = today.atStartOfDay(ZoneOffset.UTC).toInstant()
+        val monthStart = today.withDayOfMonth(1).atStartOfDay(ZoneOffset.UTC).toInstant()
+        return try {
+            PlanUsageDto(
+                usedToday = UsedTodayDto(
+                    voiceAi = repo.countSince(clientId, dayStart, PlanFeature.VOICE_AI.key),
+                    baseAi = repo.countSince(clientId, dayStart, PlanFeature.BASE_AI.key),
+                    proAi = repo.countSince(clientId, dayStart, PlanFeature.PRO_AI.key)
+                ),
+                usedMonth = UsedMonthDto(
+                    proAi = repo.countSince(clientId, monthStart, PlanFeature.PRO_AI.key)
+                )
+            )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            logger.warn("validate usage unavailable", "error" to failure.javaClass.simpleName)
+            null
         }
     }
 
@@ -308,7 +368,7 @@ class LicenseBillingHttpHandler(
         val requestId = validRequestId(parsed.requestId) ?: fallbackRequestId
         val provider = runCatching { BillingProviderId.valueOf(parsed.provider.uppercase()) }.getOrNull()
             ?: return error(ApiErrorCode.INVALID_REQUEST, requestId)
-        if (provider == BillingProviderId.LOCAL_TMT) {
+        if (provider == BillingProviderId.LOCAL_TMT || provider == BillingProviderId.MANUAL) {
             return error(ApiErrorCode.BILLING_PROVIDER_UNAVAILABLE, requestId)
         }
         return when (val result = billingService.createCheckout(

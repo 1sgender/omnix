@@ -3,7 +3,7 @@ package com.omnix.server.billing
 import java.time.Instant
 import java.util.UUID
 
-enum class BillingProviderId { PADDLE, HELEKET, LOCAL_TMT }
+enum class BillingProviderId { PADDLE, HELEKET, LOCAL_TMT, MANUAL }
 enum class BillingOrderStatus {
     CREATED,
     PROCESSING,

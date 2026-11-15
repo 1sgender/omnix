@@ -45,6 +45,8 @@ class ClipAttestationService(
         val clip = repository.findBySerial(clipSerial.trim())
             ?: return ClipChallengeOutcome.UnknownClip
         if (clip.status == ClipDeviceStatus.REVOKED) return ClipChallengeOutcome.ClipRevoked
+        // Запись режима MAC (V012) ключа не имеет: подписывать нечем.
+        if (clip.publicKey == null) return ClipChallengeOutcome.UnknownClip
         val now = clock.instant()
         val nonce = ByteArray(NONCE_BYTES).also { secureRandom.nextBytes(it) }
         return ClipChallengeOutcome.Issued(
@@ -80,6 +82,7 @@ class ClipAttestationService(
         val clip = repository.findBySerial(clipSerial.trim())
             ?: return ClipAttestOutcome.UnknownClip
         if (clip.status == ClipDeviceStatus.REVOKED) return ClipAttestOutcome.ClipRevoked
+        val registeredKey = clip.publicKey ?: return ClipAttestOutcome.UnknownClip
         // Challenge выдан именно этому клипу.
         if (challenge.clipSerial != clip.clipSerial) return ClipAttestOutcome.ChallengeInvalid
 
@@ -88,7 +91,7 @@ class ClipAttestationService(
         val message = canonicalMessage(clip.clipSerial, challenge.nonce, challenge.issuedAtMs)
         val valid = runCatching {
             val verifier = Signature.getInstance(SIGNATURE_ALGORITHM)
-            verifier.initVerify(decodePublicKey(clip.publicKey))
+            verifier.initVerify(decodePublicKey(registeredKey))
             verifier.update(message)
             verifier.verify(signature)
         }.getOrDefault(false)
@@ -108,7 +111,7 @@ class ClipAttestationService(
             ownerAccountId = accountId,
             boundNow = boundNow,
             status = ClipDeviceStatus.ACTIVE,
-            publicKeyBase64 = Base64.getEncoder().encodeToString(clip.publicKey)
+            publicKeyBase64 = Base64.getEncoder().encodeToString(registeredKey)
         )
     }
 

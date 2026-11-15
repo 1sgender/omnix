@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пары OMNIX Clip (реестр по BT-адресу, V012). -->
+<resources>
+    <string name="omnix_pair_required_message">OMNIX quloqchinlarini ulang — bulutli SI faqat ular bilan ishlaydi. Oflayn imkoniyatlar odatdagidek ishlaydi.</string>
+    <string name="omnix_pair_activate_cta">OMNIX quloqchinlari bilan faollashtirish</string>
+    <string name="omnix_pair_none_connected">Quloqchin ulanmagan. OMNIX Clip’ni Bluetooth sozlamalarida ulang va qayta urinib koʻring.</string>
+    <string name="omnix_pair_unknown">Bu OMNIX quloqchini emas yoki hali roʻyxatdan oʻtmagan.</string>
+    <string name="omnix_pair_taken">Bu quloqchinlar boshqa hisobga bogʻlangan.</string>
+    <string name="omnix_pair_revoked">Bu quloqchinlar bloklangan.</string>
+    <string name="omnix_pair_limit">Hisob uchun quloqchinlar chegarasiga yetildi.</string>
+    <string name="omnix_pair_failed">Server bilan bogʻlanib boʻlmadi. Keyinroq urinib koʻring.</string>
+    <string name="omnix_pair_my_title">Mening quloqchinlarim</string>
+    <string name="omnix_pair_none_bound">OMNIX quloqchinlari hali bogʻlanmagan.</string>
+    <string name="omnix_pair_last_seen">Oxirgi ulanish: %1$s</string>
+    <string name="omnix_pair_never_seen">Hali ulanmagan</string>
+    <string name="omnix_pair_connected_badge">Ulangan</string>
+    <string name="omnix_pair_release">Uzish</string>
+    <string name="omnix_pair_release_confirm">%1$s uzilsinmi? Quloqchinlar SI’ga kirish bermay qoʻyadi, ularni boshqa odamga berish mumkin.</string>
+    <string name="omnix_pair_released">Quloqchinlar uzildi</string>
+    <string name="omnix_pair_found_new">Yangi OMNIX juftligi topildi: %1$s. Qoʻshilsinmi?</string>
+    <string name="omnix_pair_add">Qoʻshish</string>
+    <string name="omnix_pair_cancel">Hozir emas</string>
+    <string name="omnix_pair_added">Quloqchinlar qoʻshildi</string>
+    <string name="omnix_pair_operator_title">Operator rejimi: juftlikni roʻyxatga olish</string>
+    <string name="omnix_pair_operator_serial">Seriya raqami</string>
+    <string name="omnix_pair_operator_register">Ulangan juftlikni roʻyxatga olish</string>
+    <string name="omnix_pair_operator_done">Juftlik roʻyxatga olindi</string>
+    <string name="omnix_pair_operator_exists">Bu juftlik allaqachon roʻyxatda</string>
+    <string name="omnix_pair_trial_until">7 kunlik Pro sovgʻa — %1$s gacha</string>
+    <string name="omnix_pair_chat_only_message">OMNIX quloqchinlarini ulang — ularsiz faqat chat mavjud.</string>
+    <string name="omnix_pair_recovery_limit">Bugun quloqchinlar telefonlar orasida juda koʻp koʻchirildi. Ertaga urinib koʻring.</string>
+</resources>

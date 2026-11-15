@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sunʼiy intellekt darajasi (Lokal / Flash / Pro) va «Bugun qoldi». -->
+<resources>
+    <string name="omnix_tier_pro_body">Claude — eng aqlli model. OMNIX buluti, internet kerak.</string>
+    <string name="omnix_tier_pro_locked">Pro va Max tariflarida mavjud</string>
+    <string name="omnix_tier_answered_flash">Flash javob berdi: Pro vaqtincha mavjud emas</string>
+    <string name="omnix_tier_switch_to_flash">Flash-ga oʻtish</string>
+    <string name="omnix_tier_quota_hours">Bugungi limit tugadi, %1$d soatdan keyin yangilanadi.</string>
+    <string name="omnix_tier_quota_days">Pro oylik limiti tugadi, %1$d kundan keyin yangilanadi.</string>
+    <string name="omnix_tier_quota_upgrade">Pro va Max tariflarida koʻproq javob.</string>
+    <string name="omnix_tier_left_title">Bugun qoldi</string>
+    <string name="omnix_tier_left_flash_voice">Flash · ovoz</string>
+    <string name="omnix_tier_left_flash_text">Flash · matn</string>
+    <string name="omnix_tier_left_pro_day">Pro · bugun</string>
+    <string name="omnix_tier_left_pro_month">Pro · shu oyda</string>
+    <string name="omnix_tier_left_value">%1$d / %2$d</string>
+    <string name="omnix_tier_left_limit">limit %1$d</string>
+</resources>

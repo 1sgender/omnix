@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Yapay zekâ seviyesi seçimi (Yerel / Flash / Pro) ve «Bugün kalan». -->
+<resources>
+    <string name="omnix_tier_pro_body">Claude, en akıllı model. OMNIX bulutu, internet gerekir.</string>
+    <string name="omnix_tier_pro_locked">Pro ve Max paketlerinde var</string>
+    <string name="omnix_tier_answered_flash">Flash yanıtladı: Pro geçici olarak kullanılamıyor</string>
+    <string name="omnix_tier_switch_to_flash">Flash kullan</string>
+    <string name="omnix_tier_quota_hours">Bugünkü limit doldu, %1$d saat sonra yenilenir.</string>
+    <string name="omnix_tier_quota_days">Aylık Pro limiti doldu, %1$d gün sonra yenilenir.</string>
+    <string name="omnix_tier_quota_upgrade">Pro ve Max paketlerinde daha fazla yanıt.</string>
+    <string name="omnix_tier_left_title">Bugün kalan</string>
+    <string name="omnix_tier_left_flash_voice">Flash · ses</string>
+    <string name="omnix_tier_left_flash_text">Flash · metin</string>
+    <string name="omnix_tier_left_pro_day">Pro · bugün</string>
+    <string name="omnix_tier_left_pro_month">Pro · bu ay</string>
+    <string name="omnix_tier_left_value">%1$d / %2$d</string>
+    <string name="omnix_tier_left_limit">limit %1$d</string>
+</resources>

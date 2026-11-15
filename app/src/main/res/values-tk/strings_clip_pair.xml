@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пары OMNIX Clip (реестр по BT-адресу, V012). -->
+<resources>
+    <string name="omnix_pair_required_message">OMNIX gulaklyklaryny birikdiriň — bulut AI diňe olar bilen işleýär. Oflaýn mümkinçilikler adaty işleýär.</string>
+    <string name="omnix_pair_activate_cta">OMNIX gulaklyklary bilen aktiwleşdir</string>
+    <string name="omnix_pair_none_connected">Gulaklyk birikdirilmedik. OMNIX Clip-i Bluetooth sazlamalarynda birikdiriň we gaýtadan synanyşyň.</string>
+    <string name="omnix_pair_unknown">Bu OMNIX gulaklygy däl ýa-da entek hasaba alynmadyk.</string>
+    <string name="omnix_pair_taken">Bu gulaklyklar başga hasaba baglanan.</string>
+    <string name="omnix_pair_revoked">Bu gulaklyklar petiklenen.</string>
+    <string name="omnix_pair_limit">Bir hasap üçin gulaklyk çägine ýetildi.</string>
+    <string name="omnix_pair_failed">Serwer bilen baglanyşyp bolmady. Soňrak synanyşyň.</string>
+    <string name="omnix_pair_my_title">Meniň gulaklyklarym</string>
+    <string name="omnix_pair_none_bound">OMNIX gulaklyklary entek baglanmadyk.</string>
+    <string name="omnix_pair_last_seen">Soňky birikme: %1$s</string>
+    <string name="omnix_pair_never_seen">Entek birikdirilmedi</string>
+    <string name="omnix_pair_connected_badge">Birikdirildi</string>
+    <string name="omnix_pair_release">Aýyr</string>
+    <string name="omnix_pair_release_confirm">%1$s aýyrylsynmy? Gulaklyklar AI-a giriş bermegini bes eder, olary başga adama berip bolar.</string>
+    <string name="omnix_pair_released">Gulaklyklar aýryldy</string>
+    <string name="omnix_pair_found_new">Täze OMNIX jübüti tapyldy: %1$s. Goşulsynmy?</string>
+    <string name="omnix_pair_add">Goş</string>
+    <string name="omnix_pair_cancel">Häzir däl</string>
+    <string name="omnix_pair_added">Gulaklyklar goşuldy</string>
+    <string name="omnix_pair_operator_title">Operator tertibi: jübüti hasaba almak</string>
+    <string name="omnix_pair_operator_serial">Seriýa belgisi</string>
+    <string name="omnix_pair_operator_register">Birikdirilen jübüti hasaba al</string>
+    <string name="omnix_pair_operator_done">Jübüt hasaba alyndy</string>
+    <string name="omnix_pair_operator_exists">Bu jübüt eýýäm hasaba alnan</string>
+    <string name="omnix_pair_trial_until">7 günlük Pro sowgat — %1$s senesine çenli</string>
+    <string name="omnix_pair_chat_only_message">OMNIX gulaklyklaryny birikdiriň — olarsyz diňe çat elýeterli.</string>
+    <string name="omnix_pair_recovery_limit">Bu gün gulaklyklar telefonlaryň arasynda gaty köp geçirildi. Ertir synanyşyň.</string>
+</resources>

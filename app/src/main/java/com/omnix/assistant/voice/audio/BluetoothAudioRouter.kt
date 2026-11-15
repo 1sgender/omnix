@@ -326,6 +326,34 @@ class BluetoothAudioRouter @Inject constructor(
 
     fun isHeadsetConnected(): Boolean = _isHeadsetPlugged.value
 
+    /**
+     * BT-адреса подключённых сейчас наушников (реестр пар OMNIX, V012).
+     *
+     * Источники: профиль HEADSET (точный адрес, нужен BLUETOOTH_CONNECT на
+     * Android 12+ — его запрашивает первый запуск) и аудиовыходы системы
+     * (адрес BT-выхода). Заглушки вроде 02:00:00:00:00:00 отсеивает
+     * вызывающий (ClipPairGate.normalize). Без разрешения — то, что
+     * отдают аудиовыходы, иначе пусто: гейт закрыт, а не открыт.
+     */
+    fun connectedAudioAddresses(): Set<String> {
+        val addresses = linkedSetOf<String>()
+        try {
+            if (hasBluetoothConnectPermission()) {
+                bluetoothHeadset?.connectedDevices.orEmpty().forEach { device ->
+                    device.address.orEmpty().takeIf { it.isNotBlank() }?.let(addresses::add)
+                }
+            }
+        } catch (_: SecurityException) {
+            // Разрешение отозвали между проверкой и вызовом — без адресов профиля.
+        }
+        audioManager?.getDevices(AudioManager.GET_DEVICES_OUTPUTS)?.forEach { output ->
+            if (output.type in BLUETOOTH_OUTPUT_TYPES) {
+                output.address.orEmpty().takeIf { it.isNotBlank() }?.let(addresses::add)
+            }
+        }
+        return addresses
+    }
+
     private fun isBluetoothConnected(): Boolean = _audioState.value is BluetoothAudioState.Connected
 
     fun routeAudioToEarbud() {

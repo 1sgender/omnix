@@ -225,10 +225,10 @@
     <string name="omnix_ai_title">Жасанды интеллект моделі</string>
     <string name="omnix_ai_model_auto">Автоматты</string>
     <string name="omnix_ai_model_auto_body">Қысқа қарапайым жауаптар телефонда, қалғаны OMNIX бұлтында.</string>
-    <string name="omnix_ai_model_on_device">Телефонда</string>
+    <string name="omnix_ai_model_on_device">Жергілікті</string>
     <string name="omnix_ai_model_on_device_body">%1$s. Офлайн жұмыс істейді, сұраулар телефоннан шықпайды. Жауаптар бұлттағыдан қарапайымырақ.</string>
-    <string name="omnix_ai_model_cloud">OMNIX бұлты</string>
-    <string name="omnix_ai_model_cloud_body">OMNIX серверіндегі модель: толығырақ жауаптар. Интернет қажет.</string>
+    <string name="omnix_ai_model_cloud">Flash</string>
+    <string name="omnix_ai_model_cloud_body">OMNIX бұлты: жылдам әрі телефондағыдан толығырақ жауаптар. Интернет қажет.</string>
     <string name="omnix_admin_models_title">Модельді сынау (әкімші)</string>
     <string name="omnix_admin_models_body">Мұны тек сіз көресіз. Таңдалған модель әр сұрауға жауап береді, әр жауапта кім жауап бергені жазылады.</string>
     <string name="omnix_admin_models_default">Барлығына арналғандай</string>
@@ -525,7 +525,7 @@
     <string name="omnix_privacy_where_device">ТЕЛЕФОНДА</string>
     <string name="omnix_privacy_where_device_body">Жад, чат тарихы, протоколдар, дауыс</string>
     <string name="omnix_privacy_where_cloud">БҰЛТТА</string>
-    <string name="omnix_privacy_where_cloud_body">Тек сұраудың мәтіні, дауыс жазбасынсыз</string>
+    <string name="omnix_privacy_where_cloud_body">Сұрау мәтіні. Түрікмен сөзі мен аудармашы танылу үшін қысқа аудионы да жібереді</string>
     <string name="omnix_protocols_subtitle">Omni мұны өзі жасайды — уақытқа, орынға немесе оқиғаға қарай</string>
     <string name="omnix_protocols_new_label">Жаңа протокол</string>
     <string name="omnix_protocols_yours_label">Сіздікі</string>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Құпиялылық саясатына сілтеме және модель экранындағы бұлт картасы. Мәтіндер docs/PRIVACY_POLICY.md-мен сәйкес. -->
+<resources>
+    <string name="omnix_privacy_policy_link">Құпиялылық саясаты</string>
+    <string name="omnix_privacy_policy_link_body">Толық мәтінді браузерде ашады</string>
+    <string name="omnix_privacy_policy_open_failed">Құпиялылық саясатын ашатын браузер табылмады</string>
+    <string name="omnix_privacy_card_title">Бұлтқа не кетеді</string>
+    <string name="omnix_privacy_card_local">Жергілікті: телефоннан ештеңе шықпайды, құрылғыдағы модель жауап береді.</string>
+    <string name="omnix_privacy_card_flash">Flash: сұрау мәтіні мен соңғы хабарлар OMNIX серверіне, одан ЖИ жеткізушісіне (Google, Groq немесе OpenRouter) кетеді.</string>
+    <string name="omnix_privacy_card_pro">Pro: сол сияқты, бірақ жеткізуші Anthropic (Claude). Жеке сұраулар бұлтқа тек сіздің келісіміңізбен кетеді.</string>
+    <string name="omnix_privacy_card_speech">Сөйлеу: түрікмен сөздері мен аудармашы сөйлемдері танылу үшін қысқа аудио ретінде серверге және Groq-қа жіберіледі.</string>
+</resources>

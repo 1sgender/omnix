@@ -225,10 +225,10 @@
     <string name="omnix_ai_title">Yapay zekâ modeli</string>
     <string name="omnix_ai_model_auto">Otomatik</string>
     <string name="omnix_ai_model_auto_body">Kısa ve basit yanıtlar telefonda, gerisi OMNIX bulutunda.</string>
-    <string name="omnix_ai_model_on_device">Telefonda</string>
+    <string name="omnix_ai_model_on_device">Yerel</string>
     <string name="omnix_ai_model_on_device_body">%1$s. Çevrimdışı çalışır, istekler telefondan hiç çıkmaz. Yanıtlar buluttakinden daha basittir.</string>
-    <string name="omnix_ai_model_cloud">OMNIX bulutu</string>
-    <string name="omnix_ai_model_cloud_body">OMNIX sunucusundaki model: daha dolu yanıtlar. İnternet gerekir.</string>
+    <string name="omnix_ai_model_cloud">Flash</string>
+    <string name="omnix_ai_model_cloud_body">OMNIX bulutu: hızlı ve telefondakinden daha dolu yanıtlar. İnternet gerekir.</string>
     <string name="omnix_admin_models_title">Model testi (yönetici)</string>
     <string name="omnix_admin_models_body">Bunu yalnızca siz görürsünüz. Seçilen model her isteği yanıtlar ve her yanıtta kimin yanıtladığı yazar.</string>
     <string name="omnix_admin_models_default">Herkes için olduğu gibi</string>
@@ -525,7 +525,7 @@
     <string name="omnix_privacy_where_device">TELEFONDA</string>
     <string name="omnix_privacy_where_device_body">Bellek, sohbet geçmişi, protokoller, ses</string>
     <string name="omnix_privacy_where_cloud">BULUTTA</string>
-    <string name="omnix_privacy_where_cloud_body">Yalnızca isteğin metni, ses kaydı yok</string>
+    <string name="omnix_privacy_where_cloud_body">İsteğin metni. Türkmence konuşma ve çevirmen, tanıma için kısa ses parçaları da gönderir</string>
     <string name="omnix_protocols_subtitle">Omni bunu kendisi yapar — zamana, yere veya olaya göre</string>
     <string name="omnix_protocols_new_label">Yeni protokol</string>
     <string name="omnix_protocols_yours_label">Sizin protokolleriniz</string>

@@ -297,8 +297,15 @@ check "CLIP: canonical attestation message is version-domain separated" \
       "JARVIS-CLIP-ATTEST-v1" \
       "server/src/main/kotlin/com/omnix/server/clip/ClipAttestationService.kt"
 check "CLIP: attestation verifies against registered public key" \
-      "verifier.initVerify(decodePublicKey(clip.publicKey))" \
+      "verifier.initVerify(decodePublicKey(registeredKey))" \
       "server/src/main/kotlin/com/omnix/server/clip/ClipAttestationService.kt"
+# V012: реестр по BT-адресу — временная мера, KEY-режим заменит его без смены реестра.
+check "CLIP: MAC pair registry is explicitly temporary until keyed firmware" \
+      "ВРЕМЕННАЯ схема" \
+      "server/src/main/resources/db/migration/V012__clip_mac_registry.sql"
+check "CLIP: pair-bound tokens need an ACTIVE pair on the AI path" \
+      "clip_pair_ok" \
+      "server/src/main/kotlin/com/omnix/server/license/JdbcLicenseRepository.kt"
 check "CLIP: owner binding is first-come and immutable for others" \
       "owner_account_id IS NULL AND status <> 'REVOKED'" \
       "server/src/main/kotlin/com/omnix/server/clip/JdbcClipDeviceRepository.kt"

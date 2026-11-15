@@ -1,5 +1,7 @@
 package com.omnix.server.api
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -97,7 +99,16 @@ data class AiExecutionRequest(
      * ADMIN_ACCOUNT_IDS ([com.omnix.server.admin.AdminModelAccess]); для всех
      * остальных модель по-прежнему выбирает сервер, а поле игнорируется.
      */
-    @SerialName("adminProvider") val adminProvider: String? = null
+    @SerialName("adminProvider") val adminProvider: String? = null,
+
+    /**
+     * Уровень ответа: "flash" (быстрый, по умолчанию) или "pro" (сильная модель).
+     * Это пожелание клиента, а не право: Pro доступен только по тарифу и
+     * внутри месячного бюджета, иначе сервер вернёт QUOTA_EXCEEDED или
+     * ответит уровнем Flash. Фактический уровень приходит в [AiExecutionResponse.tier].
+     * Неизвестное значение трактуется как "flash".
+     */
+    @SerialName("tier") val tier: String? = null
 ) {
     companion object {
         // P2-cleanup (Этап 5): компактный memory-контекст (AR-04) был полуготовым
@@ -124,7 +135,9 @@ data class AiExecutionResponse(
     @SerialName("requestId") val requestId: String,
     /** Только для админа (тест моделей): какой провайдер и модель ответили. */
     @SerialName("provider") val provider: String? = null,
-    @SerialName("model") val model: String? = null
+    @SerialName("model") val model: String? = null,
+    /** Фактический уровень ответа: "flash" или "pro" (Pro засчитывается, только если ответил Claude). */
+    @SerialName("tier") val tier: String = "flash"
 )
 
 /** Одна фраза для распознавания: WAV PCM 16 кГц моно в base64. */
@@ -152,12 +165,18 @@ data class AdminCloudModelDto(
     @SerialName("model") val model: String
 )
 
-/** Тело ошибки — единый формат для всех сбоев. */
+/**
+ * Тело ошибки — единый формат для всех сбоев. [retryAfter] (секунды) заполняется
+ * только для перегрузки/квот и в остальных ответах в JSON не попадает.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class ApiErrorBody(
     @SerialName("code") val code: String,
     @SerialName("message") val message: String,
-    @SerialName("requestId") val requestId: String
+    @SerialName("requestId") val requestId: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    @SerialName("retry_after") val retryAfter: Int? = null
 )
 
 @Serializable
@@ -192,6 +211,8 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     PROVIDER_TIMEOUT(504, "AI provider timeout"),
     PROVIDER_ERROR(502, "AI provider error"),
     ALL_PROVIDERS_UNAVAILABLE(503, "No AI provider is currently available"),
+    /** Сервер перегружен (bulkhead/пул БД): быстрый отказ вместо очереди, повторить позже. */
+    SERVER_BUSY(503, "Server is busy, retry later"),
     PAYLOAD_TOO_LARGE(413, "Request payload too large"),
     CLIP_UNKNOWN(404, "Clip is not provisioned"),
     CLIP_ALREADY_PROVISIONED(409, "Clip identity is already provisioned"),
@@ -199,13 +220,17 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     CLIP_CHALLENGE_INVALID(401, "Attestation challenge expired, used or unknown"),
     CLIP_BAD_SIGNATURE(401, "Attestation signature verification failed"),
     CLIP_OWNER_MISMATCH(403, "Clip is bound to another account"),
+    CLIP_PAIR_LIMIT(409, "Earbud pair limit reached for this account"),
+    CLIP_RECOVERY_LIMIT(429, "Earbuds were moved between phones too often today"),
+    CLIP_ALREADY_REGISTERED(409, "Earbuds with this serial or address are already registered"),
     INTERNAL_ERROR(500, "Internal server error");
 
-    fun toResponse(requestId: String, overrideMessage: String? = null) = ApiErrorResponse(
+    fun toResponse(requestId: String, overrideMessage: String? = null, retryAfterSeconds: Int? = null) = ApiErrorResponse(
         error = ApiErrorBody(
             code = name,
             message = overrideMessage ?: safeMessage,
-            requestId = requestId
+            requestId = requestId,
+            retryAfter = retryAfterSeconds
         )
     )
 }

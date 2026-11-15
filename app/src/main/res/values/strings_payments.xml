@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pay_row_title">Plans</string>
+    <string name="pay_title">Plans</string>
+    <string name="pay_loading">Loading plans…</string>
+    <string name="pay_price_free">Free</string>
+    <string name="pay_price_period">%1$s for %2$s days</string>
+    <string name="pay_current">Your current plan</string>
+    <string name="pay_free_note">Comes with your OMNIX earbuds</string>
+    <string name="pay_line_voice">Voice AI answers: %1$d a day</string>
+    <string name="pay_line_base">Chat AI answers: %1$d a day</string>
+    <string name="pay_line_pro">Pro answers: %1$d a day, %2$d a month</string>
+    <string name="pay_line_pro_none">Pro answers: not included</string>
+    <string name="pay_line_agent">Agent actions: %1$d a day</string>
+    <string name="pay_line_automations">Automations: %1$s</string>
+    <string name="pay_unlimited">unlimited</string>
+    <string name="pay_get">Get %1$s</string>
+    <string name="pay_creating">Creating request…</string>
+    <string name="pay_order_number">Request %1$s</string>
+    <string name="pay_order_amount">Amount to pay: %1$s</string>
+    <string name="pay_instruction">Pay this amount to the owner and give the request number %1$s. Your plan turns on after the owner confirms the payment, and the app updates by itself.</string>
+    <string name="pay_contacts_title">How to pay</string>
+    <string name="pay_contacts_later">Contacts will appear later</string>
+    <string name="pay_contact_phone">Phone</string>
+    <string name="pay_contact_telegram">Telegram</string>
+    <string name="pay_contact_imo">imo</string>
+    <string name="pay_contact_whatsapp">WhatsApp</string>
+    <string name="pay_contact_other">Contact</string>
+    <string name="pay_status_pending">Waiting for payment</string>
+    <string name="pay_status_paid">Paid, plan turned on</string>
+    <string name="pay_status_canceled">Canceled</string>
+    <string name="pay_status_expired">Expired</string>
+    <string name="pay_status_unknown">Status unknown</string>
+    <string name="pay_error_connection">No connection. Check the internet and try again.</string>
+    <string name="pay_error_server">The server did not answer. Try again in a minute.</string>
+    <string name="pay_error_no_license">Activate OMNIX first, then you can get a plan.</string>
+    <string name="pay_error_busy">Too many attempts. Try again in a minute.</string>
+    <string name="pay_retry">Try again</string>
+    <string name="pay_refresh">Refresh status</string>
+</resources>

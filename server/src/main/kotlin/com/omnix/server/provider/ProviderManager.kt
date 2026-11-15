@@ -25,7 +25,19 @@ data class ProviderRequirements(
      * иначе ответ «модели X» мог бы прийти от модели Y. Политика отбора
      * по-прежнему решает, доступен ли он (выключен/нездоров → нет кандидатов).
      */
-    val pinnedProvider: ProviderId? = null
+    val pinnedProvider: ProviderId? = null,
+    /**
+     * Уровень ответа: если задан, отбор ограничивается этим набором
+     * (Flash исключает Claude, чтобы дорогая модель не включалась сама).
+     * null — без ограничений (прежнее поведение).
+     */
+    val allowedProviders: Set<ProviderId>? = null,
+    /**
+     * Жёсткий порядок цепочки (Pro: Claude → Gemini → Groq). Провайдеры
+     * вне цепочки отбрасываются, остальные идут строго в этом порядке.
+     * null — порядок задаёт политика отбора.
+     */
+    val chain: List<ProviderId>? = null
 )
 
 /**
@@ -154,6 +166,16 @@ class ProviderManager(
         val candidates = selectionPolicy.select(providers, requirements).let { selected ->
             val pinned = requirements.pinnedProvider
             if (pinned == null) selected else selected.filter { it.id == pinned }
+        }.let { selected ->
+            val allowed = requirements.allowedProviders
+            if (allowed == null) selected else selected.filter { it.id in allowed }
+        }.let { selected ->
+            val chain = requirements.chain
+            if (chain == null) {
+                selected
+            } else {
+                selected.filter { it.id in chain }.sortedBy { chain.indexOf(it.id) }
+            }
         }
 
         if (candidates.isEmpty()) {

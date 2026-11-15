@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ссылка на политику конфиденциальности и карточка облака на экране выбора модели. Формулировки совпадают с docs/PRIVACY_POLICY.md. -->
+<resources>
+    <string name="omnix_privacy_policy_link">Политика конфиденциальности</string>
+    <string name="omnix_privacy_policy_link_body">Откроет полный текст в браузере</string>
+    <string name="omnix_privacy_policy_open_failed">Не нашлось браузера, чтобы открыть политику конфиденциальности</string>
+    <string name="omnix_privacy_card_title">Что уходит в облако</string>
+    <string name="omnix_privacy_card_local">Локально: ничего не покидает телефон, отвечает модель на устройстве.</string>
+    <string name="omnix_privacy_card_flash">Flash: текст запроса и последние сообщения уходят на сервер OMNIX, а оттуда к поставщику ИИ (Google, Groq или OpenRouter).</string>
+    <string name="omnix_privacy_card_pro">Pro: то же, но поставщик Anthropic (Claude). Личные запросы уходят в облако только с вашего согласия.</string>
+    <string name="omnix_privacy_card_speech">Речь: туркменские фразы и фразы переводчика отправляются как короткое аудио на сервер и в Groq для распознавания.</string>
+</resources>

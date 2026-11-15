@@ -91,4 +91,29 @@ class ChatAnswerOriginStoreTest {
 
         assertTrue(store.adminLabels.first().isEmpty())
     }
+
+    @Test
+    fun `flash fallback and pro quota marks ignore invalid ids`() = runTest {
+        val store = ChatAnswerOriginStore()
+
+        store.markFlashFallback(0L)
+        store.markFlashFallback(5L)
+        store.markProQuota(-1L)
+        store.markProQuota(6L)
+
+        assertEquals(setOf(5L), store.flashFallbackIds.first())
+        assertEquals(setOf(6L), store.proQuotaIds.first())
+    }
+
+    @Test
+    fun `switching to flash clears the pro quota buttons`() = runTest {
+        val store = ChatAnswerOriginStore()
+        store.markProQuota(6L)
+        store.markFlashFallback(5L)
+
+        store.clearProQuota()
+
+        assertTrue(store.proQuotaIds.first().isEmpty())
+        assertEquals("пометки «ответил Flash» остаются", setOf(5L), store.flashFallbackIds.first())
+    }
 }

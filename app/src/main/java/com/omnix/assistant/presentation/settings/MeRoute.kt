@@ -60,6 +60,7 @@ fun MeRoute(
             AiModelChoice.AUTO -> R.string.omnix_ai_model_auto
             AiModelChoice.ON_DEVICE -> R.string.omnix_ai_model_on_device
             AiModelChoice.CLOUD -> R.string.omnix_ai_model_cloud
+            AiModelChoice.PRO -> R.string.omnix_tier_pro
         }
     )
 
@@ -119,6 +120,12 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_ai_title),
                         value = aiValue,
                         destination = OmnixDestination.SettingsSection(SECTION_AI)
+                    ),
+                    MeRow(
+                        icon = OmnixBoltLineIcon,
+                        label = stringResource(R.string.pay_row_title),
+                        value = license?.planId.orEmpty().replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                        destination = OmnixDestination.SettingsSection(SECTION_TARIFFS)
                     ),
                     MeRow(
                         icon = OmnixAppearanceLineIcon,

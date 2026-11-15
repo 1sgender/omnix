@@ -39,6 +39,7 @@ class AdminHttpHandler(
     private val queries: AdminQueries,
     private val providerManager: ProviderManager,
     private val overrides: com.omnix.server.admin.ProviderRuntimeOverrides,
+    private val manualPayments: ManualPaymentAdminApi? = null,
     private val json: Json = Json
 ) {
 
@@ -104,6 +105,10 @@ class AdminHttpHandler(
                 requirePermission(principal, AdminPermission.USERS_READ) { handleUsers(request) }
             parts.size == 2 && parts[0] == "users" && method == "GET" ->
                 requirePermission(principal, AdminPermission.USERS_READ) { handleUserDetail(parts[1]) }
+            parts.size == 3 && parts[0] == "users" && parts[2] == "notes" && method == "GET" ->
+                requirePermission(principal, AdminPermission.USERS_READ) { handleUserNotes(parts[1]) }
+            parts.size == 3 && parts[0] == "users" && method == "POST" ->
+                requirePermission(principal, AdminPermission.LICENSES_WRITE) { handleUserAction(principal, request, parts[1], parts[2]) }
             parts.size == 1 && parts[0] == "devices" && method == "GET" ->
                 requirePermission(principal, AdminPermission.DEVICES_READ) { handleDevices(request) }
             parts.size == 2 && parts[0] == "devices" && method == "GET" ->
@@ -118,6 +123,21 @@ class AdminHttpHandler(
                 requirePermission(principal, AdminPermission.LICENSES_WRITE) { handleLicenseAction(principal, request, parts[1], parts[2]) }
             parts.size == 1 && parts[0] == "subscriptions" && method == "GET" ->
                 requirePermission(principal, AdminPermission.SUBSCRIPTIONS_READ) { handleSubscriptions(request) }
+            parts.size == 1 && parts[0] == "payment-requests" && method == "GET" ->
+                requirePermission(principal, AdminPermission.SUBSCRIPTIONS_READ) {
+                    val (size, offset) = pagination(request)
+                    manualPayments?.list(queryParam(request, "status"), queryParam(request, "q"), size, offset)
+                        ?: plain(404, buildJsonObject { put("error", "not_found") })
+                }
+            parts.size == 3 && parts[0] == "payment-requests" && method == "POST" &&
+                (parts[2] == "confirm" || parts[2] == "cancel") ->
+                requirePermission(principal, AdminPermission.LICENSES_WRITE) {
+                    when {
+                        manualPayments == null -> plain(404, buildJsonObject { put("error", "not_found") })
+                        parts[2] == "confirm" -> manualPayments.confirm(principal, request, parts[1], bodyJson(request))
+                        else -> manualPayments.cancel(principal, request, parts[1], bodyJson(request))
+                    }
+                }
             parts.size == 1 && parts[0] == "plans" && method == "GET" ->
                 requirePermission(principal, AdminPermission.LICENSES_READ) { handlePlans() }
             parts.size == 1 && parts[0] == "providers" && method == "GET" ->
@@ -323,6 +343,9 @@ class AdminHttpHandler(
                 putJsonArray("devices") {
                     detail.devices.forEach { add(deviceJson(it)) }
                 }
+                putJsonArray("notes") {
+                    queries.accountNotes(uuid).forEach { add(noteJson(it)) }
+                }
                 putJsonObject("usage") {
                     put("requests", detail.usageSummary.requests)
                     put("errors", detail.usageSummary.errors)
@@ -332,6 +355,101 @@ class AdminHttpHandler(
                 }
             }
         )
+    }
+
+    private fun noteJson(note: AdminQueries.NoteRow) = buildJsonObject {
+        put("id", note.id.toString())
+        put("author", note.author)
+        put("note", note.note)
+        put("createdAt", note.createdAt.toString())
+    }
+
+    private fun handleUserNotes(id: String): HttpResponseContext {
+        val accountId = runCatching { UUID.fromString(id) }.getOrNull()
+            ?: return plain(404, buildJsonObject { put("error", "not_found") })
+        if (queries.userDetail(accountId) == null) return plain(404, buildJsonObject { put("error", "not_found") })
+        return plain(
+            200, buildJsonObject {
+                putJsonArray("notes") { queries.accountNotes(accountId).forEach { add(noteJson(it)) } }
+            }
+        )
+    }
+
+    /** Обязательная причина 3..256 символов (block/unblock/bonus). */
+    private fun requiredReason(body: JsonObject?): String {
+        val reason = body?.get("reason")?.let { (it as? JsonPrimitive)?.content }?.trim().orEmpty()
+        if (reason.length !in 3..256) throw SettingsValidationError("reason must be 3..256 characters")
+        return reason
+    }
+
+    private fun handleUserAction(
+        principal: AdminPrincipal,
+        request: HttpRequestContext,
+        id: String,
+        action: String
+    ): HttpResponseContext {
+        if (action !in setOf("block", "unblock", "note", "bonus")) {
+            return plain(404, buildJsonObject { put("error", "unknown_action") })
+        }
+        val accountId = runCatching { UUID.fromString(id) }.getOrNull()
+            ?: return plain(404, buildJsonObject { put("error", "not_found") })
+        val detail = queries.userDetail(accountId)
+            ?: return plain(404, buildJsonObject { put("error", "not_found") })
+        val body = bodyJson(request)
+        val now = java.time.Instant.now()
+        return when (action) {
+            "block", "unblock" -> {
+                val reason = requiredReason(body)
+                val blocking = action == "block"
+                val to = if (blocking) "DISABLED" else "ACTIVE"
+                val from = if (blocking) "ACTIVE" else "DISABLED"
+                val changed = queries.setAccountStatus(accountId, from, to, now)
+                if (changed) {
+                    audit.append(
+                        actor = principal.actor, action = "user.$action", entityType = "ACCOUNT",
+                        entityId = accountId.toString(),
+                        oldValue = buildJsonObject { put("status", from) }.toString(),
+                        newValue = buildJsonObject { put("status", to); put("reason", reason) }.toString(),
+                        remoteAddress = request.remoteAddress, sessionId = principal.sessionId, requestId = null
+                    )
+                }
+                plain(200, buildJsonObject { put("changed", changed); put("status", if (changed) to else detail.account.status) })
+            }
+            "note" -> {
+                val text = body?.get("note")?.let { (it as? JsonPrimitive)?.content }?.trim().orEmpty()
+                if (text.length !in 1..2000) throw SettingsValidationError("note must be 1..2000 characters")
+                val noteId = queries.addAccountNote(accountId, principal.actor, text, now)
+                audit.append(
+                    actor = principal.actor, action = "user.note", entityType = "ACCOUNT",
+                    entityId = accountId.toString(), oldValue = "{}",
+                    newValue = buildJsonObject { put("noteId", noteId.toString()); put("length", text.length) }.toString(),
+                    remoteAddress = request.remoteAddress, sessionId = principal.sessionId, requestId = null
+                )
+                plain(200, buildJsonObject { put("id", noteId.toString()) })
+            }
+            else -> {
+                val days = body?.get("days")?.let { (it as? JsonPrimitive)?.content }?.toIntOrNull()
+                    ?: throw SettingsValidationError("body must contain integer 'days'")
+                if (days !in 1..3650) throw SettingsValidationError("days must be in 1..3650")
+                val reason = requiredReason(body)
+                // Бонус = продление действующей лицензии с самой поздней датой окончания.
+                val license = detail.licenses
+                    .filter { it.status == "ACTIVE" }
+                    .maxByOrNull { it.expiresAt ?: java.time.Instant.MAX }
+                    ?: throw SettingsValidationError("account has no active license")
+                val changed = queries.extendLicense(license.id, days, now)
+                if (changed) {
+                    audit.append(
+                        actor = principal.actor, action = "user.bonus", entityType = "LICENSE",
+                        entityId = license.id.toString(),
+                        oldValue = buildJsonObject { put("accountId", accountId.toString()) }.toString(),
+                        newValue = buildJsonObject { put("extendedDays", days); put("reason", reason) }.toString(),
+                        remoteAddress = request.remoteAddress, sessionId = principal.sessionId, requestId = null
+                    )
+                }
+                plain(200, buildJsonObject { put("changed", changed); put("licenseId", license.id.toString()) })
+            }
+        }
     }
 
     private fun handleDevices(request: HttpRequestContext): HttpResponseContext {
@@ -713,6 +831,7 @@ class AdminHttpHandler(
             }
             "limits" -> settings.updateLimits(principal.actor, decodeSettings(body, "limits", LimitsSettings.serializer()))
             "cost" -> settings.updateCost(principal.actor, decodeSettings(body, "cost", CostSettings.serializer()))
+            "payments" -> settings.updatePayments(principal.actor, decodeSettings(body, "payments", PaymentSettings.serializer()))
             else -> return plain(404, buildJsonObject { put("error", "unknown_section") })
         }
         audit.append(
@@ -733,6 +852,9 @@ class AdminHttpHandler(
         "ai" -> settings.ai().let { json.encodeToString(AiRoutingSettings.serializer(), it) to settings.versionOf("ai") }
         "limits" -> settings.limits().let { json.encodeToString(LimitsSettings.serializer(), it) to settings.versionOf("limits") }
         "cost" -> settings.cost().let { json.encodeToString(CostSettings.serializer(), it) to settings.versionOf("cost") }
+        "payments" -> settings.payments().let {
+            json.encodeToString(PaymentSettings.serializer(), it) to settings.versionOf("payments")
+        }
         else -> null
     }
 

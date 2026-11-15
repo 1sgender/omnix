@@ -83,7 +83,33 @@ data class LicenseValidateResponse(
      */
     @SerialName("admin") val admin: Boolean = false,
     /** Облачные модели для теста; только админу, иначе null. */
-    @SerialName("admin_models") val adminModels: List<AdminCloudModelDto>? = null
+    @SerialName("admin_models") val adminModels: List<AdminCloudModelDto>? = null,
+    /**
+     * Сколько ответов ИИ уже засчитано (экран «Сегодня осталось» в приложении).
+     * Считается тем же UsageRepository.countSince, что и PlanQuotaGate, поэтому
+     * остаток на экране совпадает с тем, что пропустит сервер.
+     * null = счётчик не подключён (юнит-тесты) — клиент тогда не показывает остаток.
+     */
+    @SerialName("usage") val usage: PlanUsageDto? = null
+)
+
+/** Использованные ответы ИИ: сутки UTC по корзинам и календарный месяц UTC для Pro. */
+@Serializable
+data class PlanUsageDto(
+    @SerialName("used_today") val usedToday: UsedTodayDto,
+    @SerialName("used_month") val usedMonth: UsedMonthDto
+)
+
+@Serializable
+data class UsedTodayDto(
+    @SerialName("voice_ai") val voiceAi: Long,
+    @SerialName("base_ai") val baseAi: Long,
+    @SerialName("pro_ai") val proAi: Long
+)
+
+@Serializable
+data class UsedMonthDto(
+    @SerialName("pro_ai") val proAi: Long
 )
 
 /** Зеркало PlanLimits для validate-ответа (см. PlanCatalog). */
@@ -100,7 +126,11 @@ data class PlanEntitlementsDto(
     @SerialName("ui_control") val uiControl: Boolean,
     @SerialName("priority_routing") val priorityRouting: Boolean,
     @SerialName("premium_models") val premiumModels: Boolean,
-    @SerialName("max_clips") val maxClips: Int
+    @SerialName("max_clips") val maxClips: Int,
+    /** Pro-ответов (Claude) в день; 0 = Pro на тарифе недоступен. */
+    @SerialName("daily_pro_ai") val dailyProAi: Int = 0,
+    /** Pro-ответов в месяц; 0 = Pro на тарифе недоступен. */
+    @SerialName("monthly_pro_ai") val monthlyProAi: Int = 0
 )
 
 /** Маппинг PlanLimits → DTO (api зависит от license, не наоборот). */
@@ -116,13 +146,42 @@ fun PlanLimits.toDto(): PlanEntitlementsDto = PlanEntitlementsDto(
     uiControl = uiControl,
     priorityRouting = priorityRouting,
     premiumModels = premiumModels,
-    maxClips = maxClips
+    maxClips = maxClips,
+    dailyProAi = dailyProAi,
+    monthlyProAi = monthlyProAi
 )
 
 @Serializable
 data class ClipBindingDto(
     @SerialName("has_bound_clip") val hasBoundClip: Boolean,
-    @SerialName("bound_clip_count") val boundClipCount: Int
+    @SerialName("bound_clip_count") val boundClipCount: Int,
+    /**
+     * V012: клиент закрывает облачный ИИ, пока не подключена одна из [pairs]
+     * (CLIP_PAIR_REQUIRED). Старый сервер поля не шлёт → клиент не гейтит.
+     */
+    @SerialName("pair_required") val pairRequired: Boolean = false,
+    /** Собственные ACTIVE-пары аккаунта (адреса — только свои). */
+    @SerialName("pairs") val pairs: List<ClipPairDto> = emptyList(),
+    @SerialName("max_pairs") val maxPairs: Int? = null
+)
+
+/** Публичные поля модели наушников из серверного каталога. */
+@Serializable
+data class ClipModelDto(
+    @SerialName("id") val id: String,
+    @SerialName("display_name") val displayName: String,
+    @SerialName("color_name") val colorName: String,
+    @SerialName("color_hex") val colorHex: String,
+    @SerialName("image_url") val imageUrl: String? = null
+)
+
+@Serializable
+data class ClipPairDto(
+    @SerialName("clip_serial") val clipSerial: String,
+    @SerialName("bt_address") val btAddress: String,
+    @SerialName("model") val model: ClipModelDto? = null,
+    @SerialName("bound_at") val boundAt: String? = null,
+    @SerialName("last_seen_at") val lastSeenAt: String? = null
 )
 
 @Serializable

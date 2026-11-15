@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Server overload: friendly messages instead of an error. -->
+<resources>
+    <string name="omnix_overload_busy">Сейчас много желающих. Попробуйте через %1$d сек.</string>
+    <string name="omnix_overload_ai">ИИ сейчас перегружен, попробуйте через минуту.</string>
+</resources>

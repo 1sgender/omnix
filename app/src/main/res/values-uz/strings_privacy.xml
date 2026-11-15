@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Maxfiylik siyosatiga havola va model ekranidagi bulut kartasi. Matnlar docs/PRIVACY_POLICY.md bilan mos. -->
+<resources>
+    <string name="omnix_privacy_policy_link">Maxfiylik siyosati</string>
+    <string name="omnix_privacy_policy_link_body">To‘liq matnni brauzerda ochadi</string>
+    <string name="omnix_privacy_policy_open_failed">Maxfiylik siyosatini ochadigan brauzer topilmadi</string>
+    <string name="omnix_privacy_card_title">Bulutga nima ketadi</string>
+    <string name="omnix_privacy_card_local">Lokal: telefondan hech narsa chiqmaydi, qurilmadagi model javob beradi.</string>
+    <string name="omnix_privacy_card_flash">Flash: so‘rov matni va oxirgi xabarlar OMNIX serveriga, undan AI yetkazuvchisiga (Google, Groq yoki OpenRouter) ketadi.</string>
+    <string name="omnix_privacy_card_pro">Pro: xuddi shunday, lekin yetkazuvchi Anthropic (Claude). Shaxsiy so‘rovlar bulutga faqat sizning roziligingiz bilan ketadi.</string>
+    <string name="omnix_privacy_card_speech">Nutq: turkman tilidagi va tarjimon jumlalari tanish uchun qisqa audio sifatida serverga va Groq ga yuboriladi.</string>
+</resources>

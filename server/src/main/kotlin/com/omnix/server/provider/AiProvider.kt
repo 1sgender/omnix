@@ -1,7 +1,7 @@
 package com.omnix.server.provider
 
 /** Идентификатор провайдера. Значение попадает только в логи/usage, не клиенту. */
-enum class ProviderId { GROQ, GEMINI, OPENROUTER }
+enum class ProviderId { GROQ, GEMINI, OPENROUTER, ANTHROPIC }
 
 /**
  * Оценочная стоимость вызова (опциональная).

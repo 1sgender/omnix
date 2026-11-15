@@ -150,7 +150,8 @@ fun OmnixNavGraph(
                     onRename = pinnedViewModel::rename,
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
-                    onToggleDictation = chatViewModel::toggleVoiceDictation
+                    onToggleDictation = chatViewModel::toggleVoiceDictation,
+                    onSwitchToFlash = chatViewModel::switchToFlash
                 )
             }
 
@@ -200,7 +201,8 @@ fun OmnixNavGraph(
                     onRequestPermissions = { permissions ->
                         permissionLauncher.launch(permissions.toTypedArray())
                     },
-                    onBack = navController::popBackStack
+                    onBack = navController::popBackStack,
+                    pairsSection = { com.omnix.assistant.presentation.devices.MyEarbudsSection() }
                 )
             }
 

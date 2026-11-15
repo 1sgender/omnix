@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Пары OMNIX Clip (реестр по BT-адресу, V012). -->
+<resources>
+    <string name="omnix_pair_required_message">Подключите наушники OMNIX — облачный ИИ работает только с ними. Офлайн-функции работают как обычно.</string>
+    <string name="omnix_pair_activate_cta">Активировать наушниками OMNIX</string>
+    <string name="omnix_pair_none_connected">Наушники не подключены. Подключите OMNIX Clip в настройках Bluetooth и повторите.</string>
+    <string name="omnix_pair_unknown">Это не наушники OMNIX или они ещё не зарегистрированы.</string>
+    <string name="omnix_pair_taken">Эти наушники привязаны к другому аккаунту.</string>
+    <string name="omnix_pair_revoked">Эти наушники заблокированы.</string>
+    <string name="omnix_pair_limit">Достигнут лимит наушников на аккаунт.</string>
+    <string name="omnix_pair_failed">Не удалось связаться с сервером. Попробуйте позже.</string>
+    <string name="omnix_pair_my_title">Мои наушники</string>
+    <string name="omnix_pair_none_bound">Наушники OMNIX ещё не привязаны.</string>
+    <string name="omnix_pair_last_seen">Последнее подключение: %1$s</string>
+    <string name="omnix_pair_never_seen">Ещё не подключались</string>
+    <string name="omnix_pair_connected_badge">Подключены</string>
+    <string name="omnix_pair_release">Отвязать</string>
+    <string name="omnix_pair_release_confirm">Отвязать %1$s? Наушники перестанут давать доступ к ИИ, их можно будет передать другому человеку.</string>
+    <string name="omnix_pair_released">Наушники отвязаны</string>
+    <string name="omnix_pair_found_new">Найдена новая пара OMNIX: %1$s. Добавить?</string>
+    <string name="omnix_pair_add">Добавить</string>
+    <string name="omnix_pair_cancel">Не сейчас</string>
+    <string name="omnix_pair_added">Наушники добавлены</string>
+    <string name="omnix_pair_operator_title">Режим оператора: регистрация пары</string>
+    <string name="omnix_pair_operator_serial">Серийный номер</string>
+    <string name="omnix_pair_operator_register">Зарегистрировать подключённую пару</string>
+    <string name="omnix_pair_operator_done">Пара зарегистрирована</string>
+    <string name="omnix_pair_operator_exists">Эта пара уже зарегистрирована</string>
+    <string name="omnix_pair_trial_until">Pro на 7 дней в подарок — до %1$s</string>
+    <string name="omnix_pair_chat_only_message">Подключите наушники OMNIX — без них доступен только чат.</string>
+    <string name="omnix_pair_recovery_limit">Слишком много переносов наушников между телефонами сегодня. Попробуйте завтра.</string>
+</resources>

@@ -42,14 +42,30 @@ class RepositoryCloudAiExecutor @Inject constructor(
     private val aiRepository: AIRepository,
     private val settingsRepository: SettingsRepository,
     private val toolRegistry: ToolRegistry,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    /** Гейт пары OMNIX (V012); в тестах — всегда открыт. */
+    private val pairAccess: CloudPairAccess = CloudPairAccess.OPEN
 ) : CloudAiExecutor {
 
     private companion object {
         const val TAG = "CloudAiExecutor"
     }
 
-    override fun isAvailable(): Boolean = networkMonitor.isCurrentlyOnline()
+    override fun isAvailable(): Boolean = isAvailableFor(RequestSource.VOICE)
+
+    override fun isAvailableFor(source: RequestSource): Boolean =
+        networkMonitor.isCurrentlyOnline() && pairAccess.blockedMessage(source.cloudUse()) == null
+
+    override fun unavailableMessage(source: RequestSource): String? =
+        if (networkMonitor.isCurrentlyOnline()) pairAccess.blockedMessage(source.cloudUse()) else null
+
+    override fun toolsBlockedMessage(): String? = pairAccess.blockedMessage(CloudUse.FULL)
+
+    /** Текстовый чат — CHAT; голос — FULL (нужна подключённая пара). */
+    private fun RequestSource.cloudUse(): CloudUse = when (this) {
+        RequestSource.CHAT -> CloudUse.CHAT
+        RequestSource.VOICE -> CloudUse.FULL
+    }
 
     override suspend fun complete(request: ExecutionRequest): Resource<String> {
         val baseSystemPrompt = settingsRepository.systemPromptFlow.first()

@@ -89,6 +89,8 @@ fun SettingsSectionRoute(
             val aiFailure by aiModelViewModel.failure.collectAsState()
             val adminModels by aiModelViewModel.admin.collectAsState()
             val wakeListening by aiModelViewModel.wakeListening.collectAsState()
+            val proAvailable by aiModelViewModel.proAvailable.collectAsState()
+            val aiRemaining by aiModelViewModel.remaining.collectAsState()
             AiSettingsScreen(
                 modifier = modifier,
                 onBack = onBack,
@@ -98,7 +100,9 @@ fun SettingsSectionRoute(
                         applying = aiApplying,
                         failure = aiFailure,
                         localModelState = modelState,
-                        onSelect = aiModelViewModel::select
+                        onSelect = aiModelViewModel::select,
+                        proAvailable = proAvailable,
+                        remaining = aiRemaining
                     )
                     if (adminModels.isAdmin) {
                         AdminModelSection(
@@ -208,6 +212,18 @@ fun SettingsSectionRoute(
         )
 
         SECTION_OFFLINE_SPEECH -> OfflineSpeechScreen(modifier = modifier, onBack = onBack)
+
+        SECTION_TARIFFS -> {
+            val tariffsViewModel: TariffsViewModel = hiltViewModel()
+            val tariffsState by tariffsViewModel.state.collectAsState()
+            TariffsScreen(
+                state = tariffsState,
+                onRequest = tariffsViewModel::request,
+                onRefresh = tariffsViewModel::refresh,
+                modifier = modifier,
+                onBack = onBack
+            )
+        }
 
         else -> SectionScaffold(stringResource(R.string.omnix_settings_title), modifier, onBack) {}
     }

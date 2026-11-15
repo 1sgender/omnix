@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.decision.AiTierSwitch
 import com.omnix.assistant.agent.decision.PrivacyClassification
 import com.omnix.assistant.agent.decision.PrivacyClassifier
 import com.omnix.assistant.agent.decision.PrivacyContent
@@ -81,6 +82,10 @@ data class ChatUiState(
     val cloudMessageIds: Set<Long> = emptySet(),
     /** Тест моделей (только админ): id ответа → кто ответил. */
     val adminLabels: Map<Long, String> = emptyMap(),
+    /** Выбран Pro, а ответил Flash: под ответом «Ответил Flash». */
+    val flashFallbackIds: Set<Long> = emptySet(),
+    /** Сообщения «лимит Pro исчерпан»: под ними «Переключиться на Flash». */
+    val proQuotaIds: Set<Long> = emptySet(),
     /**
      * Ответ, который нельзя хранить в истории (подтверждённое чтение экрана):
      * виден в ленте до следующего сообщения. Раньше его только озвучивали.
@@ -104,7 +109,8 @@ class ChatViewModel @Inject constructor(
     private val toolExecutor: ToolExecutor,
     private val messageRepository: MessageRepository,
     private val answerOriginStore: ChatAnswerOriginStore,
-    private val conversationStore: ChatConversationStore
+    private val conversationStore: ChatConversationStore,
+    private val tierSwitch: AiTierSwitch = AiTierSwitch.NONE
 ) : ViewModel() {
 
     companion object {
@@ -162,6 +168,14 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /** Кончился лимит Pro: одно нажатие — дальше отвечает Flash, кнопки под сообщениями о лимите убираем. */
+    fun switchToFlash() {
+        viewModelScope.launch {
+            tierSwitch.switchToFlash()
+            answerOriginStore.clearProQuota()
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         inputClassificationJob?.cancel()
@@ -184,6 +198,16 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             answerOriginStore.adminLabels.collectLatest { labels ->
                 _uiState.update { it.copy(adminLabels = labels) }
+            }
+        }
+        viewModelScope.launch {
+            answerOriginStore.flashFallbackIds.collectLatest { ids ->
+                _uiState.update { it.copy(flashFallbackIds = ids) }
+            }
+        }
+        viewModelScope.launch {
+            answerOriginStore.proQuotaIds.collectLatest { ids ->
+                _uiState.update { it.copy(proQuotaIds = ids) }
             }
         }
         viewModelScope.launch {

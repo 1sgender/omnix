@@ -40,7 +40,12 @@ data class LicenseInfo(
      * в этом процессе — FREE (fail-closed, см. ClientPlanGate).
      */
     val entitlements: PlanEntitlements = PlanEntitlements.FREE,
-    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN
+    val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN,
+    /**
+     * Использованные ответы ИИ по последнему validate (момент — [verifiedAt]).
+     * Только в памяти процесса: null до первого успешного validate или от старого сервера.
+     */
+    val aiUsage: PlanAiUsage? = null
 )
 
 sealed interface ActivationResult {
@@ -83,6 +88,13 @@ interface LicenseManager {
      * хранит хеш и решает сам.
      */
     fun getDeviceId(): String = ""
+
+    /**
+     * Принять omx_-токен, выданный сервером за привязку пары OMNIX Clip
+     * (без кода), и сразу перепроверить лицензию у сервера: тариф,
+     * квоты и список своих пар приходят из validate.
+     */
+    suspend fun adoptPairAccessToken(token: String): LicenseRefreshResult = LicenseRefreshResult.ServiceUnavailable
 }
 
 /**
@@ -248,6 +260,20 @@ class LicenseManagerImpl @Inject constructor(
         }
     }
 
+    override suspend fun adoptPairAccessToken(token: String): LicenseRefreshResult {
+        if (!AccessTokenPolicy.isValid(token)) return LicenseRefreshResult.Invalid
+        return try {
+            securityManager.saveAccessToken(token)
+            refreshFromServer()
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (t: Throwable) {
+            // Токен в лог не пишем.
+            Log.e(TAG, "failed to persist pair access token", t)
+            LicenseRefreshResult.ServiceUnavailable
+        }
+    }
+
     /**
      * Офлайн-льгота: применяет [offlineGraceDecision] к кэшу последней успешной
      * проверки и публикует результат в поток. Кэш на диске не трогаем —
@@ -288,7 +314,7 @@ class LicenseManagerImpl @Inject constructor(
                 .remove(LEGACY_KEY_CODE)
                 .commit()
         ) { "Could not persist server license state" }
-        return loadCachedInfo().copy(isActivated = true).also { _licenseFlow.value = it }
+        return loadCachedInfo().copy(isActivated = true, aiUsage = record.aiUsage).also { _licenseFlow.value = it }
     }
 
     private fun invalidateProcessState(expired: Boolean) {

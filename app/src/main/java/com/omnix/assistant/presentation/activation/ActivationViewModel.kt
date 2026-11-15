@@ -1,9 +1,13 @@
 package com.omnix.assistant.presentation.activation
 
 import android.content.Context
+import android.widget.Toast
+import com.omnix.assistant.presentation.devices.formatTrialDate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.R
+import com.omnix.assistant.core.clip.ClipPairOutcome
+import com.omnix.assistant.core.clip.ClipPairService
 import com.omnix.assistant.core.license.ActivationResult
 import com.omnix.assistant.core.license.LicenseInfo
 import com.omnix.assistant.core.license.LicenseManager
@@ -25,7 +29,9 @@ data class ActivationUiState(
 @HiltViewModel
 class ActivationViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val licenseManager: LicenseManager
+    private val licenseManager: LicenseManager,
+    /** null — только в юнит-тестах экрана кода (без Bluetooth-стека). */
+    private val clipPairs: ClipPairService? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ActivationUiState(
@@ -55,6 +61,35 @@ class ActivationViewModel @Inject constructor(
         // Код — десять символов в ячейках (шесть у ранее выпущенных кодов); всё
         // остальное ввод отсеивает, здесь — защита от вставки.
         _uiState.update { it.copy(inputCode = sanitizeActivationInput(newCode), errorMessage = null) }
+    }
+
+    /**
+     * Активация без кода: подключённые наушники OMNIX, зарегистрированные
+     * при упаковке, сами дают доступ (сервер создаёт аккаунт и лицензию).
+     */
+    fun activateWithPair() {
+        val service = clipPairs ?: return
+        if (_uiState.value.isLoading) return
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        viewModelScope.launch {
+            val result = service.bindConnected(withAccount = false)
+            val outcome = result.outcome
+            result.trialUntil?.let { until ->
+                // Экран сразу уходит дальше — пробный показываем тостом.
+                Toast.makeText(context, context.getString(R.string.omnix_pair_trial_until, formatTrialDate(until)), Toast.LENGTH_LONG).show()
+            }
+            _uiState.update {
+                if (outcome == ClipPairOutcome.ADDED) {
+                    it.copy(
+                        isLoading = false,
+                        isActivated = licenseManager.isActivatedAndValid(),
+                        licenseInfo = licenseManager.getLicenseInfo()
+                    )
+                } else {
+                    it.copy(isLoading = false, errorMessage = context.getString(outcome.messageRes))
+                }
+            }
+        }
     }
 
     fun activate() {

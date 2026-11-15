@@ -54,7 +54,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import java.net.InetSocketAddress
@@ -166,12 +165,16 @@ object ServerBootstrap {
         // защищается AtomicReference (чтение/запись из корутин healthScope).
         val cachedHealth = AtomicReference<Pair<Long, String>?>(null)
 
-        val maxInFlight = Runtime.getRuntime().availableProcessors() * 4
-        val inFlight = Semaphore(maxInFlight)
-        logger.info("server backpressure configured", "maxInFlight" to maxInFlight.toString())
+        val bulkheads = com.omnix.server.http.RequestBulkheads(config.concurrency)
+        logger.info(
+            "server backpressure configured",
+            "maxInFlight" to config.concurrency.maxInFlight.toString(),
+            "maxAiInFlight" to config.concurrency.maxAiInFlight.toString(),
+            "maxSttInFlight" to config.concurrency.maxSttInFlight.toString()
+        )
 
         val server = HttpServer.create(
-            InetSocketAddress(config.deployment.bindHost, port), 64
+            InetSocketAddress(config.deployment.bindHost, port), 512
         )
         val kickoffExecutor = Executors.newCachedThreadPool { r ->
             Thread(r, "omnix-kickoff").apply { isDaemon = true }
@@ -224,24 +227,16 @@ object ServerBootstrap {
 
         server.createContext("/") { exchange: HttpExchange ->
             requestScope.launch {
-                val acquired = inFlight.tryAcquire()
-                if (!acquired) {
-                    logger.warn("server overloaded: in-flight limit reached", "limit" to maxInFlight.toString())
-                    val body = """{"success":false,"error":{"code":"RATE_LIMITED","message":"Server is overloaded, retry later","requestId":"-"}}"""
-                    respond(
-                        exchange,
-                        HttpResponseContext(
-                            status = 503,
-                            body = body,
-                            headers = mapOf("Retry-After" to "1", "Cache-Control" to "no-store")
-                        )
-                    )
+                val permit = bulkheads.tryEnter(exchange.requestURI.path)
+                if (permit == null) {
+                    logger.warn("server overloaded: concurrency limit reached", "path" to exchange.requestURI.path)
+                    respond(exchange, bulkheads.busyResponse())
                     return@launch
                 }
                 try {
                     handleExchange(exchange, handler, proxySecurity, config, logger)
                 } finally {
-                    inFlight.release()
+                    permit.close()
                 }
             }
         }
@@ -271,6 +266,8 @@ object ServerBootstrap {
                     GeminiProvider(providerConfig, transport, json, logger)
                 com.omnix.server.provider.ProviderId.OPENROUTER ->
                     OpenRouterProvider(providerConfig, transport, json, logger)
+                com.omnix.server.provider.ProviderId.ANTHROPIC ->
+                    com.omnix.server.provider.AnthropicProvider(providerConfig, transport, json, logger)
             }
         }
 
@@ -344,7 +341,8 @@ object ServerBootstrap {
             metrics = metrics,
             // Дневные квоты тарифа поверх Postgres (authoritative подсчёт).
             planQuotaGate = PlanQuotaGate(usageRepository),
-            adminAccess = adminAccess
+            adminAccess = adminAccess,
+            proBudgetGuard = com.omnix.server.license.ProBudgetGuard(usageRepository, config.pro)
         )
 
         val licenseCrypto = LicenseCrypto(licenseConfig.codePepper)
@@ -407,6 +405,14 @@ object ServerBootstrap {
         // composite authenticator; challenge/attest привязывают клип к аккаунту.
         // Репозиторий общий: attest-путь + soft-привязка в validate-ответе.
         val clipDevices = com.omnix.server.clip.JdbcClipDeviceRepository(dataSource)
+        // V012: реестр пар по BT-адресу (временная схема до прошивки с ключом)
+        // и каталог моделей. Тот же LicenseCrypto: привязка пары выдаёт
+        // лицензию и omx_-токен так же, как redeem кода.
+        val clipPairRegistry = com.omnix.server.clip.ClipPairRegistry(
+            dataSource = dataSource,
+            crypto = licenseCrypto,
+            config = config.clipPairs
+        )
         val clipHttpHandler = com.omnix.server.clip.ClipHttpHandler(
             authenticator = authenticator,
             authorizer = authorizer,
@@ -418,7 +424,10 @@ object ServerBootstrap {
             ),
             validation = config.validation,
             logger = logger,
-            json = json
+            json = json,
+            pairRegistry = clipPairRegistry,
+            isOperatorAccount = adminAccess::isAdmin,
+            adminAudit = com.omnix.server.admin.AdminAuditLog(dataSource)
         )
         val licenseHttpHandler = LicenseBillingHttpHandler(
             authenticator = authenticator,
@@ -440,7 +449,9 @@ object ServerBootstrap {
             logger = logger,
             json = json,
             clipDevices = clipDevices,
-            adminAccess = adminAccess
+            adminAccess = adminAccess,
+            clipPairConfig = config.clipPairs,
+            usageRepository = usageRepository
         )
 
         // CR-15: health-лямбда и metrics-лямбда вынесены в явные функции для
@@ -463,7 +474,11 @@ object ServerBootstrap {
         val adminAccountRepository = com.omnix.server.admin.AdminAccountRepository(dataSource)
         val adminSessionRepository = com.omnix.server.admin.AdminSessionRepository(dataSource)
         val adminAuditLog = com.omnix.server.admin.AdminAuditLog(dataSource)
-        val adminSettings = com.omnix.server.admin.AdminSettingsService(dataSource, json)
+        val adminSettings = com.omnix.server.admin.AdminSettingsService(
+            dataSource,
+            json,
+            com.omnix.server.admin.PaymentSettings.fromEnv(System.getenv("PAYMENT_CONTACTS"))
+        )
         // Smart Router: цены провайдеров теперь читаются из admin settings
         // (USD за 1М токенов, секция cost) — обновления подхватываются на
         // каждый отбор без рестарта.
@@ -486,7 +501,24 @@ object ServerBootstrap {
             policy = adminPolicy
         )
         val adminQueries = com.omnix.server.admin.AdminQueries(dataSource)
+        // Ручная оплата тарифов (пока нет договора с банком): заявки поверх billing_orders.
+        val manualOrders = com.omnix.server.billing.ManualOrderRepository(dataSource, billingRepository)
+        val manualPaymentAdminApi = com.omnix.server.admin.ManualPaymentAdminApi(manualOrders, adminAuditLog)
+        val manualPaymentHandler = com.omnix.server.http.ManualPaymentHttpHandler(
+            authenticator = authenticator,
+            authorizer = authorizer,
+            orders = manualOrders,
+            paymentSettings = adminSettings::payments,
+            rateLimiter = PostgresRateLimiter(
+                dataSource, "manual_payment", licenseConfig.authenticatedRateLimit
+            ),
+            validation = config.validation,
+            logger = logger,
+            json = json
+        )
         val adminSpaHandler = com.omnix.server.admin.AdminSpaHandler()
+        // Публичная политика конфиденциальности (GET /privacy): без авторизации.
+        val privacyPageHandler = com.omnix.server.privacy.PrivacyPageHandler(System.getenv("PRIVACY_CONTACT_EMAIL"))
         val adminHttpHandler = com.omnix.server.admin.AdminHttpHandler(
             auth = adminAuthService,
             staticAuthenticator = staticAuthenticator,
@@ -498,6 +530,16 @@ object ServerBootstrap {
             queries = adminQueries,
             providerManager = providerManager,
             overrides = providerOverrides,
+            manualPayments = manualPaymentAdminApi,
+            json = json
+        )
+        // Экран «Наушники» (V012): свой префикс /v1/admin/earbuds, ставится
+        // ПЕРЕД adminHttpHandler — тот отвечает 404 на неизвестные /v1/admin/….
+        val clipAdminHandler = com.omnix.server.clip.ClipAdminHttpHandler(
+            auth = adminAuthService,
+            staticAuthenticator = staticAuthenticator,
+            registry = clipPairRegistry,
+            audit = adminAuditLog,
             json = json
         )
         // Control Plane SPA: issue/revoke лицензий из панели под админ-сессией
@@ -519,18 +561,7 @@ object ServerBootstrap {
             metrics = metrics,
             json = json,
             healthProvider = healthProvider,
-            speechToText = config.providers
-                .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GROQ && it.enabled }
-                ?.apiKey
-                ?.takeIf { it.isNotBlank() }
-                ?.let { key ->
-                    com.omnix.server.stt.GroqWhisperSpeechToText(
-                        transport = transport,
-                        apiKey = key,
-                        model = System.getenv("GROQ_STT_MODEL")?.takeIf { it.isNotBlank() }
-                            ?: com.omnix.server.stt.GroqWhisperSpeechToText.DEFAULT_MODEL
-                    )
-                },
+            speechToText = buildSpeechToText(config, transport, logger),
             metricsProvider = { renderMetrics(metrics) },
             prometheusMetricsProvider = { metrics.prometheus() },
             // AR-06: выбор реализации чекера — production-по-умолчанию через
@@ -544,8 +575,11 @@ object ServerBootstrap {
             // Control Plane: admin-маршруты /v1/admin/… первым слоем,
             // лицензионные (issue/revoke, redeem, checkout, webhooks) — следом.
             extensionHandler = { request ->
-                adminSpaHandler.handle(request) ?:
+                privacyPageHandler.handle(request) ?:
+                    adminSpaHandler.handle(request) ?:
+                    clipAdminHandler.handle(request) ?:
                     adminHttpHandler.handle(request) ?:
+                    manualPaymentHandler.handle(request) ?:
                     licenseHttpHandler.handle(request) ?:
                     appUpdateHandler.handle(request) ?:
                     clipHttpHandler.handle(request)
@@ -797,6 +831,13 @@ private suspend fun handleExchange(
         // Клиент отвалился или мы сами отменили — не пишем ответ.
         logger.info("request cancelled by client or shutdown")
     } catch (e: Throwable) {
+        if (com.omnix.server.http.RequestBulkheads.isDatabaseOverload(e)) {
+            // Пул соединений БД исчерпан: честный 503 вместо «внутренней ошибки».
+            logger.warn("database pool exhausted", "path" to exchange.requestURI.path)
+            val busy = com.omnix.server.http.RequestBulkheads.busyResponse(DB_BUSY_RETRY_AFTER_SECONDS)
+            runCatching { respond(busy.status, busy.body, busy.headers) }
+            return
+        }
         logger.error("unhandled request failure", "error" to e.javaClass.simpleName)
         runCatching {
             respond(
@@ -825,6 +866,7 @@ private suspend fun handleExchange(
 private const val SERVER_REQUEST_DEADLINE_MS = 28_000L
 private const val X_REQUEST_DEADLINE_HEADER = "X-Request-Deadline"
 private const val HEALTH_RESPONSE_CACHE_MS = 2_000L
+private const val DB_BUSY_RETRY_AFTER_SECONDS = 5
 
 fun main() {
     val config = ServerConfig.fromEnv()
@@ -841,7 +883,7 @@ fun main() {
     if (configuredProviders.isEmpty()) {
         logger.error(
             "no AI provider configured; all requests will fail",
-            "hint" to "set GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY"
+            "hint" to "set GROQ_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY / ANTHROPIC_API_KEY"
         )
     } else {
         logger.info(
@@ -902,4 +944,48 @@ fun main() {
     // server.start() уже вызван внутри bindServer(); поток main() паркуется
     // на ожидании завершения JVM (shutdown hook закроет running).
     Thread.currentThread().join()
+}
+
+/**
+ * Распознавание речи: Groq (по умолчанию) и/или Gemini, порядок и запасной
+ * вариант из STT_PROVIDERS ("groq", "groq,gemini", "gemini,groq"). Идёт мимо
+ * ProviderManager. Модель Gemini: STT_GEMINI_MODEL, иначе GEMINI_MODEL.
+ */
+private fun buildSpeechToText(
+    config: ServerConfig,
+    transport: com.omnix.server.provider.HttpTransport,
+    logger: StructuredLogger
+): com.omnix.server.stt.SpeechToText? {
+    fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+    val available = buildMap<String, com.omnix.server.stt.SpeechToText> {
+        config.providers
+            .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GROQ && it.enabled }
+            ?.apiKey?.takeIf { it.isNotBlank() }
+            ?.let { key ->
+                put(
+                    "groq",
+                    com.omnix.server.stt.GroqWhisperSpeechToText(
+                        transport = transport,
+                        apiKey = key,
+                        model = env("GROQ_STT_MODEL")
+                            ?: com.omnix.server.stt.GroqWhisperSpeechToText.DEFAULT_MODEL
+                    )
+                )
+            }
+        config.providers
+            .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GEMINI && it.enabled }
+            ?.takeIf { it.apiKeys.any { key -> key.isNotBlank() } }
+            ?.let { gemini ->
+                put(
+                    "gemini",
+                    com.omnix.server.stt.GeminiSpeechToText(
+                        transport = transport,
+                        keys = com.omnix.server.provider.ApiKeyPool(gemini.apiKeys),
+                        model = env("STT_GEMINI_MODEL") ?: gemini.model,
+                        baseUrl = gemini.baseUrl
+                    )
+                )
+            }
+    }
+    return com.omnix.server.stt.ChainedSpeechToText.fromConfig(env("STT_PROVIDERS"), available, logger)
 }

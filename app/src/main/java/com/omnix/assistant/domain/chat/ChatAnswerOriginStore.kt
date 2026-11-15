@@ -46,6 +46,31 @@ class ChatAnswerOriginStore @Inject constructor(
         _cloudMessageIds.update { ids -> ids + messageId }
     }
 
+    private val _flashFallbackIds = MutableStateFlow<Set<Long>>(emptySet())
+
+    /** Выбран Pro, а ответил Flash (Pro временно недоступен): под ответом «Ответил Flash». */
+    val flashFallbackIds: StateFlow<Set<Long>> = _flashFallbackIds.asStateFlow()
+
+    fun markFlashFallback(messageId: Long) {
+        if (messageId <= 0L) return
+        _flashFallbackIds.update { ids -> ids + messageId }
+    }
+
+    private val _proQuotaIds = MutableStateFlow<Set<Long>>(emptySet())
+
+    /** Сообщения «лимит Pro исчерпан»: под ними кнопка «Переключиться на Flash». */
+    val proQuotaIds: StateFlow<Set<Long>> = _proQuotaIds.asStateFlow()
+
+    fun markProQuota(messageId: Long) {
+        if (messageId <= 0L) return
+        _proQuotaIds.update { ids -> ids + messageId }
+    }
+
+    /** Переключились на Flash: кнопки под прежними сообщениями о лимите больше не нужны. */
+    fun clearProQuota() {
+        _proQuotaIds.value = emptySet()
+    }
+
     private val _adminLabels = MutableStateFlow<Map<Long, String>>(emptyMap())
 
     /** Тест моделей: id ответа → кто ответил («Groq · …», «Телефон · …»). Только у админа. */

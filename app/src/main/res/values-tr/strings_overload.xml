@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Server overload: friendly messages instead of an error. -->
+<resources>
+    <string name="omnix_overload_busy">Şu an çok kişi var. %1$d sn sonra tekrar deneyin.</string>
+    <string name="omnix_overload_ai">Yapay zekâ şu an aşırı yüklü, lütfen bir dakika sonra tekrar deneyin.</string>
+</resources>

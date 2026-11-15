@@ -56,6 +56,8 @@ class LiveProviderStagingSmokeTest {
                 ?: "https://generativelanguage.googleapis.com/v1beta/models"
             ProviderId.OPENROUTER -> System.getenv("OPENROUTER_STAGING_BASE_URL")
                 ?: "https://openrouter.ai/api/v1/chat/completions"
+            ProviderId.ANTHROPIC -> System.getenv("ANTHROPIC_STAGING_BASE_URL")
+                ?: "https://api.anthropic.com/v1/messages"
         }
         require(baseUrl.startsWith("https://")) { "$prefix staging base URL must use HTTPS" }
         return ProviderConfig(

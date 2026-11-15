@@ -26,7 +26,10 @@ import kotlin.math.sqrt
 @Singleton
 class ServerSpeechCapture @Inject constructor(
     private val api: OmnixApiClient,
-    private val local: LocalSpeechRecognizer
+    private val local: LocalSpeechRecognizer,
+    /** V012: серверное распознавание — облачная функция, только с подключённой парой OMNIX. */
+    private val pairAccess: com.omnix.assistant.agent.decision.CloudPairAccess =
+        com.omnix.assistant.agent.decision.CloudPairAccess.OPEN
 ) {
 
     sealed interface Outcome {
@@ -64,6 +67,7 @@ class ServerSpeechCapture @Inject constructor(
             val text = local.transcribe(samples, languageHint)
             if (text != null && text.length >= MIN_TEXT_CHARS) return Outcome.Heard(text)
         }
+        pairAccess.blockedMessage(com.omnix.assistant.agent.decision.CloudUse.FULL)?.let { return Outcome.Failed(it) }
         return when (val stt = api.transcribe(PcmWav.encode(samples, SAMPLE_RATE), languageHint)) {
             is Resource.Success -> {
                 val text = stt.data.text.trim()

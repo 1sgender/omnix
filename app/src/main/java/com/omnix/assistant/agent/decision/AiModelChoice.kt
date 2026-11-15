@@ -8,8 +8,12 @@ package com.omnix.assistant.agent.decision
  *                  простые запросы, остальное уходит в облако;
  *  - [ON_DEVICE] — только модель на телефоне (сейчас Qwen 2.5 0.5B), без
  *                  облака: работает без интернета, ничего не уходит наружу;
- *  - [CLOUD]     — только облачная модель на сервере OMNIX (провайдера
- *                  выбирает сервер, клиент его не знает и не хранит ключей).
+ *  - [CLOUD]     — Flash: только облачная модель на сервере OMNIX, быстрая
+ *                  (провайдера выбирает сервер, клиент его не знает и не
+ *                  хранит ключей);
+ *  - [PRO]       — Pro: облако, самая умная модель (Claude). Есть только в
+ *                  тарифах Pro и Max (daily_pro_ai > 0, см. [AiProAccess]);
+ *                  сервер может ответить Flash, если Pro временно недоступен.
  *
  * Команды телефону («включи фонарик») выполняются устройством при любом
  * выборе — это не ответы модели.
@@ -18,10 +22,15 @@ package com.omnix.assistant.agent.decision
  * [AiModelChoiceCatalog]; экран выбора строится по каталогу и переписывать
  * его не нужно.
  */
-enum class AiModelChoice(val storageKey: String) {
+enum class AiModelChoice(
+    val storageKey: String,
+    /** Отвечает только облако: локальный слой не пробуем. */
+    val cloudOnly: Boolean = false
+) {
     AUTO("auto"),
     ON_DEVICE("on_device"),
-    CLOUD("cloud");
+    CLOUD("cloud", cloudOnly = true),
+    PRO("pro", cloudOnly = true);
 
     companion object {
         /** Неизвестное или пустое значение из хранилища — безопасный [AUTO]. */
@@ -50,7 +59,10 @@ enum class AiModelRequirement {
     LOCAL_MODEL,
 
     /** Нужна связь с сервером OMNIX. */
-    SERVER
+    SERVER,
+
+    /** Нужен тариф с Pro (Pro или Max) и связь с сервером OMNIX. */
+    PRO_PLAN
 }
 
 /** Порядок и требования вариантов: единственное место, которое знает список. */
@@ -58,7 +70,8 @@ object AiModelChoiceCatalog {
     val options: List<Pair<AiModelChoice, AiModelRequirement>> = listOf(
         AiModelChoice.AUTO to AiModelRequirement.NONE,
         AiModelChoice.ON_DEVICE to AiModelRequirement.LOCAL_MODEL,
-        AiModelChoice.CLOUD to AiModelRequirement.SERVER
+        AiModelChoice.CLOUD to AiModelRequirement.SERVER,
+        AiModelChoice.PRO to AiModelRequirement.PRO_PLAN
     )
 
     fun requirementOf(choice: AiModelChoice): AiModelRequirement =

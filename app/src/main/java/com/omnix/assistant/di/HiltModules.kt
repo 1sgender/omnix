@@ -148,6 +148,10 @@ abstract class SecurityAndNetworkBindingModule {
 
     @Binds
     @Singleton
+    abstract fun bindManualPaymentApi(impl: com.omnix.assistant.core.payments.HttpManualPaymentApi): com.omnix.assistant.core.payments.ManualPaymentApi
+
+    @Binds
+    @Singleton
     abstract fun bindAdminModelTesting(
         impl: com.omnix.assistant.core.admin.AdminModelStore
     ): com.omnix.assistant.core.admin.AdminModelTesting
@@ -361,10 +365,27 @@ abstract class ExecutionDecisionModule {
     @Singleton
     abstract fun bindCloudAiExecutor(impl: RepositoryCloudAiExecutor): CloudAiExecutor
 
+    /** Облако только с подключённой привязанной парой OMNIX (V012). */
+    @Binds
+    @Singleton
+    abstract fun bindCloudPairAccess(
+        impl: com.omnix.assistant.agent.decision.ClipPairCloudAccess
+    ): com.omnix.assistant.agent.decision.CloudPairAccess
+
     /** Выбор ИИ-модели пользователем (Я → ИИ-модель), читается движком решений. */
     @Binds
     @Singleton
     abstract fun bindAiModelChoiceSource(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiModelChoiceSource
+
+    /** Уровень облачного ответа (Flash/Pro) — по тому же выбору и тарифу. */
+    @Binds
+    @Singleton
+    abstract fun bindAiTierPreference(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierPreference
+
+    /** «Переключиться на Flash» в чате, когда кончился лимит Pro. */
+    @Binds
+    @Singleton
+    abstract fun bindAiTierSwitch(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierSwitch
 
     @Binds
     @Singleton

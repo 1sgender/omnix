@@ -3,11 +3,11 @@ import type { ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { endpoints } from '../api/endpoints'
 import type {
-  AiRoutingSettings, CostSettings, LimitsSettings, SecuritySettings,
+  AiRoutingSettings, CostSettings, LimitsSettings, PaymentContact, PaymentSettings, SecuritySettings,
   SettingsSection, SystemSettings
 } from '../api/types'
 import {
-  Button, ErrorState, Field, Input, SkeletonRows, ToastList
+  Button, ErrorState, Field, Input, Select, SkeletonRows, ToastList
 } from '../components/ui'
 import { useToasts } from '../hooks/useToasts'
 import { isApiError } from '../api/client'
@@ -18,7 +18,8 @@ const SECTIONS: { key: SettingsSection; label: string }[] = [
   { key: 'security', label: 'Безопасность' },
   { key: 'ai', label: 'AI-роутинг' },
   { key: 'limits', label: 'Лимиты' },
-  { key: 'cost', label: 'Стоимость' }
+  { key: 'cost', label: 'Стоимость' },
+  { key: 'payments', label: 'Оплата' }
 ]
 
 export default function Settings() {
@@ -41,6 +42,7 @@ export default function Settings() {
       {section === 'ai' ? <AiPanel readOnly={!can('SETTINGS_WRITE')} /> : null}
       {section === 'limits' ? <LimitsPanel readOnly={!can('SETTINGS_WRITE')} /> : null}
       {section === 'cost' ? <CostPanel readOnly={!can('SETTINGS_WRITE')} /> : null}
+      {section === 'payments' ? <PaymentsPanel readOnly={!can('SETTINGS_WRITE')} /> : null}
     </div>
   )
 }
@@ -307,6 +309,71 @@ function CostPanel({ readOnly }: { readOnly: boolean }) {
             ))}
             <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
               <Button type="submit" variant="primary" loading={saving} disabled={readOnly || draft === null}>Сохранить</Button>
+              {draft !== null ? <Button type="button" onClick={() => setDraft(null)}>Отменить</Button> : null}
+            </div>
+          </form>
+        )
+      }}
+    />
+  )
+}
+
+const CONTACT_TYPES: { value: PaymentContact['type']; label: string }[] = [
+  { value: 'phone', label: 'Телефон' },
+  { value: 'telegram', label: 'Telegram' },
+  { value: 'imo', label: 'imo' },
+  { value: 'whatsapp', label: 'WhatsApp' }
+]
+
+function PaymentsPanel({ readOnly }: { readOnly: boolean }) {
+  const [draft, setDraft] = useState<PaymentSettings | null>(null)
+  return (
+    <SettingsPanel
+      title="Ручная оплата"
+      desc="Контакты владельца для оплаты тарифов и срок жизни заявки. Пока контактов нет, приложение пишет «Контакты появятся позже»."
+      queryKey={['settings', 'payments']} queryFn={endpoints.settings.payments} readOnly={readOnly}
+      render={(value: PaymentSettings, save, saving) => {
+        const current = draft ?? value
+        const setContact = (index: number, patch: Partial<PaymentContact>) =>
+          setDraft({ ...current, contacts: current.contacts.map((c, i) => (i === index ? { ...c, ...patch } : c)) })
+        return (
+          <form onSubmit={(e) => { e.preventDefault(); save(current) }}>
+            <NumberField id="set-pay-ttl" label="Срок жизни заявки, часов" value={current.orderTtlHours} min={1} max={720} disabled={readOnly}
+              hint="По умолчанию 72. Действует для новых заявок."
+              onChange={(n) => setDraft({ ...current, orderTtlHours: n })} />
+            <h3 className="section-title" style={{ marginTop: 8 }}>Контакты</h3>
+            {current.contacts.length === 0 ? <p className="dim" style={{ fontSize: 12.5 }}>Контактов нет</p> : null}
+            {current.contacts.map((c, index) => (
+              <div key={index} style={{ display: 'grid', gridTemplateColumns: '130px 1fr 1fr auto', gap: 8, marginBottom: 8, alignItems: 'end' }}>
+                <Field label="Тип" htmlFor={`pay-type-${index}`}>
+                  <Select id={`pay-type-${index}`} value={c.type} disabled={readOnly}
+                    onChange={(e) => setContact(index, { type: e.target.value as PaymentContact['type'] })}>
+                    {CONTACT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </Select>
+                </Field>
+                <Field label="Номер / ник" htmlFor={`pay-value-${index}`}>
+                  <Input id={`pay-value-${index}`} value={c.value} maxLength={128} disabled={readOnly}
+                    onChange={(e) => setContact(index, { value: e.target.value })} />
+                </Field>
+                <Field label="Подпись" htmlFor={`pay-label-${index}`}>
+                  <Input id={`pay-label-${index}`} value={c.label} maxLength={64} disabled={readOnly}
+                    onChange={(e) => setContact(index, { label: e.target.value })} />
+                </Field>
+                <Button type="button" size="sm" disabled={readOnly}
+                  onClick={() => setDraft({ ...current, contacts: current.contacts.filter((_, i) => i !== index) })}>
+                  Убрать
+                </Button>
+              </div>
+            ))}
+            <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
+              <Button type="button" disabled={readOnly || current.contacts.length >= 10}
+                onClick={() => setDraft({ ...current, contacts: [...current.contacts, { type: 'phone', value: '', label: '' }] })}>
+                Добавить контакт
+              </Button>
+              <Button type="submit" variant="primary" loading={saving}
+                disabled={readOnly || draft === null || current.contacts.some((c) => c.value.trim() === '')}>
+                Сохранить
+              </Button>
               {draft !== null ? <Button type="button" onClick={() => setDraft(null)}>Отменить</Button> : null}
             </div>
           </form>

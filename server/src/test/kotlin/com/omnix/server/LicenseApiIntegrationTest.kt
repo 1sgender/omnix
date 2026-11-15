@@ -33,13 +33,20 @@ import com.omnix.server.license.LicenseCrypto
 import com.omnix.server.license.LicenseService
 import com.omnix.server.observability.ConsoleStructuredLogger
 import com.omnix.server.ratelimit.SlidingWindowRateLimiter
+import com.omnix.server.usage.AiUsageRecord
+import com.omnix.server.usage.InMemoryUsageRepository
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
+import java.time.Duration
 import java.time.Instant
+import java.time.ZoneOffset
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 class LicenseApiIntegrationTest : PostgresTestSupport() {
@@ -105,9 +112,72 @@ class LicenseApiIntegrationTest : PostgresTestSupport() {
             webhookRateLimiter = SlidingWindowRateLimiter(RateLimitConfig(100, 1_000)),
             validation = ValidationConfig(),
             logger = ConsoleStructuredLogger(sink = {}),
-            json = json
+            json = json,
+            usageRepository = usage,
+            clock = usageClock
         )
     }
+
+    private val usageClock = Clock.fixed(Instant.parse("2026-11-13T12:00:00Z"), ZoneOffset.UTC)
+    private val usage = InMemoryUsageRepository()
+
+    @Test
+    fun `validate reports used AI answers per bucket for the remaining today screen`() = runBlocking {
+        val token = json.decodeFromString(
+            LicenseRedeemResponse.serializer(),
+            redeemCode(issueCode()).body
+        ).accessToken
+        val clientId = (LicenseTokenAuthenticator(licenseService).authenticate("Bearer $token") as AuthResult.Success)
+            .client.clientId
+        val now = usageClock.instant()
+        usage.record(usageRecord(clientId, "voice_ai", now))
+        usage.record(usageRecord(clientId, "voice_ai", now.minus(Duration.ofHours(2))))
+        usage.record(usageRecord(clientId, "base_ai", now))
+        usage.record(usageRecord(clientId, "pro_ai", now))
+        // Pro раньше в этом месяце: в месяц засчитывается, в сегодня — нет.
+        usage.record(usageRecord(clientId, "pro_ai", now.minus(Duration.ofDays(3))))
+        // Вчерашний голос, неуспешный ответ и чужой клиент не засчитываются.
+        usage.record(usageRecord(clientId, "voice_ai", now.minus(Duration.ofDays(1))))
+        usage.record(usageRecord(clientId, "base_ai", now, success = false))
+        usage.record(usageRecord("someone-else", "base_ai", now))
+
+        val validate = handler.handle(
+            request(
+                path = LicenseBillingHttpHandler.PATH_VALIDATE,
+                token = token,
+                body = """{"device_id":"device-abcdefgh","request_id":"usage-1"}"""
+            )
+        )!!
+        assertEquals(200, validate.status)
+        val reported = json.decodeFromString(LicenseValidateResponse.serializer(), validate.body).usage
+        assertNotNull(reported)
+        assertEquals(2L, reported!!.usedToday.voiceAi)
+        assertEquals(1L, reported.usedToday.baseAi)
+        assertEquals(1L, reported.usedToday.proAi)
+        assertEquals(2L, reported.usedMonth.proAi)
+    }
+
+    private fun usageRecord(
+        clientId: String,
+        feature: String,
+        at: Instant,
+        success: Boolean = true
+    ) = AiUsageRecord(
+        requestId = "usage-${UUID.randomUUID()}",
+        clientId = clientId,
+        provider = "GEMINI",
+        model = null,
+        latencyMs = 1,
+        inputTokens = null,
+        outputTokens = null,
+        totalTokens = null,
+        success = success,
+        errorCode = if (success) null else "PROVIDER_ERROR",
+        promptChars = 1,
+        responseChars = 1,
+        timestamp = at,
+        feature = feature
+    )
 
     @Test
     fun `admin issuance redeem authenticated validation and checkout reach database`() = runBlocking {

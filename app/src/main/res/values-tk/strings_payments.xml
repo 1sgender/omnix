@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pay_row_title">Tarifler</string>
+    <string name="pay_title">Tarifler</string>
+    <string name="pay_loading">Tarifler ýüklenýär…</string>
+    <string name="pay_price_free">Mugt</string>
+    <string name="pay_price_period">%2$s gün üçin %1$s</string>
+    <string name="pay_current">Häzirki tarifiňiz</string>
+    <string name="pay_free_note">OMNIX gulaklyklary bilen berilýär</string>
+    <string name="pay_line_voice">Sesli AI jogaplary: günde %1$d</string>
+    <string name="pay_line_base">Çatdaky AI jogaplary: günde %1$d</string>
+    <string name="pay_line_pro">Pro jogaplary: günde %1$d, aýda %2$d</string>
+    <string name="pay_line_pro_none">Pro jogaplary: girmeýär</string>
+    <string name="pay_line_agent">Agent hereketleri: günde %1$d</string>
+    <string name="pay_line_automations">Awtomatlaşdyrmalar: %1$s</string>
+    <string name="pay_unlimited">çäksiz</string>
+    <string name="pay_get">%1$s almak</string>
+    <string name="pay_creating">Arza döredilýär…</string>
+    <string name="pay_order_number">Arza %1$s</string>
+    <string name="pay_order_amount">Tölenmeli mukdar: %1$s</string>
+    <string name="pay_instruction">Bu mukdary eýesine töläp, arza belgisini aýdyň: %1$s. Eýesi tölegi tassyklanda tarif açylýar, programma özi täzelenýär.</string>
+    <string name="pay_contacts_title">Nädip tölemeli</string>
+    <string name="pay_contacts_later">Aragatnaşyk maglumatlary soň peýda bolar</string>
+    <string name="pay_contact_phone">Telefon</string>
+    <string name="pay_contact_telegram">Telegram</string>
+    <string name="pay_contact_imo">imo</string>
+    <string name="pay_contact_whatsapp">WhatsApp</string>
+    <string name="pay_contact_other">Aragatnaşyk</string>
+    <string name="pay_status_pending">Töleg garaşylýar</string>
+    <string name="pay_status_paid">Tölendi, tarif açyldy</string>
+    <string name="pay_status_canceled">Ýatyryldy</string>
+    <string name="pay_status_expired">Möhleti geçdi</string>
+    <string name="pay_status_unknown">Ýagdaýy näbelli</string>
+    <string name="pay_error_connection">Baglanyşyk ýok. Interneti barlap, gaýtadan synanyşyň.</string>
+    <string name="pay_error_server">Serwer jogap bermedi. Bir minutdan gaýtadan synanyşyň.</string>
+    <string name="pay_error_no_license">Ilki OMNIX işjeňleşdiriň, soň tarif alyp bilersiňiz.</string>
+    <string name="pay_error_busy">Synanyşyk gaty köp. Bir minutdan gaýtadan synanyşyň.</string>
+    <string name="pay_retry">Gaýtadan synanyş</string>
+    <string name="pay_refresh">Ýagdaýy täzele</string>
+</resources>

@@ -29,7 +29,10 @@ enum class InterpreterMode {
 @Singleton
 class LlmTranslationProvider @Inject constructor(
     private val aiRepository: AIRepository,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    /** V012: облачный переводчик — только с подключённой парой OMNIX. */
+    private val pairAccess: com.omnix.assistant.agent.decision.CloudPairAccess =
+        com.omnix.assistant.agent.decision.CloudPairAccess.OPEN
 ) : TranslationProvider {
 
     override val providerId: String = "llm"
@@ -39,7 +42,11 @@ class LlmTranslationProvider @Inject constructor(
         TranslationLanguages.isSupported(targetLang) &&
             (sourceLang == "auto" || TranslationLanguages.isSupported(sourceLang))
 
-    override suspend fun isAvailable(): Boolean = networkMonitor.isCurrentlyOnline()
+    override suspend fun isAvailable(): Boolean =
+        networkMonitor.isCurrentlyOnline() && pairBlocked() == null
+
+    private fun pairBlocked(): String? =
+        pairAccess.blockedMessage(com.omnix.assistant.agent.decision.CloudUse.FULL)
 
     override suspend fun translate(
         text: String,
@@ -52,6 +59,7 @@ class LlmTranslationProvider @Inject constructor(
         if (!networkMonitor.isCurrentlyOnline()) {
             return@withContext TranslationResult.NetworkRequired("Нет подключения к интернету")
         }
+        pairBlocked()?.let { return@withContext TranslationResult.NetworkRequired(it) }
 
         // C-02: перевод — отдельная точка входа в облако, минующая
         // SendPromptUseCase (H-02: только он классифицирует чат-запросы

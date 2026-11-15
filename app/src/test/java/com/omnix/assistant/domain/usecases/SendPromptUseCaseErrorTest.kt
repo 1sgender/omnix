@@ -2,16 +2,23 @@ package com.omnix.assistant.domain.usecases
 
 import android.content.Context
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.decision.AiTier
+import com.omnix.assistant.agent.decision.AiTierPreference
 import com.omnix.assistant.agent.decision.ExecutionRequest
+import com.omnix.assistant.agent.decision.ExecutionType
 import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.agent.decision.RequestSource
 import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.memory.manager.OmniMemoryManager
 import com.omnix.assistant.agent.pipeline.AgentPipeline
+import com.omnix.assistant.core.license.AiQuotaBucket
+import com.omnix.assistant.core.license.AiTierLedger
+import com.omnix.assistant.core.license.QuotaExceeded
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
+import com.omnix.assistant.domain.models.PromptExecutionResult
 import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.repository.MessageRepository
 import com.omnix.assistant.domain.repository.SettingsRepository
@@ -24,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
@@ -122,6 +130,71 @@ class SendPromptUseCaseErrorTest {
         val errors = storedErrors()
         assertEquals(1, errors.size)
         assertEquals("pipeline exploded", errors.first().text)
+    }
+
+    // ------------------------------------------------ лимиты и уровень Pro
+
+    private fun tierUseCase(ledger: AiTierLedger, origin: ChatAnswerOriginStore, proInPlan: Boolean): SendPromptUseCase {
+        // Настоящие id строк: метки «лимит Pro» и «ответил Flash» ставятся по id.
+        coEvery { messageRepo.insertMessage(any()) } answers {
+            inserted.add(firstArg())
+            inserted.size.toLong()
+        }
+        every { context.getString(R.string.omnix_tier_quota_hours, *anyVararg()) } returns "QUOTA_HOURS"
+        every { context.getString(R.string.omnix_tier_quota_days, *anyVararg()) } returns "QUOTA_DAYS"
+        every { context.getString(R.string.omnix_tier_quota_upgrade) } returns "UPGRADE"
+        val preference = object : AiTierPreference {
+            override fun requestedTier() = AiTier.PRO
+            override fun proInPlan() = proInPlan
+        }
+        return SendPromptUseCase(
+            context, messageRepo, settingsRepo, memoryManager, pipeline, localModelManager, origin, ledger, preference
+        )
+    }
+
+    @Test
+    fun `pro quota refusal says when it resets and offers flash`() = runTest {
+        val ledger = AiTierLedger()
+        val origin = ChatAnswerOriginStore()
+        ledger.onQuotaExceeded("omx_q1", QuotaExceeded(AiQuotaBucket.PRO, 5 * 3_600L, System.currentTimeMillis()))
+        coEvery { pipeline.process(any<ExecutionRequest>()) } returns
+            Resource.Error(IllegalStateException("QUOTA_EXCEEDED"), "Дневной лимит тарифа исчерпан.")
+
+        val result = tierUseCase(ledger, origin, proInPlan = true)(
+            "вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false, requestId = "omx_q1"
+        )
+
+        val error = storedErrors().single()
+        assertEquals("QUOTA_HOURS", error.text)
+        assertEquals("QUOTA_HOURS", (result as Resource.Error).message)
+        assertEquals("под сообщением — «Переключиться на Flash»", 1, origin.proQuotaIds.value.size)
+    }
+
+    @Test
+    fun `free flash quota refusal suggests pro and max`() = runTest {
+        val ledger = AiTierLedger()
+        val origin = ChatAnswerOriginStore()
+        ledger.onQuotaExceeded("omx_q2", QuotaExceeded(AiQuotaBucket.FLASH_TEXT, 3_600L, System.currentTimeMillis()))
+        coEvery { pipeline.process(any<ExecutionRequest>()) } returns Resource.Error(IllegalStateException("q"), "q")
+
+        tierUseCase(ledger, origin, proInPlan = false)("вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false, requestId = "omx_q2")
+
+        assertEquals("QUOTA_HOURS UPGRADE", storedErrors().single().text)
+        assertTrue("Flash кончился — переключать некуда", origin.proQuotaIds.value.isEmpty())
+    }
+
+    @Test
+    fun `flash answer to a pro request is labelled`() = runTest {
+        val ledger = AiTierLedger()
+        val origin = ChatAnswerOriginStore()
+        ledger.onAnswered("omx_q3", requestedPro = true, servedPro = false, voice = false)
+        coEvery { pipeline.process(any<ExecutionRequest>()) } returns
+            Resource.Success(PromptExecutionResult.DirectAnswer("ответ", executionType = ExecutionType.CLOUD_AI))
+
+        tierUseCase(ledger, origin, proInPlan = true)("вопрос", RequestSource.CHAT, PrivacyLevel.NORMAL, false, requestId = "omx_q3")
+
+        assertEquals(1, origin.flashFallbackIds.value.size)
+        assertEquals(origin.cloudMessageIds.value, origin.flashFallbackIds.value)
     }
 
     @Test

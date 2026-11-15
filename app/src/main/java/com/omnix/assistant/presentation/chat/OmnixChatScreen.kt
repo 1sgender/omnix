@@ -139,7 +139,8 @@ fun OmnixChatScreen(
     pinnedIds: Set<Long> = emptySet(),
     onTogglePin: (Long) -> Unit = {},
     customTitles: Map<Long, String> = emptyMap(),
-    onRename: (Long, String) -> Unit = { _, _ -> }
+    onRename: (Long, String) -> Unit = { _, _ -> },
+    onSwitchToFlash: () -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
 
@@ -153,7 +154,8 @@ fun OmnixChatScreen(
             onOpenHistory = onOpenHistory,
             onAllowCloud = onAllowCloud,
             onKeepLocal = onKeepLocal,
-            onToggleDictation = onToggleDictation
+            onToggleDictation = onToggleDictation,
+            onSwitchToFlash = onSwitchToFlash
         )
     }
 
@@ -240,7 +242,8 @@ private fun ChatThread(
     onOpenHistory: () -> Unit,
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
-    onToggleDictation: () -> Unit
+    onToggleDictation: () -> Unit,
+    onSwitchToFlash: () -> Unit
 ) {
     val colors = OmnixTheme.colors
     val listState = rememberLazyListState()
@@ -306,6 +309,8 @@ private fun ChatThread(
                             message = message,
                             fromCloud = message.id in state.cloudMessageIds,
                             adminLabel = state.adminLabels[message.id],
+                            flashFallback = message.id in state.flashFallbackIds,
+                            onSwitchToFlash = if (message.id in state.proQuotaIds) onSwitchToFlash else null,
                             threadWidth = threadWidth,
                             onRepeat = if (question != null && !state.isSending) {
                                 {
@@ -492,14 +497,21 @@ private fun MessageRow(
     fromCloud: Boolean,
     threadWidth: Dp,
     adminLabel: String? = null,
+    flashFallback: Boolean = false,
+    onSwitchToFlash: (() -> Unit)? = null,
     onRepeat: (() -> Unit)? = null
 ) {
     val colors = OmnixTheme.colors
     val isUser = message.role == MessageRole.USER
     val isError = message.role == MessageRole.ERROR
     val sender = stringResource(if (isUser) R.string.omnix_chat_you else R.string.omnix_chat_omnix)
-    // Админу (тест моделей) подпись называет модель, остальным — «Ответ из облака».
-    val caption = adminLabel ?: if (fromCloud) stringResource(R.string.omnix_chat_from_cloud) else null
+    // Админу (тест моделей) подпись называет модель; выбран Pro, а ответил
+    // Flash — «Ответил Flash»; остальным — «Ответ из облака».
+    val caption = adminLabel ?: when {
+        flashFallback -> stringResource(R.string.omnix_tier_answered_flash)
+        fromCloud -> stringResource(R.string.omnix_chat_from_cloud)
+        else -> null
+    }
     val description = if (caption != null && !isUser) "$sender: ${message.text}. $caption" else "$sender: ${message.text}"
 
     if (isUser) {
@@ -526,27 +538,42 @@ private fun MessageRow(
     }
 
     if (isError) {
-        Row(
-            modifier = Modifier
-                .widthIn(max = threadWidth * 0.9f)
-                .clip(ErrorShape)
-                .background(colors.errorBubble)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .clearAndSetSemantics { contentDescription = description },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OmnixAlertIcon(color = colors.stateError, size = 16.dp)
-            Text(text = message.text, style = BubbleText, color = colors.stateError)
-            if (onRepeat != null) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                modifier = Modifier
+                    .widthIn(max = threadWidth * 0.9f)
+                    .clip(ErrorShape)
+                    .background(colors.errorBubble)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clearAndSetSemantics { contentDescription = description },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OmnixAlertIcon(color = colors.stateError, size = 16.dp)
+                Text(text = message.text, style = BubbleText, color = colors.stateError)
+                if (onRepeat != null) {
+                    Text(
+                        text = stringResource(R.string.omnix_chat_retry),
+                        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+                        color = colors.stateError,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable(onClick = onRepeat)
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    )
+                }
+            }
+            // Кончился лимит Pro: одно нажатие — и дальше отвечает Flash.
+            if (onSwitchToFlash != null) {
                 Text(
-                    text = stringResource(R.string.omnix_chat_retry),
+                    text = stringResource(R.string.omnix_tier_switch_to_flash),
                     style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-                    color = colors.stateError,
+                    color = colors.textPrimary,
                     modifier = Modifier
                         .clip(CircleShape)
-                        .clickable(onClick = onRepeat)
-                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                        .border(BorderStroke(1.dp, colors.border), CircleShape)
+                        .clickable(role = Role.Button, onClick = onSwitchToFlash)
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
                 )
             }
         }

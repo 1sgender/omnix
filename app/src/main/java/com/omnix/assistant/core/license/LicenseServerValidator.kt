@@ -35,7 +35,9 @@ data class ServerLicenseRecord(
     val entitlements: PlanEntitlements = PlanEntitlements.FREE,
     val clipBinding: ClipBindingState = ClipBindingState.UNKNOWN,
     /** Тест моделей: облачные модели админа; null — аккаунт не админ. */
-    val adminCloudModels: List<AdminCloudModel>? = null
+    val adminCloudModels: List<AdminCloudModel>? = null,
+    /** Использованные ответы ИИ на момент validate; null — сервер не сообщил. */
+    val aiUsage: PlanAiUsage? = null
 )
 
 sealed interface ServerRedemptionResult {
@@ -100,7 +102,9 @@ private data class ValidateResponse(
     @SerialName("clip") val clip: ClipBindingState? = null,
     /** Тест моделей: true только для аккаунтов из ADMIN_ACCOUNT_IDS сервера. */
     @SerialName("admin") val admin: Boolean = false,
-    @SerialName("admin_models") val adminModels: List<AdminCloudModel>? = null
+    @SerialName("admin_models") val adminModels: List<AdminCloudModel>? = null,
+    /** Использованные ответы ИИ (экран «Сегодня осталось»); null — старый сервер. */
+    @SerialName("usage") val usage: PlanAiUsage? = null
 )
 
 @Serializable
@@ -187,7 +191,7 @@ class HttpLicenseServerValidator @Inject constructor(
             val requestId = UUID.randomUUID().toString()
             val body = json.encodeToString(ValidateRequest(hardwareId, requestId))
             val request = Request.Builder()
-                .url("$BASE_URL/v1/license/validate")
+                .url("$baseUrl/v1/license/validate")
                 .header("Authorization", "Bearer $token")
                 .post(body.toRequestBody(mediaType))
                 .build()
@@ -235,7 +239,10 @@ class HttpLicenseServerValidator @Inject constructor(
                 parsed.billingStatus, null,
                 parsed.entitlements ?: PlanEntitlements.FREE,
                 parsed.clip ?: ClipBindingState.UNKNOWN
-            ).copy(adminCloudModels = if (parsed.admin) parsed.adminModels.orEmpty() else null)
+            ).copy(
+                adminCloudModels = if (parsed.admin) parsed.adminModels.orEmpty() else null,
+                aiUsage = parsed.usage
+            )
         )
     }.getOrElse { ServerLicenseValidationResult.ServiceUnavailable }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Server overload: friendly messages instead of an error. -->
+<resources>
+    <string name="omnix_overload_busy">Hozir foydalanuvchilar ko‘p. %1$d soniyadan keyin qayta urinib ko‘ring.</string>
+    <string name="omnix_overload_ai">Sun’iy intellekt hozir haddan tashqari band, bir daqiqadan keyin qayta urinib ko‘ring.</string>
+</resources>

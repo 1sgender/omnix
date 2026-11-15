@@ -155,6 +155,42 @@ class JdbcClipDeviceRepository(private val dataSource: DataSource) {
         }
     }
 
+    /**
+     * ACTIVE-пары аккаунта для validate-ответа (V012): только собственные
+     * пары вызывающего, чужие данные сюда не попадают. Адрес отдаётся
+     * владельцу полностью: по нему клиент сверяет подключённые наушники.
+     */
+    fun pairsForAccount(accountId: UUID): List<ClipPairView> = transaction { connection ->
+        connection.prepareStatement(
+            """
+            SELECT d.clip_serial, d.bt_address, d.last_verified_at, d.bound_at,
+                   m.id AS m_id, m.display_name AS m_name, m.color_name AS m_color,
+                   m.color_hex AS m_hex, m.image_url AS m_image
+            FROM clip_devices d
+            LEFT JOIN clip_models m ON m.id = d.model_id
+            WHERE d.owner_account_id = ? AND d.status = 'ACTIVE' AND d.bt_address IS NOT NULL
+            ORDER BY d.bound_at NULLS LAST, d.clip_serial
+            """.trimIndent()
+        ).use { statement ->
+            statement.setObject(1, accountId)
+            statement.executeQuery().use { result ->
+                buildList {
+                    while (result.next()) {
+                        add(
+                            ClipPairView(
+                                clipSerial = result.getString("clip_serial"),
+                                btAddress = result.getString("bt_address"),
+                                model = ClipModelPublic.from(result),
+                                boundAt = result.getInstant("bound_at"),
+                                lastSeenAt = result.getInstant("last_verified_at")
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun setStatus(clipSerial: String, status: ClipDeviceStatus, now: Instant): Boolean = transaction { connection ->
         connection.prepareStatement(
             "UPDATE clip_devices SET status = ?, updated_at = ? WHERE clip_serial = ?"

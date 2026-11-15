@@ -79,6 +79,7 @@ fun PrivacyScreen(
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
+    val openPolicy = rememberOpenPrivacyPolicy()
 
     SectionScaffold(
         stringResource(R.string.omnix_privacy_title),
@@ -118,6 +119,15 @@ fun PrivacyScreen(
                 inset = true,
                 chevron = onManagePermissions != null,
                 onClick = onManagePermissions
+            )
+            OmnixGroupDivider()
+            // Публичная политика на сервере OMNIX (адрес берётся из сборки).
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_policy_link),
+                subtitle = stringResource(R.string.omnix_privacy_policy_link_body),
+                inset = true,
+                chevron = true,
+                onClick = openPolicy
             )
             OmnixGroupDivider()
             OmnixSettingRow(
