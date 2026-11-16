@@ -43,6 +43,9 @@ sealed class OmnixDestination(val route: String) {
     /** Secondary: what OMNIX keeps and where it goes (§42, §52). */
     data object Privacy : OmnixDestination("omnix/privacy")
 
+    /** Secondary: when OMNIX asks before calling or writing (from Privacy). */
+    data object Confirmations : OmnixDestination("omnix/confirmations")
+
     /** Settings sub-pages, addressed by a human concept (§42). */
     data class SettingsSection(val section: String) :
         OmnixDestination("omnix/settings/$section") {
@@ -87,6 +90,7 @@ fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Me.route,
     OmnixDestination.Devices.route,
     OmnixDestination.Privacy.route,
+    OmnixDestination.Confirmations.route,
     OmnixDestination.Memory.route,
     OmnixDestination.Automations.route -> OmnixDestination.Me
     else -> route

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,16 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.memory.model.MemoryTypeLabel
-import com.omnix.assistant.agent.policy.CallConfirmationPolicy
-import com.omnix.assistant.agent.policy.MessagingConfirmationPolicy
 import com.omnix.assistant.presentation.components.ConfirmationSheet
-import com.omnix.assistant.presentation.components.OmnixCheckIcon
 import com.omnix.assistant.presentation.components.OmnixTextButton
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.state.ConfirmationRequest
@@ -68,14 +62,10 @@ fun PrivacyScreen(
     microphoneAllowed: Boolean,
     historyStored: Boolean,
     modifier: Modifier = Modifier,
-    policyState: PrivacyPolicyUiState = PrivacyPolicyUiState(),
     onBack: (() -> Unit)? = null,
     onManagePermissions: (() -> Unit)? = null,
     onDeleteHistory: (() -> Unit)? = null,
-    onCallPolicyChange: (CallConfirmationPolicy) -> Unit = {},
-    onMessagingPolicyChange: (MessagingConfirmationPolicy) -> Unit = {},
-    onAddTrustedContact: (String) -> Unit = {},
-    onRemoveTrustedContact: (String) -> Unit = {}
+    onOpenConfirmations: (() -> Unit)? = null
 ) {
     val spacing = OmnixTheme.spacing
     var deleteArmed by remember { mutableStateOf(false) }
@@ -89,6 +79,14 @@ fun PrivacyScreen(
         PrivacyWhereCards()
         Spacer(Modifier.height(spacing.md))
         OmnixSettingsGroup {
+            OmnixSettingRow(
+                title = stringResource(R.string.omnix_privacy_confirmations),
+                subtitle = stringResource(R.string.omnix_privacy_confirmations_body),
+                inset = true,
+                chevron = onOpenConfirmations != null,
+                onClick = onOpenConfirmations
+            )
+            OmnixGroupDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_microphone),
                 value = stringResource(
@@ -128,80 +126,6 @@ fun PrivacyScreen(
                 inset = true,
                 chevron = true,
                 onClick = openPolicy
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_privacy_calls),
-                inset = true
-            )
-            Column(modifier = Modifier.selectableGroup()) {
-                PolicyOption(
-                    label = stringResource(R.string.omnix_privacy_calls_always),
-                    selected = policyState.callPolicy == CallConfirmationPolicy.ALWAYS,
-                    onSelect = { onCallPolicyChange(CallConfirmationPolicy.ALWAYS) }
-                )
-                OmnixGroupDivider()
-                PolicyOption(
-                    label = stringResource(R.string.omnix_privacy_calls_trusted),
-                    selected = policyState.callPolicy == CallConfirmationPolicy.TRUSTED_ONLY,
-                    onSelect = { onCallPolicyChange(CallConfirmationPolicy.TRUSTED_ONLY) }
-                )
-                OmnixGroupDivider()
-                PolicyOption(
-                    label = stringResource(R.string.omnix_privacy_calls_never),
-                    selected = policyState.callPolicy == CallConfirmationPolicy.NEVER,
-                    onSelect = { onCallPolicyChange(CallConfirmationPolicy.NEVER) }
-                )
-            }
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_privacy_messages),
-                inset = true
-            )
-            Column(modifier = Modifier.selectableGroup()) {
-                PolicyOption(
-                    label = stringResource(R.string.omnix_privacy_messages_always),
-                    selected = policyState.messagingPolicy == MessagingConfirmationPolicy.ALWAYS,
-                    onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.ALWAYS) }
-                )
-                OmnixGroupDivider()
-                PolicyOption(
-                    label = stringResource(R.string.omnix_privacy_messages_money),
-                    selected = policyState.messagingPolicy == MessagingConfirmationPolicy.MONEY_ONLY,
-                    onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.MONEY_ONLY) }
-                )
-                OmnixGroupDivider()
-                PolicyOption(
-                    label = stringResource(R.string.omnix_privacy_messages_never),
-                    selected = policyState.messagingPolicy == MessagingConfirmationPolicy.NEVER,
-                    onSelect = { onMessagingPolicyChange(MessagingConfirmationPolicy.NEVER) }
-                )
-            }
-            OmnixGroupDivider()
-            // Обязательные правила названы фактом, а не переключателем: движок
-            // не даёт их отключить (деньги, удаления, ввод в чужих приложениях).
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_privacy_forced_title),
-                subtitle = stringResource(R.string.omnix_privacy_forced_body),
-                inset = true
-            )
-            OmnixGroupDivider()
-            OmnixSettingRow(
-                title = stringResource(R.string.omnix_privacy_contacts_hint),
-                inset = true
-            )
-            EntryListGroup(
-                entries = policyState.trustedContacts,
-                emptyText = stringResource(R.string.omnix_privacy_contacts_empty),
-                removeLabel = stringResource(R.string.omnix_privacy_remove),
-                onRemove = onRemoveTrustedContact,
-                rowTitle = { it }
-            )
-            OmnixGroupDivider()
-            AddRow(
-                fieldHint = stringResource(R.string.omnix_privacy_contact_add_hint),
-                addLabel = stringResource(R.string.omnix_privacy_add),
-                onAdd = onAddTrustedContact
             )
         }
 
@@ -279,33 +203,6 @@ internal fun memoryTypeText(label: MemoryTypeLabel): String = when (label) {
     MemoryTypeLabel.EPISODIC -> stringResource(R.string.omnix_memory_type_episodic)
     MemoryTypeLabel.PROCEDURAL -> stringResource(R.string.omnix_memory_type_procedural)
     MemoryTypeLabel.OTHER -> stringResource(R.string.omnix_memory_type_other)
-}
-
-/**
- * One selectable line of a policy: the visible checkmark and the spoken
- * "selected" state are the same fact, stated twice (§55) — mirrors
- * AppearanceOption.
- */
-@Composable
-private fun PolicyOption(
-    label: String,
-    selected: Boolean,
-    onSelect: () -> Unit,
-    subtitle: String? = null
-) {
-    OmnixSettingRow(
-        title = label,
-        subtitle = subtitle,
-        inset = true,
-        onClick = onSelect,
-        modifier = Modifier
-            .fillMaxWidth()
-            .semantics { this.selected = selected }
-    ) {
-        if (selected) {
-            OmnixCheckIcon(color = OmnixTheme.colors.textPrimary)
-        }
-    }
 }
 
 /**

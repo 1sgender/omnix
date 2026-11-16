@@ -256,8 +256,8 @@
     <string name="omnix_voice_haptics_body">A light tap on “Omni” and when sending</string>
     <string name="omnix_voice_listening">Listening</string>
     <string name="omnix_voice_listening_body">Keep OMNIX listening for “Omni” in the background.</string>
-    <string name="omnix_voice_headset_only">Only when the Clip is connected</string>
-    <string name="omnix_voice_headset_only_body">Saves battery by listening only through your Clip.</string>
+    <string name="omnix_voice_headset_only">Only with headphones</string>
+    <string name="omnix_voice_headset_only_body">Saves battery: listens only through your headphones.</string>
     <string name="omnix_voice_sensitivity">Wake sensitivity</string>
     <string name="omnix_voice_background">Background</string>
     <string name="omnix_voice_background_body">Allow OMNIX to keep working when the screen is off.</string>
@@ -265,7 +265,7 @@
     <string name="omnix_voice_automations">Protocols</string>
     <string name="omnix_voice_automations_empty">No protocols yet. Describe one in words or tap “New protocol”, or say: “Omni, when my headphones connect, play music”.</string>
 
-    <string name="omnix_privacy_title">Settings</string>
+    <string name="omnix_privacy_title">Privacy</string>
     <string name="omnix_privacy_microphone">Microphone</string>
     <string name="omnix_privacy_allowed">Allowed</string>
     <string name="omnix_privacy_not_allowed">Not allowed</string>
@@ -277,6 +277,12 @@
     <string name="omnix_privacy_permissions">Permissions</string>
     <string name="omnix_privacy_permissions_manage">Manage</string>
     <string name="omnix_privacy_delete_history">Delete voice history</string>
+    <string name="omnix_privacy_confirmations">Confirmations</string>
+    <string name="omnix_privacy_confirmations_body">Calls, messages, trusted contacts</string>
+    <string name="omnix_confirmations_title">Confirmations</string>
+    <string name="omnix_confirmations_intro">When OMNIX asks you before calling or writing.</string>
+    <string name="omnix_language_voice_soon">voice soon</string>
+    <string name="omnix_offline_includes">What’s included</string>
 
     <string name="omnix_ai_title">AI model</string>
     <string name="omnix_ai_model_auto">Auto</string>

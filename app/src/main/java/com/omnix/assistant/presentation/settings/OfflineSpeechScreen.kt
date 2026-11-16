@@ -7,6 +7,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -84,6 +87,8 @@ internal fun OfflineSpeechScreen(
     // Пересчитываем при каждой смене состояния локального ИИ: загрузка могла завершиться.
     LaunchedEffect(localState) { viewModel.refresh() }
 
+    var wifiOnly by rememberSaveable { mutableStateOf(true) }
+
     val speechParts = listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.TK_ASR)
     val allInstalled = localInstalled &&
         speechParts.filter { it.isPublished }.all { states[it.id] == OfflineModelState.Installed }
@@ -100,16 +105,20 @@ internal fun OfflineSpeechScreen(
         if (!allInstalled && !busy) {
             OmnixPrimaryButton(
                 text = stringResource(R.string.omnix_offline_download_all, viewModel.totalSizeMb),
-                onClick = { viewModel.downloadAll(overMetered = true) },
-                modifier = Modifier.fillMaxWidth()
-            )
-            OmnixTextButton(
-                text = stringResource(R.string.omnix_offline_download_wifi),
-                onClick = { viewModel.downloadAll(overMetered = false) },
+                onClick = { viewModel.downloadAll(overMetered = !wifiOnly) },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(OmnixTheme.spacing.sm))
+            OmnixSettingsGroup {
+                OmnixToggleRow(
+                    title = stringResource(R.string.omnix_offline_download_wifi),
+                    checked = wifiOnly,
+                    onCheckedChange = { wifiOnly = it },
+                    inset = true
+                )
+            }
         }
+        OmnixSettingsSectionHeader(text = stringResource(R.string.omnix_offline_includes))
         OmnixSettingsGroup {
             LocalAiRow(localState, localInstalled, viewModel)
             OmnixGroupDivider()
