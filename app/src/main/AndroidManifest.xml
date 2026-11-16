@@ -105,6 +105,17 @@
         <intent>
             <action android:name="android.intent.action.DIAL" />
         </intent>
+        <!-- «Найди песню X»: поиск открывается в Яндекс Музыке, затем в любом
+             музыкальном приложении, YouTube Music и YouTube (media.play_search). -->
+        <intent>
+            <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEARCH" />
+        </intent>
+        <package android:name="ru.yandex.music" />
+        <package android:name="com.google.android.apps.youtube.music" />
+        <package android:name="com.google.android.youtube" />
     </queries>
 
     <application
