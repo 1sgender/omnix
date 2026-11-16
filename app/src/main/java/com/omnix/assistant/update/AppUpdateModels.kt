@@ -59,7 +59,26 @@ fun parseAppLatest(body: String): AppLatestInfo? = try {
 fun isUpdateAvailable(latest: AppLatestInfo?, currentVersionCode: Long): Boolean {
     if (latest == null || !latest.success) return false
     if (latest.versionCode <= currentVersionCode) return false
-    return latest.url.startsWith("https://")
+    return isTrustedUpdateUrl(latest.url)
+}
+
+/** Хосты, с которых разрешено скачивать APK обновления. */
+val TRUSTED_UPDATE_HOSTS: Set<String> = setOf("github.com")
+
+/**
+ * Ссылка на APK принимается только по https и только с доверенного хоста:
+ * подменённый ответ сервера не может направить загрузку на чужой файл.
+ */
+fun isTrustedUpdateUrl(url: String, trustedHosts: Set<String> = TRUSTED_UPDATE_HOSTS): Boolean {
+    val uri = try {
+        java.net.URI(url)
+    } catch (_: Exception) {
+        return false
+    }
+    if (!uri.scheme.equals("https", ignoreCase = true)) return false
+    if (uri.userInfo != null) return false
+    val host = uri.host?.lowercase(Locale.ROOT) ?: return false
+    return host in trustedHosts
 }
 
 /** Решение по незавершённой загрузке из прошлой сессии. */

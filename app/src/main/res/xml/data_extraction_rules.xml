@@ -1,16 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Исключаем чувствительные данные из бэкапа и переноса на новое устройство:
-    зашифрованные настройки (ключи API) и локальную базу с историей диалогов.
+    Данные OMNIX не покидают телефон ни через облачный бэкап, ни при переносе
+    на новое устройство: на Android 12+ allowBackup="false" перенос
+    «телефон → телефон» не отключает, поэтому каждый домен исключён явно
+    (настройки, база с историей диалогов, память, записи near-miss, модели).
     Атрибут domain обязателен, иначе правило игнорируется системой.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="sharedpref" path="omnix_secure_prefs.xml" />
-        <exclude domain="database" path="omnix_database.db" />
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+        <exclude domain="device_file" />
+        <exclude domain="device_database" />
+        <exclude domain="device_sharedpref" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="sharedpref" path="omnix_secure_prefs.xml" />
-        <exclude domain="database" path="omnix_database.db" />
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+        <exclude domain="device_file" />
+        <exclude domain="device_database" />
+        <exclude domain="device_sharedpref" />
     </device-transfer>
 </data-extraction-rules>
