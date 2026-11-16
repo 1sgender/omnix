@@ -46,7 +46,7 @@ object MusicRequestParser {
         "qo.shi$WORD_TAIL", "musiqa$WORD_TAIL"
     ).joinToString("|")
 
-    private val FILLER = "(?:мне\\s+|для\\s+меня\\s+|me\\s+|the\\s+|a\\s+|bana\\s+|maňa\\s+|маған\\s+|menga\\s+)*"
+    private const val FILLER = "(?:мне\\s+|для\\s+меня\\s+|me\\s+|the\\s+|a\\s+|bana\\s+|maňa\\s+|маған\\s+|menga\\s+)*"
 
     /** «найди песню X», «play the song X», «хочу послушать музыку X». */
     private val VERB_NOUN_QUERY = Regex("^(?:$VERBS)\\s+$FILLER(?:$NOUNS)\\s+(.+)$")
