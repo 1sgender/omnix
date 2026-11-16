@@ -46,10 +46,17 @@ class OkHttpTransport(
     ): HttpTransportResponse =
         execute(url, headers, body.toRequestBody(contentType.toMediaType()), connectTimeoutMs, requestTimeoutMs)
 
+    override suspend fun get(
+        url: String,
+        headers: Map<String, String>,
+        connectTimeoutMs: Long,
+        requestTimeoutMs: Long
+    ): HttpTransportResponse = execute(url, headers, null, connectTimeoutMs, requestTimeoutMs)
+
     private suspend fun execute(
         url: String,
         headers: Map<String, String>,
-        requestBody: RequestBody,
+        requestBody: RequestBody?,
         connectTimeoutMs: Long,
         requestTimeoutMs: Long
     ): HttpTransportResponse {
@@ -61,9 +68,8 @@ class OkHttpTransport(
             .retryOnConnectionFailure(false)
             .build()
 
-        val requestBuilder = Request.Builder()
-            .url(url)
-            .post(requestBody)
+        val requestBuilder = Request.Builder().url(url)
+        if (requestBody != null) requestBuilder.post(requestBody) else requestBuilder.get()
         headers.forEach { (name, value) -> requestBuilder.header(name, value) }
         val call = client.newCall(requestBuilder.build())
 

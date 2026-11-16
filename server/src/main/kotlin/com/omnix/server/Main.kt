@@ -170,7 +170,8 @@ object ServerBootstrap {
             "server backpressure configured",
             "maxInFlight" to config.concurrency.maxInFlight.toString(),
             "maxAiInFlight" to config.concurrency.maxAiInFlight.toString(),
-            "maxSttInFlight" to config.concurrency.maxSttInFlight.toString()
+            "maxSttInFlight" to config.concurrency.maxSttInFlight.toString(),
+            "maxSearchInFlight" to config.concurrency.maxSearchInFlight.toString()
         )
 
         val server = HttpServer.create(
@@ -562,6 +563,7 @@ object ServerBootstrap {
             json = json,
             healthProvider = healthProvider,
             speechToText = buildSpeechToText(config, transport, logger),
+            searchProvider = buildSearchProvider(config, transport, logger),
             metricsProvider = { renderMetrics(metrics) },
             prometheusMetricsProvider = { metrics.prometheus() },
             // AR-06: выбор реализации чекера — production-по-умолчанию через
@@ -988,4 +990,39 @@ private fun buildSpeechToText(
             }
     }
     return com.omnix.server.stt.ChainedSpeechToText.fromConfig(env("STT_PROVIDERS"), available, logger)
+}
+
+/**
+ * Веб-поиск (/v1/search): Brave (BRAVE_SEARCH_API_KEY) и/или Gemini с Google
+ * Search grounding (GEMINI_API_KEY), порядок и запасной вариант из
+ * SEARCH_PROVIDERS ("brave,gemini" по умолчанию). Нет ни одного ключа: null,
+ * эндпоинт отвечает SEARCH_UNAVAILABLE. Модель Gemini: SEARCH_GEMINI_MODEL.
+ */
+private fun buildSearchProvider(
+    config: ServerConfig,
+    transport: com.omnix.server.provider.HttpTransport,
+    logger: StructuredLogger
+): com.omnix.server.search.SearchProvider? {
+    fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+    val available = buildMap<String, com.omnix.server.search.SearchProvider> {
+        env("BRAVE_SEARCH_API_KEY")?.let { key ->
+            put("brave", com.omnix.server.search.BraveSearchProvider(transport = transport, apiKey = key.trim()))
+        }
+        config.providers
+            .firstOrNull { it.id == com.omnix.server.provider.ProviderId.GEMINI && it.enabled }
+            ?.takeIf { it.apiKeys.any { key -> key.isNotBlank() } }
+            ?.let { gemini ->
+                put(
+                    "gemini",
+                    com.omnix.server.search.GeminiGroundedSearchProvider(
+                        transport = transport,
+                        keys = com.omnix.server.provider.ApiKeyPool(gemini.apiKeys),
+                        model = env("SEARCH_GEMINI_MODEL")
+                            ?: com.omnix.server.search.GeminiGroundedSearchProvider.DEFAULT_MODEL,
+                        baseUrl = gemini.baseUrl
+                    )
+                )
+            }
+    }
+    return com.omnix.server.search.ChainedSearchProvider.fromConfig(env("SEARCH_PROVIDERS"), available, logger)
 }

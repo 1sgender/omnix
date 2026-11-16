@@ -8,6 +8,17 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Added (songs and server web search)
+
+- «Найди песню X», «включи песню X», «поставь X» (ru, en, tk, tr, kk, uz) идут в новый
+  инструмент `media.play_search`: поиск открывается в Яндекс Музыке (приложение, затем
+  ссылка), далее MEDIA_PLAY_FROM_SEARCH, YouTube Music, YouTube, в конце music.yandex.ru в
+  браузере. Раньше такая фраза уходила в web_search («точных данных не найдено»).
+- Серверный веб-поиск `POST /v1/search` (Brave Search API, запасной Gemini с Google Search;
+  env `BRAVE_SEARCH_API_KEY`, `SEARCH_PROVIDERS`, `SEARCH_GEMINI_MODEL`,
+  `OMNIX_MAX_SEARCH_IN_FLIGHT`). Без ключей ответ `SEARCH_UNAVAILABLE`, и телефон ищет
+  прежним путём (DuckDuckGo, Википедия). Запрос с секретом не уходит поисковику.
+
 ### Added (manual tariff payments)
 
 - Ручная оплата тарифов, пока нет договора с банком: экран «Я → Тарифы» (Free / Pro / Max,

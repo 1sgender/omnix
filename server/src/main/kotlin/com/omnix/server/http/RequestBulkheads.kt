@@ -18,6 +18,7 @@ class RequestBulkheads(private val config: ConcurrencyConfig) {
     private val total = Semaphore(config.maxInFlight)
     private val ai = Semaphore(config.maxAiInFlight)
     private val stt = Semaphore(config.maxSttInFlight)
+    private val search = Semaphore(config.maxSearchInFlight)
 
     /** Занятое место; [close] освобождает его ровно один раз. */
     inner class Permit internal constructor(private val heavy: Semaphore?) : AutoCloseable {
@@ -37,6 +38,7 @@ class RequestBulkheads(private val config: ConcurrencyConfig) {
         val heavy = when (path) {
             OmnixApiHandler.PATH_EXECUTE -> ai
             OmnixApiHandler.PATH_STT -> stt
+            OmnixApiHandler.PATH_SEARCH -> search
             else -> null
         }
         if (heavy != null && !heavy.tryAcquire()) {
