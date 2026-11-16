@@ -25,6 +25,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -938,7 +941,7 @@ private fun ChatComposer(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.Outlined.AttachFile,
+                imageVector = Icons.Outlined.AttachFile,
                 contentDescription = null,
                 tint = colors.textSecondary,
                 modifier = Modifier.size(22.dp)
@@ -1035,7 +1038,7 @@ private fun AttachmentStrip(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Outlined.Close,
+                    imageVector = Icons.Outlined.Close,
                     contentDescription = null,
                     tint = colors.textSecondary,
                     modifier = Modifier.size(18.dp)
