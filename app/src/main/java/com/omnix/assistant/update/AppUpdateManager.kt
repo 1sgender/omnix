@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.SigningInfo
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
@@ -13,6 +14,7 @@ import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import com.omnix.assistant.R
 import java.io.File
+import java.security.MessageDigest
 
 /** Ранее запущенная загрузка: переживает перезапуск приложения. */
 data class PendingUpdate(
@@ -150,10 +152,59 @@ class AppUpdateManager(private val context: Context) {
         context.startActivity(intent)
     }
 
+    /**
+     * Скачанный APK — это тот же пакет, подписанный тем же сертификатом,
+     * что и установленное приложение. Любая ошибка разбора — отказ.
+     */
+    private fun isSignedLikeThisApp(file: File): Boolean = try {
+        val packageManager = context.packageManager
+        val flag = PackageManager.GET_SIGNING_CERTIFICATES
+        val archive = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageArchiveInfo(
+                file.absolutePath,
+                PackageManager.PackageInfoFlags.of(flag.toLong())
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.getPackageArchiveInfo(file.absolutePath, flag)
+        }
+        val installed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(flag.toLong())
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            packageManager.getPackageInfo(context.packageName, flag)
+        }
+        val archiveSigners = signerDigests(archive?.signingInfo)
+        val installedSigners = signerDigests(installed.signingInfo)
+        archive != null &&
+            archive.packageName == context.packageName &&
+            archiveSigners.isNotEmpty() &&
+            archiveSigners == installedSigners
+    } catch (_: Exception) {
+        false
+    }
+
+    private fun signerDigests(info: SigningInfo?): Set<String> {
+        val signers = info?.apkContentsSigners ?: return emptySet()
+        val digest = MessageDigest.getInstance("SHA-256")
+        return signers.map { signature ->
+            digest.digest(signature.toByteArray()).joinToString("") { "%02x".format(it) }
+        }.toSet()
+    }
+
     /** Отправляет скачанный APK системному установщику. */
     fun installApk(): Boolean {
         val file = updateFile()
         if (!file.exists()) return false
+        if (!isSignedLikeThisApp(file)) {
+            // Чужой или повреждённый файл установщику не отдаём и не храним.
+            file.delete()
+            clearPending()
+            return false
+        }
         return try {
             val apkUri = FileProvider.getUriForFile(
                 context,
