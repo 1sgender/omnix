@@ -171,6 +171,13 @@
     <string name="omnix_chat_omnix">OMNIX</string>
     <string name="omnix_chat_input_hint">Спросить OMNIX</string>
     <string name="omnix_chat_send">Отправить</string>
+    <string name="omnix_chat_attach">Прикрепить файл</string>
+    <string name="omnix_chat_attach_remove">Убрать файл</string>
+    <string name="omnix_chat_attach_unsupported">Этот тип файла пока не поддерживается. Подходят текст, CSV, JSON и Word (.docx).</string>
+    <string name="omnix_chat_attach_too_large">Файл слишком большой (до 2 МБ).</string>
+    <string name="omnix_chat_attach_empty">В файле нет текста.</string>
+    <string name="omnix_chat_attach_unreadable">Не удалось прочитать файл.</string>
+    <string name="omnix_chat_attach_truncated">Отправится только начало файла.</string>
     <string name="omnix_chat_search_hint">Поиск по чатам</string>
     <string name="omnix_chat_search_empty">Ничего не найдено</string>
     <string name="omnix_chat_group_week">Последние 7 дней</string>

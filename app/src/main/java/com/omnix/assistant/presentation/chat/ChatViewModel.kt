@@ -68,8 +68,19 @@ data class PendingCloudConsentUi(
     val userPrompt: String
 )
 
+/** Файл, выбранный для следующего сообщения: текст уже извлечён. */
+data class PendingAttachmentUi(
+    val name: String,
+    val text: String,
+    val truncated: Boolean
+)
+
 data class ChatUiState(
     val messages: List<Message> = emptyList(),
+    /** Приложенный к вводу файл; уйдёт вместе со следующим сообщением. */
+    val attachment: PendingAttachmentUi? = null,
+    /** Почему файл не удалось приложить; показывается над полем ввода. */
+    val attachmentError: com.omnix.assistant.domain.files.FileTextExtractor.Reason? = null,
     val inputText: String = "",
     val isSending: Boolean = false,
     val isVoiceDictating: Boolean = false,
@@ -110,7 +121,9 @@ class ChatViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val answerOriginStore: ChatAnswerOriginStore,
     private val conversationStore: ChatConversationStore,
-    private val tierSwitch: AiTierSwitch = AiTierSwitch.NONE
+    private val tierSwitch: AiTierSwitch = AiTierSwitch.NONE,
+    private val attachmentReader: com.omnix.assistant.data.files.AttachmentReader =
+        com.omnix.assistant.data.files.AttachmentReader(context)
 ) : ViewModel() {
 
     companion object {
@@ -319,9 +332,37 @@ class ChatViewModel @Inject constructor(
         _inputClassificationRequests.tryEmit(newText)
     }
 
+    /** Пользователь выбрал файл в системном окне: читаем и кладём в поле ввода. */
+    fun onAttachmentPicked(uri: android.net.Uri) {
+        viewModelScope.launch {
+            when (val result = attachmentReader.read(uri)) {
+                is com.omnix.assistant.domain.files.FileTextExtractor.Result.Success ->
+                    _uiState.update {
+                        it.copy(
+                            attachment = PendingAttachmentUi(result.name, result.text, result.truncated),
+                            attachmentError = null
+                        )
+                    }
+                is com.omnix.assistant.domain.files.FileTextExtractor.Result.Failure ->
+                    _uiState.update { it.copy(attachmentError = result.reason) }
+            }
+        }
+    }
+
+    fun clearAttachment() {
+        _uiState.update { it.copy(attachment = null, attachmentError = null) }
+    }
+
     fun sendTextMessage(textToSend: String = _uiState.value.inputText) {
-        val query = textToSend.trim()
-        if (query.isBlank() || _uiState.value.isSending) return
+        val typed = textToSend.trim()
+        val attachment = _uiState.value.attachment
+        if ((typed.isBlank() && attachment == null) || _uiState.value.isSending) return
+        // Файл уходит в модель блоком в начале сообщения; в ленте он виден чипом.
+        val query = if (attachment != null && !(typed.isNotBlank() && isConfirmationReply(typed))) {
+            com.omnix.assistant.domain.files.ChatAttachmentCodec.encode(attachment.name, attachment.text, typed)
+        } else {
+            typed
+        }
         _uiState.update { it.copy(localOnlyAnswer = null) }
 
         // C-02: приоритет №1 — если висит cloud-consent вопрос, «да/нет» — ответ на него.
@@ -358,6 +399,8 @@ class ChatViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 inputText = "",
+                attachment = null,
+                attachmentError = null,
                 isSending = true,
                 // C-02: новый сброс старого consent, если начат новый запрос.
                 pendingCloudConsent = null
@@ -426,6 +469,13 @@ class ChatViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /** «Да»/«нет» при открытом вопросе отвечает на него, а не отправляет файл. */
+    private fun isConfirmationReply(text: String): Boolean {
+        val state = _uiState.value
+        return (state.pendingCloudConsent != null || state.pendingConfirmation != null) &&
+            ConfirmationIntent.isDefinitive(text)
     }
 
     /** Снимает «отправляется» и кладёт в ленту ошибку (ERROR-пузырь с «Повторить»). */

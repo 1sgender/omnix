@@ -140,9 +140,14 @@ fun OmnixChatScreen(
     onTogglePin: (Long) -> Unit = {},
     customTitles: Map<Long, String> = emptyMap(),
     onRename: (Long, String) -> Unit = { _, _ -> },
-    onSwitchToFlash: () -> Unit = {}
+    onSwitchToFlash: () -> Unit = {},
+    onAttachmentPicked: (android.net.Uri) -> Unit = {},
+    onClearAttachment: () -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
+    val attachPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri -> if (uri != null) onAttachmentPicked(uri) }
 
     Box(modifier = modifier) {
         ChatThread(
@@ -155,7 +160,9 @@ fun OmnixChatScreen(
             onAllowCloud = onAllowCloud,
             onKeepLocal = onKeepLocal,
             onToggleDictation = onToggleDictation,
-            onSwitchToFlash = onSwitchToFlash
+            onSwitchToFlash = onSwitchToFlash,
+            onAttach = { attachPicker.launch(arrayOf("*/*")) },
+            onClearAttachment = onClearAttachment
         )
     }
 
@@ -243,7 +250,9 @@ private fun ChatThread(
     onAllowCloud: () -> Unit,
     onKeepLocal: () -> Unit,
     onToggleDictation: () -> Unit,
-    onSwitchToFlash: () -> Unit
+    onSwitchToFlash: () -> Unit,
+    onAttach: () -> Unit,
+    onClearAttachment: () -> Unit
 ) {
     val colors = OmnixTheme.colors
     val listState = rememberLazyListState()
@@ -351,7 +360,11 @@ private fun ChatThread(
             isDictating = state.isVoiceDictating,
             onTextChange = onInputChange,
             onSend = onSend,
-            onToggleDictation = onToggleDictation
+            onToggleDictation = onToggleDictation,
+            attachment = state.attachment,
+            attachmentError = state.attachmentError,
+            onAttach = onAttach,
+            onClearAttachment = onClearAttachment
         )
     }
 }
@@ -515,15 +528,19 @@ private fun MessageRow(
     val description = if (caption != null && !isUser) "$sender: ${message.text}. $caption" else "$sender: ${message.text}"
 
     if (isUser) {
+        // Файл из сообщения не показываем целиком: имя файла и вопрос.
+        val decoded = remember(message.text) { com.omnix.assistant.domain.files.ChatAttachmentCodec.decode(message.text) }
+        val shown = listOfNotNull(decoded.fileName?.let { "\uD83D\uDCCE $it" }, decoded.question.ifEmpty { null })
+            .joinToString("\n")
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { contentDescription = description },
+                .semantics { contentDescription = "$sender: $shown" },
             contentAlignment = Alignment.CenterEnd
         ) {
             SelectionContainer {
                 Text(
-                    text = message.text,
+                    text = shown,
                     style = BubbleText,
                     color = colors.onActionPrimary,
                     modifier = Modifier
@@ -848,15 +865,22 @@ private fun ChatComposer(
     isDictating: Boolean,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
-    onToggleDictation: () -> Unit
+    onToggleDictation: () -> Unit,
+    attachment: PendingAttachmentUi? = null,
+    attachmentError: com.omnix.assistant.domain.files.FileTextExtractor.Reason? = null,
+    onAttach: () -> Unit = {},
+    onClearAttachment: () -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
-    val hasText = text.isNotBlank()
+    val hasText = text.isNotBlank() || attachment != null
+    val attachLabel = stringResource(R.string.omnix_chat_attach)
     val sendLabel = stringResource(R.string.omnix_chat_send)
     val dictationLabel = stringResource(
         if (isDictating) R.string.omnix_chat_dictation_stop else R.string.omnix_chat_dictation_start
     )
 
+    Column {
+    AttachmentStrip(attachment, attachmentError, onClearAttachment)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -898,6 +922,26 @@ private fun ChatComposer(
                     .fillMaxWidth()
                     // Высота ограничена, дальше поле прокручивается само.
                     .heightIn(max = 140.dp)
+            )
+        }
+
+        // Скрепка: выбрать файл, он уйдёт вместе со следующим сообщением.
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onAttach)
+                .clearAndSetSemantics {
+                    contentDescription = attachLabel
+                    role = Role.Button
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Outlined.AttachFile,
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(22.dp)
             )
         }
 
@@ -949,6 +993,77 @@ private fun ChatComposer(
                 )
             }
         }
+    }
+    }
+}
+
+/** Над полем ввода: чип приложенного файла или причина, почему файл не принят. */
+@Composable
+private fun AttachmentStrip(
+    attachment: PendingAttachmentUi?,
+    error: com.omnix.assistant.domain.files.FileTextExtractor.Reason?,
+    onClear: () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    if (attachment != null) {
+        val removeLabel = stringResource(R.string.omnix_chat_attach_remove)
+        Row(
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 6.dp)
+                .clip(CircleShape)
+                .background(colors.surfaceElevated)
+                .padding(start = 12.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = attachment.name,
+                style = FieldText,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 220.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onClear)
+                    .clearAndSetSemantics {
+                        contentDescription = removeLabel
+                        role = Role.Button
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Outlined.Close,
+                    contentDescription = null,
+                    tint = colors.textSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+        if (attachment.truncated) {
+            Text(
+                text = stringResource(R.string.omnix_chat_attach_truncated),
+                style = FieldText,
+                color = colors.textTertiary,
+                modifier = Modifier.padding(start = 20.dp, top = 2.dp)
+            )
+        }
+    } else if (error != null) {
+        Text(
+            text = stringResource(
+                when (error) {
+                    com.omnix.assistant.domain.files.FileTextExtractor.Reason.TOO_LARGE -> R.string.omnix_chat_attach_too_large
+                    com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNSUPPORTED -> R.string.omnix_chat_attach_unsupported
+                    com.omnix.assistant.domain.files.FileTextExtractor.Reason.EMPTY -> R.string.omnix_chat_attach_empty
+                    com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNREADABLE -> R.string.omnix_chat_attach_unreadable
+                }
+            ),
+            style = FieldText,
+            color = colors.stateError,
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp)
+        )
     }
 }
 
