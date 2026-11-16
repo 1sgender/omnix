@@ -1,6 +1,13 @@
 # App-owned R8 rules. Dependencies are expected to ship consumer rules; add any
 # further keep/dontwarn rule only in response to a reproduced release failure.
 
+# Release builds carry no debug/verbose logging: R8 removes the calls together
+# with their argument strings. Log.i/w/e stay for field diagnostics.
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}
+
 # Preserve runtime-visible annotations used by generated serializers and DI.
 -keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations,AnnotationDefault,InnerClasses,EnclosingMethod
 
