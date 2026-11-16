@@ -69,6 +69,13 @@ fun AppearanceScreen(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             ThemePreview(
+                label = stringResource(R.string.omnix_appearance_system),
+                selected = appearance == OmnixAppearance.System,
+                onSelect = { onAppearanceChange(OmnixAppearance.System) },
+                schemes = listOf(OmnixLightColors, OmnixDarkColors),
+                modifier = Modifier.weight(1f)
+            )
+            ThemePreview(
                 label = stringResource(R.string.omnix_appearance_light),
                 selected = appearance == OmnixAppearance.Light,
                 onSelect = { onAppearanceChange(OmnixAppearance.Light) },
@@ -80,13 +87,6 @@ fun AppearanceScreen(
                 selected = appearance == OmnixAppearance.Dark,
                 onSelect = { onAppearanceChange(OmnixAppearance.Dark) },
                 schemes = listOf(OmnixDarkColors),
-                modifier = Modifier.weight(1f)
-            )
-            ThemePreview(
-                label = stringResource(R.string.omnix_appearance_system),
-                selected = appearance == OmnixAppearance.System,
-                onSelect = { onAppearanceChange(OmnixAppearance.System) },
-                schemes = listOf(OmnixLightColors, OmnixDarkColors),
                 modifier = Modifier.weight(1f)
             )
         }

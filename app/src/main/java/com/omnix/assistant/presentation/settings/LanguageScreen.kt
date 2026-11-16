@@ -4,7 +4,10 @@ import android.app.LocaleManager
 import android.content.Context
 import android.os.Build
 import android.os.LocaleList
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -81,6 +84,11 @@ internal fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -
                     code = language.code.take(2).uppercase(java.util.Locale.ROOT),
                     title = language.nativeName,
                     selected = selected == language,
+                    badge = if (language == AppLanguage.TK) {
+                        stringResource(R.string.omnix_language_voice_soon)
+                    } else {
+                        null
+                    },
                     onSelect = {
                         selected = language
                         applyAppLanguage(context, language)
@@ -93,7 +101,13 @@ internal fun LanguageSettingsScreen(modifier: Modifier = Modifier, onBack: (() -
 
 /** «Трафарет»: код языка моноширинным слева, название, галочка у выбранного. */
 @Composable
-private fun LanguageRow(code: String, title: String, selected: Boolean, onSelect: () -> Unit) {
+private fun LanguageRow(
+    code: String,
+    title: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    badge: String? = null
+) {
     val colors = OmnixTheme.colors
     Row(
         modifier = Modifier
@@ -116,8 +130,20 @@ private fun LanguageRow(code: String, title: String, selected: Boolean, onSelect
                 fontWeight = if (selected) FontWeight.SemiBold else null
             ),
             color = colors.textPrimary,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f, fill = badge == null)
         )
+        if (badge != null) {
+            Text(
+                text = badge,
+                style = OmnixMonoLabelStyle,
+                color = colors.stateWarning,
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .border(BorderStroke(1.dp, colors.stateWarning), RoundedCornerShape(50))
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+            Spacer(Modifier.weight(1f))
+        }
         if (selected) OmnixCheckIcon(color = colors.textPrimary)
     }
 }
