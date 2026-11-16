@@ -137,7 +137,7 @@ class ToolExecutorBehaviorTest {
     fun `call to a named contact is not blocked but secrets in a call still are`() = runBlocking {
         val calls = AtomicInteger(0)
         val callTool = ScriptedTool(
-            toolId = "communication.call",
+            toolId = "test.recipient_handoff",
             isOffline = true,
             mayDiscloseUserContentExternally = true,
             contactIsRecipient = true
@@ -160,9 +160,13 @@ class ToolExecutorBehaviorTest {
             )
         )
 
-        assertEquals(ToolExecutionStatus.SUCCESS, allowed.status)
-        assertEquals("PRIVACY_POLICY_BLOCKED", blocked.error)
-        assertEquals(1, calls.get())
+        assertEquals(
+            "allowed: status=${allowed.status} error=${allowed.error} summary=${allowed.summary}",
+            ToolExecutionStatus.SUCCESS,
+            allowed.status
+        )
+        assertEquals("blocked: status=${blocked.status}", "PRIVACY_POLICY_BLOCKED", blocked.error)
+        assertEquals("tool runs", 1, calls.get())
     }
 
     @Test
