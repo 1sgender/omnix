@@ -172,6 +172,13 @@
     <string name="omnix_chat_omnix">OMNIX</string>
     <string name="omnix_chat_input_hint">OMNIX-den soraň</string>
     <string name="omnix_chat_send">Iber</string>
+    <string name="omnix_chat_attach">Faýl goşmak</string>
+    <string name="omnix_chat_attach_remove">Faýly aýyrmak</string>
+    <string name="omnix_chat_attach_unsupported">Bu faýl görnüşi entek goldanylmaýar. Tekst, CSV, JSON we Word (.docx) bolýar.</string>
+    <string name="omnix_chat_attach_too_large">Faýl gaty uly (2 MB-a çenli).</string>
+    <string name="omnix_chat_attach_empty">Faýlda tekst ýok.</string>
+    <string name="omnix_chat_attach_unreadable">Faýly okap bolmady.</string>
+    <string name="omnix_chat_attach_truncated">Diňe faýlyň başy iberiler.</string>
     <string name="omnix_chat_search_hint">Çatlarda gözle</string>
     <string name="omnix_chat_search_empty">Hiç zat tapylmady</string>
     <string name="omnix_chat_group_week">Soňky 7 gün</string>

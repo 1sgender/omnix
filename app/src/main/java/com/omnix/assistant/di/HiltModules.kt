@@ -217,6 +217,7 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindSmsTool(tool: SmsTool): OmniTool
     @Binds @IntoSet abstract fun bindContactsTool(tool: ContactsTool): OmniTool
     @Binds @IntoSet abstract fun bindShareTool(tool: ShareTool): OmniTool
+    @Binds @IntoSet abstract fun bindCreateFileTool(tool: com.omnix.assistant.agent.tools.files.CreateFileTool): OmniTool
     @Binds @IntoSet abstract fun bindTelegramTool(tool: TelegramTool): OmniTool
 
     // 4. Продуктивность и задачи (Productivity)

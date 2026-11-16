@@ -124,6 +124,13 @@
     <string name="omnix_chat_omnix">OMNIX</string>
     <string name="omnix_chat_input_hint">OMNIX’e sor</string>
     <string name="omnix_chat_send">Gönder</string>
+    <string name="omnix_chat_attach">Dosya ekle</string>
+    <string name="omnix_chat_attach_remove">Dosyayı kaldır</string>
+    <string name="omnix_chat_attach_unsupported">Bu dosya türü henüz desteklenmiyor. Metin, CSV, JSON ve Word (.docx) dosyaları olur.</string>
+    <string name="omnix_chat_attach_too_large">Dosya çok büyük (en fazla 2 MB).</string>
+    <string name="omnix_chat_attach_empty">Dosyada metin yok.</string>
+    <string name="omnix_chat_attach_unreadable">Dosya okunamadı.</string>
+    <string name="omnix_chat_attach_truncated">Dosyanın yalnızca başı gönderilecek.</string>
     <string name="omnix_chat_search_hint">Sohbetlerde ara</string>
     <string name="omnix_chat_search_empty">Hiçbir şey bulunamadı</string>
     <string name="omnix_chat_group_week">Son 7 gün</string>
