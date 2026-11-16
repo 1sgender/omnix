@@ -172,6 +172,13 @@
     <string name="omnix_chat_omnix">OMNIX</string>
     <string name="omnix_chat_input_hint">OMNIX-den soraň</string>
     <string name="omnix_chat_send">Iber</string>
+    <string name="omnix_chat_attach">Faýl goşmak</string>
+    <string name="omnix_chat_attach_remove">Faýly aýyrmak</string>
+    <string name="omnix_chat_attach_unsupported">Bu faýl görnüşi entek goldanylmaýar. Tekst, CSV, JSON we Word (.docx) bolýar.</string>
+    <string name="omnix_chat_attach_too_large">Faýl gaty uly (2 MB-a çenli).</string>
+    <string name="omnix_chat_attach_empty">Faýlda tekst ýok.</string>
+    <string name="omnix_chat_attach_unreadable">Faýly okap bolmady.</string>
+    <string name="omnix_chat_attach_truncated">Diňe faýlyň başy iberiler.</string>
     <string name="omnix_chat_search_hint">Çatlarda gözle</string>
     <string name="omnix_chat_search_empty">Hiç zat tapylmady</string>
     <string name="omnix_chat_group_week">Soňky 7 gün</string>
@@ -255,8 +262,8 @@
     <string name="omnix_voice_haptics_body">«Omni» aýdylanda we iberilende ýeňil titreme</string>
     <string name="omnix_voice_listening">Diňleme</string>
     <string name="omnix_voice_listening_body">OMNIX fonda «Omni» sözüni diňläp durşun.</string>
-    <string name="omnix_voice_headset_only">Diňe Clip birikdirilen wagty</string>
-    <string name="omnix_voice_headset_only_body">Diňe Cligiňiz arkaly diňlemek batareýany tygşytlaýar.</string>
+    <string name="omnix_voice_headset_only">Diňe gulaklyklar bilen</string>
+    <string name="omnix_voice_headset_only_body">Batareýany tygşytlaýar: diňe gulaklyklar arkaly diňleýär.</string>
     <string name="omnix_voice_sensitivity">Oýandyryş duýgurlygy</string>
     <string name="omnix_voice_background">Fon</string>
     <string name="omnix_voice_background_body">OMNIX-e ekran öçüli wagtynda-da işlemäge rugsat beriň.</string>
@@ -264,7 +271,7 @@
     <string name="omnix_voice_automations">Protokollar</string>
     <string name="omnix_voice_automations_empty">Heniz protokol ýok. Protokoly sözler bilen düşündiriň, «Täze protokol» basyň ýa-da aýdyň: «Omni, gulaklyk birikende aýdym goý».</string>
 
-    <string name="omnix_privacy_title">Sazlamalar</string>
+    <string name="omnix_privacy_title">Gizlinlik</string>
     <string name="omnix_privacy_microphone">Mikrofon</string>
     <string name="omnix_privacy_allowed">Rugsat berlen</string>
     <string name="omnix_privacy_not_allowed">Rugsat berilmedik</string>
@@ -276,6 +283,12 @@
     <string name="omnix_privacy_permissions">Rugsatlar</string>
     <string name="omnix_privacy_permissions_manage">Dolandyr</string>
     <string name="omnix_privacy_delete_history">Dawuş taryhyny poz</string>
+    <string name="omnix_privacy_confirmations">Tassyklamalar</string>
+    <string name="omnix_privacy_confirmations_body">Jaňlar, habarlar, ygtybarly kontaktlar</string>
+    <string name="omnix_confirmations_title">Tassyklamalar</string>
+    <string name="omnix_confirmations_intro">OMNIX jaň etmezden ýa-da ýazmazdan öň sizden soranda.</string>
+    <string name="omnix_language_voice_soon">ses basym</string>
+    <string name="omnix_offline_includes">Näme girýär</string>
 
     <string name="omnix_ai_title">EA modeli</string>
     <string name="omnix_ai_model_auto">Awto</string>

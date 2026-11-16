@@ -35,6 +35,7 @@ class ToolExecutorBehaviorTest {
         override val requiredPermissions: List<String> = emptyList(),
         riskLevelForPolicy: ToolRisk = ToolRisk.SAFE,
         private val implicitPrivacyContext: List<String> = emptyList(),
+        override val contactIsRecipient: Boolean = false,
         private val run: suspend () -> ToolExecutionResult
     ) : OmniTool {
         override val description = toolId
@@ -130,6 +131,42 @@ class ToolExecutorBehaviorTest {
         assertEquals("PRIVACY_POLICY_BLOCKED", shareResult.error)
         assertEquals("PRIVACY_POLICY_BLOCKED", locationResult.error)
         assertEquals(0, calls.get())
+    }
+
+    @Test
+    fun `call to a named contact is not blocked but secrets in a call still are`() = runBlocking {
+        val calls = AtomicInteger(0)
+        val callTool = ScriptedTool(
+            toolId = "test.recipient_handoff",
+            isOffline = true,
+            mayDiscloseUserContentExternally = true,
+            contactIsRecipient = true
+        ) {
+            calls.incrementAndGet()
+            ToolExecutionResult.success("calling")
+        }
+        val executor = executor(callTool)
+
+        val allowed = executor.execute(
+            ToolCall(callTool.toolId, buildJsonObject { put("contact", "мама") })
+        )
+        val blocked = executor.execute(
+            ToolCall(
+                callTool.toolId,
+                buildJsonObject {
+                    put("contact", "мама")
+                    put("note", "password=call-secret")
+                }
+            )
+        )
+
+        assertEquals(
+            "allowed: status=${allowed.status} error=${allowed.error} summary=${allowed.summary}",
+            ToolExecutionStatus.SUCCESS,
+            allowed.status
+        )
+        assertEquals("blocked: status=${blocked.status}", "PRIVACY_POLICY_BLOCKED", blocked.error)
+        assertEquals("tool runs", 1, calls.get())
     }
 
     @Test

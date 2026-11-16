@@ -36,6 +36,17 @@ interface HttpTransport {
         connectTimeoutMs: Long,
         requestTimeoutMs: Long
     ): HttpTransportResponse = throw TransportException(ProviderFailureKind.UNKNOWN, "binary body not supported")
+
+    /**
+     * GET без тела (поиск Brave). Транспорты, которым это не нужно (фейки в
+     * тестах провайдеров), его не реализуют.
+     */
+    suspend fun get(
+        url: String,
+        headers: Map<String, String>,
+        connectTimeoutMs: Long,
+        requestTimeoutMs: Long
+    ): HttpTransportResponse = throw TransportException(ProviderFailureKind.UNKNOWN, "GET not supported")
 }
 
 data class HttpTransportResponse(val status: Int, val body: String)

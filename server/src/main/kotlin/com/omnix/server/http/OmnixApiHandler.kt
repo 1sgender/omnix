@@ -91,7 +91,9 @@ class OmnixApiHandler(
      */
     private val healthProviderFunc: (() -> String)? = null,
     /** Распознавание речи для переводчика; null — эндпоинт отвечает 503. */
-    private val speechToText: com.omnix.server.stt.SpeechToText? = null
+    private val speechToText: com.omnix.server.stt.SpeechToText? = null,
+    /** Веб-поиск; null — эндпоинт отвечает SEARCH_UNAVAILABLE. */
+    private val searchProvider: com.omnix.server.search.SearchProvider? = null
 ) {
     private val speechHandler = SpeechHttpHandler(
         authenticator = authenticator,
@@ -105,11 +107,24 @@ class OmnixApiHandler(
         speechToText = speechToText
     )
 
+    private val searchHandler = SearchHttpHandler(
+        authenticator = authenticator,
+        authorizer = authorizer,
+        rateLimiter = rateLimiter,
+        validation = validation,
+        logger = logger,
+        metrics = metrics,
+        json = json,
+        entitlementChecker = entitlementChecker,
+        searchProvider = searchProvider
+    )
+
     /** Внешний (main-kickoff) вход в health — то же самое, что и PATH_HEALTH. */
     fun healthSnapshot(): String = (healthProviderFunc ?: healthProvider)()
     companion object {
         const val PATH_EXECUTE = "/v1/ai/execute"
         const val PATH_STT = "/v1/stt/transcribe"
+        const val PATH_SEARCH = "/v1/search"
 
         /** Заголовок идентификатора устройства для привязки токена (V007). */
         const val HEADER_DEVICE_ID = "X-Omnix-Device"
@@ -148,7 +163,11 @@ class OmnixApiHandler(
             path == PATH_STT && method == "POST" ->
                 speechHandler.handle(request)
 
+            path == PATH_SEARCH && method == "POST" ->
+                searchHandler.handle(request)
+
             path == PATH_STT ||
+                path == PATH_SEARCH ||
                 path == PATH_EXECUTE ||
                 path == PATH_ADMIN_METRICS ||
                 path == PATH_ADMIN_METRICS_PROMETHEUS ||

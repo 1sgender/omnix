@@ -56,6 +56,7 @@ import com.omnix.assistant.agent.tools.intelligence.WeatherTool
 import com.omnix.assistant.agent.tools.intelligence.WebSearchTool
 import com.omnix.assistant.agent.tools.location.LocationNavigationTool
 import com.omnix.assistant.agent.tools.media.MediaControlTool
+import com.omnix.assistant.agent.tools.media.MusicSearchTool
 import com.omnix.assistant.agent.tools.productivity.AlarmTimerTool
 import com.omnix.assistant.agent.tools.productivity.CalendarTool
 import com.omnix.assistant.agent.tools.productivity.ClipboardTool
@@ -208,12 +209,15 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindDoNotDisturbTool(tool: DoNotDisturbTool): OmniTool
     @Binds @IntoSet abstract fun bindScreenshotTool(tool: ScreenshotTool): OmniTool
     @Binds @IntoSet abstract fun bindMediaControlTool(tool: MediaControlTool): OmniTool
+    @Binds @IntoSet abstract fun bindMusicSearchTool(tool: MusicSearchTool): OmniTool
+    @Binds abstract fun bindServerWebSearch(client: com.omnix.assistant.data.remote.OmnixApiClient): com.omnix.assistant.agent.tools.intelligence.ServerWebSearch
 
     // 3. Связь и коммуникации (Communication)
     @Binds @IntoSet abstract fun bindCallTool(tool: CallTool): OmniTool
     @Binds @IntoSet abstract fun bindSmsTool(tool: SmsTool): OmniTool
     @Binds @IntoSet abstract fun bindContactsTool(tool: ContactsTool): OmniTool
     @Binds @IntoSet abstract fun bindShareTool(tool: ShareTool): OmniTool
+    @Binds @IntoSet abstract fun bindCreateFileTool(tool: com.omnix.assistant.agent.tools.files.CreateFileTool): OmniTool
     @Binds @IntoSet abstract fun bindTelegramTool(tool: TelegramTool): OmniTool
 
     // 4. Продуктивность и задачи (Productivity)

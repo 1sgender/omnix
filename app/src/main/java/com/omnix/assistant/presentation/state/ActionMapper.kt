@@ -37,7 +37,8 @@ object ActionMapper {
         "device.wifi" to ActionType.DEVICE_SETTING,
         "device.dnd" to ActionType.DEVICE_SETTING,
         "device.screenshot" to ActionType.DEVICE_SETTING,
-        "media.control" to ActionType.MEDIA
+        "media.control" to ActionType.MEDIA,
+        "media.play_search" to ActionType.MEDIA
     )
 
     /**

@@ -11,21 +11,25 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
 import java.net.URLEncoder
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Web Search Tool v2.0
- * 
- * Улучшенный поиск с несколькими источниками:
+ * Web Search Tool v3.0
+ *
+ * Источники по порядку:
+ * 0. Сервер OMNIX (/v1/search: Brave или Gemini с Google Search). С телефона в
+ *    Туркменистане DuckDuckGo и Википедия часто заблокированы.
  * 1. DuckDuckGo Instant Answer API (быстрые факты)
- * 2. DuckDuckGo HTML fallback (если API пуст)
- * 3. Wikipedia API (для энциклопедических запросов)
+ * 2. Wikipedia API (для энциклопедических запросов)
  */
 @Singleton
 class WebSearchTool @Inject constructor(
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    /** Сервер OMNIX ищет сам; при любом сбое остаётся прежний путь (DuckDuckGo, Википедия). */
+    private val serverSearch: ServerWebSearch = ServerWebSearch.NONE
 ) : OmniTool {
 
     companion object {
@@ -42,7 +46,7 @@ class WebSearchTool @Inject constructor(
     override val category: ToolCategory = ToolCategory.INTELLIGENCE
     override val riskLevel: ToolRisk = ToolRisk.SAFE
     override val isOffline: Boolean = false
-    override val executionTimeoutMs: Long = 12000L
+    override val executionTimeoutMs: Long = 20000L
     override val requiresForeground: Boolean = false
 
     override val parametersSchema: JsonObject = buildJsonObject {
@@ -68,6 +72,32 @@ class WebSearchTool @Inject constructor(
                 summary = "Пустой поисковый запрос",
                 error = "EMPTY_QUERY"
             )
+        }
+
+        // 0. Сервер OMNIX. Не сработал (не настроен, нет сети, лимит): прежний путь.
+        val serverOutcome = try {
+            serverSearch.search(query, arguments["lang"]?.jsonPrimitive?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+                ?: Locale.getDefault().language)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            ServerSearchOutcome.Unavailable("ERROR")
+        }
+        if (serverOutcome is ServerSearchOutcome.Found) {
+            ServerSearchSummary.compose(serverOutcome)?.let { summary ->
+                return ToolExecutionResult.success(
+                    summary = summary,
+                    data = buildJsonObject {
+                        put("query", query)
+                        put("result", summary)
+                        put("source", "OMNIX")
+                        put("found", true)
+                        put("links", buildJsonArray {
+                            serverOutcome.results.take(3).forEach { add(it.url) }
+                        })
+                    }
+                )
+            }
         }
 
         return try {

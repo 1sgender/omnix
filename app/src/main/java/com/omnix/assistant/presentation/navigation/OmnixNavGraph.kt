@@ -47,6 +47,7 @@ import com.omnix.assistant.presentation.settings.AiModelViewModel
 import com.omnix.assistant.presentation.settings.SettingsViewModel
 import com.omnix.assistant.presentation.settings.MeRoute
 import com.omnix.assistant.presentation.settings.MemoryScreen
+import com.omnix.assistant.presentation.settings.ConfirmationsScreen
 import com.omnix.assistant.presentation.settings.PrivacyPolicyViewModel
 import com.omnix.assistant.presentation.settings.PrivacyScreen
 import com.omnix.assistant.presentation.settings.SECTION_ABOUT
@@ -136,6 +137,8 @@ fun OmnixNavGraph(
                     },
                     onConfirm = chatViewModel::confirmPendingAction,
                     onCancel = chatViewModel::cancelPendingAction,
+                    onAttachmentPicked = chatViewModel::onAttachmentPicked,
+                    onClearAttachment = chatViewModel::clearAttachment,
                     onNewChat = chatViewModel::startNewConversation,
                     onOpenHistory = chatViewModel::openHistory,
                     onCloseHistory = chatViewModel::closeHistory,
@@ -215,14 +218,14 @@ fun OmnixNavGraph(
                 // through immediately — no batch save.
                 val context = LocalContext.current
                 val privacyChatViewModel: ChatViewModel = hiltViewModel()
-                val policyViewModel: PrivacyPolicyViewModel = hiltViewModel()
-                val policyState by policyViewModel.uiState.collectAsStateWithLifecycle()
                 PrivacyScreen(
                     microphoneAllowed =
                         uiState.systemState != SystemStateType.MICROPHONE_DENIED,
                     historyStored = true,
-                    policyState = policyState,
                     onBack = navController::popBackStack,
+                    onOpenConfirmations = {
+                        navController.navigateSingleTop(OmnixDestination.Confirmations)
+                    },
                     onManagePermissions = {
                         context.startActivity(
                             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -232,7 +235,16 @@ fun OmnixNavGraph(
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     },
-                    onDeleteHistory = privacyChatViewModel::clearAllHistory,
+                    onDeleteHistory = privacyChatViewModel::clearAllHistory
+                )
+            }
+
+            composable(OmnixDestination.Confirmations.route) {
+                val policyViewModel: PrivacyPolicyViewModel = hiltViewModel()
+                val policyState by policyViewModel.uiState.collectAsStateWithLifecycle()
+                ConfirmationsScreen(
+                    policyState = policyState,
+                    onBack = navController::popBackStack,
                     onCallPolicyChange = policyViewModel::setCallPolicy,
                     onMessagingPolicyChange = policyViewModel::setMessagingPolicy,
                     onAddTrustedContact = policyViewModel::addTrustedContact,

@@ -65,7 +65,11 @@ class MessageRepositoryImpl @Inject constructor(
                 rows.map { row ->
                     ConversationSummary(
                         id = row.conversationId,
-                        title = row.title,
+                        // Файл в первом сообщении не должен попасть в заголовок целиком.
+                        title = row.title?.let { text ->
+                            val decoded = com.omnix.assistant.domain.files.ChatAttachmentCodec.decode(text)
+                            decoded.question.ifEmpty { decoded.fileName.orEmpty() }.take(200)
+                        },
                         startedAt = row.startedAt,
                         lastMessageAt = row.lastMessageAt,
                         messageCount = row.messageCount

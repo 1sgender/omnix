@@ -160,6 +160,8 @@ data class ConcurrencyConfig(
     val maxAiInFlight: Int = 32,
     /** Одновременные /v1/stt/transcribe. */
     val maxSttInFlight: Int = 8,
+    /** Одновременные /v1/search. */
+    val maxSearchInFlight: Int = 16,
     /** Что сказать клиенту в Retry-After при отказе, секунды. */
     val busyRetryAfterSeconds: Int = 3
 ) {
@@ -167,6 +169,7 @@ data class ConcurrencyConfig(
         require(maxInFlight in 1..10_000) { "maxInFlight must be in 1..10000" }
         require(maxAiInFlight in 1..10_000) { "maxAiInFlight must be in 1..10000" }
         require(maxSttInFlight in 1..10_000) { "maxSttInFlight must be in 1..10000" }
+        require(maxSearchInFlight in 1..10_000) { "maxSearchInFlight must be in 1..10000" }
         require(busyRetryAfterSeconds in 1..120) { "busyRetryAfterSeconds must be in 1..120" }
     }
 }
@@ -236,7 +239,10 @@ data class AiGenerationConfig(
                 "На вопрос, просьбу объяснить, составить план или текст отвечай полно и понятно, " +
                 "как хороший собеседник: начни с сути, затем подробности. Где это помогает, используй " +
                 "простой markdown: короткие абзацы, списки, **жирный** для главного, заголовки ## для " +
-                "длинных ответов, блоки кода для кода. Не используй таблицы и HTML. Не пиши вступлений " +
+                "длинных ответов, блоки кода для кода. Для сравнений и данных используй простые таблицы " +
+                "markdown (до пяти колонок). Для чисел по категориям (доли, суммы, динамика) вставляй " +
+                "блок ```chart: первая строка «title: заголовок», дальше по строке «подпись: число», " +
+                "от двух до десяти строк; приложение нарисует столбцы. Не используй HTML. Не пиши вступлений " +
                 "вроде «Конечно!» и не повторяй вопрос."
     }
 }
@@ -521,6 +527,7 @@ data class ServerConfig(
                     maxInFlight = int("OMNIX_MAX_IN_FLIGHT", 128),
                     maxAiInFlight = int("OMNIX_MAX_AI_IN_FLIGHT", 32),
                     maxSttInFlight = int("OMNIX_MAX_STT_IN_FLIGHT", 8),
+                    maxSearchInFlight = int("OMNIX_MAX_SEARCH_IN_FLIGHT", 16),
                     busyRetryAfterSeconds = int("OMNIX_BUSY_RETRY_AFTER_SECONDS", 3)
                 ),
                 validation = ValidationConfig(

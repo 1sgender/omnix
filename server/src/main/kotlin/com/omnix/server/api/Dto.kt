@@ -158,6 +158,30 @@ data class SttResponse(
     @SerialName("requestId") val requestId: String
 )
 
+/** Веб-поиск: запрос и язык пользователя (ISO-код, подсказка провайдеру). */
+@Serializable
+data class SearchRequest(
+    @SerialName("query") val query: String,
+    @SerialName("lang") val lang: String? = null,
+    @SerialName("requestId") val requestId: String? = null
+)
+
+@Serializable
+data class SearchResultDto(
+    @SerialName("title") val title: String,
+    @SerialName("url") val url: String,
+    @SerialName("snippet") val snippet: String
+)
+
+@Serializable
+data class SearchResponse(
+    @SerialName("success") val success: Boolean = true,
+    @SerialName("results") val results: List<SearchResultDto>,
+    /** Готовый краткий ответ, если провайдер его дал (Gemini); иначе null. */
+    @SerialName("answer") val answer: String? = null,
+    @SerialName("requestId") val requestId: String
+)
+
 /** Облачная модель, доступная админу для теста (см. AdminModelAccess). */
 @Serializable
 data class AdminCloudModelDto(
@@ -214,6 +238,8 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     /** Сервер перегружен (bulkhead/пул БД): быстрый отказ вместо очереди, повторить позже. */
     SERVER_BUSY(503, "Server is busy, retry later"),
     PAYLOAD_TOO_LARGE(413, "Request payload too large"),
+    /** Веб-поиск не настроен или все его провайдеры недоступны: клиент уходит на запасной путь. */
+    SEARCH_UNAVAILABLE(503, "Web search is not available"),
     CLIP_UNKNOWN(404, "Clip is not provisioned"),
     CLIP_ALREADY_PROVISIONED(409, "Clip identity is already provisioned"),
     CLIP_REVOKED(403, "Clip identity is revoked"),

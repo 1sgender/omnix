@@ -2,6 +2,9 @@ package com.omnix.assistant.data.remote
 
 import android.util.Log
 import com.omnix.assistant.agent.decision.AiTier
+import com.omnix.assistant.agent.tools.intelligence.ServerSearchOutcome
+import com.omnix.assistant.agent.tools.intelligence.ServerSearchResult
+import com.omnix.assistant.agent.tools.intelligence.ServerWebSearch
 import com.omnix.assistant.core.admin.AdminModelPin
 import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.constants.AppConstants
@@ -101,6 +104,27 @@ data class SttResultDto(
     @SerialName("language") val language: String? = null
 )
 
+/** Веб-поиск на сервере. Зеркалит server `SearchRequest`. */
+@Serializable
+data class SearchRequestDto(
+    @SerialName("query") val query: String,
+    @SerialName("lang") val lang: String? = null,
+    @SerialName("requestId") val requestId: String
+)
+
+@Serializable
+data class SearchResultItemDto(
+    @SerialName("title") val title: String = "",
+    @SerialName("url") val url: String = "",
+    @SerialName("snippet") val snippet: String = ""
+)
+
+@Serializable
+data class SearchResponseDto(
+    @SerialName("results") val results: List<SearchResultItemDto> = emptyList(),
+    @SerialName("answer") val answer: String? = null
+)
+
 @Serializable
 data class OmnixApiErrorDto(
     @SerialName("code") val code: String = "INTERNAL_ERROR",
@@ -134,7 +158,7 @@ class OmnixApiClient @Inject constructor(
     private val adminModels: AdminModelTesting = AdminModelTesting.OFF,
     /** Кто ответил (Pro/Flash), засчитанные ответы и отказы по лимиту — для чата и «Сегодня осталось». */
     private val tierLedger: AiTierLedger = AiTierLedger()
-) {
+) : ServerWebSearch {
     companion object {
         private const val TAG = "OmnixApiClient"
 
@@ -144,6 +168,8 @@ class OmnixApiClient @Inject constructor(
         val BASE_URL: String = AppConstants.OMNIX_API_BASE_URL
         const val EXECUTE_PATH = "/v1/ai/execute"
         const val STT_PATH = "/v1/stt/transcribe"
+        const val SEARCH_PATH = "/v1/search"
+        private const val SEARCH_TIMEOUT_SECONDS = 9L
         private const val MAX_RESPONSE_BYTES = 1L * 1024 * 1024
 
         /**
@@ -378,6 +404,69 @@ class OmnixApiClient @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "stt failure | requestId=$requestId | type=${e.javaClass.simpleName}")
             Resource.Error(e, "Не удалось распознать речь.")
+        }
+    }
+
+    /**
+     * Веб-поиск на сервере (/v1/search): телефон в Туркменистане часто не достаёт
+     * до DuckDuckGo и Википедии. Любой сбой (нет активации, сеть, SEARCH_UNAVAILABLE,
+     * лимит) возвращается как [ServerSearchOutcome.Unavailable]: вызывающий
+     * инструмент идёт запасным путём. Текст запроса в лог не пишется.
+     */
+    override suspend fun search(query: String, lang: String): ServerSearchOutcome = withContext(Dispatchers.IO) {
+        val token = securityManager.getAccessToken()
+        if (!AccessTokenPolicy.isValid(token)) return@withContext ServerSearchOutcome.Unavailable("NO_TOKEN")
+        val requestId = RequestIds.newId()
+        val payload = json.encodeToString(
+            SearchRequestDto.serializer(),
+            SearchRequestDto(query = query, lang = lang.takeIf { it.isNotBlank() }, requestId = requestId)
+        )
+        val request = Request.Builder()
+            .url("$BASE_URL$SEARCH_PATH")
+            .header("Authorization", "Bearer $token")
+            .header("Content-Type", "application/json")
+            .post(payload.toRequestBody(mediaType))
+            .build()
+        val client = apiHttpClient.newBuilder().callTimeout(SEARCH_TIMEOUT_SECONDS, TimeUnit.SECONDS).build()
+        try {
+            suspendCancellableCoroutine<ServerSearchOutcome> { cont ->
+                val call = client.newCall(request)
+                cont.invokeOnCancellation { call.cancel() }
+                call.enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        if (cont.isActive) cont.resume(ServerSearchOutcome.Unavailable("NETWORK"))
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        val outcome = try {
+                            response.use { resp ->
+                                val body = resp.body?.readUtf8Bounded(MAX_RESPONSE_BYTES).orEmpty()
+                                Log.i(TAG, "search response | requestId=$requestId | http=${resp.code}")
+                                if (resp.isSuccessful) parseSearch(body) else ServerSearchOutcome.Unavailable("HTTP_${resp.code}")
+                            }
+                        } catch (_: Exception) {
+                            ServerSearchOutcome.Unavailable("BAD_RESPONSE")
+                        }
+                        if (cont.isActive) cont.resume(outcome)
+                    }
+                })
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            ServerSearchOutcome.Unavailable("ERROR")
+        }
+    }
+
+    private fun parseSearch(body: String): ServerSearchOutcome {
+        val parsed = json.decodeFromString(SearchResponseDto.serializer(), body)
+        val results = parsed.results.filter { it.url.isNotBlank() }
+            .map { ServerSearchResult(it.title, it.url, it.snippet) }
+        val answer = parsed.answer?.takeIf { it.isNotBlank() }
+        return if (results.isEmpty() && answer == null) {
+            ServerSearchOutcome.Unavailable("EMPTY")
+        } else {
+            ServerSearchOutcome.Found(answer, results)
         }
     }
 

@@ -171,6 +171,13 @@
     <string name="omnix_chat_omnix">OMNIX</string>
     <string name="omnix_chat_input_hint">Спросить OMNIX</string>
     <string name="omnix_chat_send">Отправить</string>
+    <string name="omnix_chat_attach">Прикрепить файл</string>
+    <string name="omnix_chat_attach_remove">Убрать файл</string>
+    <string name="omnix_chat_attach_unsupported">Этот тип файла пока не поддерживается. Подходят текст, CSV, JSON и Word (.docx).</string>
+    <string name="omnix_chat_attach_too_large">Файл слишком большой (до 2 МБ).</string>
+    <string name="omnix_chat_attach_empty">В файле нет текста.</string>
+    <string name="omnix_chat_attach_unreadable">Не удалось прочитать файл.</string>
+    <string name="omnix_chat_attach_truncated">Отправится только начало файла.</string>
     <string name="omnix_chat_search_hint">Поиск по чатам</string>
     <string name="omnix_chat_search_empty">Ничего не найдено</string>
     <string name="omnix_chat_group_week">Последние 7 дней</string>
@@ -254,8 +261,8 @@
     <string name="omnix_voice_haptics_body">Лёгкий «тик» на «Омни» и при отправке</string>
     <string name="omnix_voice_listening">Прослушивание</string>
     <string name="omnix_voice_listening_body">OMNIX ждёт слово «Омни» в фоне.</string>
-    <string name="omnix_voice_headset_only">Только с подключённым Clip</string>
-    <string name="omnix_voice_headset_only_body">Экономит батарею: OMNIX слушает только через Clip.</string>
+    <string name="omnix_voice_headset_only">Только с наушниками</string>
+    <string name="omnix_voice_headset_only_body">Экономит батарею: слушает только через наушники.</string>
     <string name="omnix_voice_sensitivity">Чувствительность</string>
     <string name="omnix_voice_background">Работа в фоне</string>
     <string name="omnix_voice_background_body">Разрешите OMNIX работать при выключенном экране.</string>
@@ -263,7 +270,7 @@
     <string name="omnix_voice_automations">Протоколы</string>
     <string name="omnix_voice_automations_empty">Протоколов пока нет. Опишите протокол словами, нажмите «Новый протокол» или скажите: «Омни, когда подключу наушники — включи музыку».</string>
 
-    <string name="omnix_privacy_title">Настройки</string>
+    <string name="omnix_privacy_title">Конфиденциальность</string>
     <string name="omnix_privacy_microphone">Микрофон</string>
     <string name="omnix_privacy_allowed">Разрешён</string>
     <string name="omnix_privacy_not_allowed">Не разрешён</string>
@@ -275,6 +282,12 @@
     <string name="omnix_privacy_permissions">Разрешения</string>
     <string name="omnix_privacy_permissions_manage">Управлять</string>
     <string name="omnix_privacy_delete_history">Удалить историю запросов</string>
+    <string name="omnix_privacy_confirmations">Подтверждения</string>
+    <string name="omnix_privacy_confirmations_body">Звонки, сообщения, доверенные контакты</string>
+    <string name="omnix_confirmations_title">Подтверждения</string>
+    <string name="omnix_confirmations_intro">Когда OMNIX спрашивает вас, прежде чем позвонить или написать.</string>
+    <string name="omnix_language_voice_soon">голос скоро</string>
+    <string name="omnix_offline_includes">Что входит</string>
 
     <string name="omnix_ai_title">ИИ-модель</string>
     <string name="omnix_ai_model_auto">Авто</string>

@@ -2,6 +2,7 @@ package com.omnix.assistant.agent.fast
 
 import com.omnix.assistant.agent.media.MediaIntent
 import com.omnix.assistant.agent.media.MediaIntentParser
+import com.omnix.assistant.agent.media.MusicRequestParser
 import com.omnix.assistant.agent.model.ToolCall
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -140,6 +141,11 @@ class FastCommandRouter @Inject constructor() {
                 )
             }
         }
+
+        // 2.9 Поиск песни: «найди песню X», «включи песню X», «play song X».
+        // Раньше «включи песню X» уходило в media.control PLAY, а «найди песню X»
+        // в web_search (скриншот владельца: «точных данных не найдено»).
+        MusicRequestParser.parseExplicit(q)?.let { return musicSearchRoute(it) }
 
         // 3. Управление медиа и музыкой (через нормализацию намерения)
         // Важно: "включи музыку" -> PLAY_MEDIA, а не NEXT_TRACK.
@@ -500,8 +506,21 @@ class FastCommandRouter @Inject constructor() {
             )
         }
 
+        // 15. «Включи X» / «поставь X» без слова «песня»: всё остальное уже проверено
+        // выше, значит это название песни или исполнитель.
+        MusicRequestParser.parseBare(q)?.let { return musicSearchRoute(it) }
+
         return FastRouteResult.ForwardToLlm
     }
+
+    private fun musicSearchRoute(query: String): FastRouteResult.HandledLocally =
+        FastRouteResult.HandledLocally(
+            toolCall = ToolCall(
+                toolId = "media.play_search",
+                arguments = buildJsonObject { put("query", query) }
+            ),
+            immediateVoiceResponse = "Ищу «$query» в Яндекс Музыке."
+        )
 
     /**
      * Слово «интернет» само по себе означает предмет web-поиска, а не Wi-Fi.
