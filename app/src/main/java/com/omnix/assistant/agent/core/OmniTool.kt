@@ -87,6 +87,14 @@ interface OmniTool {
     val mayDiscloseUserContentExternally: Boolean
         get() = !isOffline
 
+    /**
+     * True when the contact in the arguments is the very purpose of the tool
+     * (a call, a message to a person). The privacy gate then does not treat the
+     * recipient itself as a leak; any other sensitive content still blocks.
+     */
+    val contactIsRecipient: Boolean
+        get() = false
+
     /** Local-only context the privacy gate must classify before executing. */
     fun externalPrivacyContext(arguments: JsonObject): List<String> = emptyList()
 

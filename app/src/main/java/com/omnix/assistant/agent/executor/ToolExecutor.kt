@@ -5,6 +5,7 @@ import com.omnix.assistant.agent.core.OmniTool
 import com.omnix.assistant.agent.decision.PrivacyClassifier
 import com.omnix.assistant.agent.decision.PrivacyContent
 import com.omnix.assistant.agent.decision.PrivacyLevel
+import com.omnix.assistant.agent.decision.PrivacyReason
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.agent.policy.ActionOrigin
@@ -98,7 +99,12 @@ class ToolExecutor @Inject constructor(
                 relatedContent = tool.externalPrivacyContext(call.arguments)
             )
         )
-        return if (classification.level == PrivacyLevel.NORMAL) {
+        // Звонок и сообщение контакту: адресат и есть цель действия, а не утечка.
+        // Пропускаем, только если других причин (пароли, платежи, токены) нет.
+        val onlyRecipient = tool.contactIsRecipient && classification.complete &&
+            classification.reasons.isNotEmpty() &&
+            classification.reasons.all { it == PrivacyReason.PRIVATE_CONTACT }
+        return if (classification.level == PrivacyLevel.NORMAL || onlyRecipient) {
             null
         } else {
             Log.i(

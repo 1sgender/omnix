@@ -41,6 +41,7 @@ class CallTool @Inject constructor(
     override val riskLevel: ToolRisk = ToolRisk.CONFIRMATION_REQUIRED
     override val isOffline: Boolean = true
     override val mayDiscloseUserContentExternally: Boolean = true
+    override val contactIsRecipient: Boolean = true
     override val requiresForeground: Boolean = true
 
     override val capabilityContract = ToolCapabilityContract(
