@@ -45,9 +45,17 @@ class AppUpdateModelsTest {
         // Регрессия: живой сервер опускает success:true (дефолт сериализации),
         // и старый дефолт false вечно запрещал обновления.
         val parsed = parseAppLatest(
-            """{"channel":"staging","versionCode":101,"url":"https://x/y.apk","sizeBytes":1}"""
+            """{"channel":"staging","versionCode":101,"url":"https://github.com/x/y.apk","sizeBytes":1}"""
         )!!
         assertTrue(isUpdateAvailable(parsed, 100L))
+    }
+
+    @Test
+    fun `https url on an untrusted host is not an update`() {
+        assertFalse(isUpdateAvailable(info(url = "https://evil.example/app.apk"), 100L))
+        assertFalse(isUpdateAvailable(info(url = "https://github.com.evil.example/app.apk"), 100L))
+        assertFalse(isUpdateAvailable(info(url = "https://github.com@evil.example/app.apk"), 100L))
+        assertFalse(isUpdateAvailable(info(url = "not a url"), 100L))
     }
 
     @Test
