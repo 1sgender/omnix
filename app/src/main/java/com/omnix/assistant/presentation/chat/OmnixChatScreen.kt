@@ -594,7 +594,8 @@ private fun MessageRow(
                 text = message.text,
                 style = BubbleText,
                 color = colors.textPrimary,
-                codeBackground = colors.surfaceElevated
+                codeBackground = colors.surfaceElevated,
+                accent = colors.accentBrand
             )
         }
         Row(
