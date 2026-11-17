@@ -210,8 +210,8 @@ class GeminiGroundedSearchProvider(
     companion object {
         const val DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
-        /** grounding с google_search есть у Gemini 2.x; у 1.5 другой формат инструмента. */
-        const val DEFAULT_MODEL = "gemini-2.5-flash"
+        /** grounding с google_search есть у Gemini 2.x и новее; у 1.5 другой формат инструмента. */
+        const val DEFAULT_MODEL = "gemini-3.8-flash"
         private const val MAX_KEY_ATTEMPTS = 3
         private const val MAX_SOURCES = 5
     }
