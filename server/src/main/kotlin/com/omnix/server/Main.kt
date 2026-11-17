@@ -993,9 +993,9 @@ private fun buildSpeechToText(
 }
 
 /**
- * Веб-поиск (/v1/search): Brave (BRAVE_SEARCH_API_KEY) и/или Gemini с Google
+ * Веб-поиск (/v1/search): Serper (SERPER_API_KEY), Brave (BRAVE_SEARCH_API_KEY) и/или Gemini с Google
  * Search grounding (GEMINI_API_KEY), порядок и запасной вариант из
- * SEARCH_PROVIDERS ("brave,gemini" по умолчанию). Нет ни одного ключа: null,
+ * SEARCH_PROVIDERS ("serper,brave,gemini" по умолчанию). Нет ни одного ключа: null,
  * эндпоинт отвечает SEARCH_UNAVAILABLE. Модель Gemini: SEARCH_GEMINI_MODEL.
  */
 private fun buildSearchProvider(
@@ -1005,6 +1005,9 @@ private fun buildSearchProvider(
 ): com.omnix.server.search.SearchProvider? {
     fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
     val available = buildMap<String, com.omnix.server.search.SearchProvider> {
+        env("SERPER_API_KEY")?.let { key ->
+            put("serper", com.omnix.server.search.SerperSearchProvider(transport = transport, apiKey = key.trim()))
+        }
         env("BRAVE_SEARCH_API_KEY")?.let { key ->
             put("brave", com.omnix.server.search.BraveSearchProvider(transport = transport, apiKey = key.trim()))
         }
@@ -1024,5 +1027,13 @@ private fun buildSearchProvider(
                 )
             }
     }
-    return com.omnix.server.search.ChainedSearchProvider.fromConfig(env("SEARCH_PROVIDERS"), available, logger)
+    val chain = com.omnix.server.search.ChainedSearchProvider.fromConfig(env("SEARCH_PROVIDERS"), available, logger)
+        ?: return null
+    // Одинаковые запросы не оплачиваем повторно (SEARCH_CACHE_TTL_HOURS, 0 = без кэша).
+    val ttlHours = env("SEARCH_CACHE_TTL_HOURS")?.toLongOrNull() ?: 12L
+    return if (ttlHours > 0) {
+        com.omnix.server.search.CachedSearchProvider(chain, ttlMillis = ttlHours * 60 * 60 * 1000)
+    } else {
+        chain
+    }
 }
