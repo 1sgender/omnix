@@ -57,6 +57,7 @@ media пока верифицируют внутри execute() (та же чес
 | `device.flashlight` | torch | `CameraManager.TorchCallback` (состояние подтверждено системой) | `FAILURE` (`TORCH_VERIFY_FAILED`) |
 | `productivity.clipboard` (copy) | буфер обмена | чтение `primaryClip` и сравнение текста | `FAILURE` (`CLIPBOARD_VERIFY_FAILED`) — с API 29 фоновая запись игнорируется |
 | `productivity.alarm_timer` (alarm) | будильник | `AlarmManager.nextAlarmClockInfo` (час совпал) | `USER_ACTION_REQUIRED` (`ALARM_UNVERIFIED`) — «проверьте в часах» |
+| `productivity.reminder` | напоминание (Room + AlarmManager) | чтение записи обратно: должна быть и ждать (`PENDING`) | `FAILURE` (`REMINDER_VERIFY_FAILED`); без точных будильников — успех с предупреждением «время не гарантируется» |
 | `productivity.alarm_timer` (timer) | таймер | публичного API верификации НЕТ | формулировка ограничена действием: «отправлен в приложение часов» |
 | `media.control` (play/pause/…) | media-клавиши | обратной связи нет (нужен MediaSessionManager) | формулировка ограничена действием: «команда отправлена медиаплееру» |
 | `device.bluetooth` / `device.wifi` | переключение | недоступно приложениям на Android 13+/10+ | `USER_ACTION_REQUIRED` + системный экран (без имитации) |

@@ -62,6 +62,7 @@ import com.omnix.assistant.agent.tools.productivity.CalendarTool
 import com.omnix.assistant.agent.tools.productivity.ClipboardTool
 import com.omnix.assistant.agent.tools.productivity.CreateAutomationTool
 import com.omnix.assistant.agent.tools.productivity.EarBriefingTool
+import com.omnix.assistant.agent.tools.productivity.ReminderTool
 import com.omnix.assistant.agent.tools.system.*
 import com.omnix.assistant.ai.AIClient
 import com.omnix.assistant.ai.OmnixApiAiClient
@@ -226,6 +227,7 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindClipboardTool(tool: ClipboardTool): OmniTool
     @Binds @IntoSet abstract fun bindCreateAutomationTool(tool: CreateAutomationTool): OmniTool
     @Binds @IntoSet abstract fun bindEarBriefingTool(tool: EarBriefingTool): OmniTool
+    @Binds @IntoSet abstract fun bindReminderTool(tool: ReminderTool): OmniTool
 
     // 5. Локация и навигация (Location)
     @Binds @IntoSet abstract fun bindLocationNavigationTool(tool: LocationNavigationTool): OmniTool

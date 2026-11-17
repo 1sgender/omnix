@@ -4,6 +4,8 @@ import com.omnix.assistant.agent.media.MediaIntent
 import com.omnix.assistant.agent.media.MediaIntentParser
 import com.omnix.assistant.agent.media.MusicRequestParser
 import com.omnix.assistant.agent.model.ToolCall
+import com.omnix.assistant.agent.reminder.ReminderTimeParser
+import com.omnix.assistant.agent.tools.productivity.ReminderTool
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -41,6 +43,20 @@ class FastCommandRouter @Inject constructor() {
             .let { joinSplitCommandVerb(it) }
 
         if (q.isEmpty()) return FastRouteResult.ForwardToLlm
+
+        // 0.9 Напоминание: «напомни в 18:00 позвонить маме», «через 20 минут…»,
+        // «завтра в 10…». Раньше такая фраза уходила в облако, и сервер мог
+        // просто ответить «хорошо» без всякого действия. Время и текст разбирает
+        // сам инструмент; если времени нет, он спросит, когда напомнить.
+        if (ReminderTimeParser.isReminderRequest(q)) {
+            return FastRouteResult.HandledLocally(
+                toolCall = ToolCall(
+                    toolId = ReminderTool.TOOL_ID,
+                    arguments = buildJsonObject { put("phrase", q) }
+                ),
+                immediateVoiceResponse = "Ставлю напоминание."
+            )
+        }
 
         // 1. Команды забывания / очистки памяти (Memory 2.0 Governance)
         if (q.startsWith("забудь") || q.startsWith("удали из памяти") || q.startsWith("сотри из памяти")) {

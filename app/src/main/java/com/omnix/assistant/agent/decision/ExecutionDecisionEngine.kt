@@ -86,6 +86,9 @@ class ExecutionDecisionEngine @Inject constructor(
 
         private const val TAG = "DecisionEngine"
 
+        /** Ключ metadata: номер созданного напоминания (см. AgentPipeline). */
+        const val REMINDER_ID_KEY = "reminder_id"
+
         private const val OFFLINE_MESSAGE =
             "Нет подключения к интернету. Локальные команды (фонарик, звук, батарея, приложения, память) работают офлайн."
 
@@ -410,7 +413,7 @@ class ExecutionDecisionEngine @Inject constructor(
                     "tool_id" to call.toolId,
                     "confidence" to confidence.toString(),
                     "request_id" to request.requestId
-                )
+                ) + reminderIdMetadata(call, result)
             )
 
             // Разрешение / системный UI / неподдерживаемая возможность —
@@ -616,6 +619,16 @@ class ExecutionDecisionEngine @Inject constructor(
             // останавливаемся как privacy-blocked.
             is Resource.NeedsConsent -> privacyBlocked(DecisionReason.CLOUD_BLOCKED_BY_PRIVACY)
         }
+    }
+
+    /** Номер созданного напоминания: по нему чат рисует карточку вместо обычного ответа. */
+    private fun reminderIdMetadata(
+        call: com.omnix.assistant.agent.model.ToolCall,
+        result: com.omnix.assistant.agent.model.ToolExecutionResult
+    ): Map<String, String> {
+        if (call.toolId != com.omnix.assistant.agent.tools.productivity.ReminderTool.TOOL_ID) return emptyMap()
+        val id = (result.data?.get("id") as? kotlinx.serialization.json.JsonPrimitive)?.content
+        return if (id == null) emptyMap() else mapOf(REMINDER_ID_KEY to id)
     }
 
     private fun privacyBlocked(reason: DecisionReason): ExecutionResult.Error =

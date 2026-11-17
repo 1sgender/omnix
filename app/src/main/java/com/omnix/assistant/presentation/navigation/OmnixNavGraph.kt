@@ -38,6 +38,7 @@ import com.omnix.assistant.presentation.chat.ChatViewModel
 import com.omnix.assistant.presentation.chat.ChatHandoffViewModel
 import com.omnix.assistant.presentation.chat.OmnixChatScreen
 import com.omnix.assistant.presentation.chat.PinnedChatsViewModel
+import com.omnix.assistant.presentation.reminders.RemindersScreen
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
@@ -154,7 +155,9 @@ fun OmnixNavGraph(
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
                     onToggleDictation = chatViewModel::toggleVoiceDictation,
-                    onSwitchToFlash = chatViewModel::switchToFlash
+                    onSwitchToFlash = chatViewModel::switchToFlash,
+                    onCancelReminder = chatViewModel::cancelReminder,
+                    onEditReminder = chatViewModel::editReminder
                 )
             }
 
@@ -270,6 +273,10 @@ fun OmnixNavGraph(
                     onRemoveFact = memoryViewModel::removeFact,
                     onRemoveProcedure = memoryViewModel::removeProcedure
                 )
+            }
+
+            composable(OmnixDestination.Reminders.route) {
+                RemindersScreen(onBack = navController::popBackStack)
             }
 
             composable(OmnixDestination.Automations.route) {

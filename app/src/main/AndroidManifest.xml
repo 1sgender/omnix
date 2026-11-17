@@ -23,6 +23,9 @@
          the scheduler checks canScheduleExactAlarms() and otherwise falls back to inexact. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Напоминание поверх блокировки: полноэкранное уведомление открывает экран
+         «Готово / Отложить». На Android 14 доступ проверяется canUseFullScreenIntent(). -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- AlarmClock ACTION_SET_ALARM требует это normal-permission. -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
@@ -188,6 +191,32 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Напоминания: будильник, «Готово» / «Отложить» из уведомления и перепланирование
+             после перезагрузки, смены времени и обновления. -->
+        <receiver
+            android:name=".agent.reminder.ReminderReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Сработавшее напоминание поверх блокировки экрана. -->
+        <activity
+            android:name=".presentation.reminders.ReminderAlertActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.OmniAssistant"
+            android:turnScreenOn="true" />
 
         <!-- Самообновление: отдаёт APK системному установщику (см. update_file_paths). -->
         <provider

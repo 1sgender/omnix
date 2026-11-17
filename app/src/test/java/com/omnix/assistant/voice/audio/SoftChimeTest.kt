@@ -17,8 +17,18 @@ class SoftChimeTest {
     }
 
     @Test
+    fun `reminder chime is longer than wake, audible and never loud`() {
+        val samples = SoftChime.reminder()
+        val seconds = samples.size.toDouble() / SoftChime.SAMPLE_RATE
+        val peak = samples.maxOf { abs(it.toInt()) }
+        assertTrue("longer than wake: $seconds", seconds in 0.6..1.4)
+        assertTrue("audible: $peak", peak > 1_500)
+        assertTrue("soft: $peak", peak < Short.MAX_VALUE / 2)
+    }
+
+    @Test
     fun `chime starts and ends without a click`() {
-        for (samples in listOf(SoftChime.wake(), SoftChime.cancel())) {
+        for (samples in listOf(SoftChime.wake(), SoftChime.cancel(), SoftChime.reminder())) {
             assertTrue(abs(samples.first().toInt()) < 400)
             assertTrue(abs(samples.last().toInt()) < 400)
         }

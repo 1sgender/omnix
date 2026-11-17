@@ -33,6 +33,7 @@ class NavTabMappingTest {
     @Test
     fun `translator keeps home lit`() {
         assertEquals(OmnixDestination.Home, tabForRoute(OmnixDestination.Translator.route))
+        assertEquals(OmnixDestination.Home, tabForRoute(OmnixDestination.Reminders.route))
     }
 
     @Test
