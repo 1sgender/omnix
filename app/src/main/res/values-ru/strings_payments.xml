@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Действия агента: %1$d в день</string>
     <string name="pay_line_automations">Автоматизации: %1$s</string>
     <string name="pay_unlimited">без ограничений</string>
-    <string name="pay_get">Получить %1$s</string>
     <string name="pay_creating">Создаём заявку…</string>
     <string name="pay_order_number">Заявка %1$s</string>
     <string name="pay_order_amount">К оплате: %1$s</string>
@@ -37,4 +36,25 @@
     <string name="pay_error_busy">Слишком много попыток. Повторите через минуту.</string>
     <string name="pay_retry">Повторить</string>
     <string name="pay_refresh">Обновить статус</string>
+    <string name="plan_card_label">Тариф</string>
+    <string name="plan_card_free_sub">Базовый набор, идёт с наушниками OMNIX</string>
+    <string name="plan_card_paid_sub">Тариф активен</string>
+    <string name="plan_card_meters_title">Лимиты на сегодня</string>
+    <string name="plan_card_buy">Купить</string>
+    <string name="plan_card_change">Сменить тариф</string>
+    <string name="plan_name_free">Free</string>
+    <string name="plan_name_pro">Pro</string>
+    <string name="plan_name_max">Max</string>
+    <string name="plan_meter_flash">Flash-ответы</string>
+    <string name="plan_meter_search">Поиск</string>
+    <string name="plan_meter_translation">Перевод</string>
+    <string name="plan_meter_ear">Ухо, мин</string>
+    <string name="plan_meter_per_day">%1$d в день</string>
+    <string name="plan_meter_left">%1$d из %2$d</string>
+    <string name="pay_compare_title">Сравнение тарифов</string>
+    <string name="pay_price_month">%1$s в мес.</string>
+    <string name="pay_subscribe">Оформить %1$s</string>
+    <string name="pay_line_search">Поиск: %1$d в день</string>
+    <string name="pay_line_translation">Перевод: %1$d в день</string>
+    <string name="pay_line_ear">Ухо: %1$d мин в день</string>
 </resources>

@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Agent actions: %1$d a day</string>
     <string name="pay_line_automations">Automations: %1$s</string>
     <string name="pay_unlimited">unlimited</string>
-    <string name="pay_get">Get %1$s</string>
     <string name="pay_creating">Creating request…</string>
     <string name="pay_order_number">Request %1$s</string>
     <string name="pay_order_amount">Amount to pay: %1$s</string>
@@ -37,4 +36,25 @@
     <string name="pay_error_busy">Too many attempts. Try again in a minute.</string>
     <string name="pay_retry">Try again</string>
     <string name="pay_refresh">Refresh status</string>
+    <string name="plan_card_label">Plan</string>
+    <string name="plan_card_free_sub">Basic set, comes with your OMNIX earbuds</string>
+    <string name="plan_card_paid_sub">Plan is active</string>
+    <string name="plan_card_meters_title">Limits for today</string>
+    <string name="plan_card_buy">Buy</string>
+    <string name="plan_card_change">Change plan</string>
+    <string name="plan_name_free">Free</string>
+    <string name="plan_name_pro">Pro</string>
+    <string name="plan_name_max">Max</string>
+    <string name="plan_meter_flash">Flash answers</string>
+    <string name="plan_meter_search">Search</string>
+    <string name="plan_meter_translation">Translation</string>
+    <string name="plan_meter_ear">Ear, min</string>
+    <string name="plan_meter_per_day">%1$d a day</string>
+    <string name="plan_meter_left">%1$d of %2$d</string>
+    <string name="pay_compare_title">Compare plans</string>
+    <string name="pay_price_month">%1$s / mo</string>
+    <string name="pay_subscribe">Subscribe to %1$s</string>
+    <string name="pay_line_search">Search: %1$d a day</string>
+    <string name="pay_line_translation">Translation: %1$d a day</string>
+    <string name="pay_line_ear">Ear briefing: %1$d min a day</string>
 </resources>
