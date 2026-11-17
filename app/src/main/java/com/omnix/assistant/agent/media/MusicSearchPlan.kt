@@ -6,19 +6,18 @@ import java.net.URLEncoder
  * Порядок, в котором OMNIX ищет песню. Чистая логика без Android-классов:
  * [MusicSearchRunner] перебирает шаги, пока какое-то приложение не откроется.
  *
- * Решение владельца: в первую очередь Яндекс Музыка, затем любой музыкальный
- * плеер системы, затем YouTube Music / YouTube, в конце веб-страница
- * Яндекс Музыки в браузере. Ключей и API нет: открывается поиск в приложении.
+ * Это запасной вариант: основной путь, плеер внутри OMNIX с треками из
+ * Яндекс Музыки, живёт в [com.omnix.assistant.agent.media.ymusic.YandexMusicPlayer].
+ * Сюда доходим, когда внутри сыграть не вышло (нет сети, нет трека). Решение
+ * владельца (YouTube в Туркменистане заблокирован): только приложение Яндекс
+ * Музыка, затем её страница в браузере. YouTube и YouTube Music исключены.
  */
 enum class MusicSearchTarget(val label: String) {
     YANDEX_MUSIC_APP("Яндекс Музыке"),
-    SYSTEM_MEDIA_SEARCH("музыкальном приложении"),
-    YOUTUBE_MUSIC("YouTube Music"),
-    YOUTUBE("YouTube"),
     YANDEX_MUSIC_WEB("Яндекс Музыке (в браузере)")
 }
 
-enum class MusicIntentKind { VIEW, MEDIA_PLAY_FROM_SEARCH, SEARCH }
+enum class MusicIntentKind { VIEW }
 
 /** Один способ открыть поиск: вид намерения, пакет (если нужен) и ссылка (для VIEW). */
 data class MusicSearchStep(
@@ -31,8 +30,6 @@ data class MusicSearchStep(
 
 object MusicSearchPlan {
     const val PKG_YANDEX_MUSIC = "ru.yandex.music"
-    const val PKG_YOUTUBE_MUSIC = "com.google.android.apps.youtube.music"
-    const val PKG_YOUTUBE = "com.google.android.youtube"
 
     fun encode(query: String): String = URLEncoder.encode(query, "UTF-8")
 
@@ -51,15 +48,6 @@ object MusicSearchPlan {
         // Если приложение не разбирает свою схему, пробуем обычную ссылку, закреплённую за ним.
         MusicSearchStep(
             MusicSearchTarget.YANDEX_MUSIC_APP, MusicIntentKind.VIEW, PKG_YANDEX_MUSIC, yandexWebUrl(query), query
-        ),
-        MusicSearchStep(
-            MusicSearchTarget.SYSTEM_MEDIA_SEARCH, MusicIntentKind.MEDIA_PLAY_FROM_SEARCH, null, null, query
-        ),
-        MusicSearchStep(
-            MusicSearchTarget.YOUTUBE_MUSIC, MusicIntentKind.SEARCH, PKG_YOUTUBE_MUSIC, null, query
-        ),
-        MusicSearchStep(
-            MusicSearchTarget.YOUTUBE, MusicIntentKind.SEARCH, PKG_YOUTUBE, null, query
         ),
         MusicSearchStep(
             MusicSearchTarget.YANDEX_MUSIC_WEB, MusicIntentKind.VIEW, null, yandexWebUrl(query), query
