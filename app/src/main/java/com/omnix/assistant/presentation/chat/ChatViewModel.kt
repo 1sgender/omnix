@@ -13,6 +13,9 @@ import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.agent.tools.accessibility.ScreenContentPrivacy
 import com.omnix.assistant.agent.decision.PrivacyReason
 import com.omnix.assistant.agent.executor.ToolExecutor
+import com.omnix.assistant.agent.reminder.ReminderActions
+import com.omnix.assistant.agent.reminder.ReminderEntity
+import com.omnix.assistant.agent.reminder.ReminderTimeParser
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.result.Resource
@@ -37,6 +40,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.ZoneId
 import javax.inject.Inject
 
 /** Отложенное действие, ожидающее подтверждения пользователя в чате. */
@@ -124,7 +128,9 @@ data class ChatUiState(
     val showHistory: Boolean = false,
     /** Прошлые разговоры, свежие первыми. */
     val conversations: List<ConversationSummary> = emptyList(),
-    val currentConversationId: Long = 0L
+    val currentConversationId: Long = 0L,
+    /** Напоминания по номеру: карточки в ленте показывают их живое состояние. */
+    val reminders: Map<Long, ReminderEntity> = emptyMap()
 )
 
 @HiltViewModel
@@ -147,7 +153,8 @@ class ChatViewModel @Inject constructor(
     private val documentStore: com.omnix.assistant.data.files.ChatDocumentStore =
         com.omnix.assistant.data.files.ChatDocumentStore(context),
     private val audioTranscriber: com.omnix.assistant.data.files.AudioTranscriber =
-        com.omnix.assistant.data.files.AudioTranscriber.NONE
+        com.omnix.assistant.data.files.AudioTranscriber.NONE,
+    private val reminderActions: ReminderActions = ReminderActions.NONE
 ) : ViewModel() {
 
     companion object {
@@ -261,6 +268,29 @@ class ChatViewModel @Inject constructor(
             messageRepository.getConversations().collectLatest { list ->
                 _uiState.update { it.copy(conversations = list) }
             }
+        }
+        viewModelScope.launch {
+            reminderActions.all.collectLatest { list ->
+                _uiState.update { it.copy(reminders = list.associateBy(ReminderEntity::id)) }
+            }
+        }
+    }
+
+    /** «Отменить» на карточке напоминания. */
+    fun cancelReminder(id: Long) {
+        viewModelScope.launch { reminderActions.cancel(id) }
+    }
+
+    /** «Изменить» на карточке: новое время — ближайшее [hour]:[minute]. */
+    fun editReminder(id: Long, hour: Int, minute: Int) {
+        viewModelScope.launch {
+            val triggerAt = ReminderTimeParser.nextOccurrence(
+                hour,
+                minute,
+                System.currentTimeMillis(),
+                ZoneId.systemDefault()
+            )
+            reminderActions.reschedule(id, triggerAt)
         }
     }
 

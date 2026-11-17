@@ -23,6 +23,7 @@ object ActionMapper {
         "communication.share" to ActionType.MESSAGE,
         "communication.contacts" to ActionType.Generic,
         "productivity.alarm_timer" to ActionType.ALARM,
+        "productivity.reminder" to ActionType.ALARM,
         "productivity.calendar" to ActionType.CALENDAR,
         "productivity.create_automation" to ActionType.AUTOMATION,
         "productivity.ear_briefing" to ActionType.Generic,

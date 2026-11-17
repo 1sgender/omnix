@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reminders: chat card, alert screen, list. -->
+<resources>
+    <string name="omnix_reminder_label">Еске салу</string>
+    <string name="omnix_reminder_today">бүгін</string>
+    <string name="omnix_reminder_tomorrow">ертең</string>
+    <string name="omnix_reminder_edit">Өзгерту</string>
+    <string name="omnix_reminder_cancel">Бас тарту</string>
+    <string name="omnix_reminder_done">Дайын</string>
+    <string name="omnix_reminder_snooze">10 минутқа кейінге қалдыру</string>
+    <string name="omnix_reminder_status_cancelled">Бас тартылды</string>
+    <string name="omnix_reminder_set">%1$s еске саламын: %2$s</string>
+    <string name="omnix_reminder_warn_inexact">нақты уақыт кепілдендірілмейді: баптауларда нақты оятқыштарға рұқсат беріңіз</string>
+    <string name="omnix_reminder_warn_notifications">хабарландырулар өшірулі, еске салу тек дыбыспен шығады</string>
+    <string name="omnix_reminder_warn_fullscreen">экран өзі қосылмайды: баптауларда толық экран хабарландыруларына рұқсат беріңіз</string>
+    <string name="omnix_reminder_no_time">Қашан еске салайын? Мысалы: сағат 18:00-де анама қоңырау шалуды еске сал</string>
+    <string name="omnix_reminder_no_text">Не туралы еске салайын?</string>
+    <string name="omnix_reminder_voice">Еске салам: %1$s</string>
+    <string name="omnix_reminders_title">Еске салулар</string>
+    <string name="omnix_reminders_empty">Еске салулар әзірге жоқ. Айтыңыз: сағат 18:00-де анама қоңырау шалуды еске сал</string>
+    <string name="omnix_reminder_delete">Жою</string>
+</resources>

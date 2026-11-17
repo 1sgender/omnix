@@ -37,6 +37,9 @@ sealed class OmnixDestination(val route: String) {
      */
     data object Automations : OmnixDestination("omnix/automations")
 
+    /** Secondary: reminders list, reached from the Home tile. */
+    data object Reminders : OmnixDestination("omnix/reminders")
+
     /** Secondary: what OMNIX remembers about the user (owner report on v344). */
     data object Memory : OmnixDestination("omnix/memory")
 
@@ -85,7 +88,8 @@ sealed class OmnixDestination(val route: String) {
  */
 fun tabForRoute(route: String?): OmnixDestination? = when (route) {
     OmnixDestination.Home.route,
-    OmnixDestination.Translator.route -> OmnixDestination.Home
+    OmnixDestination.Translator.route,
+    OmnixDestination.Reminders.route -> OmnixDestination.Home
     OmnixDestination.Chat.route -> OmnixDestination.Chat
     OmnixDestination.Me.route,
     OmnixDestination.Devices.route,

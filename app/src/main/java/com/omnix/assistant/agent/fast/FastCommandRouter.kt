@@ -4,6 +4,8 @@ import com.omnix.assistant.agent.media.MediaIntent
 import com.omnix.assistant.agent.media.MediaIntentParser
 import com.omnix.assistant.agent.media.MusicRequestParser
 import com.omnix.assistant.agent.model.ToolCall
+import com.omnix.assistant.agent.reminder.ReminderTimeParser
+import com.omnix.assistant.agent.tools.productivity.ReminderTool
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -51,6 +53,22 @@ class FastCommandRouter @Inject constructor() {
                     arguments = buildJsonObject { put("choice", choice.storageKey) }
                 ),
                 immediateVoiceResponse = "Переключаю модель."
+            )
+        }
+
+        // 0.9 Напоминание: «напомни в 18:00 позвонить маме», «через 20 минут…»,
+        // «завтра в 10…». Раньше такая фраза уходила в облако, и сервер мог
+        // просто ответить «хорошо» без всякого действия. Время и текст разбирает
+        // сам инструмент. Без времени в фразе правило не срабатывает.
+        if (ReminderTimeParser.isReminderRequest(q) &&
+            ReminderTimeParser.parse(q, System.currentTimeMillis()) !is ReminderTimeParser.Result.NoTime
+        ) {
+            return FastRouteResult.HandledLocally(
+                toolCall = ToolCall(
+                    toolId = ReminderTool.TOOL_ID,
+                    arguments = buildJsonObject { put("phrase", q) }
+                ),
+                immediateVoiceResponse = "Ставлю напоминание."
             )
         }
 

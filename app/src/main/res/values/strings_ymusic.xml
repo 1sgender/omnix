@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Яндекс Музыка: плеер внутри OMNIX -->
+    <string name="ymusic_settings_title">Yandex Music</string>
+    <string name="ymusic_settings_hint">Music plays right inside OMNIX from your Yandex Music account (Plus subscription required). Paste your account token: it is stored encrypted on this phone only and is sent nowhere except Yandex Music itself.</string>
+    <string name="ymusic_token_label">Token</string>
+    <string name="ymusic_token_saved">Token saved on this phone</string>
+    <string name="ymusic_token_missing">No token entered</string>
+    <string name="ymusic_token_remove">Remove</string>
+    <string name="ymusic_token_input_title">New token</string>
+    <string name="ymusic_token_placeholder">Paste your Yandex Music token</string>
+    <string name="ymusic_token_invalid">This does not look like a token</string>
+    <string name="ymusic_token_save">Save token</string>
+    <string name="ymusic_unofficial_warning">Warning: Yandex Music has no official API. This access is unofficial, may stop working at any time and breaks the Yandex terms of service. Using it is your decision.</string>
+    <string name="ymusic_need_token">Paste your Yandex Music token in settings</string>
+    <string name="ymusic_now_playing">Playing “%1$s” — %2$s</string>
+    <string name="ymusic_now_playing_no_artist">Playing “%1$s”</string>
+    <string name="ymusic_token_rejected">Yandex Music did not accept the token. Paste a new one in settings</string>
+    <string name="ymusic_fallback_search">Could not play inside OMNIX, searching “%1$s” in Yandex Music</string>
+    <string name="ymusic_notif_channel">OMNIX Music</string>
+    <string name="ymusic_notif_loading">Loading…</string>
+    <string name="ymusic_action_pause">Pause</string>
+    <string name="ymusic_action_play">Play</string>
+    <string name="ymusic_action_previous">Previous</string>
+    <string name="ymusic_action_next">Next</string>
+    <string name="ymusic_action_stop">Stop</string>
+
+</resources>

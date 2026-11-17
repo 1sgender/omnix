@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reminders: chat card, alert screen, list. -->
+<resources>
+    <string name="omnix_reminder_label">Напоминание</string>
+    <string name="omnix_reminder_today">сегодня</string>
+    <string name="omnix_reminder_tomorrow">завтра</string>
+    <string name="omnix_reminder_edit">Изменить</string>
+    <string name="omnix_reminder_cancel">Отменить</string>
+    <string name="omnix_reminder_done">Готово</string>
+    <string name="omnix_reminder_snooze">Отложить на 10 мин</string>
+    <string name="omnix_reminder_status_cancelled">Отменено</string>
+    <string name="omnix_reminder_set">Напомню %1$s: %2$s</string>
+    <string name="omnix_reminder_warn_inexact">точное время не гарантируется: разрешите точные будильники в настройках</string>
+    <string name="omnix_reminder_warn_notifications">уведомления выключены, напоминание только прозвучит</string>
+    <string name="omnix_reminder_warn_fullscreen">экран не включится сам: разрешите полноэкранные уведомления в настройках</string>
+    <string name="omnix_reminder_no_time">Когда напомнить? Например: напомни в 18:00 позвонить маме</string>
+    <string name="omnix_reminder_no_text">О чём напомнить?</string>
+    <string name="omnix_reminder_voice">Напоминаю: %1$s</string>
+    <string name="omnix_reminders_title">Напоминания</string>
+    <string name="omnix_reminders_empty">Напоминаний пока нет. Скажите: напомни в 18:00 позвонить маме</string>
+    <string name="omnix_reminder_delete">Удалить</string>
+</resources>
