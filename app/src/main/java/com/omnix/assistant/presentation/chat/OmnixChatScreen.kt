@@ -194,14 +194,13 @@ fun OmnixChatScreen(
         exit = slideOutHorizontally(tween(HISTORY_ANIM_MS)) { -it }
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val panelShape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
+            val panelShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(maxOf(maxWidth * HISTORY_PANEL_FRACTION, HISTORY_PANEL_MIN_WIDTH))
                     .clip(panelShape)
                     .background(colors.surface)
-                    .border(BorderStroke(1.dp, colors.border), panelShape)
                     // Панель «глотает» тапы, чтобы они не доходили до затемнения.
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },

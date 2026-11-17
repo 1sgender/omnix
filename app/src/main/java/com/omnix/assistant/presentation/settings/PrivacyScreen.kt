@@ -1,11 +1,8 @@
 package com.omnix.assistant.presentation.settings
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -79,64 +78,60 @@ fun PrivacyScreen(
         onBack
     ) {
         PrivacyWhereCards()
-        Spacer(Modifier.height(spacing.md))
-        OmnixSettingsGroup {
+        Spacer(Modifier.height(spacing.xl))
+        OmnixFlatList {
+            OmnixFlatDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_confirmations),
                 subtitle = stringResource(R.string.omnix_privacy_confirmations_body),
-                inset = true,
                 chevron = onOpenConfirmations != null,
                 onClick = onOpenConfirmations
             )
-            OmnixGroupDivider()
+            OmnixFlatDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_microphone),
                 value = stringResource(
                     if (microphoneAllowed) R.string.omnix_privacy_allowed else R.string.omnix_privacy_not_allowed
-                ),
-                inset = true
+                )
             )
-            OmnixGroupDivider()
+            OmnixFlatDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_voice_history),
                 value = stringResource(
                     if (historyStored) R.string.omnix_privacy_stored_on_device else R.string.omnix_privacy_not_stored
-                ),
-                inset = true
+                )
             )
-            OmnixGroupDivider()
+            OmnixFlatDivider()
             // Реальное поведение: перед отправкой «приватного» запроса в облако
             // оркестратор спрашивает согласие.
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_cloud),
-                value = stringResource(R.string.omnix_privacy_cloud_controlled),
-                inset = true
+                value = stringResource(R.string.omnix_privacy_cloud_controlled)
             )
-            OmnixGroupDivider()
+            OmnixFlatDivider()
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_permissions),
                 value = stringResource(R.string.omnix_privacy_permissions_manage),
-                inset = true,
                 chevron = onManagePermissions != null,
                 onClick = onManagePermissions
             )
-            OmnixGroupDivider()
+            OmnixFlatDivider()
             // Публичная политика на сервере OMNIX (адрес берётся из сборки).
             OmnixSettingRow(
                 title = stringResource(R.string.omnix_privacy_policy_link),
                 subtitle = stringResource(R.string.omnix_privacy_policy_link_body),
-                inset = true,
                 chevron = true,
                 onClick = openPolicy
             )
-        }
-
-        if (onDeleteHistory != null) {
-            Spacer(Modifier.height(spacing.sm))
-            OmnixTextButton(
-                text = stringResource(R.string.omnix_privacy_delete_history),
-                onClick = { deleteArmed = true }
-            )
+            OmnixFlatDivider()
+            if (onDeleteHistory != null) {
+                OmnixSettingRow(
+                    title = stringResource(R.string.omnix_privacy_delete_history),
+                    titleColor = OmnixTheme.colors.stateError,
+                    onClick = { deleteArmed = true }
+                )
+                OmnixFlatDivider()
+            }
         }
     }
 
@@ -278,45 +273,50 @@ internal fun factKeyLabel(key: String): String = when (key) {
     else -> key
 }
 
-/** «Трафарет»: где живут данные — на телефоне (инверсия) и в облаке (рамка). */
+/**
+ * Где живут данные: одна тональная панель без контура, две колонки
+ * («на телефоне» и «в облаке») через тонкую вертикальную черту.
+ */
 @Composable
 private fun PrivacyWhereCards() {
     val colors = OmnixTheme.colors
     Row(
-        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .clip(WhereShape)
+            .background(colors.surface)
     ) {
-        WhereCard(
+        WhereColumn(
             label = stringResource(R.string.omnix_privacy_where_device),
             body = stringResource(R.string.omnix_privacy_where_device_body),
-            ink = colors.onActionPrimary,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .background(colors.actionPrimary, WhereShape)
+            modifier = Modifier.weight(1f)
         )
-        WhereCard(
+        Box(
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .width(1.dp)
+                .fillMaxHeight()
+                .background(colors.border)
+        )
+        WhereColumn(
             label = stringResource(R.string.omnix_privacy_where_cloud),
             body = stringResource(R.string.omnix_privacy_where_cloud_body),
-            ink = colors.textPrimary,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .background(colors.surface, WhereShape)
-                .border(BorderStroke(1.dp, colors.border), WhereShape)
+            modifier = Modifier.weight(1f)
         )
     }
 }
 
 @Composable
-private fun WhereCard(label: String, body: String, ink: Color, modifier: Modifier = Modifier) {
+private fun WhereColumn(label: String, body: String, modifier: Modifier = Modifier) {
+    val colors = OmnixTheme.colors
     Column(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
+        modifier = modifier.padding(20.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
     ) {
-        Text(text = label, style = OmnixMonoLabelStyle, color = ink.copy(alpha = 0.75f))
-        Text(text = body, style = OmnixTheme.typography.caption, color = ink)
+        Text(text = label.uppercase(java.util.Locale.getDefault()), style = OmnixMonoLabelStyle, color = colors.textTertiary)
+        Text(text = body, style = OmnixTheme.typography.subheadline, color = colors.textPrimary)
     }
 }
 
-private val WhereShape = RoundedCornerShape(16.dp)
+private val WhereShape = RoundedCornerShape(24.dp)

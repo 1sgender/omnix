@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
+import com.omnix.assistant.presentation.components.OmnixChevronRightIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.components.OmnixOnDeviceLineIcon
@@ -544,7 +545,11 @@ private fun OnDevicePill() {
     }
 }
 
-/** The 2×2 quick actions. */
+/**
+ * Быстрые действия: плоские строки прямо на фоне, между ними тонкие
+ * разделители. Без карточек и рамок: тонкая линейная иконка, название,
+ * короткое пояснение и стрелка.
+ */
 @Composable
 private fun QuickActions(
     onTranslatorTap: () -> Unit,
@@ -557,20 +562,20 @@ private fun QuickActions(
         add(QuickAction(OmnixAlarmLineIcon, colors.textPrimary, R.string.omnix_home_card_reminders, R.string.omnix_home_card_reminders_sub, onRemindersTap))
         add(QuickAction(OmnixBoltLineIcon, colors.textPrimary, R.string.omnix_home_card_automations, R.string.omnix_home_card_automations_sub, onAutomationsTap))
     }
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // Одна колонка одинаковых по ширине и высоте карточек: ровная сетка
-        // без «одной в ряду и двух в другом».
+    Column(modifier = Modifier.fillMaxWidth()) {
         cards.forEach { card ->
-            QuickActionCard(
+            QuickActionRow(
                 icon = card.icon,
                 iconTint = card.tint,
                 title = stringResource(card.title),
                 subtitle = stringResource(card.subtitle),
-                onClick = card.onClick,
-                modifier = Modifier.fillMaxWidth()
+                onClick = card.onClick
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(colors.border)
             )
         }
     }
@@ -585,7 +590,7 @@ private class QuickAction(
 )
 
 @Composable
-private fun QuickActionCard(
+private fun QuickActionRow(
     icon: ImageVector,
     iconTint: Color,
     title: String,
@@ -597,18 +602,16 @@ private fun QuickActionCard(
     val interaction = remember { MutableInteractionSource() }
     Row(
         modifier = modifier
-            .omnixPressScale(interaction)
-            .clip(CardShape)
-            .background(colors.surface)
-            .border(BorderStroke(1.dp, colors.border), CardShape)
+            .fillMaxWidth()
+            .omnixPressScale(interaction, pressedScale = 0.99f)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button,
                 onClick = onClick
             )
-            .heightIn(min = 64.dp)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .heightIn(min = 72.dp)
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -616,7 +619,7 @@ private fun QuickActionCard(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 17.sp),
                 color = colors.textPrimary,
                 maxLines = 1
             )
@@ -627,6 +630,7 @@ private fun QuickActionCard(
                 maxLines = 2
             )
         }
+        OmnixChevronRightIcon(color = colors.textTertiary)
     }
 }
 
@@ -655,4 +659,3 @@ private val SCREEN_PADDING = 16.dp
 private val LOGO_MIN = 200.dp
 private val LOGO_MAX = 320.dp
 private val PillShape = RoundedCornerShape(16.dp)
-private val CardShape = RoundedCornerShape(16.dp)
