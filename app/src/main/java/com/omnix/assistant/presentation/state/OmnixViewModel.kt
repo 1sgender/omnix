@@ -408,7 +408,8 @@ class OmnixViewModel @Inject constructor(
         }
     }
 
-    private fun stopAssistant() {
+    /** Выключить ассистента (логотип теперь только слушает; выключение из уведомления и настроек). */
+    fun stopAssistant() {
         powerError.value = null
         powerTransition.value = AssistantPower.STOPPING
         OmnixVoiceService.stop(context)
