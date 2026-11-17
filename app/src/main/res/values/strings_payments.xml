@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Agent actions: %1$d a day</string>
     <string name="pay_line_automations">Automations: %1$s</string>
     <string name="pay_unlimited">unlimited</string>
-    <string name="pay_get">Get %1$s</string>
     <string name="pay_creating">Creating request…</string>
     <string name="pay_order_number">Request %1$s</string>
     <string name="pay_order_amount">Amount to pay: %1$s</string>

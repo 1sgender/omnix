@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Действия агента: %1$d в день</string>
     <string name="pay_line_automations">Автоматизации: %1$s</string>
     <string name="pay_unlimited">без ограничений</string>
-    <string name="pay_get">Получить %1$s</string>
     <string name="pay_creating">Создаём заявку…</string>
     <string name="pay_order_number">Заявка %1$s</string>
     <string name="pay_order_amount">К оплате: %1$s</string>

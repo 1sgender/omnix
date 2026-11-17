@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Ajan eylemleri: günde %1$d</string>
     <string name="pay_line_automations">Otomasyonlar: %1$s</string>
     <string name="pay_unlimited">sınırsız</string>
-    <string name="pay_get">%1$s planını al</string>
     <string name="pay_creating">Talep oluşturuluyor…</string>
     <string name="pay_order_number">Talep %1$s</string>
     <string name="pay_order_amount">Ödenecek tutar: %1$s</string>

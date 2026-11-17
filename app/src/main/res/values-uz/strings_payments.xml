@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Agent amallari: kuniga %1$d ta</string>
     <string name="pay_line_automations">Avtomatlashtirishlar: %1$s</string>
     <string name="pay_unlimited">cheklovsiz</string>
-    <string name="pay_get">%1$s olish</string>
     <string name="pay_creating">Ariza yaratilmoqda…</string>
     <string name="pay_order_number">Ariza %1$s</string>
     <string name="pay_order_amount">To‘lov summasi: %1$s</string>

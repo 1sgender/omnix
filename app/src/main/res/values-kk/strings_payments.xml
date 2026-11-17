@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Агент әрекеттері: күніне %1$d</string>
     <string name="pay_line_automations">Автоматтандырулар: %1$s</string>
     <string name="pay_unlimited">шектеусіз</string>
-    <string name="pay_get">%1$s алу</string>
     <string name="pay_creating">Өтінім жасалуда…</string>
     <string name="pay_order_number">Өтінім %1$s</string>
     <string name="pay_order_amount">Төленетін сома: %1$s</string>

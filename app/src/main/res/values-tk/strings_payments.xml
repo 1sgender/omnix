@@ -14,7 +14,6 @@
     <string name="pay_line_agent">Agent hereketleri: günde %1$d</string>
     <string name="pay_line_automations">Awtomatlaşdyrmalar: %1$s</string>
     <string name="pay_unlimited">çäksiz</string>
-    <string name="pay_get">%1$s almak</string>
     <string name="pay_creating">Arza döredilýär…</string>
     <string name="pay_order_number">Arza %1$s</string>
     <string name="pay_order_amount">Tölenmeli mukdar: %1$s</string>
