@@ -165,4 +165,10 @@ class MusicSearchTest {
         assertEquals(PrivacyLevel.NORMAL, level("bohemian rhapsody"))
         assertNotNull(level("мой пароль: hunter2hunter2").takeIf { it != PrivacyLevel.NORMAL })
     }
+
+    @Test
+    fun `second command verb inside request is not part of title`() {
+        assertEquals("кореc глаза не врут", MusicRequestParser.parseExplicit("включи музыку найди кореc глаза не врут"))
+        assertEquals("глаза не врут", MusicRequestParser.parseExplicit("включи песню найди песню глаза не врут"))
+    }
 }
