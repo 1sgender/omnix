@@ -48,7 +48,9 @@ class FastCommandRouter @Inject constructor() {
         // «завтра в 10…». Раньше такая фраза уходила в облако, и сервер мог
         // просто ответить «хорошо» без всякого действия. Время и текст разбирает
         // сам инструмент; если времени нет, он спросит, когда напомнить.
-        if (ReminderTimeParser.isReminderRequest(q)) {
+        if (ReminderTimeParser.isReminderRequest(q) &&
+            ReminderTimeParser.parse(q, System.currentTimeMillis()) !is ReminderTimeParser.Result.NoTime
+        ) {
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(
                     toolId = ReminderTool.TOOL_ID,
