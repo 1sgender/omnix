@@ -37,8 +37,19 @@ object SpeechLanguage {
     /** Код языка для серверного распознавания (Whisper). */
     const val SERVER_HINT_TK = "tk"
 
-    /** Туркменский распознаёт сервер: у Android-распознавателя его нет. */
-    fun usesServerRecognition(language: AppLanguage = AppLanguage.current()): Boolean = language == AppLanguage.TK
+    const val SERVER_HINT_RU = "ru"
+
+    /**
+     * Свой захват микрофона (без системного «бипа» Android): сначала модель на телефоне,
+     * затем сервер. Туркменского у Android-распознавателя нет; русский берём сами,
+     * чтобы он работал без интернета (решение владельца 2026-11-17).
+     */
+    fun usesServerRecognition(language: AppLanguage = AppLanguage.current()): Boolean =
+        language == AppLanguage.TK || language == AppLanguage.RU
+
+    /** Код языка для распознавания на телефоне и сервере. */
+    fun serverHint(language: AppLanguage = AppLanguage.current()): String =
+        if (language == AppLanguage.RU) SERVER_HINT_RU else SERVER_HINT_TK
 
     /** Распознаватель Android: туркменского нет — слушаем по-русски (запасной тег). */
     fun recognitionTag(language: AppLanguage = AppLanguage.current()): String =
