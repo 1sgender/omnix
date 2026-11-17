@@ -100,7 +100,6 @@ fun HomeScreen(
     state: OmnixUiState,
     modifier: Modifier = Modifier,
     onLogoTap: () -> Unit = {},
-    onTalkTap: () -> Unit = {},
     onClipTap: () -> Unit = {},
     onPowerErrorAction: (AssistantPowerError) -> Unit = {},
     onPowerErrorDismiss: () -> Unit = {},
@@ -159,8 +158,6 @@ fun HomeScreen(
                 exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) + shrinkVertically()
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(Modifier.height(24.dp))
-                    TalkButton(listening = state.phase.isHearing, onClick = onTalkTap)
                     if (!state.isOnline) {
                         Spacer(Modifier.height(16.dp))
                         OnDevicePill()
@@ -209,27 +206,26 @@ private fun HomeHeader(on: Boolean, clip: ClipState, onClipTap: () -> Unit) {
             else -> R.string.omnix_home_greeting_night
         }
     )
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = SCREEN_PADDING),
-        verticalAlignment = Alignment.Top
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = date, style = OmnixMonoLabelStyle, color = colors.textTertiary, maxLines = 1)
-            Text(
-                text = greeting,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp),
-                color = colors.textPrimary,
-                maxLines = 1
-            )
-        }
+        Text(text = date, style = OmnixMonoLabelStyle, color = colors.textTertiary, maxLines = 1)
+        Text(
+            text = greeting,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp),
+            color = colors.textPrimary,
+            maxLines = 2
+        )
+        // Плашка под приветствием: рядом она отнимала ширину, и «Добрый вечер» обрезалось до «Добрый».
         AnimatedVisibility(
             visible = on,
-            enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)),
-            exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs))
+            enter = fadeIn(tween(OmnixTheme.motion.contentFadeMs)) + expandVertically(),
+            exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) + shrinkVertically()
         ) {
-            ClipPill(clip = clip, onClick = onClipTap)
+            Box(modifier = Modifier.padding(top = 6.dp)) { ClipPill(clip = clip, onClick = onClipTap) }
         }
     }
 }
@@ -383,37 +379,6 @@ private fun StatusText(state: OmnixUiState) {
     }
 }
 
-/** "Speak": a request without the wake word; "Stop" while OMNIX is hearing one. */
-@Composable
-private fun TalkButton(listening: Boolean, onClick: () -> Unit) {
-    val colors = OmnixTheme.colors
-    val interaction = remember { MutableInteractionSource() }
-    Row(
-        modifier = Modifier
-            .heightIn(min = 52.dp)
-            .omnixPressScale(interaction)
-            .clip(RoundedCornerShape(26.dp))
-            .background(if (listening) colors.textPrimary else colors.surface)
-            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(26.dp))
-            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Icon(
-            imageVector = OmnixMicLineIcon,
-            contentDescription = null,
-            tint = if (listening) colors.background else colors.accentBrand,
-            modifier = Modifier.size(20.dp)
-        )
-        Text(
-            text = stringResource(if (listening) R.string.omnix_home_talk_stop else R.string.omnix_home_talk),
-            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
-            color = if (listening) colors.background else colors.textPrimary
-        )
-    }
-}
-
 /** Why OMNIX did not turn on, with the one action that fixes it. */
 @Composable
 private fun PowerErrorCard(
@@ -562,20 +527,27 @@ private fun QuickActions(
         add(QuickAction(OmnixAlarmLineIcon, colors.textPrimary, R.string.omnix_home_card_reminders, R.string.omnix_home_card_reminders_sub, onRemindersTap))
         add(QuickAction(OmnixBoltLineIcon, colors.textPrimary, R.string.omnix_home_card_automations, R.string.omnix_home_card_automations_sub, onAutomationsTap))
     }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Top
-    ) {
-        cards.forEach { card ->
-            QuickActionTile(
-                icon = card.icon,
-                iconTint = card.tint,
-                title = stringResource(card.title),
-                description = stringResource(card.subtitle),
-                onClick = card.onClick,
-                modifier = Modifier.weight(1f)
-            )
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        QuickActionTile(
+            icon = cards[0].icon,
+            iconTint = cards[0].tint,
+            title = stringResource(cards[0].title),
+            caption = stringResource(cards[0].subtitle),
+            onClick = cards[0].onClick,
+            modifier = Modifier.fillMaxWidth(),
+            wide = true
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            cards.drop(1).forEach { card ->
+                QuickActionTile(
+                    icon = card.icon,
+                    iconTint = card.tint,
+                    title = stringResource(card.title),
+                    caption = stringResource(card.subtitle),
+                    onClick = card.onClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
@@ -588,47 +560,60 @@ private class QuickAction(
     val onClick: () -> Unit
 )
 
+/** Плитка без заливки: тонкая рамка, иконка, название и моно-подпись. */
 @Composable
 private fun QuickActionTile(
     icon: ImageVector,
     iconTint: Color,
     title: String,
-    description: String,
+    caption: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    wide: Boolean = false
 ) {
     val colors = OmnixTheme.colors
     val interaction = remember { MutableInteractionSource() }
-    Column(
-        modifier = modifier
-            .omnixPressScale(interaction)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interaction,
-                indication = null,
-                role = Role.Button,
-                onClick = onClick
+    val shape = RoundedCornerShape(16.dp)
+    val textBlock: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = caption.uppercase(),
+                style = OmnixMonoLabelStyle.copy(fontSize = 10.sp, letterSpacing = 0.06.em),
+                color = colors.textTertiary,
+                maxLines = 1
             )
-            .semantics(mergeDescendants = true) { contentDescription = "$title. $description" }
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .border(BorderStroke(1.dp, colors.border), CircleShape),
-            contentAlignment = Alignment.Center
+            Text(
+                text = title,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = if (wide) 17.sp else 15.sp, lineHeight = 20.sp),
+                color = colors.textPrimary,
+                maxLines = 2
+            )
+        }
+    }
+    val base = modifier
+        .omnixPressScale(interaction)
+        .clip(shape)
+        .border(BorderStroke(1.dp, colors.border), shape)
+        .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
+        .semantics(mergeDescendants = true) { contentDescription = "$title. $caption" }
+        .padding(16.dp)
+    if (wide) {
+        Row(
+            modifier = base.heightIn(min = 72.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            textBlock()
+            Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(26.dp))
+        }
+    } else {
+        Column(
+            modifier = base.heightIn(min = 104.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
+            textBlock()
         }
-        Text(
-            text = title,
-            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 16.sp),
-            color = colors.textSecondary,
-            textAlign = TextAlign.Center,
-            maxLines = 2
-        )
     }
 }
 

@@ -155,6 +155,7 @@ class OmnixViewModel @Inject constructor(
     }
 
     companion object {
+        private const val LISTEN_AFTER_START_TIMEOUT_MS = 4_000L
         /** Slack so the recompute strictly lands after the latch window. */
         private const val SUCCESS_TICK_SLACK_MS = 100L
 
@@ -366,7 +367,9 @@ class OmnixViewModel @Inject constructor(
      */
     fun onLogoTap() {
         if (powerTransition.value != null) return
-        if (orchestrator.serviceActive.value) stopAssistant() else startAssistant()
+        // Работающий ассистент: тап по логотипу сразу слушает (повторный тап
+        // возвращает в ожидание). Выключить можно из уведомления и настроек.
+        if (orchestrator.serviceActive.value) orchestrator.toggleListeningFromUi() else startAssistant()
     }
 
     private fun startAssistant() {
@@ -389,6 +392,13 @@ class OmnixViewModel @Inject constructor(
             } != null
             if (!started) powerError.value = AssistantPowerError.START_TIMEOUT
             powerTransition.value = null
+            // Нажатие на логотип сразу начинает слушать: ждём, пока
+            // ассистент встанет в ожидание, и включаем запись без второго тапа.
+            if (started) {
+                withTimeoutOrNull(LISTEN_AFTER_START_TIMEOUT_MS) {
+                    orchestrator.currentMode.first { it == OrchestratorMode.STANDBY_WAKE_WORD }
+                }?.let { orchestrator.toggleListeningFromUi() }
+            }
             // Один раз при первом включении: без исключения из оптимизации
             // батареи One UI усыпляет OMNIX в фоне, и «Омни» перестаёт работать.
             if (started && AssistantAutoStart.shouldAskBatteryExemption(context)) {
@@ -398,7 +408,8 @@ class OmnixViewModel @Inject constructor(
         }
     }
 
-    private fun stopAssistant() {
+    /** Выключить ассистента (логотип теперь только слушает; выключение из уведомления и настроек). */
+    fun stopAssistant() {
         powerError.value = null
         powerTransition.value = AssistantPower.STOPPING
         OmnixVoiceService.stop(context)
