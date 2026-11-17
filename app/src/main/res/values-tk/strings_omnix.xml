@@ -179,6 +179,16 @@
     <string name="omnix_chat_attach_empty">Faýlda tekst ýok.</string>
     <string name="omnix_chat_attach_unreadable">Faýly okap bolmady.</string>
     <string name="omnix_chat_attach_truncated">Diňe faýlyň başy iberiler.</string>
+    <string name="omnix_chat_attach_file">Faýl</string>
+    <string name="omnix_chat_attach_photo">Galereýadan surat</string>
+    <string name="omnix_chat_attach_camera">Surata düşürmek</string>
+    <string name="omnix_chat_image_remove">Suraty aýyrmak</string>
+    <string name="omnix_chat_image_processing">Surat taýýarlanýar…</string>
+    <string name="omnix_chat_image_description">Goşulan surat</string>
+    <string name="omnix_chat_image_default_question">Bu suratda näme bar?</string>
+    <string name="omnix_chat_image_unsupported">Diňe JPEG, PNG we WebP suratlary bolýar.</string>
+    <string name="omnix_chat_image_too_large">Surat gaty uly.</string>
+    <string name="omnix_chat_image_unreadable">Suraty açyp bolmady.</string>
     <string name="omnix_chat_search_hint">Çatlarda gözle</string>
     <string name="omnix_chat_search_empty">Hiç zat tapylmady</string>
     <string name="omnix_chat_group_week">Soňky 7 gün</string>

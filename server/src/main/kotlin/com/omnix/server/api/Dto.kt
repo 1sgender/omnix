@@ -34,6 +34,16 @@ data class MessageDto(
 )
 
 /**
+ * Картинка к сообщению: уже сжатая клиентом (JPEG/PNG/WebP), в base64 без
+ * префикса `data:`. Тип и размер проверяет [ImageValidator].
+ */
+@Serializable
+data class ImageDto(
+    @SerialName("mimeType") val mimeType: String,
+    @SerialName("data") val data: String
+)
+
+/**
  * Запрос на выполнение.
  *
  * Намеренно НЕТ поля `provider`: клиент не имеет права выбирать провайдера
@@ -108,7 +118,14 @@ data class AiExecutionRequest(
      * ответит уровнем Flash. Фактический уровень приходит в [AiExecutionResponse.tier].
      * Неизвестное значение трактуется как "flash".
      */
-    @SerialName("tier") val tier: String? = null
+    @SerialName("tier") val tier: String? = null,
+
+    /**
+     * Картинки к текущему сообщению (фото из галереи/камеры). Только для
+     * провайдеров с vision (Gemini, Claude); остальные из отбора исключаются.
+     * Пустой список = прежнее поведение.
+     */
+    @SerialName("images") val images: List<ImageDto> = emptyList()
 ) {
     companion object {
         // P2-cleanup (Этап 5): компактный memory-контекст (AR-04) был полуготовым

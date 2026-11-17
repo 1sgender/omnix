@@ -2,6 +2,8 @@ package com.omnix.server.provider
 
 import com.omnix.server.config.ProviderConfig
 import com.omnix.server.observability.StructuredLogger
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -92,7 +94,18 @@ private data class OaiResponse(
 // =============================================================== DTO (Gemini)
 
 @Serializable
-private data class GemPart(@SerialName("text") val text: String)
+private data class GemInlineData(
+    @SerialName("mimeType") val mimeType: String,
+    @SerialName("data") val data: String
+)
+
+/** Часть сообщения: либо текст, либо картинка (inlineData). Пустое поле не отправляется. */
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable
+private data class GemPart(
+    @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("text") val text: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("inlineData") val inlineData: GemInlineData? = null
+)
 
 @Serializable
 private data class GemContent(
@@ -444,10 +457,14 @@ class GeminiProvider(
         }
 
         val turnHistory = request.history.filter { it.role in setOf("user", "assistant") }
-            .map { GemContent(role = geminiRole(it.role), parts = listOf(GemPart(it.content))) }
+            .map { GemContent(role = geminiRole(it.role), parts = listOf(GemPart(text = it.content))) }
         val trimmedHistory = trimGemHistory(turnHistory)
 
-        val contents = trimmedHistory + GemContent(role = "user", parts = listOf(GemPart(request.prompt)))
+        // Картинки идут перед текстом вопроса (так модель читает их лучше).
+        val currentParts = request.images.map {
+            GemPart(inlineData = GemInlineData(mimeType = it.mimeType, data = it.base64Data))
+        } + GemPart(text = request.prompt)
+        val contents = trimmedHistory + GemContent(role = "user", parts = currentParts)
 
         val tools: List<GemGoogleSearchRetrieval> =
             if (request.requiresWeb && capabilities.supportsWeb) {
@@ -470,7 +487,7 @@ class GeminiProvider(
             GemRequest(
                 contents = contents,
                 systemInstruction = GemSystemInstruction(
-                    parts = listOf(GemPart(combinedSystem))
+                    parts = listOf(GemPart(text = combinedSystem))
                 ),
                 generationConfig = GemGenerationConfig(
                     temperature = request.temperature,
@@ -489,7 +506,8 @@ class GeminiProvider(
         supportsChat = true,
         supportsWeb = true,
         supportsStreaming = false,
-        supportsToolCalling = false
+        supportsToolCalling = false,
+        supportsVision = true
     )
 
     /** Маппинг OpenAI-ролей на Gemini-роли: assistant → model. */
@@ -525,7 +543,7 @@ class GeminiProvider(
             .firstOrNull()
             ?.content
             ?.parts
-            ?.joinToString("") { it.text }
+            ?.joinToString("") { it.text.orEmpty() }
             ?.trim()
 
         if (text.isNullOrEmpty()) {

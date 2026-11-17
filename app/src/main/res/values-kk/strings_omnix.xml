@@ -131,6 +131,16 @@
     <string name="omnix_chat_attach_empty">Файлда мәтін жоқ.</string>
     <string name="omnix_chat_attach_unreadable">Файлды оқу мүмкін болмады.</string>
     <string name="omnix_chat_attach_truncated">Файлдың тек басы жіберіледі.</string>
+    <string name="omnix_chat_attach_file">Файл</string>
+    <string name="omnix_chat_attach_photo">Галереядан фото</string>
+    <string name="omnix_chat_attach_camera">Суретке түсіру</string>
+    <string name="omnix_chat_image_remove">Фотоны алып тастау</string>
+    <string name="omnix_chat_image_processing">Фото дайындалуда…</string>
+    <string name="omnix_chat_image_description">Қосылған фото</string>
+    <string name="omnix_chat_image_default_question">Бұл фотода не бар?</string>
+    <string name="omnix_chat_image_unsupported">Тек JPEG, PNG және WebP фотолары жарайды.</string>
+    <string name="omnix_chat_image_too_large">Фото тым үлкен.</string>
+    <string name="omnix_chat_image_unreadable">Фотоны ашу мүмкін болмады.</string>
     <string name="omnix_chat_search_hint">Чаттардан іздеу</string>
     <string name="omnix_chat_search_empty">Ештеңе табылмады</string>
     <string name="omnix_chat_group_week">Соңғы 7 күн</string>

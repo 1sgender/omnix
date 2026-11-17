@@ -391,6 +391,11 @@ abstract class ExecutionDecisionModule {
     @Singleton
     abstract fun bindAiTierSwitch(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierSwitch
 
+    /** Файлы картинок чата для облачного клиента. */
+    @Binds
+    @Singleton
+    abstract fun bindChatImageSource(impl: com.omnix.assistant.data.files.ChatImageStore): com.omnix.assistant.domain.files.ChatImageSource
+
     @Binds
     @Singleton
     abstract fun bindAgentExecutor(impl: CognitiveAgentExecutor): AgentExecutor

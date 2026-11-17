@@ -44,6 +44,8 @@ data class CapabilityProfile(
     val supportsWeb: Boolean = false,
     val supportsStreaming: Boolean = false,
     val supportsToolCalling: Boolean = false,
+    /** Понимает ли модель картинки во входящем сообщении (Gemini, Claude). */
+    val supportsVision: Boolean = false,
     /** P95 end-to-end latency в миллисекундах по последним измерениям, если известна. */
     val p95LatencyMs: Int? = null,
     /** Оценка стоимости (может отсутствовать для провайдеров без известной цены). */
@@ -70,6 +72,12 @@ data class ProviderMessage(
     val content: String
 )
 
+/** Картинка к текущему сообщению: mime уже проверен, data — base64 без префикса. */
+data class ProviderImage(
+    val mimeType: String,
+    val base64Data: String
+)
+
 /** Нормализованный запрос к провайдеру. */
 data class ProviderRequest(
     val requestId: String,
@@ -91,6 +99,8 @@ data class ProviderRequest(
      * включения retrieval-инструмента.
      */
     val requiresWeb: Boolean = false,
+    /** Картинки к текущему сообщению ([prompt]); только для провайдеров с vision. */
+    val images: List<ProviderImage> = emptyList(),
     val maxTokens: Int,
     val temperature: Double,
     /**

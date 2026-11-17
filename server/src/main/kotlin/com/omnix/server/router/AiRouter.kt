@@ -266,7 +266,14 @@ class AiRouter(
             promptChars = request.text.length,
             historyChars = historyChars,
             requiresWeb = request.requiresWeb
-        )
+        ).let { cls ->
+            // Вопрос по картинке не бывает «короткой репликой» для самого дешёвого пути.
+            if (request.images.isNotEmpty() && cls == com.omnix.server.cost.CostClass.SIMPLE) {
+                com.omnix.server.cost.CostClass.MEDIUM
+            } else {
+                cls
+            }
+        }
         logger.info(
             "cost estimation",
             "requestId" to requestId,
@@ -278,6 +285,7 @@ class AiRouter(
         val isAdmin = adminAccess?.isAdmin(client.accountId) == true
         val requirements = ProviderRequirements(
             requiresWeb = request.requiresWeb,
+            requiresVision = request.images.isNotEmpty(),
             costClass = costClass,
             pinnedProvider = pinned,
             allowedProviders = when {
@@ -296,7 +304,8 @@ class AiRouter(
             "privacyLevel" to effectivePrivacy.name,
             "requiresWeb" to request.requiresWeb.toString(),
             // Текст промпта НЕ логируется — только его размер.
-            "promptSize" to LogSanitizer.describeText(request.text)
+            "promptSize" to LogSanitizer.describeText(request.text),
+            "images" to request.images.size.toString()
         )
 
         val providerRequest = ProviderRequest(
@@ -305,6 +314,9 @@ class AiRouter(
             systemPrompt = buildSystemPrompt(request),
             history = providerHistory(request, requestId),
             requiresWeb = request.requiresWeb,
+            images = request.images.map {
+                com.omnix.server.provider.ProviderImage(it.mimeType.trim().lowercase(), it.data)
+            },
             // Cost Control: SIMPLE-класс получает урезанный бюджет ответа —
             // короткая реплика не должна платить за длинный вывод.
             maxTokens = if (request.source == ApiRequestSource.CHAT) {
@@ -455,7 +467,8 @@ class AiRouter(
         // сборка ProviderRequest. Раньше один красный пузырь ошибки (role
         // "error") в истории ломал разговор: каждый следующий запрос получал
         // INVALID_REQUEST (v344, 2026-10-22).
-        else -> null
+        // Картинки: тип, размер и сигнатура файла.
+        else -> com.omnix.server.api.ImageValidator.validate(request.images, validation)
     }
 
     /**

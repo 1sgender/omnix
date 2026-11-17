@@ -60,6 +60,13 @@ data class MessageDto(
     @SerialName("content") val content: String
 )
 
+/** Картинка к сообщению: сжатый JPEG в base64 без префикса data:. Зеркалит server `ImageDto`. */
+@Serializable
+data class OmniAiImageDto(
+    @SerialName("mimeType") val mimeType: String,
+    @SerialName("data") val data: String
+)
+
 @Serializable
 data class OmniAiRequestDto(
     @SerialName("text") val text: String,
@@ -73,7 +80,9 @@ data class OmniAiRequestDto(
     /** Тест моделей: провайдер, закреплённый админом; сервер учтёт его только для админа. */
     @SerialName("adminProvider") val adminProvider: String? = null,
     /** "pro" — просим Claude (выбран Pro и он есть в тарифе); null — Flash, как раньше. */
-    @SerialName("tier") val tier: String? = null
+    @SerialName("tier") val tier: String? = null,
+    /** Картинки к текущему сообщению (фото из чата); пусто — обычный запрос. */
+    @SerialName("images") val images: List<OmniAiImageDto> = emptyList()
 )
 
 @Serializable
@@ -218,7 +227,9 @@ class OmnixApiClient @Inject constructor(
          */
         requestId: String = RequestIds.newId(),
         /** Flash (по умолчанию) или Pro. Pro — пожелание: сервер может ответить Flash. */
-        tier: AiTier = AiTier.FLASH
+        tier: AiTier = AiTier.FLASH,
+        /** Фото к сообщению: сервер отдаст их модели с vision (Gemini/Claude). */
+        images: List<OmniAiImageDto> = emptyList()
     ): Resource<String> = withContext(Dispatchers.IO) {
         val token = securityManager.getAccessToken()
         if (!AccessTokenPolicy.isValid(token)) {
@@ -249,7 +260,8 @@ class OmnixApiClient @Inject constructor(
                 // OpenAI-каноничный вид (user/assistant/system).
                 history = history.filter { it.content.isNotBlank() },
                 adminProvider = (adminModels.pin() as? AdminModelPin.Cloud)?.provider,
-                tier = tier.takeIf { it == AiTier.PRO }?.wireValue
+                tier = tier.takeIf { it == AiTier.PRO }?.wireValue,
+                images = images
             )
         )
         val callContext = CallContext(

@@ -178,6 +178,16 @@
     <string name="omnix_chat_attach_empty">В файле нет текста.</string>
     <string name="omnix_chat_attach_unreadable">Не удалось прочитать файл.</string>
     <string name="omnix_chat_attach_truncated">Отправится только начало файла.</string>
+    <string name="omnix_chat_attach_file">Файл</string>
+    <string name="omnix_chat_attach_photo">Фото из галереи</string>
+    <string name="omnix_chat_attach_camera">Сделать снимок</string>
+    <string name="omnix_chat_image_remove">Убрать фото</string>
+    <string name="omnix_chat_image_processing">Готовлю фото…</string>
+    <string name="omnix_chat_image_description">Приложенное фото</string>
+    <string name="omnix_chat_image_default_question">Что на этом фото?</string>
+    <string name="omnix_chat_image_unsupported">Подходят только фото JPEG, PNG и WebP.</string>
+    <string name="omnix_chat_image_too_large">Фото слишком большое.</string>
+    <string name="omnix_chat_image_unreadable">Не удалось открыть фото.</string>
     <string name="omnix_chat_search_hint">Поиск по чатам</string>
     <string name="omnix_chat_search_empty">Ничего не найдено</string>
     <string name="omnix_chat_group_week">Последние 7 дней</string>

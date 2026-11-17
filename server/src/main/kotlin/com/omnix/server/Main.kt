@@ -764,6 +764,10 @@ private suspend fun handleExchange(
                 // Распознаванию речи нужна фраза целиком (до ~30 с WAV в base64).
                 val maxBody = if (exchange.requestURI.path == OmnixApiHandler.PATH_STT) {
                     config.validation.maxSttBodyBytes
+                } else if (exchange.requestURI.path == OmnixApiHandler.PATH_EXECUTE) {
+                    // Чат с картинками: тело больше обычного; без картинок
+                    // обработчик всё равно отклонит всё, что выше maxBodyBytes.
+                    maxOf(config.validation.maxBodyBytes, config.validation.maxImageBodyBytes)
                 } else {
                     config.validation.maxBodyBytes
                 }

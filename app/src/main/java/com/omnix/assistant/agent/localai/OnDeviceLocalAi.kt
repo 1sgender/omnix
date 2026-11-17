@@ -57,6 +57,13 @@ class OnDeviceLocalAi @Inject constructor(
             return LocalAiResult.Unsupported("Local model has no web access")
         }
 
+        // ------------------------------------------------------- guard: image
+        // Локальная модель картинок не видит: ответить по фото может только облако.
+        if (com.omnix.assistant.domain.files.ChatImageCodec.hasImage(request.text)) {
+            Log.d(TAG, "unsupported: к сообщению приложено фото")
+            return LocalAiResult.Unsupported("Local model cannot read images")
+        }
+
         // ------------------------------------------------------- guard: device
         // Страховка второго уровня: device-команды сюда доходить не должны —
         // их забирает FastCommandRouter → DEVICE_TOOL. Если запрос всё же

@@ -178,7 +178,14 @@ data class ValidationConfig(
     val maxTextLength: Int = 8_000,
     val maxBodyBytes: Long = 32 * 1024,
     /** Распознавание речи: фраза до ~30 с WAV в base64 (≈1,3 МБ). */
-    val maxSttBodyBytes: Long = 2L * 1024 * 1024
+    val maxSttBodyBytes: Long = 2L * 1024 * 1024,
+    /** Запрос с картинками: тело до 4 МБ (картинка ≤1,5 МБ в base64 +33%). */
+    val maxImageBodyBytes: Long = 4L * 1024 * 1024,
+    /** Одна картинка после декодирования base64. */
+    val maxImageBytes: Int = 1_500_000,
+    val maxImagesPerRequest: Int = 3,
+    /** Сумма всех картинок запроса после декодирования. */
+    val maxImagesTotalBytes: Int = 2_500_000
 ) {
     init {
         require(maxTextLength > 0) { "maxTextLength must be positive" }
@@ -187,6 +194,12 @@ data class ValidationConfig(
         }
         require(maxBodyBytes in 1..(10L * 1024 * 1024)) {
             "maxBodyBytes must be in 1..10 MiB"
+        }
+        require(maxImageBodyBytes in 1..(10L * 1024 * 1024)) {
+            "maxImageBodyBytes must be in 1..10 MiB"
+        }
+        require(maxImageBytes > 0 && maxImagesPerRequest in 1..10 && maxImagesTotalBytes > 0) {
+            "image limits must be positive"
         }
     }
 }
@@ -532,7 +545,8 @@ data class ServerConfig(
                 ),
                 validation = ValidationConfig(
                     maxTextLength = int("MAX_TEXT_LENGTH", 8_000),
-                    maxBodyBytes = long("MAX_BODY_BYTES", 32 * 1024)
+                    maxBodyBytes = long("MAX_BODY_BYTES", 32 * 1024),
+                    maxImageBodyBytes = long("MAX_IMAGE_BODY_BYTES", 4L * 1024 * 1024)
                 ),
                 privacy = PrivacyPolicyConfig(
                     allowPrivate = bool("ALLOW_PRIVATE_CLOUD", false),
