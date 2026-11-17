@@ -168,7 +168,7 @@ class SerperSearchTest {
             method = "POST", path = "/v1/search", authorizationHeader = "Bearer $token",
             body = """{"query":"курс доллара"}""", contentLength = 30
         )
-        repeat(10) { assertEquals(200, handler.handle(post()).status) }
+        repeat(5) { assertEquals(200, handler.handle(post()).status) }
         val limited = handler.handle(post())
         assertEquals(429, limited.status)
         assertTrue(limited.headers["Retry-After"]?.toLongOrNull()?.let { it > 0 } == true)

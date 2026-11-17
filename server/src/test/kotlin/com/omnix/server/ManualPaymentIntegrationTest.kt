@@ -530,7 +530,7 @@ class ManualPaymentIntegrationTest : PostgresTestSupport() {
         val plans = (body["plans"] as JsonArray).map { it as JsonObject }
         assertEquals(listOf("free", "pro", "omnix"), plans.map { (it["id"] as JsonPrimitive).content })
         assertEquals(listOf("0", "14900", "29900"), plans.map { (it["price_minor"] as JsonPrimitive).content })
-        assertEquals("300", ((plans[1]["entitlements"] as JsonObject)["daily_voice_ai"] as JsonPrimitive).content)
+        assertEquals("150", ((plans[1]["entitlements"] as JsonObject)["daily_voice_ai"] as JsonPrimitive).content)
         assertTrue((body["contacts"] as JsonArray).isEmpty())
         assertEquals(72, (body["order_ttl_hours"] as JsonPrimitive).content.toInt())
         assertTrue((body["orders"] as JsonArray).isEmpty())
