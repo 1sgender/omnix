@@ -2,7 +2,6 @@
 <!-- AI tier choice (Local / Flash / Pro) and the "left today" limits. -->
 <resources>
     <string name="omnix_tier_pro" translatable="false">Pro</string>
-    <string name="omnix_tier_pro_body">Claude, the smartest model. OMNIX cloud, needs the internet.</string>
     <string name="omnix_tier_pro_locked">Available in Pro and Max</string>
     <string name="omnix_tier_answered_flash">Flash answered: Pro is unavailable for now</string>
     <string name="omnix_tier_switch_to_flash">Switch to Flash</string>

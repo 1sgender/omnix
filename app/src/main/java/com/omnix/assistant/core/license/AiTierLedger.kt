@@ -24,6 +24,7 @@ class AiTierLedger @Inject constructor() {
     private val downgraded = LinkedHashSet<String>()
     private val quotaByRequest = LinkedHashMap<String, QuotaExceeded>()
     private val busyByRequest = LinkedHashMap<String, ServerBusy>()
+    private val servedProByRequest = LinkedHashMap<String, Boolean>()
 
     private val _answers = MutableStateFlow<List<LocalAnswer>>(emptyList())
 
@@ -43,8 +44,13 @@ class AiTierLedger @Inject constructor() {
         voice: Boolean,
         atMs: Long = System.currentTimeMillis()
     ) {
-        if (requestedPro && !servedPro && requestId.isNotBlank()) {
-            synchronized(lock) { downgraded.addBounded(requestId) }
+        if (requestId.isNotBlank()) {
+            synchronized(lock) {
+                if (requestedPro && !servedPro) downgraded.addBounded(requestId)
+                servedProByRequest.remove(requestId)
+                servedProByRequest[requestId] = servedPro
+                while (servedProByRequest.size > MAX_REQUESTS) servedProByRequest.remove(servedProByRequest.keys.first())
+            }
         }
         val bucket = AiQuotaBucket.of(servedPro = servedPro, voice = voice)
         val monthAgo = atMs - MONTH_MS
@@ -54,6 +60,12 @@ class AiTierLedger @Inject constructor() {
         // Ответ из корзины — значит, она снова открыта (лимит обновился раньше, чем думали).
         _exhausted.update { list -> list.filterNot { it.bucket == bucket } }
     }
+
+    /**
+     * Кто ответил на этот запрос: true — Pro, false — Flash, null — облако не
+     * отвечало. Для моно-метки под ответом в чате. Запись забирается.
+     */
+    fun takeServedPro(requestId: String): Boolean? = synchronized(lock) { servedProByRequest.remove(requestId) }
 
     /** Просили Pro, ответил Flash (Pro временно недоступен). Запись забирается. */
     fun takeDowngrade(requestId: String): Boolean = synchronized(lock) { downgraded.remove(requestId) }

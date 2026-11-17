@@ -84,26 +84,16 @@ fun SettingsSectionRoute(
                 initial = com.omnix.assistant.agent.localai.LocalModelState.NotInitialized
             )
             val aiModelViewModel: AiModelViewModel = hiltViewModel()
-            val aiChoice by aiModelViewModel.choice.collectAsState()
-            val aiApplying by aiModelViewModel.applying.collectAsState()
-            val aiFailure by aiModelViewModel.failure.collectAsState()
             val adminModels by aiModelViewModel.admin.collectAsState()
             val wakeListening by aiModelViewModel.wakeListening.collectAsState()
-            val proAvailable by aiModelViewModel.proAvailable.collectAsState()
             val aiRemaining by aiModelViewModel.remaining.collectAsState()
             AiSettingsScreen(
                 modifier = modifier,
                 onBack = onBack,
                 modelChoice = {
-                    AiModelSection(
-                        choice = aiChoice,
-                        applying = aiApplying,
-                        failure = aiFailure,
-                        localModelState = modelState,
-                        onSelect = aiModelViewModel::select,
-                        proAvailable = proAvailable,
-                        remaining = aiRemaining
-                    )
+                    // Модель выбирается в чате (чип у поля ввода) и голосом;
+                    // здесь — только сведения тарифа.
+                    AiModelInfoSection(remaining = aiRemaining)
                     if (adminModels.isAdmin) {
                         AdminModelSection(
                             state = adminModels,
@@ -269,7 +259,7 @@ private fun AiSettingsScreen(
 ) {
     SectionScaffold(stringResource(R.string.omnix_ai_title), modifier, onBack) {
         val spacing = OmnixTheme.spacing
-        // The user picks what answers (Auto / on the phone / OMNIX cloud).
+        // What answers is picked in the chat; here are the plan limits.
         // The cloud provider stays server-managed: no provider names, no
         // temperature, no keys on the device.
         modelChoice()

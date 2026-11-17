@@ -42,6 +42,18 @@ class FastCommandRouter @Inject constructor() {
 
         if (q.isEmpty()) return FastRouteResult.ForwardToLlm
 
+        // 0. Смена модели ИИ голосом («переключись на Pro», «ответь умнее»).
+        //    Раньше остальных правил: «модель» ниже — это вопрос о телефоне.
+        AiModelVoiceCommand.parse(q)?.let { choice ->
+            return FastRouteResult.HandledLocally(
+                toolCall = ToolCall(
+                    toolId = AiModelVoiceCommand.TOOL_ID,
+                    arguments = buildJsonObject { put("choice", choice.storageKey) }
+                ),
+                immediateVoiceResponse = "Переключаю модель."
+            )
+        }
+
         // 1. Команды забывания / очистки памяти (Memory 2.0 Governance)
         if (q.startsWith("забудь") || q.startsWith("удали из памяти") || q.startsWith("сотри из памяти")) {
             val target = q.replace(Regex("^(забудь|удали из памяти|сотри из памяти)\\s*"), "")
