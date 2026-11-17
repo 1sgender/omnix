@@ -51,7 +51,6 @@ fun HomeRoute(
         state = state,
         modifier = modifier,
         onLogoTap = viewModel::onLogoTap,
-        onTalkTap = viewModel::onTalkTap,
         onClipTap = onClipTap,
         onTranslatorTap = { onOpen(OmnixDestination.Translator) },
         onRemindersTap = { onOpen(OmnixDestination.Chat) },

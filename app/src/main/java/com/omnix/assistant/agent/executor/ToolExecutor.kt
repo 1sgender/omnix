@@ -8,6 +8,8 @@ import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.agent.decision.PrivacyReason
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolExecutionResult
+import com.omnix.assistant.agent.model.ToolExecutionStatus
+import com.omnix.assistant.core.permission.PermissionPrompts
 import com.omnix.assistant.agent.policy.ActionOrigin
 import com.omnix.assistant.agent.registry.ToolRegistry
 import com.omnix.assistant.agent.safety.PreflightVerdict
@@ -347,6 +349,18 @@ class ToolExecutor @Inject constructor(
     suspend fun execute(
         call: ToolCall,
         origin: ActionOrigin = ActionOrigin.USER_REQUEST
+    ): ToolExecutionResult {
+        val result = executeChecked(call, origin)
+        // Не хватило доступа: системный запрос показываем сразу, а не только текстом.
+        if (result.status == ToolExecutionStatus.PERMISSION_REQUIRED) {
+            PermissionPrompts.request(result.missingPermissions)
+        }
+        return result
+    }
+
+    private suspend fun executeChecked(
+        call: ToolCall,
+        origin: ActionOrigin
     ): ToolExecutionResult = withContext(Dispatchers.IO) {
         val tool = registry.getTool(call.toolId)
             ?: return@withContext ToolExecutionResult.failure(

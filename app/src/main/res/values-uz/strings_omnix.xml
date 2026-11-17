@@ -15,7 +15,7 @@
     <string name="omnix_home_off_hint">Yoqish uchun logotipga bosing</string>
     <string name="omnix_home_starting">Yoqilmoqda…</string>
     <string name="omnix_home_stopping">Oʻchirilmoqda…</string>
-    <string name="omnix_home_on_hint">“Omni” deng yoki Gapirish tugmasini bosing</string>
+    <string name="omnix_home_on_hint">“Omni” deng yoki logotipni bosing</string>
     <string name="omnix_home_talk">Gapirish</string>
     <string name="omnix_home_talk_stop">Toʻxtatish</string>
     <string name="omnix_home_power_a11y">OMNIX yordamchisi</string>

@@ -100,7 +100,6 @@ fun HomeScreen(
     state: OmnixUiState,
     modifier: Modifier = Modifier,
     onLogoTap: () -> Unit = {},
-    onTalkTap: () -> Unit = {},
     onClipTap: () -> Unit = {},
     onPowerErrorAction: (AssistantPowerError) -> Unit = {},
     onPowerErrorDismiss: () -> Unit = {},
@@ -159,8 +158,6 @@ fun HomeScreen(
                 exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) + shrinkVertically()
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(Modifier.height(24.dp))
-                    TalkButton(listening = state.phase.isHearing, onClick = onTalkTap)
                     if (!state.isOnline) {
                         Spacer(Modifier.height(16.dp))
                         OnDevicePill()
@@ -380,37 +377,6 @@ private fun StatusText(state: OmnixUiState) {
                 )
             }
         }
-    }
-}
-
-/** "Speak": a request without the wake word; "Stop" while OMNIX is hearing one. */
-@Composable
-private fun TalkButton(listening: Boolean, onClick: () -> Unit) {
-    val colors = OmnixTheme.colors
-    val interaction = remember { MutableInteractionSource() }
-    Row(
-        modifier = Modifier
-            .heightIn(min = 52.dp)
-            .omnixPressScale(interaction)
-            .clip(RoundedCornerShape(26.dp))
-            .background(if (listening) colors.textPrimary else colors.surface)
-            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(26.dp))
-            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Icon(
-            imageVector = OmnixMicLineIcon,
-            contentDescription = null,
-            tint = if (listening) colors.background else colors.accentBrand,
-            modifier = Modifier.size(20.dp)
-        )
-        Text(
-            text = stringResource(if (listening) R.string.omnix_home_talk_stop else R.string.omnix_home_talk),
-            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
-            color = if (listening) colors.background else colors.textPrimary
-        )
     }
 }
 
