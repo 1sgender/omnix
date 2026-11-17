@@ -81,6 +81,32 @@ class ChatImageRulesTest {
         }
     }
 
+    private fun jpegWithOrientation(value: Int, little: Boolean): ByteArray {
+        fun u16(v: Int) = if (little) byteArrayOf(v.toByte(), (v shr 8).toByte()) else byteArrayOf((v shr 8).toByte(), v.toByte())
+        fun u32(v: Int) = if (little) u16(v and 0xFFFF) + u16(v ushr 16) else u16(v ushr 16) + u16(v and 0xFFFF)
+        val tiff = (if (little) "II".toByteArray() else "MM".toByteArray()) + u16(42) + u32(8) +
+            u16(1) + u16(0x0112) + u16(3) + u32(1) + u16(value) + u16(0) + u32(0)
+        val payload = "Exif".toByteArray() + byteArrayOf(0, 0) + tiff
+        val len = payload.size + 2
+        return byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE1.toByte(), (len shr 8).toByte(), len.toByte()) +
+            payload + byteArrayOf(0xFF.toByte(), 0xDA.toByte(), 0, 2)
+    }
+
+    @Test
+    fun `exif orientation becomes rotation in both byte orders`() {
+        assertEquals(90, ChatImageRules.exifRotation(jpegWithOrientation(6, little = true)))
+        assertEquals(180, ChatImageRules.exifRotation(jpegWithOrientation(3, little = false)))
+        assertEquals(270, ChatImageRules.exifRotation(jpegWithOrientation(8, little = true)))
+        assertEquals(0, ChatImageRules.exifRotation(jpegWithOrientation(1, little = false)))
+    }
+
+    @Test
+    fun `missing or broken exif means no rotation`() {
+        assertEquals(0, ChatImageRules.exifRotation(jpeg))
+        assertEquals(0, ChatImageRules.exifRotation(png))
+        assertEquals(0, ChatImageRules.exifRotation(jpegWithOrientation(6, true).copyOf(12)))
+    }
+
     @Test
     fun `quality starts at 80 and only goes down`() {
         assertEquals(80, ChatImageRules.JPEG_QUALITY)
