@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 /**
  * «Ассистент включён» переживает перезапуск процесса, обновление и перезагрузку
  * (отзыв владельца на v344: «должен слышать, даже когда приложение не запущено»).
- * Выключает только сам пользователь — логотипом или кнопкой в уведомлении.
+ * По умолчанию включено: слушать нужно и без нажатия кнопки. Выключает только сам
+ * пользователь — логотипом или кнопкой в уведомлении.
  */
 object AssistantAutoStart {
     private const val PREFS = "omnix_assistant"
@@ -27,7 +28,7 @@ object AssistantAutoStart {
     private const val KEY_BATTERY_ASKED = "battery_exemption_asked"
 
     fun isEnabled(context: Context): Boolean =
-        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ENABLED, false)
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ENABLED, true)
 
     fun setEnabled(context: Context, enabled: Boolean) {
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

@@ -365,7 +365,7 @@ data class ServerConfig(
                     priority = int("GEMINI_PRIORITY", 2),
                     apiKey = keyList("GEMINI_API_KEY").firstOrNull(),
                     apiKeys = keyList("GEMINI_API_KEY"),
-                    model = str("GEMINI_MODEL") ?: "gemini-1.5-flash",
+                    model = str("GEMINI_MODEL") ?: "gemini-3.8-flash",
                     baseUrl = str("GEMINI_BASE_URL")
                         ?: "https://generativelanguage.googleapis.com/v1beta/models",
                     connectTimeoutMs = long("GEMINI_CONNECT_TIMEOUT_MS", 2_000),

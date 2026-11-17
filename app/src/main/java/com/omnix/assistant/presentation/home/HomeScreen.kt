@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
+import com.omnix.assistant.presentation.components.OmnixChevronRightIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.components.OmnixOnDeviceLineIcon
@@ -116,7 +117,7 @@ fun HomeScreen(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The logo gives up size on short screens before anything else.
-        val logoSize = (maxHeight * 0.36f).coerceIn(LOGO_MIN, LOGO_MAX)
+        val logoSize = (maxHeight * 0.40f).coerceIn(LOGO_MIN, LOGO_MAX)
 
         Column(
             modifier = Modifier
@@ -171,7 +172,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier.weight(1.2f))
+            Spacer(Modifier.weight(0.8f))
 
             AnimatedVisibility(
                 visible = showCards,
@@ -439,9 +440,9 @@ private fun PowerErrorCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(colors.surface)
-            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(18.dp))
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(16.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -544,7 +545,11 @@ private fun OnDevicePill() {
     }
 }
 
-/** The 2×2 quick actions. */
+/**
+ * Быстрые действия: плоские строки прямо на фоне, между ними тонкие
+ * разделители. Без карточек и рамок: тонкая линейная иконка, название,
+ * короткое пояснение и стрелка.
+ */
 @Composable
 private fun QuickActions(
     onTranslatorTap: () -> Unit,
@@ -557,26 +562,21 @@ private fun QuickActions(
         add(QuickAction(OmnixAlarmLineIcon, colors.textPrimary, R.string.omnix_home_card_reminders, R.string.omnix_home_card_reminders_sub, onRemindersTap))
         add(QuickAction(OmnixBoltLineIcon, colors.textPrimary, R.string.omnix_home_card_automations, R.string.omnix_home_card_automations_sub, onAutomationsTap))
     }
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // Три карточки: первая на всю ширину, две следующие парой — без дыры в сетке.
-        val rows = if (cards.size % 2 == 1) listOf(cards.take(1)) + cards.drop(1).chunked(2) else cards.chunked(2)
-        rows.forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { card ->
-                    QuickActionCard(
-                        icon = card.icon,
-                        iconTint = card.tint,
-                        title = stringResource(card.title),
-                        subtitle = stringResource(card.subtitle),
-                        onClick = card.onClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (row.size == 1) Spacer(Modifier.weight(1f))
-            }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        cards.forEach { card ->
+            QuickActionRow(
+                icon = card.icon,
+                iconTint = card.tint,
+                title = stringResource(card.title),
+                subtitle = stringResource(card.subtitle),
+                onClick = card.onClick
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(colors.border)
+            )
         }
     }
 }
@@ -590,7 +590,7 @@ private class QuickAction(
 )
 
 @Composable
-private fun QuickActionCard(
+private fun QuickActionRow(
     icon: ImageVector,
     iconTint: Color,
     title: String,
@@ -600,36 +600,37 @@ private fun QuickActionCard(
 ) {
     val colors = OmnixTheme.colors
     val interaction = remember { MutableInteractionSource() }
-    Column(
+    Row(
         modifier = modifier
-            .omnixPressScale(interaction)
-            .clip(CardShape)
-            .background(colors.surface)
-            .border(BorderStroke(1.dp, colors.border), CardShape)
+            .fillMaxWidth()
+            .omnixPressScale(interaction, pressedScale = 0.99f)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button,
                 onClick = onClick
             )
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .heightIn(min = 72.dp)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 17.sp),
                 color = colors.textPrimary,
                 maxLines = 1
             )
             Text(
                 text = subtitle,
-                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
                 color = colors.textSecondary,
-                maxLines = 1
+                maxLines = 2
             )
         }
+        OmnixChevronRightIcon(color = colors.textTertiary)
     }
 }
 
@@ -654,8 +655,7 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
     is OmnixPhase.Error -> stringResource(R.string.omnix_state_ready)
 }
 
-private val SCREEN_PADDING = 20.dp
+private val SCREEN_PADDING = 16.dp
 private val LOGO_MIN = 200.dp
-private val LOGO_MAX = 300.dp
-private val PillShape = RoundedCornerShape(18.dp)
-private val CardShape = RoundedCornerShape(18.dp)
+private val LOGO_MAX = 320.dp
+private val PillShape = RoundedCornerShape(16.dp)

@@ -184,7 +184,7 @@ class SpeechRecognizerManager @Inject constructor(
     }
 
     /** Одна фраза через сервер: слушаем сами, отправляем в Whisper, отдаём как обычный результат. */
-    private fun startServerListening(continuous: Boolean, languageHint: String = SpeechLanguage.SERVER_HINT_TK) {
+    private fun startServerListening(continuous: Boolean, languageHint: String = SpeechLanguage.serverHint()) {
         val session = generation.incrementAndGet()
         isListening = true
         _speechState.value = SpeechRecognitionEvent.ReadyForSpeech

@@ -194,14 +194,13 @@ fun OmnixChatScreen(
         exit = slideOutHorizontally(tween(HISTORY_ANIM_MS)) { -it }
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val panelShape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
+            val panelShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(maxOf(maxWidth * HISTORY_PANEL_FRACTION, HISTORY_PANEL_MIN_WIDTH))
                     .clip(panelShape)
                     .background(colors.surface)
-                    .border(BorderStroke(1.dp, colors.border), panelShape)
                     // Панель «глотает» тапы, чтобы они не доходили до затемнения.
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -883,7 +882,7 @@ private fun ChatComposer(
         if (isDictating) R.string.omnix_chat_dictation_stop else R.string.omnix_chat_dictation_start
     )
 
-    Column {
+    Column(modifier = Modifier.fillMaxWidth()) {
     AttachmentStrip(attachment, attachmentError, onClearAttachment)
     Row(
         modifier = Modifier
@@ -1064,9 +1063,16 @@ private fun AttachmentStrip(
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNREADABLE -> R.string.omnix_chat_attach_unreadable
                 }
             ),
-            style = FieldText,
+            style = FieldText.copy(fontSize = 14.sp, lineHeight = 20.sp),
             color = colors.stateError,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp)
+            softWrap = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 12.dp, top = 6.dp)
+                .clip(ErrorShape)
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.stateError.copy(alpha = 0.4f)), ErrorShape)
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         )
     }
 }

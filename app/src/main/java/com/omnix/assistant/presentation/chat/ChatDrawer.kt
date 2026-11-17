@@ -1,9 +1,7 @@
 package com.omnix.assistant.presentation.chat
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +20,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,10 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -47,6 +43,9 @@ import com.omnix.assistant.R
 import com.omnix.assistant.domain.models.ConversationSummary
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.components.OmnixNewChatLineIcon
+import com.omnix.assistant.presentation.components.OmnixSectionLabel
+import com.omnix.assistant.presentation.components.OmnixSheet
+import com.omnix.assistant.presentation.components.OmnixSheetAction
 import com.omnix.assistant.presentation.components.OmnixSearchLineIcon
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
@@ -164,45 +163,63 @@ internal fun ChatDrawerContent(
 
     actionsFor?.let { conversation ->
         val pinned = conversation.id in pinnedIds
-        ChatDialogCard(
+        OmnixSheet(
             title = conversation.title?.takeIf { it.isNotBlank() } ?: untitled,
             onDismiss = { actionsFor = null }
         ) {
-            ChatActionRow(stringResource(if (pinned) R.string.omnix_chat_unpin else R.string.omnix_chat_pin)) {
+            OmnixSheetAction(stringResource(if (pinned) R.string.omnix_chat_unpin else R.string.omnix_chat_pin), onClick = {
                 actionsFor = null
                 onTogglePin(conversation.id)
-            }
-            ChatActionRow(stringResource(R.string.omnix_chat_rename)) {
+            })
+            OmnixSheetAction(stringResource(R.string.omnix_chat_rename), onClick = {
                 actionsFor = null
                 renameText = conversation.title.orEmpty()
                 renaming = conversation
-            }
-            ChatActionRow(stringResource(R.string.omnix_chat_delete), danger = true) {
+            })
+            OmnixSheetAction(stringResource(R.string.omnix_chat_delete), danger = true, onClick = {
                 actionsFor = null
                 deleteArmed = conversation
-            }
-            ChatActionRow(stringResource(R.string.omnix_cancel), muted = true) { actionsFor = null }
+            })
+            OmnixSheetAction(stringResource(R.string.omnix_cancel), muted = true, onClick = { actionsFor = null })
         }
     }
 
     renaming?.let { conversation ->
-        ChatDialogCard(
+        OmnixSheet(
             title = stringResource(R.string.omnix_chat_rename),
             onDismiss = { renaming = null }
         ) {
-            OutlinedTextField(
-                value = renameText,
-                onValueChange = { renameText = it.take(80) },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                placeholder = { Text(stringResource(R.string.omnix_chat_rename_hint)) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            ChatActionRow(stringResource(R.string.omnix_chat_save)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(colors.surface)
+                    .padding(horizontal = 18.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                if (renameText.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.omnix_chat_rename_hint),
+                        style = DrawerText,
+                        color = colors.textTertiary,
+                        maxLines = 1
+                    )
+                }
+                BasicTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it.take(80) },
+                    singleLine = true,
+                    textStyle = DrawerText.copy(color = colors.textPrimary),
+                    cursorBrush = SolidColor(colors.textPrimary),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            OmnixSheetAction(stringResource(R.string.omnix_chat_save), onClick = {
                 onRename(conversation.id, renameText)
                 renaming = null
-            }
-            ChatActionRow(stringResource(R.string.omnix_cancel), muted = true) { renaming = null }
+            })
+            OmnixSheetAction(stringResource(R.string.omnix_cancel), muted = true, onClick = { renaming = null })
         }
     }
 
@@ -273,12 +290,7 @@ private fun GroupLabel(group: ConversationGroup) {
             ConversationGroup.OLDER -> R.string.omnix_chat_group_older
         }
     )
-    Text(
-        text = text,
-        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-        color = OmnixTheme.colors.textSecondary,
-        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 6.dp)
-    )
+    OmnixSectionLabel(text = text, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 8.dp))
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -292,14 +304,14 @@ private fun DrawerRow(
     leading: (@Composable () -> Unit)? = null
 ) {
     val colors = OmnixTheme.colors
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(16.dp)
     val deleteLabel = stringResource(R.string.omnix_chat_delete)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .clip(shape)
-            .background(if (selected) colors.surfaceElevated else colors.background)
+            .background(if (selected) colors.surfaceElevated else Color.Transparent)
             .then(
                 if (onLongClick != null) {
                     Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = deleteLabel)
@@ -324,60 +336,3 @@ private fun DrawerRow(
 
 private val DrawerText = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp, lineHeight = 20.sp)
 
-/** Карточка диалога в стиле «Трафарет»: скругление 24dp, заголовок, строки действий. */
-@Composable
-private fun ChatDialogCard(
-    title: String,
-    onDismiss: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    val colors = OmnixTheme.colors
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(colors.surface)
-                .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(24.dp))
-                .padding(vertical = 8.dp)
-        ) {
-            Text(
-                text = title,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp),
-                color = colors.textPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
-            )
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ChatActionRow(
-    text: String,
-    danger: Boolean = false,
-    muted: Boolean = false,
-    onClick: () -> Unit
-) {
-    val colors = OmnixTheme.colors
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 20.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Text(
-            text = text,
-            style = TextStyle(fontFamily = OmnixSans, fontSize = 16.sp),
-            color = when {
-                danger -> colors.stateError
-                muted -> colors.textSecondary
-                else -> colors.textPrimary
-            }
-        )
-    }
-}

@@ -38,6 +38,7 @@ import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixScreenHeader
 import com.omnix.assistant.agent.capability.CapabilityStatus
 import com.omnix.assistant.presentation.components.OmnixDivider
+import com.omnix.assistant.presentation.components.OmnixSectionLabel
 import com.omnix.assistant.presentation.components.OmnixStatusDot
 import com.omnix.assistant.presentation.components.clipDotColor
 import com.omnix.assistant.presentation.components.clipLabel
@@ -129,23 +130,15 @@ fun DevicesScreen(
         // (замечание владельца 2026-10-21), а серое «нельзя» — тем более.
         val needAction = capabilities.filter { capabilityDot(it.status) == CapabilityDotToken.ATTENTION }
         if (needAction.isNotEmpty()) {
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = stringResource(R.string.omnix_devices_on_this_phone),
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-                color = OmnixTheme.colors.textSecondary
-            )
+            Spacer(Modifier.height(32.dp))
+            OmnixSectionLabel(text = stringResource(R.string.omnix_devices_on_this_phone))
             Spacer(Modifier.height(8.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(OmnixTheme.colors.surface)
-                    .border(BorderStroke(1.dp, OmnixTheme.colors.border), RoundedCornerShape(20.dp))
-            ) {
-                needAction.forEachIndexed { index, group ->
-                    if (index > 0) OmnixDivider()
+            // Плоский список на фоне экрана: тонкие линии вместо коробки.
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OmnixDivider()
+                needAction.forEach { group ->
                     CapabilityGroupRow(group = group, onRequestPermissions = onRequestPermissions)
+                    OmnixDivider()
                 }
             }
         }
@@ -379,7 +372,7 @@ private fun CapabilityGroupRow(
                 }
             )
             .heightIn(min = 56.dp)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -397,12 +390,14 @@ private fun CapabilityGroupRow(
             subtitle?.let {
                 Text(text = it, style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp), color = colors.textSecondary)
             }
+            // Статус стоит под названием на всю ширину, а не в правой колонке:
+            // иначе название и пояснение сжимаются и рвутся по буквам.
+            Text(
+                text = capabilityStatusText(labelToken),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                color = colors.textSecondary
+            )
         }
-        Text(
-            text = capabilityStatusText(labelToken),
-            style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
-            color = colors.textSecondary
-        )
     }
 }
 
