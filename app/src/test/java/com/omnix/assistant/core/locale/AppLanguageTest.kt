@@ -25,9 +25,11 @@ class AppLanguageTest {
     }
 
     @Test
-    fun `only turkmen is recognised on the server`() {
+    fun `turkmen and russian use own capture, not the Android recogniser`() {
         assertEquals(true, SpeechLanguage.usesServerRecognition(AppLanguage.TK))
-        assertEquals(false, SpeechLanguage.usesServerRecognition(AppLanguage.RU))
+        assertEquals(true, SpeechLanguage.usesServerRecognition(AppLanguage.RU))
+        assertEquals("ru", SpeechLanguage.serverHint(AppLanguage.RU))
+        assertEquals("tk", SpeechLanguage.serverHint(AppLanguage.TK))
         assertEquals(false, SpeechLanguage.usesServerRecognition(AppLanguage.UZ))
         assertEquals("tk", SpeechLanguage.SERVER_HINT_TK)
     }
