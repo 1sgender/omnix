@@ -35,43 +35,43 @@ object ReminderTimeParser {
     private val startVerb = Regex(
         """^(?:(?:пожалуйста|please)[,\s]+)?(?:напомни(?:ть)?(?:\s+мне)?|""" +
             """(?:поставь|создай|добавь|сделай|установи)\s+(?:мне\s+)?напоминание|""" +
-            """remind\s+me|(?:set|add|create)\s+(?:a\s+)?reminder)$L1"""
+            """remind\s+me|(?:set|add|create)\s+(?:a\s+)?reminder)${L1}"""
     )
     private val anyVerb = Regex("""(?:hatırlat|ýatla|ýadyma\s+sal|eslat|еске\s+сал|ескерт)\p{L}*""")
 
     private val halfHour = Regex(
-        """$L0(?:через\s+полчаса|in\s+half\s+an?\s+hour|yarım\s+saat\s+sonra|""" +
-            """yarım\s+sagat(?:dan)?|yarim\s+soat(?:dan)?\s+keyin|жарты\s+сағат(?:тан)?)$L1"""
+        """${L0}(?:через\s+полчаса|in\s+half\s+an?\s+hour|yarım\s+saat\s+sonra|""" +
+            """yarım\s+sagat(?:dan)?|yarim\s+soat(?:dan)?\s+keyin|жарты\s+сағат(?:тан)?)${L1}"""
     )
-    private val oneWord = Regex("""$L0через\s+(час|минуту|минутку)$L1""")
+    private val oneWord = Regex("""${L0}через\s+(час|минуту|минутку)${L1}""")
 
     private val relativeMinutes = listOf(
-        Regex("""$L0(?:через|in)\s+$AMOUNT\s*$MIN_UNIT$L1"""),
-        Regex("""$L0$AMOUNT\s*$MIN_UNIT\s+(?:sonra|keyin|кейін|соң|soň)$L1"""),
-        Regex("""$L0(\d{1,3}|bir|бір)\s*(?:minut|минут)(?:dan|den|тан|тен)$L1""")
+        Regex("""${L0}(?:через|in)\s+${AMOUNT}\s*${MIN_UNIT}${L1}"""),
+        Regex("""${L0}${AMOUNT}\s*${MIN_UNIT}\s+(?:sonra|keyin|кейін|соң|soň)${L1}"""),
+        Regex("""${L0}(\d{1,3}|bir|бір)\s*(?:minut|минут)(?:dan|den|тан|тен)${L1}""")
     )
     private val relativeHours = listOf(
-        Regex("""$L0(?:через|in)\s+$AMOUNT\s*$HOUR_UNIT$L1"""),
-        Regex("""$L0$AMOUNT\s*$HOUR_UNIT\s+(?:sonra|keyin|кейін|соң|soň)$L1"""),
-        Regex("""$L0(\d{1,3}|bir|бір)\s*(?:sagat|сағат)(?:dan|den|тан|тен)$L1""")
+        Regex("""${L0}(?:через|in)\s+${AMOUNT}\s*${HOUR_UNIT}${L1}"""),
+        Regex("""${L0}${AMOUNT}\s*${HOUR_UNIT}\s+(?:sonra|keyin|кейін|соң|soň)${L1}"""),
+        Regex("""${L0}(\d{1,3}|bir|бір)\s*(?:sagat|сағат)(?:dan|den|тан|тен)${L1}""")
     )
 
-    private val dayAfter = Regex("""$L0(?:послезавтра|day\s+after\s+tomorrow|öbür\s+gün|obur\s+gun)$L1""")
-    private val dayTomorrow = Regex("""$L0(?:завтра|tomorrow|yarın|yarin|ertir|ertaga|ертең)$L1""")
-    private val dayToday = Regex("""$L0(?:сегодня|today|bugün|bugun|bu\s+gün|şu\s+gün|бүгін)$L1""")
+    private val dayAfter = Regex("""${L0}(?:послезавтра|day\s+after\s+tomorrow|öbür\s+gün|obur\s+gun)${L1}""")
+    private val dayTomorrow = Regex("""${L0}(?:завтра|tomorrow|yarın|yarin|ertir|ertaga|ертең)${L1}""")
+    private val dayToday = Regex("""${L0}(?:сегодня|today|bugün|bugun|bu\s+gün|şu\s+gün|бүгін)${L1}""")
 
     private const val PREP = """(?:в|at|saat|sagat|soat|сағат|соат)"""
     private const val MERIDIEM = """(?:\s*(am|pm|вечера|утра|дня|ночи))?"""
     // Падежное окончание татарского/тюркского типа: «18-да», «6'da», «18:00 da».
-    private const val CASE_SUFFIX = """(?:['’-]\p{L}{1,3}(?![\p{L}])|\s+(?:da|de)$L1)?"""
+    private const val CASE_SUFFIX = """(?:['’-]\p{L}{1,3}(?![\p{L}])|\s+(?:da|de)${L1})?"""
 
-    private val clockColon = Regex("""$L0(?:(?:$PREP|на)\s+)?(\d{1,2}):(\d{2})$MERIDIEM$CASE_SUFFIX$L1""")
-    private val clockDot = Regex("""$L0(?:$PREP|на)\s+(\d{1,2})\.(\d{2})$MERIDIEM$CASE_SUFFIX$L1""")
+    private val clockColon = Regex("""${L0}(?:(?:${PREP}|на)\s+)?(\d{1,2}):(\d{2})${MERIDIEM}${CASE_SUFFIX}${L1}""")
+    private val clockDot = Regex("""${L0}(?:${PREP}|на)\s+(\d{1,2})\.(\d{2})${MERIDIEM}${CASE_SUFFIX}${L1}""")
     private val clockHour = Regex(
-        """$L0$PREP\s+(\d{1,2})(?![\d:]|\.\d)(?:\s*(?:часов|часа|час))?$MERIDIEM$CASE_SUFFIX$L1"""
+        """${L0}${PREP}\s+(\d{1,2})(?![\d:]|\.\d)(?:\s*(?:часов|часа|час))?${MERIDIEM}${CASE_SUFFIX}${L1}"""
     )
 
-    private val leadingFiller = Regex("""^(?:мне|me|to|that|about|про|что|чтобы|надо|нужно|ve|and)$L1[\s,:;.-]*""")
+    private val leadingFiller = Regex("""^(?:мне|me|to|that|about|про|что|чтобы|надо|нужно|ve|and)${L1}[\s,:;.-]*""")
     private val trailingFiller = Regex("""[\s,]+(?:на|в|at|on|for)$""")
     private val spaces = Regex("""\s+""")
 
