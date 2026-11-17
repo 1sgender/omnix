@@ -53,7 +53,10 @@ interface ContextualCloudAIClient {
 class OmnixApiAiClient @Inject constructor(
     private val apiClient: OmnixApiClient,
     /** Выбор Flash/Pro: только для запросов движка решений, не для legacy-вызовов (переводчик). */
-    private val tierPreference: AiTierPreference = AiTierPreference.FLASH
+    private val tierPreference: AiTierPreference = AiTierPreference.FLASH,
+    /** Файлы картинок чата: по id из сообщения отдаёт готовый JPEG. */
+    private val imageSource: com.omnix.assistant.domain.files.ChatImageSource =
+        com.omnix.assistant.domain.files.ChatImageSource.NONE
 ) : AIClient, ContextualCloudAIClient {
 
     override suspend fun complete(
@@ -102,8 +105,21 @@ class OmnixApiAiClient @Inject constructor(
                 "Облачная обработка запрещена политикой приватности"
             )
         }
+        // Фото лежит в сообщении ссылкой: сам файл подставляем здесь, а в тексте
+        // остаётся только вопрос.
+        val decoded = com.omnix.assistant.domain.files.ChatImageCodec.decode(prompt)
+        val images = decoded.imageIds.mapNotNull { id ->
+            imageSource.base64Jpeg(id)?.let { com.omnix.assistant.data.remote.OmniAiImageDto("image/jpeg", it) }
+        }
+        if (decoded.imageIds.isNotEmpty() && images.isEmpty()) {
+            return Resource.Error(
+                IllegalStateException("IMAGE_MISSING"),
+                "Фото больше нет на устройстве. Прикрепите его ещё раз."
+            )
+        }
         return apiClient.execute(
-            text = prompt,
+            text = if (images.isEmpty()) prompt else decoded.question.ifBlank { "Что на этом фото?" },
+            images = images,
             source = source,
             privacyLevel = effectivePrivacyLevel.name,
             requiresWeb = requiresWeb,
@@ -124,7 +140,8 @@ class OmnixApiAiClient @Inject constructor(
                 .map {
                     com.omnix.assistant.data.remote.MessageDto(
                         role = it.role.value,
-                        content = it.text
+                        // Фото из прошлых реплик в историю не идёт: только пометка.
+                        content = com.omnix.assistant.domain.files.ChatImageCodec.forHistory(it.text)
                     )
                 }
         )

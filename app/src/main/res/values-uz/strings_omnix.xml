@@ -129,6 +129,16 @@
     <string name="omnix_chat_attach_empty">Faylda matn yo‘q.</string>
     <string name="omnix_chat_attach_unreadable">Faylni o‘qib bo‘lmadi.</string>
     <string name="omnix_chat_attach_truncated">Faylning faqat boshi yuboriladi.</string>
+    <string name="omnix_chat_attach_file">Fayl</string>
+    <string name="omnix_chat_attach_photo">Galereyadan rasm</string>
+    <string name="omnix_chat_attach_camera">Rasmga olish</string>
+    <string name="omnix_chat_image_remove">Rasmni olib tashlash</string>
+    <string name="omnix_chat_image_processing">Rasm tayyorlanmoqda…</string>
+    <string name="omnix_chat_image_description">Biriktirilgan rasm</string>
+    <string name="omnix_chat_image_default_question">Bu rasmda nima bor?</string>
+    <string name="omnix_chat_image_unsupported">Faqat JPEG, PNG va WebP rasmlari mos keladi.</string>
+    <string name="omnix_chat_image_too_large">Rasm juda katta.</string>
+    <string name="omnix_chat_image_unreadable">Rasmni ochib bo‘lmadi.</string>
     <string name="omnix_chat_search_hint">Chatlarda qidirish</string>
     <string name="omnix_chat_search_empty">Hech narsa topilmadi</string>
     <string name="omnix_chat_group_week">Oxirgi 7 kun</string>

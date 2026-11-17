@@ -129,6 +129,16 @@
     <string name="omnix_chat_attach_empty">Dosyada metin yok.</string>
     <string name="omnix_chat_attach_unreadable">Dosya okunamadı.</string>
     <string name="omnix_chat_attach_truncated">Dosyanın yalnızca başı gönderilecek.</string>
+    <string name="omnix_chat_attach_file">Dosya</string>
+    <string name="omnix_chat_attach_photo">Galeriden fotoğraf</string>
+    <string name="omnix_chat_attach_camera">Fotoğraf çek</string>
+    <string name="omnix_chat_image_remove">Fotoğrafı kaldır</string>
+    <string name="omnix_chat_image_processing">Fotoğraf hazırlanıyor…</string>
+    <string name="omnix_chat_image_description">Eklenen fotoğraf</string>
+    <string name="omnix_chat_image_default_question">Bu fotoğrafta ne var?</string>
+    <string name="omnix_chat_image_unsupported">Yalnızca JPEG, PNG ve WebP fotoğrafları desteklenir.</string>
+    <string name="omnix_chat_image_too_large">Fotoğraf çok büyük.</string>
+    <string name="omnix_chat_image_unreadable">Fotoğraf açılamadı.</string>
     <string name="omnix_chat_search_hint">Sohbetlerde ara</string>
     <string name="omnix_chat_search_empty">Hiçbir şey bulunamadı</string>
     <string name="omnix_chat_group_week">Son 7 gün</string>

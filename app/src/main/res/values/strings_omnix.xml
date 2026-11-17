@@ -178,6 +178,16 @@
     <string name="omnix_chat_attach_empty">The file has no text.</string>
     <string name="omnix_chat_attach_unreadable">Couldn\'t read the file.</string>
     <string name="omnix_chat_attach_truncated">Only the beginning of the file will be sent.</string>
+    <string name="omnix_chat_attach_file">File</string>
+    <string name="omnix_chat_attach_photo">Photo from gallery</string>
+    <string name="omnix_chat_attach_camera">Take a photo</string>
+    <string name="omnix_chat_image_remove">Remove photo</string>
+    <string name="omnix_chat_image_processing">Preparing the photo…</string>
+    <string name="omnix_chat_image_description">Attached photo</string>
+    <string name="omnix_chat_image_default_question">What is in this photo?</string>
+    <string name="omnix_chat_image_unsupported">Only JPEG, PNG and WebP photos are supported.</string>
+    <string name="omnix_chat_image_too_large">The photo is too large.</string>
+    <string name="omnix_chat_image_unreadable">Couldn\'t open the photo.</string>
     <string name="omnix_chat_search_hint">Search chats</string>
     <string name="omnix_chat_search_empty">Nothing found</string>
     <string name="omnix_chat_group_week">Previous 7 days</string>

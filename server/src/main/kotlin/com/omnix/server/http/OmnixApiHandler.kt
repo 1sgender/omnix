@@ -190,8 +190,16 @@ class OmnixApiHandler(
         // ByteArray создаётся один раз и отпускается; парсинг идёт
         // напрямую из строки без повторного выделения.
         val bodySize = request.body.toByteArray(Charsets.UTF_8).size.toLong()
-        if (request.contentLength > validation.maxBodyBytes ||
+        val overTextLimit = request.contentLength > validation.maxBodyBytes ||
             bodySize > validation.maxBodyBytes
+        // Тело больше обычного допустимо только у запроса с картинками, и не
+        // больше maxImageBodyBytes. Тяжёлое тело без поля images отклоняем
+        // ДО парсинга: парсить мегабайты до аутентификации незачем.
+        if (overTextLimit && (
+                request.contentLength > validation.maxImageBodyBytes ||
+                    bodySize > validation.maxImageBodyBytes ||
+                    !request.body.contains("\"images\"")
+                )
         ) {
             return error(ApiErrorCode.PAYLOAD_TOO_LARGE, newRequestId())
         }
@@ -207,6 +215,11 @@ class OmnixApiHandler(
         } catch (e: Exception) {
             parseError = e.javaClass.simpleName
             null
+        }
+
+        // Большое тело без картинок (поле images пустое/не разобралось) — отказ.
+        if (overTextLimit && parsed?.images.isNullOrEmpty()) {
+            return error(ApiErrorCode.PAYLOAD_TOO_LARGE, newRequestId())
         }
 
         // Сквозной requestId: клиентский (если валидный), либо свой.

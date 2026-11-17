@@ -56,7 +56,8 @@ class SmartProviderSelectionPolicy(
             .filter { provider ->
                 val caps = provider.capabilities
                 (!requirements.requiresWeb || caps.supportsWeb) &&
-                    (!requirements.requiresToolCalling || caps.supportsToolCalling)
+                    (!requirements.requiresToolCalling || caps.supportsToolCalling) &&
+                    (!requirements.requiresVision || caps.supportsVision)
             }
             .filter { health.isAvailable(it.id) }
             .toList()
