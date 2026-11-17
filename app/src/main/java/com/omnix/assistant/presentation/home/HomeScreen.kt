@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +59,6 @@ import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
-import com.omnix.assistant.presentation.components.OmnixChevronRightIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.components.OmnixOnDeviceLineIcon
@@ -546,9 +546,9 @@ private fun OnDevicePill() {
 }
 
 /**
- * Быстрые действия: плоские строки прямо на фоне, между ними тонкие
- * разделители. Без карточек и рамок: тонкая линейная иконка, название,
- * короткое пояснение и стрелка.
+ * Быстрые действия: три круглые «кнопки-знака» в ряд под логотипом. Тонкая
+ * линейная иконка в контурном круге и короткая подпись; без карточек и
+ * списков, чтобы не спорить с логотипом. Каждая зона нажатия не меньше 48dp.
  */
 @Composable
 private fun QuickActions(
@@ -562,20 +562,19 @@ private fun QuickActions(
         add(QuickAction(OmnixAlarmLineIcon, colors.textPrimary, R.string.omnix_home_card_reminders, R.string.omnix_home_card_reminders_sub, onRemindersTap))
         add(QuickAction(OmnixBoltLineIcon, colors.textPrimary, R.string.omnix_home_card_automations, R.string.omnix_home_card_automations_sub, onAutomationsTap))
     }
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Top
+    ) {
         cards.forEach { card ->
-            QuickActionRow(
+            QuickActionTile(
                 icon = card.icon,
                 iconTint = card.tint,
                 title = stringResource(card.title),
-                subtitle = stringResource(card.subtitle),
-                onClick = card.onClick
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(colors.border)
+                description = stringResource(card.subtitle),
+                onClick = card.onClick,
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -590,47 +589,46 @@ private class QuickAction(
 )
 
 @Composable
-private fun QuickActionRow(
+private fun QuickActionTile(
     icon: ImageVector,
     iconTint: Color,
     title: String,
-    subtitle: String,
+    description: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = OmnixTheme.colors
     val interaction = remember { MutableInteractionSource() }
-    Row(
+    Column(
         modifier = modifier
-            .fillMaxWidth()
-            .omnixPressScale(interaction, pressedScale = 0.99f)
+            .omnixPressScale(interaction)
+            .clip(RoundedCornerShape(16.dp))
             .clickable(
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button,
                 onClick = onClick
             )
-            .heightIn(min = 72.dp)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "$title. $description" }
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = title,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 17.sp),
-                color = colors.textPrimary,
-                maxLines = 1
-            )
-            Text(
-                text = subtitle,
-                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
-                color = colors.textSecondary,
-                maxLines = 2
-            )
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .border(BorderStroke(1.dp, colors.border), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
         }
-        OmnixChevronRightIcon(color = colors.textTertiary)
+        Text(
+            text = title,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 16.sp),
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
     }
 }
 
