@@ -70,6 +70,9 @@ fun HomeRoute(
                     // and stopped from outside the app (Android 13+ asks).
                     val permissions = buildList {
                         add(Manifest.permission.RECORD_AUDIO)
+                        // Звонки и сообщения по имени («позвони маме») без отдельного похода в настройки.
+                        add(Manifest.permission.READ_CONTACTS)
+                        add(Manifest.permission.CALL_PHONE)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             add(Manifest.permission.POST_NOTIFICATIONS)
                         }
