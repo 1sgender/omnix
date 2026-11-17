@@ -4,7 +4,10 @@ package com.omnix.server.license
  * Тарифы OMNIX: FREE / PRO / OMNIX (в продукте «Max»; id `omnix` сохранён,
  * на нём уже выданы лицензии).
  *
- * Утверждено владельцем 2026-11-13 (цены в BILLING_PLANS: 0 / 149 / 299 TMT в мес.):
+ * Утверждено владельцем 2026-11-13 (цены в BILLING_PLANS: 0 / 149 / 299 TMT в мес.);
+ * лимиты Flash, поиска, перевода и «уха» пересмотрены 2026-11-17 по модели себестоимости
+ * (курс 19,5 TMT/USD): при выборке ВСЕХ лимитов сразу тариф не должен уходить в минус.
+ * Ниже в списке стоят прежние утверждённые цифры, действуют значения из PlanCatalog:
  * - Free идёт с наушниками навсегда и должен стоить нам ~0 (бесплатные ключи Gemini);
  * - голосовой AI (Flash): 10 / 300 / 1000 в день;
  * - базовый AI (Flash, чат): 10 / 300 / 1000 в день;
@@ -61,7 +64,7 @@ object PlanCatalog {
         dailyVoiceAi = 10,
         dailyBaseAi = 10,
         dailyAgentActions = 5,
-        dailyWebSearch = 10,
+        dailyWebSearch = 5,
         dailyTranslationUnits = 15,
         dailyEarMinutes = 10,
         maxAutomations = 3,
@@ -75,13 +78,13 @@ object PlanCatalog {
     )
 
     private val omnix = PlanLimits(
-        dailyVoiceAi = 1000,
-        dailyBaseAi = 1000,
+        dailyVoiceAi = 300,
+        dailyBaseAi = 300,
         dailyAgentActions = 500,
-        dailyWebSearch = 500,
-        dailyTranslationUnits = 1000,
+        dailyWebSearch = 60,
+        dailyTranslationUnits = 300,
         // Fair-use cap против абуза; в UI подаётся как «безлимит».
-        dailyEarMinutes = 600,
+        dailyEarMinutes = 120,
         maxAutomations = Int.MAX_VALUE,
         screenReading = true,
         uiControl = true,
@@ -93,12 +96,12 @@ object PlanCatalog {
     )
 
     private val pro = PlanLimits(
-        dailyVoiceAi = 300,
-        dailyBaseAi = 300,
+        dailyVoiceAi = 150,
+        dailyBaseAi = 150,
         dailyAgentActions = 100,
-        dailyWebSearch = 100,
-        dailyTranslationUnits = 300,
-        dailyEarMinutes = 120,
+        dailyWebSearch = 30,
+        dailyTranslationUnits = 100,
+        dailyEarMinutes = 45,
         maxAutomations = Int.MAX_VALUE,
         screenReading = true,
         uiControl = true,
