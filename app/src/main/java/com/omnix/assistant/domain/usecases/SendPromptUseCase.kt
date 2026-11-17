@@ -23,6 +23,7 @@ import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.domain.models.PromptExecutionResult
+import com.omnix.assistant.agent.decision.AiTier
 import com.omnix.assistant.agent.decision.ExecutionType
 import com.omnix.assistant.domain.chat.ChatAnswerOriginStore
 import com.omnix.assistant.domain.repository.MessageRepository
@@ -325,6 +326,12 @@ class SendPromptUseCase @Inject constructor(
         )
         if (executionType == ExecutionType.CLOUD_AI) {
             answerOriginStore.markCloud(messageId)
+        }
+        // Кто ответил на самом деле (по полю tier ответа сервера) — моно-метка под ответом.
+        tierLedger.takeServedPro(requestId)?.let { servedPro ->
+            if (executionType == ExecutionType.CLOUD_AI) {
+                answerOriginStore.markTier(messageId, if (servedPro) AiTier.PRO else AiTier.FLASH)
+            }
         }
         // Выбран Pro, а сервер ответил Flash — ненавязчивая пометка под ответом.
         if (tierLedger.takeDowngrade(requestId)) {

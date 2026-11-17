@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import com.omnix.assistant.agent.decision.AiTier
 import com.omnix.assistant.agent.decision.ExecutionType
 import com.omnix.assistant.core.admin.AdminModelTesting
 import javax.inject.Inject
@@ -44,6 +45,16 @@ class ChatAnswerOriginStore @Inject constructor(
     fun markCloud(messageId: Long) {
         if (messageId <= 0L) return
         _cloudMessageIds.update { ids -> ids + messageId }
+    }
+
+    private val _answeredTiers = MutableStateFlow<Map<Long, AiTier>>(emptyMap())
+
+    /** Облачный ответ → кто ответил (Flash или Pro): мелкая моно-метка под ответом. */
+    val answeredTiers: StateFlow<Map<Long, AiTier>> = _answeredTiers.asStateFlow()
+
+    fun markTier(messageId: Long, tier: AiTier) {
+        if (messageId <= 0L) return
+        _answeredTiers.update { tiers -> tiers + (messageId to tier) }
     }
 
     private val _flashFallbackIds = MutableStateFlow<Set<Long>>(emptySet())

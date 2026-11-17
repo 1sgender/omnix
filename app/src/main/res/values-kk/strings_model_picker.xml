@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AI model picker in chat: chip by the input, bottom sheet, voice confirmation. -->
+<resources>
+    <string name="omnix_model_sheet_title">Кім жауап береді</string>
+    <string name="omnix_model_chip_cd">ЖИ моделі: %1$s. Өзгерту</string>
+    <string name="omnix_model_line_auto">Өзі таңдайды: телефон немесе бұлт</string>
+    <string name="omnix_model_line_on_device">Интернетсіз, жауаптар қарапайымырақ</string>
+    <string name="omnix_model_line_flash">Жылдам</string>
+    <string name="omnix_model_line_pro">Ақылдырақ, ұзағырақ ойлайды</string>
+    <string name="omnix_model_left_today">Бүгін қалды: %1$d / %2$d</string>
+    <string name="omnix_model_limit_today">Бүгін: %1$d дейін</string>
+    <string name="omnix_model_no_limit">Шектеусіз</string>
+    <string name="omnix_model_see_plans">Тарифтерді көру</string>
+    <string name="omnix_ai_model_voice_switched">Дайын, енді %1$s жауап береді</string>
+    <string name="omnix_ai_model_voice_pro_locked">Pro тек Pro және Max тарифтерінде бар. Әзірге %1$s жауап береді</string>
+</resources>

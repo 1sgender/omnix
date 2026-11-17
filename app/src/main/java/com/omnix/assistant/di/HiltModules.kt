@@ -198,6 +198,7 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindGetDeviceInfoTool(tool: GetDeviceInfoTool): OmniTool
     @Binds @IntoSet abstract fun bindGetBatteryTool(tool: GetBatteryTool): OmniTool
     @Binds @IntoSet abstract fun bindGetTimeTool(tool: GetTimeTool): OmniTool
+    @Binds @IntoSet abstract fun bindAiModelSwitchTool(tool: com.omnix.assistant.agent.tools.system.AiModelSwitchTool): OmniTool
     @Binds @IntoSet abstract fun bindGetNetworkStatusTool(tool: GetNetworkStatusTool): OmniTool
 
     // 2. Управление устройством (Device & Media)
@@ -392,6 +393,11 @@ abstract class ExecutionDecisionModule {
     @Binds
     @Singleton
     abstract fun bindAiTierSwitch(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierSwitch
+
+    /** Смена модели с проверкой: лист выбора в чате и голосовая команда. */
+    @Binds
+    @Singleton
+    abstract fun bindAiModelSwitch(impl: com.omnix.assistant.data.preferences.AiModelSwitcher): com.omnix.assistant.agent.decision.AiModelSwitch
 
     @Binds
     @Singleton

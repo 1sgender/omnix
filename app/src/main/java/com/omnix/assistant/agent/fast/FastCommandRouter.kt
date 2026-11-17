@@ -44,10 +44,22 @@ class FastCommandRouter @Inject constructor() {
 
         if (q.isEmpty()) return FastRouteResult.ForwardToLlm
 
+        // 0. Смена модели ИИ голосом («переключись на Pro», «ответь умнее»).
+        //    Раньше остальных правил: «модель» ниже — это вопрос о телефоне.
+        AiModelVoiceCommand.parse(q)?.let { choice ->
+            return FastRouteResult.HandledLocally(
+                toolCall = ToolCall(
+                    toolId = AiModelVoiceCommand.TOOL_ID,
+                    arguments = buildJsonObject { put("choice", choice.storageKey) }
+                ),
+                immediateVoiceResponse = "Переключаю модель."
+            )
+        }
+
         // 0.9 Напоминание: «напомни в 18:00 позвонить маме», «через 20 минут…»,
         // «завтра в 10…». Раньше такая фраза уходила в облако, и сервер мог
         // просто ответить «хорошо» без всякого действия. Время и текст разбирает
-        // сам инструмент; если времени нет, он спросит, когда напомнить.
+        // сам инструмент. Без времени в фразе правило не срабатывает.
         if (ReminderTimeParser.isReminderRequest(q) &&
             ReminderTimeParser.parse(q, System.currentTimeMillis()) !is ReminderTimeParser.Result.NoTime
         ) {
