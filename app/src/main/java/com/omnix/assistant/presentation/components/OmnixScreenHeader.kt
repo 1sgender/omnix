@@ -13,6 +13,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +55,7 @@ fun OmnixScreenHeader(
             androidx.compose.foundation.layout.Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(colors.surface)
                     .border(BorderStroke(1.dp, colors.border), CircleShape)
@@ -62,10 +67,24 @@ fun OmnixScreenHeader(
             Spacer(Modifier.width(spacing.md))
         }
 
+        // Заголовок не переносится по слогам: одна строка, при нехватке
+        // ширины шрифт уменьшается ступенями (до 18 sp), затем многоточие.
+        val baseStyle = OmnixTheme.typography.screenTitle
+        var shrink by remember(title) { mutableStateOf(1f) }
         Text(
             text = title,
-            style = OmnixTheme.typography.screenTitle,
-            color = colors.textPrimary
+            style = baseStyle.copy(
+                fontSize = baseStyle.fontSize * shrink,
+                lineHeight = baseStyle.lineHeight * shrink
+            ),
+            color = colors.textPrimary,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { result ->
+                if (result.hasVisualOverflow && shrink > 0.65f) shrink -= 0.07f
+            },
+            modifier = Modifier.weight(1f)
         )
     }
 }

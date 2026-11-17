@@ -84,7 +84,7 @@ data class OmnixColorScheme(
 // glance.
 private val TextPrimaryToken = Color(0xFFF2F2F0)
 private val TextSecondaryToken = Color(0xFFA3A3A3)
-private val TextTertiaryToken = Color(0xFF7A7A7A)
+private val TextTertiaryToken = Color(0xFF8C8C8C)
 private val TextDisabledToken = Color(0x47F2F2F0)     // 0.28
 
 /** Paper: the one "accent" of the dark scheme — the primary fill and the lit mark. */
@@ -146,7 +146,7 @@ val OmnixNightColors = OmnixDarkColors.copy(
 
     textPrimary = Color(0xD6F2F2F0),
     textSecondary = Color(0xFF858585),
-    textTertiary = Color(0xFF6B6B6B),
+    textTertiary = Color(0xFF808080),
     textDisabled = Color(0x33F2F2F0),
 
     stateIdle = Color(0xFF6B6B6B),

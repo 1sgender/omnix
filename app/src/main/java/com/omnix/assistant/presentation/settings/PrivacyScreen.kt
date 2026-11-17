@@ -10,6 +10,8 @@ import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -280,9 +282,9 @@ internal fun factKeyLabel(key: String): String = when (key) {
 @Composable
 private fun PrivacyWhereCards() {
     val colors = OmnixTheme.colors
-    androidx.compose.foundation.layout.Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
     ) {
         WhereCard(
             label = stringResource(R.string.omnix_privacy_where_device),
@@ -290,6 +292,7 @@ private fun PrivacyWhereCards() {
             ink = colors.onActionPrimary,
             modifier = Modifier
                 .weight(1f)
+                .fillMaxHeight()
                 .background(colors.actionPrimary, WhereShape)
         )
         WhereCard(
@@ -298,6 +301,7 @@ private fun PrivacyWhereCards() {
             ink = colors.textPrimary,
             modifier = Modifier
                 .weight(1f)
+                .fillMaxHeight()
                 .background(colors.surface, WhereShape)
                 .border(BorderStroke(1.dp, colors.border), WhereShape)
         )
@@ -307,12 +311,12 @@ private fun PrivacyWhereCards() {
 @Composable
 private fun WhereCard(label: String, body: String, ink: Color, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(14.dp),
+        modifier = modifier.padding(16.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
     ) {
-        Text(text = label, style = OmnixMonoLabelStyle, color = ink.copy(alpha = 0.6f))
+        Text(text = label, style = OmnixMonoLabelStyle, color = ink.copy(alpha = 0.75f))
         Text(text = body, style = OmnixTheme.typography.caption, color = ink)
     }
 }
 
-private val WhereShape = RoundedCornerShape(20.dp)
+private val WhereShape = RoundedCornerShape(16.dp)
