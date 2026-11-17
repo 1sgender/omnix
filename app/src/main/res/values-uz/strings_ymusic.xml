@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Яндекс Музыка: плеер внутри OMNIX -->
+    <string name="ymusic_settings_title">Yandex Musiqa</string>
+    <string name="ymusic_settings_hint">Musiqa toʻgʻridan-toʻgʻri OMNIX ichida Yandex Musiqa akkauntingizdan chalinadi (Plus obunasi kerak). Akkauntingiz tokenini qoʻying: u faqat shu telefonda shifrlangan holda saqlanadi va Yandex Musiqadan boshqa joyga yuborilmaydi.</string>
+    <string name="ymusic_token_label">Token</string>
+    <string name="ymusic_token_saved">Token telefonda saqlandi</string>
+    <string name="ymusic_token_missing">Token kiritilmagan</string>
+    <string name="ymusic_token_remove">Oʻchirish</string>
+    <string name="ymusic_token_input_title">Yangi token</string>
+    <string name="ymusic_token_placeholder">Yandex Musiqa tokenini qoʻying</string>
+    <string name="ymusic_token_invalid">Bu tokenga oʻxshamaydi</string>
+    <string name="ymusic_token_save">Tokenni saqlash</string>
+    <string name="ymusic_unofficial_warning">Diqqat: Yandex Musiqaning rasmiy API’si yoʻq. Bu kirish norasmiy, istalgan vaqtda ishlamay qolishi mumkin va Yandex xizmat shartlarini buzadi. Foydalanish yoki foydalanmaslik oʻzingizga bogʻliq.</string>
+    <string name="ymusic_need_token">Sozlamalarga Yandex Musiqa tokenini qoʻying</string>
+    <string name="ymusic_now_playing">«%1$s» — %2$s ijro etilmoqda</string>
+    <string name="ymusic_now_playing_no_artist">«%1$s» ijro etilmoqda</string>
+    <string name="ymusic_token_rejected">Yandex Musiqa tokenni qabul qilmadi. Sozlamalarda yangisini qoʻying</string>
+    <string name="ymusic_fallback_search">OMNIX ichida ijro etib boʻlmadi, Yandex Musiqada «%1$s» qidirilmoqda</string>
+    <string name="ymusic_notif_channel">OMNIX Musiqa</string>
+    <string name="ymusic_notif_loading">Yuklanmoqda…</string>
+    <string name="ymusic_action_pause">Pauza</string>
+    <string name="ymusic_action_play">Ijro</string>
+    <string name="ymusic_action_previous">Oldingi</string>
+    <string name="ymusic_action_next">Keyingi</string>
+    <string name="ymusic_action_stop">Toʻxtatish</string>
+
+</resources>

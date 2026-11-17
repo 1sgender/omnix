@@ -144,6 +144,13 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_offline_title),
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_OFFLINE_SPEECH)
+                    ),
+                    // Музыка: токен Яндекс Музыки для плеера внутри OMNIX.
+                    MeRow(
+                        icon = OmnixHeadphonesLineIcon,
+                        label = stringResource(R.string.ymusic_settings_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_YANDEX_MUSIC)
                     )
                 )
             )

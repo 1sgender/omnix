@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Яндекс Музыка: плеер внутри OMNIX -->
+    <string name="ymusic_settings_title">Yandeks Muzyka</string>
+    <string name="ymusic_settings_hint">Aýdymlar göni OMNIX-iň içinde Yandeks Muzykaňdan çalynýar (Plýus abunasy gerek). Hasabyňyzyň tokenini goýuň: ol diňe şu telefonda şifrlenen görnüşde saklanýar we Yandeks Muzykadan başga ýere iberilmeýär.</string>
+    <string name="ymusic_token_label">Token</string>
+    <string name="ymusic_token_saved">Token telefonda saklandy</string>
+    <string name="ymusic_token_missing">Token girizilmedi</string>
+    <string name="ymusic_token_remove">Aýyr</string>
+    <string name="ymusic_token_input_title">Täze token</string>
+    <string name="ymusic_token_placeholder">Yandeks Muzyka tokenini goýuň</string>
+    <string name="ymusic_token_invalid">Bu token ýaly däl</string>
+    <string name="ymusic_token_save">Tokeni sakla</string>
+    <string name="ymusic_unofficial_warning">Üns beriň: Yandeks Muzykanyň resmi API-si ýok. Bu elýeterlilik resmi däl, islendik wagt işlemez bolmagy mümkin we Yandeksiň hyzmat şertlerini bozýar. Ulanmak ýa-da ulanmazlyk özüňiziň karaňyz.</string>
+    <string name="ymusic_need_token">Sazlamalarda Yandeks Muzyka tokenini goýuň</string>
+    <string name="ymusic_now_playing">«%1$s» — %2$s çalýaryn</string>
+    <string name="ymusic_now_playing_no_artist">«%1$s» çalýaryn</string>
+    <string name="ymusic_token_rejected">Yandeks Muzyka tokeni kabul etmedi. Sazlamalarda täze token goýuň</string>
+    <string name="ymusic_fallback_search">OMNIX-iň içinde çalyp bolmady, «%1$s» Yandeks Muzykada gözleýärin</string>
+    <string name="ymusic_notif_channel">OMNIX Aýdym-saz</string>
+    <string name="ymusic_notif_loading">Ýüklenýär…</string>
+    <string name="ymusic_action_pause">Duruz</string>
+    <string name="ymusic_action_play">Çal</string>
+    <string name="ymusic_action_previous">Yzyna</string>
+    <string name="ymusic_action_next">Indiki</string>
+    <string name="ymusic_action_stop">Bes et</string>
+
+</resources>

@@ -11,6 +11,8 @@ import com.omnix.assistant.agent.core.CapabilityAwareTool
 import com.omnix.assistant.agent.core.ToolCategory
 import com.omnix.assistant.agent.media.MediaIntent
 import com.omnix.assistant.agent.media.MediaIntentParser
+import com.omnix.assistant.agent.media.ymusic.YandexMusicPlayer
+import com.omnix.assistant.agent.media.ymusic.YmPlayResult
 import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.agent.model.ToolRisk
 import com.omnix.assistant.agent.tools.verification.ExecutionVerification
@@ -27,11 +29,14 @@ import javax.inject.Singleton
  *    реально ли играет плеер (для этого нужен MediaSessionManager с доступом к
  *    уведомлениям). Поэтому формулировки фиксируют СДЕЛАННОЕ ДЕЙСТВИЕ
  *    («команда отправлена плееру»), а не неподтверждаемый результат
- *    («поставлена на паузу») — без Fake Success.
+ *    («поставлена на паузу») — без Fake Success;
+ *  - когда играет встроенный плеер Яндекс Музыки ([YandexMusicPlayer]), команды
+ *    идут прямо в него, и результат известен точно.
  */
 @Singleton
 class MediaControlTool @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val ymusic: YandexMusicPlayer
 ) : CapabilityAwareTool {
 
     override val toolId: String = "media.control"
@@ -111,6 +116,10 @@ class MediaControlTool @Inject constructor(
             }
         }
 
+        if (ymusic.isActive) {
+            internalPlayerResult(intent)?.let { return it }
+        }
+
         val keyCode = when (intent) {
             MediaIntent.PAUSE_MEDIA -> KeyEvent.KEYCODE_MEDIA_PAUSE
             MediaIntent.PLAY_MEDIA, MediaIntent.RESUME_MEDIA -> KeyEvent.KEYCODE_MEDIA_PLAY
@@ -148,5 +157,39 @@ class MediaControlTool @Inject constructor(
         } catch (e: Exception) {
             ToolExecutionResult.failure("Ошибка управления медиа: ${e.localizedMessage}", "MEDIA_ERROR")
         }
+    }
+
+    /** Команда встроенному плееру; null — команда ему не относится, пусть решает система. */
+    private suspend fun internalPlayerResult(intent: MediaIntent): ToolExecutionResult? {
+        val ok: Boolean
+        val label: String
+        when (intent) {
+            MediaIntent.PAUSE_MEDIA -> { ok = ymusic.pause(); label = "Пауза" }
+            MediaIntent.PLAY_MEDIA, MediaIntent.RESUME_MEDIA -> { ok = ymusic.resume(); label = "Продолжаю" }
+            MediaIntent.TOGGLE_PLAY_PAUSE -> {
+                val wasPlaying = ymusic.state.value.playing
+                ok = ymusic.togglePlayPause()
+                label = if (wasPlaying) "Пауза" else "Продолжаю"
+            }
+            MediaIntent.NEXT_TRACK -> return trackChange(ymusic.next())
+            MediaIntent.PREVIOUS_TRACK -> return trackChange(ymusic.previous())
+            MediaIntent.STOP_MEDIA -> { ymusic.stop(); ok = true; label = "Остановил музыку" }
+            MediaIntent.VOLUME_UP, MediaIntent.VOLUME_DOWN -> return null
+        }
+        val data = buildJsonObject { put("intent", intent.name); put("target", "OMNIX_PLAYER") }
+        return if (ok) {
+            ToolExecutionResult.success(label, data = data)
+        } else {
+            ToolExecutionResult.failure("Плеер OMNIX не смог выполнить команду", "MEDIA_PLAYER_ERROR", data = data)
+        }
+    }
+
+    private fun trackChange(result: YmPlayResult?): ToolExecutionResult = when (result) {
+        is YmPlayResult.Started -> ToolExecutionResult.success(
+            "Играю «${result.track.title}» — ${result.track.artistLine}",
+            data = buildJsonObject { put("target", "OMNIX_PLAYER") }
+        )
+        is YmPlayResult.Failed -> ToolExecutionResult.failure("Не получилось включить другой трек", "MEDIA_PLAYER_ERROR")
+        null -> ToolExecutionResult.success("Очередь закончилась, музыка остановлена")
     }
 }

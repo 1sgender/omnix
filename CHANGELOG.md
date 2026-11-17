@@ -11,9 +11,13 @@ must be added only when the repository owner creates an actual release.
 ### Added (songs and server web search)
 
 - «Найди песню X», «включи песню X», «поставь X» (ru, en, tk, tr, kk, uz) идут в новый
-  инструмент `media.play_search`: поиск открывается в Яндекс Музыке (приложение, затем
-  ссылка), далее MEDIA_PLAY_FROM_SEARCH, YouTube Music, YouTube, в конце music.yandex.ru в
-  браузере. Раньше такая фраза уходила в web_search («точных данных не найдено»).
+  инструмент `media.play_search`. Раньше такая фраза уходила в web_search («точных данных не найдено»).
+- Плеер внутри OMNIX с треками из Яндекс Музыки (неофициальный API api.music.yandex.net,
+  токен владельца в настройках «Я → Яндекс Музыка», хранится в EncryptedSharedPreferences, на
+  сервер не уходит). Foreground-сервис с уведомлением; `media.control` (пауза, дальше, назад,
+  стоп) управляет им напрямую. Нет токена: «Вставь токен Яндекс Музыки в настройках» и открытие
+  настроек. Сбой внутри: запасной поиск в приложении Яндекс Музыка и на music.yandex.ru.
+  YouTube и YouTube Music из цепочки убраны полностью (в Туркменистане заблокированы).
 - Серверный веб-поиск `POST /v1/search` (Brave Search API, запасной Gemini с Google Search;
   env `BRAVE_SEARCH_API_KEY`, `SEARCH_PROVIDERS`, `SEARCH_GEMINI_MODEL`,
   `OMNIX_MAX_SEARCH_IN_FLIGHT`). Без ключей ответ `SEARCH_UNAVAILABLE`, и телефон ищет
