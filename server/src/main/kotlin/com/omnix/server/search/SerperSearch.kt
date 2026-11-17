@@ -115,10 +115,10 @@ class CachedSearchProvider(
     private val clock: Clock = Clock.systemUTC()
 ) : SearchProvider {
 
-    private data class Entry(val storedAt: Long, val value: SearchOutcome.Success)
+    private data class CachedEntry(val storedAt: Long, val value: SearchOutcome.Success)
 
-    private val entries = object : LinkedHashMap<String, Entry>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Entry>?): Boolean =
+    private val entries = object : LinkedHashMap<String, CachedEntry>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CachedEntry>?): Boolean =
             size > maxEntries
     }
 
@@ -130,7 +130,7 @@ class CachedSearchProvider(
         }
         val outcome = delegate.search(query, lang)
         if (outcome is SearchOutcome.Success && (outcome.results.isNotEmpty() || !outcome.answer.isNullOrBlank())) {
-            synchronized(entries) { entries[key] = Entry(now, outcome) }
+            synchronized(entries) { entries[key] = CachedEntry(now, outcome) }
         }
         return outcome
     }
