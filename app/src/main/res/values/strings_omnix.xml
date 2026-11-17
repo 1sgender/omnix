@@ -32,8 +32,6 @@
     <string name="omnix_home_starting">Turning on…</string>
     <string name="omnix_home_stopping">Turning off…</string>
     <string name="omnix_home_on_hint">Say “Omni” or tap the logo</string>
-    <string name="omnix_home_talk">Speak</string>
-    <string name="omnix_home_talk_stop">Stop</string>
     <string name="omnix_home_power_a11y">OMNIX assistant</string>
     <string name="omnix_home_power_on_state">On</string>
     <string name="omnix_home_power_off_state">Off</string>

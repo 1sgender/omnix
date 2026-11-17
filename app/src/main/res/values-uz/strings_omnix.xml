@@ -16,8 +16,6 @@
     <string name="omnix_home_starting">Yoqilmoqda…</string>
     <string name="omnix_home_stopping">Oʻchirilmoqda…</string>
     <string name="omnix_home_on_hint">“Omni” deng yoki logotipni bosing</string>
-    <string name="omnix_home_talk">Gapirish</string>
-    <string name="omnix_home_talk_stop">Toʻxtatish</string>
     <string name="omnix_home_power_a11y">OMNIX yordamchisi</string>
     <string name="omnix_home_power_on_state">Yoqilgan</string>
     <string name="omnix_home_power_off_state">Oʻchirilgan</string>

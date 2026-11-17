@@ -16,8 +16,6 @@
     <string name="omnix_home_starting">Қосылуда…</string>
     <string name="omnix_home_stopping">Өшірілуде…</string>
     <string name="omnix_home_on_hint">«Омни» деңіз немесе логотипті басыңыз</string>
-    <string name="omnix_home_talk">Сөйлеу</string>
-    <string name="omnix_home_talk_stop">Тоқтату</string>
     <string name="omnix_home_power_a11y">OMNIX көмекшісі</string>
     <string name="omnix_home_power_on_state">Қосулы</string>
     <string name="omnix_home_power_off_state">Өшірулі</string>
