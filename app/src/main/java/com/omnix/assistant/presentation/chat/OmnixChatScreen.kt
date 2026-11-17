@@ -143,6 +143,9 @@ fun OmnixChatScreen(
     customTitles: Map<Long, String> = emptyMap(),
     onRename: (Long, String) -> Unit = { _, _ -> },
     onSwitchToFlash: () -> Unit = {},
+    modelPicker: ChatModelPickerState? = null,
+    onSelectModel: (com.omnix.assistant.agent.decision.AiModelChoice) -> Unit = {},
+    onOpenTariffs: () -> Unit = {},
     onAttachmentPicked: (android.net.Uri) -> Unit = {},
     onClearAttachment: () -> Unit = {}
 ) {
@@ -150,6 +153,7 @@ fun OmnixChatScreen(
     val attachPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
     ) { uri -> if (uri != null) onAttachmentPicked(uri) }
+    var modelSheetOpen by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         ChatThread(
@@ -163,6 +167,8 @@ fun OmnixChatScreen(
             onKeepLocal = onKeepLocal,
             onToggleDictation = onToggleDictation,
             onSwitchToFlash = onSwitchToFlash,
+            modelPicker = modelPicker,
+            onOpenModelSheet = { modelSheetOpen = true },
             onAttach = { attachPicker.launch(arrayOf("*/*")) },
             onClearAttachment = onClearAttachment
         )
@@ -223,6 +229,16 @@ fun OmnixChatScreen(
         }
     }
 
+    // Лист выбора модели: чип у поля ввода → «Кто отвечает».
+    if (modelSheetOpen && modelPicker != null) {
+        ChatModelSheet(
+            state = modelPicker,
+            onSelect = onSelectModel,
+            onOpenTariffs = onOpenTariffs,
+            onDismiss = { modelSheetOpen = false }
+        )
+    }
+
     // Confirmation reuses the one shared sheet: the tap path and the voice
     // path resolve the same pending call in the executor (§17).
     state.pendingConfirmation?.let { pending ->
@@ -252,6 +268,8 @@ private fun ChatThread(
     onKeepLocal: () -> Unit,
     onToggleDictation: () -> Unit,
     onSwitchToFlash: () -> Unit,
+    modelPicker: ChatModelPickerState?,
+    onOpenModelSheet: () -> Unit,
     onAttach: () -> Unit,
     onClearAttachment: () -> Unit
 ) {
@@ -320,6 +338,7 @@ private fun ChatThread(
                             fromCloud = message.id in state.cloudMessageIds,
                             adminLabel = state.adminLabels[message.id],
                             flashFallback = message.id in state.flashFallbackIds,
+                            tier = state.answeredTiers[message.id],
                             onSwitchToFlash = if (message.id in state.proQuotaIds) onSwitchToFlash else null,
                             threadWidth = threadWidth,
                             onRepeat = if (question != null && !state.isSending) {
@@ -354,6 +373,15 @@ private fun ChatThread(
         }
 
         ConsentAndBadge(state = state, onAllowCloud = onAllowCloud, onKeepLocal = onKeepLocal)
+
+        if (modelPicker != null) {
+            ChatModelChip(
+                choice = modelPicker.choice,
+                checking = modelPicker.applying != null,
+                onClick = onOpenModelSheet,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+        }
 
         ChatComposer(
             text = state.inputText,
@@ -512,6 +540,7 @@ private fun MessageRow(
     threadWidth: Dp,
     adminLabel: String? = null,
     flashFallback: Boolean = false,
+    tier: com.omnix.assistant.agent.decision.AiTier? = null,
     onSwitchToFlash: (() -> Unit)? = null,
     onRepeat: (() -> Unit)? = null
 ) {
@@ -631,6 +660,14 @@ private fun MessageRow(
                         .clip(CircleShape)
                         .clickable(onClick = onRepeat)
                         .padding(horizontal = 10.dp, vertical = 8.dp)
+                )
+            }
+            // Моно-метка «чем отвечено»; не дублирует «Ответил Flash» и подпись админа.
+            if (tier != null && adminLabel == null && !flashFallback) {
+                Text(
+                    text = if (tier == com.omnix.assistant.agent.decision.AiTier.PRO) "PRO" else "FLASH",
+                    style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                    color = colors.textTertiary
                 )
             }
             if (caption != null) {

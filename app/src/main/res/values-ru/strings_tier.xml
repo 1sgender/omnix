@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Выбор уровня ИИ (Локально / Flash / Pro) и «Сегодня осталось». -->
 <resources>
-    <string name="omnix_tier_pro_body">Claude — самая умная модель. Облако OMNIX, нужен интернет.</string>
     <string name="omnix_tier_pro_locked">Доступно в Pro и Max</string>
     <string name="omnix_tier_answered_flash">Ответил Flash: Pro временно недоступен</string>
     <string name="omnix_tier_switch_to_flash">Переключиться на Flash</string>

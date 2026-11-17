@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.omnix.assistant.R
+import com.omnix.assistant.agent.decision.AiTier
 import com.omnix.assistant.agent.decision.AiTierSwitch
 import com.omnix.assistant.agent.decision.PrivacyClassification
 import com.omnix.assistant.agent.decision.PrivacyClassifier
@@ -93,6 +94,8 @@ data class ChatUiState(
     val cloudMessageIds: Set<Long> = emptySet(),
     /** Тест моделей (только админ): id ответа → кто ответил. */
     val adminLabels: Map<Long, String> = emptyMap(),
+    /** Облачный ответ → кто ответил (Flash / Pro): моно-метка под ответом. */
+    val answeredTiers: Map<Long, AiTier> = emptyMap(),
     /** Выбран Pro, а ответил Flash: под ответом «Ответил Flash». */
     val flashFallbackIds: Set<Long> = emptySet(),
     /** Сообщения «лимит Pro исчерпан»: под ними «Переключиться на Flash». */
@@ -211,6 +214,11 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             answerOriginStore.adminLabels.collectLatest { labels ->
                 _uiState.update { it.copy(adminLabels = labels) }
+            }
+        }
+        viewModelScope.launch {
+            answerOriginStore.answeredTiers.collectLatest { tiers ->
+                _uiState.update { it.copy(answeredTiers = tiers) }
             }
         }
         viewModelScope.launch {
