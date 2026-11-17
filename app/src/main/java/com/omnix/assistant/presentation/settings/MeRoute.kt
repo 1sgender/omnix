@@ -2,6 +2,7 @@ package com.omnix.assistant.presentation.settings
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -40,11 +41,15 @@ fun MeRoute(
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     appearanceViewModel: AppearanceViewModel = hiltViewModel(),
-    aiModelViewModel: AiModelViewModel = hiltViewModel()
+    aiModelViewModel: AiModelViewModel = hiltViewModel(),
+    planViewModel: MePlanViewModel = hiltViewModel()
 ) {
     val settings by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val appearance by appearanceViewModel.uiState.collectAsStateWithLifecycle()
     val aiChoice by aiModelViewModel.choice.collectAsStateWithLifecycle()
+    val planState by planViewModel.state.collectAsStateWithLifecycle()
+    // Остатки лимитов лежат в prefs без событий: перечитываем при каждом показе вкладки.
+    LaunchedEffect(Unit) { planViewModel.refresh() }
     val isAdmin = aiModelViewModel.admin.collectAsStateWithLifecycle().value.isAdmin
 
     val license = settings.licenseInfo?.takeIf { it.isActivated && !it.isExpired }
@@ -122,12 +127,6 @@ fun MeRoute(
                         destination = OmnixDestination.SettingsSection(SECTION_AI)
                     ),
                     MeRow(
-                        icon = OmnixBoltLineIcon,
-                        label = stringResource(R.string.pay_row_title),
-                        value = license?.planId.orEmpty().replaceFirstChar { it.titlecase(Locale.getDefault()) },
-                        destination = OmnixDestination.SettingsSection(SECTION_TARIFFS)
-                    ),
-                    MeRow(
                         icon = OmnixAppearanceLineIcon,
                         label = stringResource(R.string.omnix_settings_appearance),
                         value = appearanceValue,
@@ -150,6 +149,7 @@ fun MeRoute(
             )
         ),
         modifier = modifier,
+        planState = planState,
         onOpen = onOpen,
         onVersionTap = { onOpen(OmnixDestination.SettingsSection(SECTION_ABOUT)) },
         onVersionLongPress = { onOpen(OmnixDestination.SettingsSection(SECTION_DIAGNOSTICS)) }

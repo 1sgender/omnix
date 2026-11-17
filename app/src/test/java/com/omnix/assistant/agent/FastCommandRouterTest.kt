@@ -531,4 +531,21 @@ class FastCommandRouterTest {
         val result = router.route("")
         assertTrue(result is FastRouteResult.ForwardToLlm)
     }
+
+    @Test
+    fun `speech recognition split of the call verb is still a local call`() {
+        for (phrase in listOf("По звони маме", "по-звони маме", "позвони маме")) {
+            val result = router.route(phrase)
+            assertTrue(phrase, result is FastRouteResult.HandledLocally)
+            val call = (result as FastRouteResult.HandledLocally).toolCall!!
+            assertEquals("communication.call", call.toolId)
+            assertEquals("маме", call.arguments["recipient"]?.jsonPrimitive?.content)
+        }
+    }
+
+    @Test
+    fun `joining split verbs does not touch ordinary words`() {
+        assertTrue(router.route("по звонку мне нужен совет") is FastRouteResult.ForwardToLlm)
+        assertTrue(router.route("на берегу было тихо") is FastRouteResult.ForwardToLlm)
+    }
 }

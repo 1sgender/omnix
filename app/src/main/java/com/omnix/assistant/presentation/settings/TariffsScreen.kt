@@ -1,6 +1,23 @@
 package com.omnix.assistant.presentation.settings
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
+import com.omnix.assistant.presentation.design.OmnixSans
+import java.util.Locale
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -62,6 +79,7 @@ fun TariffsScreen(
         }
         val currentRank = planRank(state.currentPlanId)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            PlanComparison(catalog.plans, currentRank)
             catalog.plans.forEach { plan ->
                 PlanCard(
                     plan = plan,
@@ -74,6 +92,81 @@ fun TariffsScreen(
                 )
             }
             OmnixSecondaryButton(text = stringResource(R.string.pay_refresh), onClick = onRefresh)
+        }
+    }
+}
+
+/**
+ * Сравнение тарифов одной таблицей: колонки Free / Pro / Max, строки — дневные лимиты.
+ * Числа берутся из entitlements каталога сервера, в приложении они не зашиты.
+ */
+@Composable
+private fun PlanComparison(plans: List<TariffPlan>, currentRank: Int) {
+    if (plans.isEmpty()) return
+    val colors = OmnixTheme.colors
+    val rows = listOf(
+        R.string.plan_meter_flash to { e: PlanEntitlements -> e.dailyBaseAi },
+        R.string.plan_meter_search to { e: PlanEntitlements -> e.dailyWebSearch },
+        R.string.plan_meter_translation to { e: PlanEntitlements -> e.dailyTranslationUnits },
+        R.string.plan_meter_ear to { e: PlanEntitlements -> e.dailyEarMinutes }
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.pay_compare_title).uppercase(Locale.getDefault()),
+            style = OmnixMonoLabelStyle,
+            color = colors.textTertiary
+        )
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Spacer(Modifier.weight(1.3f))
+            plans.forEach { plan ->
+                val current = planRank(plan.id) == currentRank
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = plan.name,
+                        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 15.sp),
+                        color = if (current) colors.accentBrand else colors.textPrimary,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = if (plan.isFree) {
+                            stringResource(R.string.pay_price_free)
+                        } else {
+                            stringResource(R.string.pay_price_month, formatPrice(plan.priceMinor, plan.currency))
+                        },
+                        style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                        color = colors.textTertiary,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+        rows.forEach { (label, value) ->
+            Box(Modifier.fillMaxWidth().height(1.dp).background(colors.textPrimary.copy(alpha = 0.06f)))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(label),
+                    style = OmnixMonoLabelStyle.copy(fontSize = 11.sp),
+                    color = colors.textTertiary,
+                    modifier = Modifier.weight(1.3f)
+                )
+                plans.forEach { plan ->
+                    Text(
+                        text = value(plan.entitlements).toString(),
+                        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
     }
 }
@@ -121,7 +214,7 @@ private fun PlanCard(
             val canOrderAgain = order == null || order.status.isFinal
             if (!plan.isFree && !isCurrent && canOrderAgain) {
                 OmnixPrimaryButton(
-                    text = if (creating) stringResource(R.string.pay_creating) else stringResource(R.string.pay_get, plan.name),
+                    text = if (creating) stringResource(R.string.pay_creating) else stringResource(R.string.pay_subscribe, plan.name),
                     onClick = onRequest,
                     enabled = canRequest,
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
@@ -187,6 +280,9 @@ private fun entitlementLines(e: PlanEntitlements): List<String> = buildList {
         }
     )
     add(stringResource(R.string.pay_line_agent, e.dailyAgentActions))
+    add(stringResource(R.string.pay_line_search, e.dailyWebSearch))
+    add(stringResource(R.string.pay_line_translation, e.dailyTranslationUnits))
+    add(stringResource(R.string.pay_line_ear, e.dailyEarMinutes))
     add(
         stringResource(
             R.string.pay_line_automations,

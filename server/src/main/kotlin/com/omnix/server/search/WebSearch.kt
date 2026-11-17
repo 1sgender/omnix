@@ -250,8 +250,8 @@ class ChainedSearchProvider(
 
     companion object {
         /**
-         * Порядок из SEARCH_PROVIDERS ("brave,gemini"); пустое значение =
-         * "brave,gemini". Неизвестные и ненастроенные имена пропускаются.
+         * Порядок из SEARCH_PROVIDERS ("serper,brave,gemini"); пустое значение =
+         * "serper,brave,gemini". Неизвестные и ненастроенные имена пропускаются.
          * null, если не осталось ни одного провайдера.
          */
         fun fromConfig(
@@ -269,7 +269,7 @@ class ChainedSearchProvider(
             }
         }
 
-        const val DEFAULT_ORDER = "brave,gemini"
+        const val DEFAULT_ORDER = "serper,brave,gemini"
     }
 }
 

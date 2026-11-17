@@ -88,7 +88,6 @@ import com.omnix.assistant.agent.decision.PrivacyLevel
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.presentation.components.ConfirmationSheet
-import com.omnix.assistant.presentation.components.OmnixAlertIcon
 import com.omnix.assistant.presentation.components.OmnixCheckLineIcon
 import com.omnix.assistant.presentation.components.OmnixCloudLineIcon
 import com.omnix.assistant.presentation.components.OmnixCopyLineIcon
@@ -557,43 +556,44 @@ private fun MessageRow(
     }
 
     if (isError) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(
+        // Спокойное сообщение в ленте: без плашки, тонкая линия слева как
+        // единственный акцент, текст обычного размера и приглушённого цвета.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(androidx.compose.foundation.layout.IntrinsicSize.Min)
+                .clearAndSetSemantics { contentDescription = description },
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
                 modifier = Modifier
-                    .widthIn(max = threadWidth * 0.9f)
-                    .clip(ErrorShape)
-                    .background(colors.errorBubble)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .clearAndSetSemantics { contentDescription = description },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(colors.stateError.copy(alpha = 0.65f))
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = threadWidth * 0.9f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OmnixAlertIcon(color = colors.stateError, size = 16.dp)
-                Text(text = message.text, style = BubbleText, color = colors.stateError)
-                if (onRepeat != null) {
-                    Text(
-                        text = stringResource(R.string.omnix_chat_retry),
-                        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-                        color = colors.stateError,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .clickable(onClick = onRepeat)
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
-                    )
-                }
-            }
-            // Кончился лимит Pro: одно нажатие — и дальше отвечает Flash.
-            if (onSwitchToFlash != null) {
                 Text(
-                    text = stringResource(R.string.omnix_tier_switch_to_flash),
-                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
-                    color = colors.textPrimary,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .border(BorderStroke(1.dp, colors.border), CircleShape)
-                        .clickable(role = Role.Button, onClick = onSwitchToFlash)
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                    text = message.text,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 14.sp, lineHeight = 20.sp),
+                    color = colors.textSecondary
                 )
+                if (onRepeat != null || onSwitchToFlash != null) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (onRepeat != null) {
+                            ErrorAction(text = stringResource(R.string.omnix_chat_retry), onClick = onRepeat)
+                        }
+                        // Кончился лимит Pro: одно нажатие — и дальше отвечает Flash.
+                        if (onSwitchToFlash != null) {
+                            ErrorAction(text = stringResource(R.string.omnix_tier_switch_to_flash), onClick = onSwitchToFlash)
+                        }
+                    }
+                }
             }
         }
         return
@@ -1090,3 +1090,25 @@ private val ErrorShape = RoundedCornerShape(16.dp)
 private val SuggestionShape = RoundedCornerShape(16.dp)
 private val ComposerShape = RoundedCornerShape(28.dp)
 private val CardShape = RoundedCornerShape(20.dp)
+
+/** Лёгкое действие под сообщением об ошибке: тонкая пилюля, ≥48dp зона нажатия. */
+@Composable
+private fun ErrorAction(text: String, onClick: () -> Unit) {
+    val colors = OmnixTheme.colors
+    Box(
+        modifier = Modifier
+            .heightIn(min = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+            color = colors.textPrimary,
+            modifier = Modifier
+                .clip(CircleShape)
+                .border(BorderStroke(1.dp, colors.border), CircleShape)
+                .padding(horizontal = 14.dp, vertical = 8.dp)
+        )
+    }
+}

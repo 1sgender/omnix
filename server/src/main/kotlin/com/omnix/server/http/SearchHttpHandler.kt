@@ -19,6 +19,8 @@ import com.omnix.server.privacy.PromptPrivacyClassifier
 import com.omnix.server.privacy.ServerPrivacyClassifier
 import com.omnix.server.ratelimit.RateLimitDecision
 import com.omnix.server.ratelimit.RateLimiter
+import com.omnix.server.license.PlanCatalog
+import com.omnix.server.search.SearchDailyLimiter
 import com.omnix.server.search.SearchOutcome
 import com.omnix.server.search.SearchProvider
 import kotlinx.serialization.json.Json
@@ -40,7 +42,8 @@ class SearchHttpHandler(
     private val json: Json,
     private val entitlementChecker: (AuthenticatedClient) -> Boolean,
     private val searchProvider: SearchProvider?,
-    private val privacyClassifier: ServerPrivacyClassifier = PromptPrivacyClassifier
+    private val privacyClassifier: ServerPrivacyClassifier = PromptPrivacyClassifier,
+    private val dailyLimiter: SearchDailyLimiter = SearchDailyLimiter()
 ) {
     suspend fun handle(request: HttpRequestContext): HttpResponseContext {
         val bodySize = request.body.toByteArray(Charsets.UTF_8).size.toLong()
@@ -74,6 +77,19 @@ class SearchHttpHandler(
                 )
             }
             RateLimitDecision.Allowed -> Unit
+        }
+
+        // Дневной лимит поиска по тарифу считаем здесь: правкой приложения его не обойти.
+        if (client.tier !in setOf(ClientTier.ADMIN, ClientTier.INTERNAL)) {
+            val limit = PlanCatalog.forPlanId(client.planId ?: PlanCatalog.FREE).dailyWebSearch
+            val decision = dailyLimiter.tryAcquire(client.clientId, limit)
+            if (decision is SearchDailyLimiter.Decision.Exceeded) {
+                return error(
+                    ApiErrorCode.QUOTA_EXCEEDED,
+                    requestId,
+                    headers = mapOf("Retry-After" to decision.retryAfterSeconds.toString())
+                )
+            }
         }
 
         val searchRequest = parsed ?: return error(ApiErrorCode.INVALID_REQUEST, requestId)

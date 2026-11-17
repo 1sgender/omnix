@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="pay_row_title">Tariflar</string>
     <string name="pay_title">Tariflar</string>
     <string name="pay_loading">Tariflar yuklanmoqda…</string>
     <string name="pay_price_free">Bepul</string>
@@ -14,7 +13,6 @@
     <string name="pay_line_agent">Agent amallari: kuniga %1$d ta</string>
     <string name="pay_line_automations">Avtomatlashtirishlar: %1$s</string>
     <string name="pay_unlimited">cheklovsiz</string>
-    <string name="pay_get">%1$s olish</string>
     <string name="pay_creating">Ariza yaratilmoqda…</string>
     <string name="pay_order_number">Ariza %1$s</string>
     <string name="pay_order_amount">To‘lov summasi: %1$s</string>
@@ -37,4 +35,25 @@
     <string name="pay_error_busy">Urinishlar juda ko‘p. Bir daqiqadan keyin qayta urining.</string>
     <string name="pay_retry">Qayta urinish</string>
     <string name="pay_refresh">Holatni yangilash</string>
+    <string name="plan_card_label">Tarif</string>
+    <string name="plan_card_free_sub">Asosiy to‘plam, OMNIX quloqchinlari bilan beriladi</string>
+    <string name="plan_card_paid_sub">Tarif faol</string>
+    <string name="plan_card_meters_title">Bugungi limitlar</string>
+    <string name="plan_card_buy">Sotib olish</string>
+    <string name="plan_card_change">Tarifni almashtirish</string>
+    <string name="plan_name_free">Free</string>
+    <string name="plan_name_pro">Pro</string>
+    <string name="plan_name_max">Max</string>
+    <string name="plan_meter_flash">Flash javoblari</string>
+    <string name="plan_meter_search">Qidiruv</string>
+    <string name="plan_meter_translation">Tarjima</string>
+    <string name="plan_meter_ear">Quloq, daq</string>
+    <string name="plan_meter_per_day">kuniga %1$d</string>
+    <string name="plan_meter_left">%2$d dan %1$d</string>
+    <string name="pay_compare_title">Tariflarni solishtirish</string>
+    <string name="pay_price_month">oyiga %1$s</string>
+    <string name="pay_subscribe">%1$s tarifini rasmiylashtirish</string>
+    <string name="pay_line_search">Qidiruv: kuniga %1$d</string>
+    <string name="pay_line_translation">Tarjima: kuniga %1$d</string>
+    <string name="pay_line_ear">Quloq: kuniga %1$d daq</string>
 </resources>

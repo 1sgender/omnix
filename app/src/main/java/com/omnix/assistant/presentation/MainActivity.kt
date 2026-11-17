@@ -24,6 +24,7 @@ import com.omnix.assistant.presentation.navigation.OmnixNavGraph
 import com.omnix.assistant.update.AppUpdatePrompt
 import com.omnix.assistant.update.OtaDownloadMonitor
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.omnix.assistant.data.preferences.OmnixExperienceStore
 import com.omnix.assistant.presentation.firstrun.FirstRunRoute
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,12 +60,31 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var chatConversations: ChatConversationStore
 
+    private val permissionPromptLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { }
+
     /** Guards the first frame while stored preferences are read. */
     private var splashHeld: Boolean by mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Инструменту не хватило разрешения: спрашиваем системным диалогом сразу.
+        lifecycleScope.launch {
+            repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+                com.omnix.assistant.core.permission.PermissionPrompts.pending.collect { wanted ->
+                    if (wanted.isNotEmpty()) {
+                        com.omnix.assistant.core.permission.PermissionPrompts.clear()
+                        val missing = wanted.filter {
+                            androidx.core.content.ContextCompat.checkSelfPermission(this@MainActivity, it) !=
+                                android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                        if (missing.isNotEmpty()) permissionPromptLauncher.launch(missing.toTypedArray())
+                    }
+                }
+            }
+        }
         // Each fresh open of the app starts a new chat; the process may have
         // stayed alive for the voice service. A recreated activity (rotation,
         // theme) keeps the open conversation.

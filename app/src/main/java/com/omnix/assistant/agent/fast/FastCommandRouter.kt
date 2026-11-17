@@ -26,10 +26,19 @@ sealed interface FastRouteResult {
 @Singleton
 class FastCommandRouter @Inject constructor() {
 
+    /**
+     * Распознавание речи иногда режет глагол команды на две части: «по звони маме»,
+     * «на бери», «от крой ютуб». Склеиваем только в начале фразы и только известные
+     * глаголы, иначе «по звонку» или «на берегу» превратились бы в команды.
+     */
+    private fun joinSplitCommandVerb(text: String): String =
+        SPLIT_VERBS.fold(text) { acc, (parts, whole) -> acc.replace(parts, whole) }
+
     fun route(rawQuery: String): FastRouteResult {
         val q = rawQuery.lowercase().trim()
             .replace(Regex("^(джарвис|omnix|жарвис|джей|диджей)[,\\s]*"), "")
             .trim()
+            .let { joinSplitCommandVerb(it) }
 
         if (q.isEmpty()) return FastRouteResult.ForwardToLlm
 
@@ -580,3 +589,11 @@ class FastCommandRouter @Inject constructor() {
         return city
     }
 }
+
+private val SPLIT_VERBS: List<Pair<Regex, String>> = listOf(
+    Regex("^по[\\s-]+звони(?=\\s|$)") to "позвони",
+    Regex("^на[\\s-]+бери(?=\\s|$)") to "набери",
+    Regex("^вы[\\s-]+зови(?=\\s|$)") to "вызови",
+    Regex("^на[\\s-]+пиши(?=\\s|$)") to "напиши",
+    Regex("^от[\\s-]+крой(?=\\s|$)") to "открой"
+)

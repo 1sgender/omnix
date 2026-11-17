@@ -15,9 +15,7 @@
     <string name="omnix_home_off_hint">Açmak için logoya dokunun</string>
     <string name="omnix_home_starting">Açılıyor…</string>
     <string name="omnix_home_stopping">Kapanıyor…</string>
-    <string name="omnix_home_on_hint">“Omni” deyin ya da Konuş’a dokunun</string>
-    <string name="omnix_home_talk">Konuş</string>
-    <string name="omnix_home_talk_stop">Durdur</string>
+    <string name="omnix_home_on_hint">“Omni” deyin ya da logoya dokunun</string>
     <string name="omnix_home_power_a11y">OMNIX asistanı</string>
     <string name="omnix_home_power_on_state">Açık</string>
     <string name="omnix_home_power_off_state">Kapalı</string>

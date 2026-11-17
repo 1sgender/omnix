@@ -46,20 +46,20 @@ object SoftChime {
         // Однополюсный фильтр низких частот: «глухой» тембр.
         val alpha = 0.22
         var prev = 0.0
-        val peak = 0.32
+        val peak = 0.6
         return ShortArray(total) { i ->
             prev += alpha * (out[i] - prev)
             (prev.coerceIn(-1.0, 1.0) * peak * Short.MAX_VALUE).toInt().toShort()
         }
     }
 
-    /** Проигрывает готовый звук на канале системных сигналов, затем освобождает плеер. */
+    /** Проигрывает готовый звук на канале ассистента (громкость медиа/ассистента, а не беззвучных «системных звуков»), затем освобождает плеер. */
     fun play(samples: ShortArray, sampleRate: Int = SAMPLE_RATE) {
         try {
             val track = AudioTrack.Builder()
                 .setAudioAttributes(
                     AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_ASSISTANT)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build()
                 )

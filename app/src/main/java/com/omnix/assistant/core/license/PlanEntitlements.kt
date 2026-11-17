@@ -21,7 +21,7 @@ data class PlanEntitlements(
     @SerialName("daily_voice_ai") val dailyVoiceAi: Int = 10,
     @SerialName("daily_base_ai") val dailyBaseAi: Int = 10,
     @SerialName("daily_agent_actions") val dailyAgentActions: Int = 5,
-    @SerialName("daily_web_search") val dailyWebSearch: Int = 10,
+    @SerialName("daily_web_search") val dailyWebSearch: Int = 5,
     @SerialName("daily_translation_units") val dailyTranslationUnits: Int = 15,
     @SerialName("daily_ear_minutes") val dailyEarMinutes: Int = 10,
     @SerialName("max_automations") val maxAutomations: Int = 3,
