@@ -24,7 +24,12 @@ sealed interface PromptExecutionResult {
          * (CLOUD_AI/AGENT) — «норма», без бейджа. Null = путь неизвестен
          * (например, clarification-обёртка без выполнения).
          */
-        val executionType: ExecutionType? = null
+        val executionType: ExecutionType? = null,
+        /**
+         * Ответ создал напоминание: в ленте вместо текста карточка с этим
+         * номером (кнопки «Изменить» и «Отменить»). Сам [text] озвучивается.
+         */
+        val reminderId: Long? = null
     ) : PromptExecutionResult
 
     data class ConfirmationRequired(

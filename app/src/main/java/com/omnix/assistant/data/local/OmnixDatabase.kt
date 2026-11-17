@@ -5,6 +5,8 @@ import androidx.room.RoomDatabase
 import com.omnix.assistant.agent.automation.dao.AutomationDao
 import com.omnix.assistant.agent.automation.entity.AutomationEntity
 import com.omnix.assistant.agent.memory.dao.*
+import com.omnix.assistant.agent.reminder.ReminderDao
+import com.omnix.assistant.agent.reminder.ReminderEntity
 import com.omnix.assistant.agent.memory.entity.*
 import com.omnix.assistant.data.local.dao.MessageDao
 import com.omnix.assistant.data.local.entity.MessageEntity
@@ -16,7 +18,8 @@ import com.omnix.assistant.data.local.entity.MessageEntity
         FactEntity::class,
         PreferenceEntity::class,
         ProcedureEntity::class,
-        AutomationEntity::class
+        AutomationEntity::class,
+        ReminderEntity::class
     ],
     version = OmnixMigrations.CURRENT_VERSION,
     // Пункт аудита #7: схема экспортируется в app/schemas/ — обязательное
@@ -31,4 +34,5 @@ abstract class OmnixDatabase : RoomDatabase() {
     abstract fun preferenceDao(): PreferenceDao
     abstract fun procedureDao(): ProcedureDao
     abstract fun automationDao(): AutomationDao
+    abstract fun reminderDao(): ReminderDao
 }

@@ -24,7 +24,7 @@ object OmnixMigrations {
     const val MIN_SUPPORTED_VERSION = 5
 
     /** The schema [OmnixDatabase] declares; bump it together with a migration. */
-    const val CURRENT_VERSION = 6
+    const val CURRENT_VERSION = 7
 
     /**
      * v6: the chat is split into conversations (owner, 2026-10-21: every
@@ -44,6 +44,26 @@ object OmnixMigrations {
         }
     }
 
+    /**
+     * v7: reminders («напомни в 18:00 позвонить маме»). Новая таблица, старые
+     * данные не затрагиваются.
+     */
+    val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `reminders` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`text` TEXT NOT NULL, " +
+                    "`trigger_at` INTEGER NOT NULL, " +
+                    "`status` TEXT NOT NULL)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_reminders_status_trigger_at` " +
+                    "ON `reminders` (`status`, `trigger_at`)"
+            )
+        }
+    }
+
     /** Supported migrations in ascending order. */
-    val ALL: Array<Migration> = arrayOf(MIGRATION_5_6)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_5_6, MIGRATION_6_7)
 }

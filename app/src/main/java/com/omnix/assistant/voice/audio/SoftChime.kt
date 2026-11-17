@@ -24,6 +24,10 @@ object SoftChime {
     fun cancel(sampleRate: Int = SAMPLE_RATE): ShortArray =
         mix(sampleRate, 0.24, Note(330.0, 0.0, 0.14), Note(247.0, 0.07, 0.17))
 
+    /** Напоминание: три ноты вверх, чуть дольше «слушаю», чтобы заметить с другого конца комнаты. */
+    fun reminder(sampleRate: Int = SAMPLE_RATE): ShortArray =
+        mix(sampleRate, 0.45, Note(523.25, 0.0, 0.20), Note(659.25, 0.16, 0.20), Note(783.99, 0.32, 0.34))
+
     private data class Note(val hz: Double, val startSec: Double, val lengthSec: Double)
 
     private fun mix(sampleRate: Int, tailSec: Double, vararg notes: Note): ShortArray {

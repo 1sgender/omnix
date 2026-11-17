@@ -85,6 +85,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.decision.PrivacyLevel
+import com.omnix.assistant.agent.reminder.ReminderMessage
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.presentation.components.ConfirmationSheet
@@ -147,7 +148,9 @@ fun OmnixChatScreen(
     onSelectModel: (com.omnix.assistant.agent.decision.AiModelChoice) -> Unit = {},
     onOpenTariffs: () -> Unit = {},
     onAttachmentPicked: (android.net.Uri) -> Unit = {},
-    onClearAttachment: () -> Unit = {}
+    onClearAttachment: () -> Unit = {},
+    onCancelReminder: (Long) -> Unit = {},
+    onEditReminder: (Long, Int, Int) -> Unit = { _, _, _ -> }
 ) {
     val colors = OmnixTheme.colors
     val attachPicker = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -170,7 +173,9 @@ fun OmnixChatScreen(
             modelPicker = modelPicker,
             onOpenModelSheet = { modelSheetOpen = true },
             onAttach = { attachPicker.launch(arrayOf("*/*")) },
-            onClearAttachment = onClearAttachment
+            onClearAttachment = onClearAttachment,
+            onCancelReminder = onCancelReminder,
+            onEditReminder = onEditReminder
         )
     }
 
@@ -271,7 +276,9 @@ private fun ChatThread(
     modelPicker: ChatModelPickerState?,
     onOpenModelSheet: () -> Unit,
     onAttach: () -> Unit,
-    onClearAttachment: () -> Unit
+    onClearAttachment: () -> Unit,
+    onCancelReminder: (Long) -> Unit,
+    onEditReminder: (Long, Int, Int) -> Unit
 ) {
     val colors = OmnixTheme.colors
     val listState = rememberLazyListState()
@@ -332,6 +339,15 @@ private fun ChatThread(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     items(state.messages, key = { "msg-${it.id}" }) { message ->
+                        if (message.role == MessageRole.REMINDER) {
+                            val reminderId = ReminderMessage.decode(message.text)
+                            ReminderCard(
+                                reminder = reminderId?.let { state.reminders[it] },
+                                onEdit = { hour, minute -> reminderId?.let { onEditReminder(it, hour, minute) } },
+                                onCancel = { reminderId?.let(onCancelReminder) }
+                            )
+                            return@items
+                        }
                         val question = repeatTargets[message.id]
                         MessageRow(
                             message = message,

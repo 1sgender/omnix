@@ -10,7 +10,13 @@ enum class MessageRole(val value: String) {
      * message in the chat, not as a regular OMNIX reply. Stored as a plain
      * string in Room — no schema change, old rows are unaffected.
      */
-    ERROR("error");
+    ERROR("error"),
+
+    /**
+     * Карточка напоминания в ленте: текст сообщения ссылается на запись в
+     * таблице напоминаний (см. ReminderMessage). В историю для модели не уходит.
+     */
+    REMINDER("reminder");
 
     companion object {
         fun fromString(value: String): MessageRole {

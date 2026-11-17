@@ -35,6 +35,7 @@ class ActionMapperTest {
         assertEquals(ActionType.CALL, ActionMapper.typeOf("communication.call"))
         assertEquals(ActionType.MESSAGE, ActionMapper.typeOf("communication.sms"))
         assertEquals(ActionType.ALARM, ActionMapper.typeOf("productivity.alarm_timer"))
+        assertEquals(ActionType.ALARM, ActionMapper.typeOf("productivity.reminder"))
         assertEquals(ActionType.NAVIGATION, ActionMapper.typeOf("location.navigation"))
         assertEquals(ActionType.APP, ActionMapper.typeOf("device.open_app"))
         assertEquals(ActionType.MEDIA, ActionMapper.typeOf("media.control"))
