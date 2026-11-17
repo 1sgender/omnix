@@ -1,13 +1,11 @@
 package com.omnix.assistant.data.files
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
-import android.media.ExifInterface
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Base64
@@ -30,8 +28,6 @@ import javax.inject.Singleton
  * до [ChatImageRules.MAX_SIDE_PX]), сжимает в JPEG и кладёт в память приложения.
  * Ссылка на файл (id) попадает в текст сообщения, см. [ChatImageCodec].
  */
-// minSdk 29: android.media.ExifInterface читает EXIF из потока без лишней зависимости.
-@SuppressLint("ExifInterface")
 @Singleton
 class ChatImageStore @Inject constructor(
     @ApplicationContext private val context: Context
@@ -141,15 +137,19 @@ class ChatImageStore @Inject constructor(
         } catch (_: SecurityException) {
             null
         } ?: return 0
+        // EXIF лежит в начале файла: хватает первых 128 КБ, свой разбор без лишней зависимости.
         return try {
-            stream.use {
-                when (ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
-                    ExifInterface.ORIENTATION_ROTATE_90 -> 90
-                    ExifInterface.ORIENTATION_ROTATE_180 -> 180
-                    ExifInterface.ORIENTATION_ROTATE_270 -> 270
-                    else -> 0
+            val head = stream.use { input ->
+                val buffer = ByteArray(EXIF_HEAD_BYTES)
+                var read = 0
+                while (read < buffer.size) {
+                    val n = input.read(buffer, read, buffer.size - read)
+                    if (n < 0) break
+                    read += n
                 }
+                buffer.copyOf(read)
             }
+            ChatImageRules.exifRotation(head)
         } catch (_: IOException) {
             0
         }
@@ -212,6 +212,7 @@ class ChatImageStore @Inject constructor(
         private const val DIR_NAME = "chat_images"
         private const val CAMERA_DIR = "shared/camera"
         private const val HEADER_BYTES = 16
+        private const val EXIF_HEAD_BYTES = 128 * 1024
 
         /** Куда камера сложит снимок: файл в cache/shared, отдаём через FileProvider приложения. */
         fun newCameraUri(context: Context): Uri {

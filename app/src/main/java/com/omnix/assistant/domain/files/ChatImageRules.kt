@@ -81,5 +81,57 @@ object ChatImageRules {
         return sample
     }
 
+    /**
+     * Поворот снимка по EXIF (тег Orientation) в градусах: 0, 90, 180 или 270.
+     * Читает только начало JPEG; отражения не учитываются.
+     */
+    fun exifRotation(jpeg: ByteArray): Int {
+        fun u16(i: Int, little: Boolean): Int =
+            if (little) (jpeg[i].toInt() and 0xFF) or ((jpeg[i + 1].toInt() and 0xFF) shl 8)
+            else ((jpeg[i].toInt() and 0xFF) shl 8) or (jpeg[i + 1].toInt() and 0xFF)
+        fun u32(i: Int, little: Boolean): Long =
+            if (little) (u16(i, true).toLong() or (u16(i + 2, true).toLong() shl 16))
+            else ((u16(i, false).toLong() shl 16) or u16(i + 2, false).toLong())
+
+        if (jpeg.size < 4 || jpeg[0] != 0xFF.toByte() || jpeg[1] != 0xD8.toByte()) return 0
+        var pos = 2
+        while (pos + 4 <= jpeg.size) {
+            if (jpeg[pos] != 0xFF.toByte()) return 0
+            val marker = jpeg[pos + 1].toInt() and 0xFF
+            if (marker == 0xDA || marker == 0xD9) return 0
+            val length = u16(pos + 2, false)
+            if (length < 2 || pos + 2 + length > jpeg.size) return 0
+            val segment = pos + 4
+            if (marker == 0xE1 && length >= 16 &&
+                String(jpeg, segment, 4, Charsets.ISO_8859_1) == "Exif"
+            ) {
+                val tiff = segment + 6
+                val little = when (String(jpeg, tiff, 2, Charsets.ISO_8859_1)) {
+                    "II" -> true
+                    "MM" -> false
+                    else -> return 0
+                }
+                val ifd = tiff + u32(tiff + 4, little).toInt()
+                if (ifd < tiff || ifd + 2 > jpeg.size) return 0
+                val count = u16(ifd, little)
+                for (k in 0 until count) {
+                    val entry = ifd + 2 + k * 12
+                    if (entry + 12 > jpeg.size) return 0
+                    if (u16(entry, little) == 0x0112) {
+                        return when (u16(entry + 8, little)) {
+                            3 -> 180
+                            6 -> 90
+                            8 -> 270
+                            else -> 0
+                        }
+                    }
+                }
+                return 0
+            }
+            pos += 2 + length
+        }
+        return 0
+    }
+
     private val PNG_SIGNATURE = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
 }
