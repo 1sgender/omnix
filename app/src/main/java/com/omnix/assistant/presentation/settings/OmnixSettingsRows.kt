@@ -2,7 +2,6 @@ package com.omnix.assistant.presentation.settings
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -421,9 +420,8 @@ fun OmnixSettingsGroup(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(OmnixTheme.radius.medium),
-        color = OmnixTheme.colors.surface,
-        border = BorderStroke(OmnixHairline, OmnixTheme.colors.border)
+        shape = RoundedCornerShape(OmnixTheme.radius.large),
+        color = OmnixTheme.colors.surface
     ) {
         Column {
             content()
@@ -442,6 +440,31 @@ fun OmnixGroupDivider(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(start = OmnixTheme.spacing.md)
+            .height(OmnixHairline)
+            .background(OmnixTheme.colors.border)
+    )
+}
+
+/**
+ * Плоский список без коробки: строки лежат прямо на фоне экрана, между ними
+ * тонкие разделители. Строки внутри передают `inset = false`.
+ */
+@Composable
+fun OmnixFlatList(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        content()
+    }
+}
+
+/** Разделитель плоского списка: на всю ширину, тоньше и тише обычного. */
+@Composable
+fun OmnixFlatDivider(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
             .height(OmnixHairline)
             .background(OmnixTheme.colors.border)
     )
