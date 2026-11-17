@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Выбор модели ИИ в чате: чип у поля ввода, нижний лист, подтверждение голосом. -->
+<resources>
+    <string name="omnix_model_sheet_title">Кто отвечает</string>
+    <string name="omnix_model_chip_cd">Модель ИИ: %1$s. Сменить</string>
+    <string name="omnix_model_line_auto">Сам выбирает: телефон или облако</string>
+    <string name="omnix_model_line_on_device">Без интернета, ответы проще</string>
+    <string name="omnix_model_line_flash">Быстро</string>
+    <string name="omnix_model_line_pro">Умнее, думает дольше</string>
+    <string name="omnix_model_left_today">Сегодня осталось: %1$d из %2$d</string>
+    <string name="omnix_model_limit_today">На сегодня: до %1$d</string>
+    <string name="omnix_model_no_limit">Без лимита</string>
+    <string name="omnix_model_see_plans">Посмотреть тарифы</string>
+    <string name="omnix_ai_model_voice_switched">Готово, теперь отвечает %1$s</string>
+    <string name="omnix_ai_model_voice_pro_locked">Pro есть в тарифах Pro и Max. Пока отвечает %1$s</string>
+</resources>

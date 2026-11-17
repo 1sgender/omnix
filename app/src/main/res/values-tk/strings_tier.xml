@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Emeli aň derejesi (Lokal / Flash / Pro) we «Şu gün galdy». -->
 <resources>
-    <string name="omnix_tier_pro_body">Claude — iň akylly model. OMNIX buluty, internet gerek.</string>
     <string name="omnix_tier_pro_locked">Pro we Max tariflerinde bar</string>
     <string name="omnix_tier_answered_flash">Flash jogap berdi: Pro wagtlaýyn elýeterli däl</string>
     <string name="omnix_tier_switch_to_flash">Flash-a geç</string>

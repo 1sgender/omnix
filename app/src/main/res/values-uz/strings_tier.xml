@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Sunʼiy intellekt darajasi (Lokal / Flash / Pro) va «Bugun qoldi». -->
 <resources>
-    <string name="omnix_tier_pro_body">Claude — eng aqlli model. OMNIX buluti, internet kerak.</string>
     <string name="omnix_tier_pro_locked">Pro va Max tariflarida mavjud</string>
     <string name="omnix_tier_answered_flash">Flash javob berdi: Pro vaqtincha mavjud emas</string>
     <string name="omnix_tier_switch_to_flash">Flash-ga oʻtish</string>
