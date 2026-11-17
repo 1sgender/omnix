@@ -37,4 +37,25 @@
     <string name="pay_error_busy">Çok fazla deneme. Bir dakika sonra tekrar deneyin.</string>
     <string name="pay_retry">Tekrar dene</string>
     <string name="pay_refresh">Durumu yenile</string>
+    <string name="plan_card_label">Tarife</string>
+    <string name="plan_card_free_sub">Temel paket, OMNIX kulaklıklarıyla birlikte gelir</string>
+    <string name="plan_card_paid_sub">Tarife etkin</string>
+    <string name="plan_card_meters_title">Bugünkü limitler</string>
+    <string name="plan_card_buy">Satın al</string>
+    <string name="plan_card_change">Tarifeyi değiştir</string>
+    <string name="plan_name_free">Free</string>
+    <string name="plan_name_pro">Pro</string>
+    <string name="plan_name_max">Max</string>
+    <string name="plan_meter_flash">Flash yanıtları</string>
+    <string name="plan_meter_search">Arama</string>
+    <string name="plan_meter_translation">Çeviri</string>
+    <string name="plan_meter_ear">Kulak, dk</string>
+    <string name="plan_meter_per_day">günde %1$d</string>
+    <string name="plan_meter_left">%2$d içinden %1$d</string>
+    <string name="pay_compare_title">Tarifeleri karşılaştır</string>
+    <string name="pay_price_month">%1$s / ay</string>
+    <string name="pay_subscribe">%1$s tarifesini al</string>
+    <string name="pay_line_search">Arama: günde %1$d</string>
+    <string name="pay_line_translation">Çeviri: günde %1$d</string>
+    <string name="pay_line_ear">Kulak: günde %1$d dk</string>
 </resources>

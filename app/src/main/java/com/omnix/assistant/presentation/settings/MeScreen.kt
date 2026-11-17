@@ -77,6 +77,7 @@ fun MeScreen(
     versionName: String,
     groups: List<MeGroup>,
     modifier: Modifier = Modifier,
+    planState: MePlanState? = null,
     onOpen: (OmnixDestination) -> Unit = {},
     onVersionTap: () -> Unit = {},
     onVersionLongPress: () -> Unit = {}
@@ -109,6 +110,13 @@ fun MeScreen(
                         .clip(RoundedCornerShape(20.dp))
                         .clickable(role = Role.Button) { onOpen(OmnixDestination.SettingsSection(SECTION_PROFILE)) }
                 )
+                if (planState != null) {
+                    PlanCard(
+                        state = planState,
+                        onOpenTariffs = { onOpen(OmnixDestination.SettingsSection(SECTION_TARIFFS)) },
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
                 Column(
                     modifier = Modifier.padding(top = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
