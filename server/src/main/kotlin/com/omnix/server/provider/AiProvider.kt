@@ -44,6 +44,10 @@ data class CapabilityProfile(
     val supportsWeb: Boolean = false,
     val supportsStreaming: Boolean = false,
     val supportsToolCalling: Boolean = false,
+    /** Понимает ли модель картинки во входящем сообщении (Gemini, Claude). */
+    val supportsVision: Boolean = false,
+    /** Читает ли модель PDF целиком (Gemini inlineData, Claude document block). */
+    val supportsDocuments: Boolean = false,
     /** P95 end-to-end latency в миллисекундах по последним измерениям, если известна. */
     val p95LatencyMs: Int? = null,
     /** Оценка стоимости (может отсутствовать для провайдеров без известной цены). */
@@ -70,6 +74,51 @@ data class ProviderMessage(
     val content: String
 )
 
+/** Картинка к текущему сообщению: mime уже проверен, data — base64 без префикса. */
+data class ProviderImage(
+    val mimeType: String,
+    val base64Data: String
+)
+
+/** Текст приложенного файла (уже извлечён клиентом). */
+data class ProviderAttachment(
+    val name: String,
+    val text: String,
+    val kind: String? = null
+)
+
+/** PDF целиком; [fallbackText] — его текст для моделей без чтения документов. */
+data class ProviderDocument(
+    val mimeType: String,
+    val base64Data: String,
+    val name: String,
+    val fallbackText: String
+)
+
+/**
+ * Текст текущего сообщения вместе с файлами: сначала содержимое файлов,
+ * затем вопрос. [nativeDocuments] — PDF уходит модели целиком, его текст не
+ * дублируем, только упоминаем.
+ */
+fun ProviderRequest.promptWithFiles(nativeDocuments: Boolean): String {
+    if (attachments.isEmpty() && documents.isEmpty()) return prompt
+    return buildString {
+        for (a in attachments) {
+            append(if (a.kind == "audio") "Audio transcript of «" else "File «")
+            append(a.name).append("»:\n<<<\n").append(a.text).append("\n>>>\n\n")
+        }
+        for (d in documents) {
+            if (nativeDocuments) {
+                append("Attached PDF document «").append(d.name).append("».\n\n")
+            } else if (d.fallbackText.isNotBlank()) {
+                append("File «").append(d.name).append("» (text extracted from PDF):\n<<<\n")
+                append(d.fallbackText).append("\n>>>\n\n")
+            }
+        }
+        append(prompt)
+    }
+}
+
 /** Нормализованный запрос к провайдеру. */
 data class ProviderRequest(
     val requestId: String,
@@ -91,6 +140,12 @@ data class ProviderRequest(
      * включения retrieval-инструмента.
      */
     val requiresWeb: Boolean = false,
+    /** Картинки к текущему сообщению ([prompt]); только для провайдеров с vision. */
+    val images: List<ProviderImage> = emptyList(),
+    /** Тексты приложенных файлов к текущему сообщению. */
+    val attachments: List<ProviderAttachment> = emptyList(),
+    /** PDF к текущему сообщению. */
+    val documents: List<ProviderDocument> = emptyList(),
     val maxTokens: Int,
     val temperature: Double,
     /**

@@ -159,6 +159,8 @@ fun OmnixNavGraph(
                     onCancel = chatViewModel::cancelPendingAction,
                     onAttachmentPicked = chatViewModel::onAttachmentPicked,
                     onClearAttachment = chatViewModel::clearAttachment,
+                    onImagePicked = chatViewModel::onImagePicked,
+                    onClearImage = chatViewModel::clearImage,
                     onNewChat = chatViewModel::startNewConversation,
                     onOpenHistory = chatViewModel::openHistory,
                     onCloseHistory = chatViewModel::closeHistory,

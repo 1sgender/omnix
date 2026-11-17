@@ -225,6 +225,9 @@ class AiRouter(
         val relatedForClassification = buildList {
             addAll(request.history.map { it.content })
             request.systemContext?.let { add(it) }
+            // Файлы проверяются наравне с текстом: приватное в документе не должно уйти незаметно.
+            addAll(request.attachments.map { it.text })
+            addAll(request.documents.map { it.fallbackText }.filter { it.isNotBlank() })
         }
         val automaticPrivacy = PromptPrivacyClassifier.classifySafely(
             content = PrivacyContent(
@@ -262,11 +265,22 @@ class AiRouter(
         // провайдера и бюджет ответа. Считается ДО менеджера — лог для
         // наблюдаемости стоимости.
         val historyChars = request.history.sumOf { it.content.length }
+        val fileChars = request.attachments.sumOf { it.text.length } +
+            request.documents.sumOf { it.fallbackText.length }
         val costClass = com.omnix.server.cost.RequestCostEstimator.classify(
-            promptChars = request.text.length,
+            promptChars = request.text.length + fileChars,
             historyChars = historyChars,
             requiresWeb = request.requiresWeb
-        )
+        ).let { cls ->
+            // Вопрос по картинке не бывает «короткой репликой» для самого дешёвого пути.
+            if (request.documents.isNotEmpty()) {
+                com.omnix.server.cost.CostClass.HARD
+            } else if (request.images.isNotEmpty() && cls == com.omnix.server.cost.CostClass.SIMPLE) {
+                com.omnix.server.cost.CostClass.MEDIUM
+            } else {
+                cls
+            }
+        }
         logger.info(
             "cost estimation",
             "requestId" to requestId,
@@ -278,6 +292,8 @@ class AiRouter(
         val isAdmin = adminAccess?.isAdmin(client.accountId) == true
         val requirements = ProviderRequirements(
             requiresWeb = request.requiresWeb,
+            requiresVision = request.images.isNotEmpty(),
+            requiresDocuments = request.documents.any { it.fallbackText.isBlank() },
             costClass = costClass,
             pinnedProvider = pinned,
             allowedProviders = when {
@@ -296,7 +312,10 @@ class AiRouter(
             "privacyLevel" to effectivePrivacy.name,
             "requiresWeb" to request.requiresWeb.toString(),
             // Текст промпта НЕ логируется — только его размер.
-            "promptSize" to LogSanitizer.describeText(request.text)
+            "promptSize" to LogSanitizer.describeText(request.text),
+            "images" to request.images.size.toString(),
+            "attachments" to request.attachments.size.toString(),
+            "documents" to request.documents.size.toString()
         )
 
         val providerRequest = ProviderRequest(
@@ -305,6 +324,17 @@ class AiRouter(
             systemPrompt = buildSystemPrompt(request),
             history = providerHistory(request, requestId),
             requiresWeb = request.requiresWeb,
+            images = request.images.map {
+                com.omnix.server.provider.ProviderImage(it.mimeType.trim().lowercase(), it.data)
+            },
+            attachments = request.attachments.map {
+                com.omnix.server.provider.ProviderAttachment(it.name.trim(), it.text, it.kind)
+            },
+            documents = request.documents.map {
+                com.omnix.server.provider.ProviderDocument(
+                    com.omnix.server.api.AttachmentValidator.PDF_MIME, it.data, it.name.trim(), it.fallbackText
+                )
+            },
             // Cost Control: SIMPLE-класс получает урезанный бюджет ответа —
             // короткая реплика не должна платить за длинный вывод.
             maxTokens = if (request.source == ApiRequestSource.CHAT) {
@@ -455,7 +485,9 @@ class AiRouter(
         // сборка ProviderRequest. Раньше один красный пузырь ошибки (role
         // "error") в истории ломал разговор: каждый следующий запрос получал
         // INVALID_REQUEST (v344, 2026-10-22).
-        else -> null
+        // Картинки: тип, размер и сигнатура файла.
+        else -> com.omnix.server.api.ImageValidator.validate(request.images, validation)
+            ?: com.omnix.server.api.AttachmentValidator.validate(request.attachments, request.documents, validation)
     }
 
     /**

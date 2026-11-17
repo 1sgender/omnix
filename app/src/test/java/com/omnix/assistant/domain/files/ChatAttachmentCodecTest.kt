@@ -39,6 +39,38 @@ class ChatAttachmentCodecTest {
     }
 
     @Test
+    fun `kind size and document id survive a round trip`() {
+        val encoded = ChatAttachmentCodec.encode("a.pdf", "текст", "вопрос", FileKind.PDF, 2048, "abcdef123456")
+        val decoded = ChatAttachmentCodec.decode(encoded)
+        assertEquals("a.pdf", decoded.fileName)
+        assertEquals(FileKind.PDF, decoded.kind)
+        assertEquals(2048L, decoded.sizeBytes)
+        assertEquals("abcdef123456", decoded.documentId)
+        assertEquals("текст", decoded.content)
+        assertEquals("вопрос", decoded.question)
+    }
+
+    @Test
+    fun `old format without attributes still decodes`() {
+        val old = "<<OMNIX_FILE name=\"old.txt\">>\nтело\n<<END_OMNIX_FILE>>\nчто тут?"
+        val decoded = ChatAttachmentCodec.decode(old)
+        assertEquals("old.txt", decoded.fileName)
+        assertNull(decoded.kind)
+        assertNull(decoded.documentId)
+        assertEquals("что тут?", decoded.question)
+    }
+
+    @Test
+    fun `history copy shortens long files and drops the document id`() {
+        val encoded = ChatAttachmentCodec.encode("a.pdf", "x".repeat(10_000), "q", FileKind.PDF, 1, "abcdef123456")
+        val short = ChatAttachmentCodec.forHistory(encoded)
+        val decoded = ChatAttachmentCodec.decode(short)
+        assertTrue(decoded.content!!.length < 4_100)
+        assertNull(decoded.documentId)
+        assertEquals("q", decoded.question)
+    }
+
+    @Test
     fun `quotes and line breaks in the name are removed`() {
         val name = ChatAttachmentCodec.sanitizeName("a\"b\nc<d>.txt")
         assertEquals("a b c d .txt", name)

@@ -5,13 +5,22 @@ import com.omnix.server.observability.StructuredLogger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 // =============================================================== DTO (Anthropic Messages API)
 
+/**
+ * `content` — строка (обычная реплика) или массив блоков (текст + картинки);
+ * Messages API принимает оба вида.
+ */
 @Serializable
 private data class AnthropicMessage(
     @SerialName("role") val role: String,
-    @SerialName("content") val content: String
+    @SerialName("content") val content: JsonElement
 )
 
 @Serializable
@@ -77,7 +86,9 @@ class AnthropicProvider(
         supportsChat = true,
         supportsWeb = false,
         supportsStreaming = false,
-        supportsToolCalling = false
+        supportsToolCalling = false,
+        supportsVision = true,
+        supportsDocuments = true
     )
 
     override fun endpointUrl() = config.baseUrl
@@ -100,8 +111,8 @@ class AnthropicProvider(
 
         val turns = request.history
             .filter { it.role == "user" || it.role == "assistant" }
-            .map { AnthropicMessage(it.role, it.content) }
-        val messages = normalize(trimHistory(turns) + AnthropicMessage("user", request.prompt))
+            .map { AnthropicMessage(it.role, JsonPrimitive(it.content)) }
+        val messages = normalize(trimHistory(turns) + AnthropicMessage("user", currentContent(request)))
 
         return json.encodeToString(
             AnthropicRequest.serializer(),
@@ -140,6 +151,55 @@ class AnthropicProvider(
         )
     }
 
+    /** Текущее сообщение: чистый текст или блоки (картинки, затем вопрос). */
+    private fun currentContent(request: ProviderRequest): JsonElement {
+        val text = request.promptWithFiles(nativeDocuments = true)
+        if (request.images.isEmpty() && request.documents.isEmpty()) return JsonPrimitive(text)
+        return JsonArray(
+            request.images.map { image ->
+                buildJsonObject {
+                    put("type", "image")
+                    put("source", buildJsonObject {
+                        put("type", "base64")
+                        put("media_type", image.mimeType)
+                        put("data", image.base64Data)
+                    })
+                }
+            } + request.documents.map { doc ->
+                buildJsonObject {
+                    put("type", "document")
+                    put("source", buildJsonObject {
+                        put("type", "base64")
+                        put("media_type", doc.mimeType)
+                        put("data", doc.base64Data)
+                    })
+                }
+            } + buildJsonObject {
+                put("type", "text")
+                put("text", text)
+            }
+        )
+    }
+
+    /** Блоки сообщения как массив: строка превращается в один text-блок. */
+    private fun blocks(content: JsonElement): List<JsonElement> = when (content) {
+        is JsonArray -> content.toList()
+        is JsonPrimitive -> listOf(
+            buildJsonObject {
+                put("type", "text")
+                put("text", content.content)
+            }
+        )
+        else -> emptyList()
+    }
+
+    private fun mergeContent(a: JsonElement, b: JsonElement): JsonElement =
+        if (a is JsonPrimitive && b is JsonPrimitive) {
+            JsonPrimitive(a.content + "\n\n" + b.content)
+        } else {
+            JsonArray(blocks(a) + blocks(b))
+        }
+
     /** Отбрасывает самые старые реплики, пока история не уложится в бюджет. */
     private fun trimHistory(history: List<AnthropicMessage>): List<AnthropicMessage> {
         if (history.isEmpty()) return emptyList()
@@ -165,7 +225,7 @@ class AnthropicProvider(
             if (result.isEmpty() && turn.role != "user") continue
             val last = result.lastOrNull()
             if (last != null && last.role == turn.role) {
-                result[result.lastIndex] = last.copy(content = last.content + "\n\n" + turn.content)
+                result[result.lastIndex] = last.copy(content = mergeContent(last.content, turn.content))
             } else {
                 result += turn
             }
