@@ -120,10 +120,13 @@ object MusicRequestParser {
         raw.lowercase().trim().replace(Regex("\\s+"), " ")
             .replace(TRAILING_POLITE, "").trim()
 
+    /** «включи музыку найди X»: второй глагол и слово «песню» в начале названием не являются. */
+    private val LEADING_COMMAND = Regex("^(?:(?:найди|найти|поищи|ищи|включи|поставь|сыграй|find|search|play)\\s+)+(?:(?:песню|песня|трек|музыку|song|track)\\s+)?")
+
     private fun clean(query: String): String? {
-        val q = query.trim().trim('"', '«', '»', '“', '”', '.', ',', '!', '?').trim()
+        val trimmed = query.trim().trim('"', '«', '»', '“', '”', '.', ',', '!', '?').trim()
             .replace(Regex("\\s+"), " ")
-            .take(MAX_QUERY_CHARS)
-        return q.takeIf { it.length >= 2 }
+        val stripped = trimmed.replace(LEADING_COMMAND, "").takeIf { it.length >= 2 } ?: trimmed
+        return stripped.take(MAX_QUERY_CHARS).takeIf { it.length >= 2 }
     }
 }
