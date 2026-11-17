@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -90,6 +91,7 @@ fun OmnixSettingRow(
     val colors = OmnixTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
+    val stackValue = value != null && value.length > 18
     val rowBackground by animateColorAsState(
         targetValue = if (pressed && enabled) colors.surfaceElevated else Color.Transparent,
         animationSpec = tween(120),
@@ -148,13 +150,25 @@ fun OmnixSettingRow(
                     color = colors.textTertiary
                 )
             }
+            // Длинное значение идёт строкой под названием на всю ширину:
+            // справа оно отнимало ширину у названия, и то рвалось по буквам.
+            if (stackValue && value != null) {
+                Text(
+                    text = value,
+                    style = OmnixTheme.typography.caption,
+                    color = colors.textSecondary
+                )
+            }
         }
-        value?.let {
+        if (!stackValue && value != null) {
             Text(
-                text = it,
+                text = value,
                 style = OmnixTheme.typography.body,
                 color = colors.textSecondary,
-                modifier = Modifier.padding(start = spacing.sm)
+                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                modifier = Modifier
+                    .widthIn(max = 150.dp)
+                    .padding(start = spacing.sm)
             )
         }
         trailing?.let {

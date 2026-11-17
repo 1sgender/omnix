@@ -397,12 +397,14 @@ private fun CapabilityGroupRow(
             subtitle?.let {
                 Text(text = it, style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp), color = colors.textSecondary)
             }
+            // Статус стоит под названием на всю ширину, а не в правой колонке:
+            // иначе название и пояснение сжимаются и рвутся по буквам.
+            Text(
+                text = capabilityStatusText(labelToken),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                color = colors.textSecondary
+            )
         }
-        Text(
-            text = capabilityStatusText(labelToken),
-            style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
-            color = colors.textSecondary
-        )
     }
 }
 

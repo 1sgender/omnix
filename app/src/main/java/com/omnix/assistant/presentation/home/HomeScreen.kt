@@ -116,7 +116,7 @@ fun HomeScreen(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The logo gives up size on short screens before anything else.
-        val logoSize = (maxHeight * 0.36f).coerceIn(LOGO_MIN, LOGO_MAX)
+        val logoSize = (maxHeight * 0.40f).coerceIn(LOGO_MIN, LOGO_MAX)
 
         Column(
             modifier = Modifier
@@ -171,7 +171,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(Modifier.weight(1.2f))
+            Spacer(Modifier.weight(0.8f))
 
             AnimatedVisibility(
                 visible = showCards,
@@ -439,9 +439,9 @@ private fun PowerErrorCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(colors.surface)
-            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(18.dp))
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(16.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -561,22 +561,17 @@ private fun QuickActions(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Три карточки: первая на всю ширину, две следующие парой — без дыры в сетке.
-        val rows = if (cards.size % 2 == 1) listOf(cards.take(1)) + cards.drop(1).chunked(2) else cards.chunked(2)
-        rows.forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { card ->
-                    QuickActionCard(
-                        icon = card.icon,
-                        iconTint = card.tint,
-                        title = stringResource(card.title),
-                        subtitle = stringResource(card.subtitle),
-                        onClick = card.onClick,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (row.size == 1) Spacer(Modifier.weight(1f))
-            }
+        // Одна колонка одинаковых по ширине и высоте карточек: ровная сетка
+        // без «одной в ряду и двух в другом».
+        cards.forEach { card ->
+            QuickActionCard(
+                icon = card.icon,
+                iconTint = card.tint,
+                title = stringResource(card.title),
+                subtitle = stringResource(card.subtitle),
+                onClick = card.onClick,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -600,7 +595,7 @@ private fun QuickActionCard(
 ) {
     val colors = OmnixTheme.colors
     val interaction = remember { MutableInteractionSource() }
-    Column(
+    Row(
         modifier = modifier
             .omnixPressScale(interaction)
             .clip(CardShape)
@@ -612,22 +607,24 @@ private fun QuickActionCard(
                 role = Role.Button,
                 onClick = onClick
             )
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(24.dp))
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
-                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 16.sp),
                 color = colors.textPrimary,
                 maxLines = 1
             )
             Text(
                 text = subtitle,
-                style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
                 color = colors.textSecondary,
-                maxLines = 1
+                maxLines = 2
             )
         }
     }
@@ -654,8 +651,8 @@ fun stateLabel(state: OmnixUiState): String = when (val phase = state.phase) {
     is OmnixPhase.Error -> stringResource(R.string.omnix_state_ready)
 }
 
-private val SCREEN_PADDING = 20.dp
+private val SCREEN_PADDING = 16.dp
 private val LOGO_MIN = 200.dp
-private val LOGO_MAX = 300.dp
-private val PillShape = RoundedCornerShape(18.dp)
-private val CardShape = RoundedCornerShape(18.dp)
+private val LOGO_MAX = 320.dp
+private val PillShape = RoundedCornerShape(16.dp)
+private val CardShape = RoundedCornerShape(16.dp)

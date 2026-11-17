@@ -186,6 +186,8 @@ private fun DiagnosticRow(result: DiagnosticResult) {
         Text(
             text = label,
             style = OmnixTheme.typography.status,
+            maxLines = 1,
+            softWrap = false,
             color = color,
             modifier = Modifier
                 .border(
