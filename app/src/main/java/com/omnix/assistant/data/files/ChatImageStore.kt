@@ -1,5 +1,6 @@
 package com.omnix.assistant.data.files
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -29,6 +30,8 @@ import javax.inject.Singleton
  * до [ChatImageRules.MAX_SIDE_PX]), сжимает в JPEG и кладёт в память приложения.
  * Ссылка на файл (id) попадает в текст сообщения, см. [ChatImageCodec].
  */
+// minSdk 29: android.media.ExifInterface читает EXIF из потока без лишней зависимости.
+@SuppressLint("ExifInterface")
 @Singleton
 class ChatImageStore @Inject constructor(
     @ApplicationContext private val context: Context
