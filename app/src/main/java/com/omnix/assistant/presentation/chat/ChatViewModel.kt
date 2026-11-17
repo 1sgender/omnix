@@ -72,8 +72,15 @@ data class PendingCloudConsentUi(
 data class PendingAttachmentUi(
     val name: String,
     val text: String,
-    val truncated: Boolean
+    val truncated: Boolean,
+    val kind: com.omnix.assistant.domain.files.FileKind = com.omnix.assistant.domain.files.FileKind.TEXT,
+    val sizeBytes: Long = -1,
+    /** PDF, сохранённый для отправки модели целиком. */
+    val documentId: String? = null
 )
+
+/** Что сейчас происходит с выбранным файлом: над полем ввода «Читаю файл…». */
+enum class AttachmentWork { READING, TRANSCRIBING }
 
 data class ChatUiState(
     val messages: List<Message> = emptyList(),
@@ -81,6 +88,8 @@ data class ChatUiState(
     val attachment: PendingAttachmentUi? = null,
     /** Почему файл не удалось приложить; показывается над полем ввода. */
     val attachmentError: com.omnix.assistant.domain.files.FileTextExtractor.Reason? = null,
+    /** Файл читается или аудио расшифровывается. */
+    val attachmentProcessing: AttachmentWork? = null,
     /** Фото, выбранное для следующего сообщения (id файла в ChatImageStore). */
     val pendingImageId: String? = null,
     /** Фото сжимается: над полем ввода «Готовлю фото…». */
@@ -131,7 +140,11 @@ class ChatViewModel @Inject constructor(
     private val attachmentReader: com.omnix.assistant.data.files.AttachmentReader =
         com.omnix.assistant.data.files.AttachmentReader(context),
     private val imageStore: com.omnix.assistant.data.files.ChatImageStore =
-        com.omnix.assistant.data.files.ChatImageStore(context)
+        com.omnix.assistant.data.files.ChatImageStore(context),
+    private val documentStore: com.omnix.assistant.data.files.ChatDocumentStore =
+        com.omnix.assistant.data.files.ChatDocumentStore(context),
+    private val audioTranscriber: com.omnix.assistant.data.files.AudioTranscriber =
+        com.omnix.assistant.data.files.AudioTranscriber.NONE
 ) : ViewModel() {
 
     companion object {
@@ -340,30 +353,88 @@ class ChatViewModel @Inject constructor(
         _inputClassificationRequests.tryEmit(newText)
     }
 
-    /** Пользователь выбрал файл в системном окне: читаем и кладём в поле ввода. */
+    /**
+     * Пользователь выбрал файл в системном окне: читаем и кладём в поле ввода.
+     * Фото уходит в обработку картинок, аудио — в расшифровку.
+     */
     fun onAttachmentPicked(uri: android.net.Uri) {
         viewModelScope.launch {
+            _uiState.update { it.copy(attachmentProcessing = AttachmentWork.READING, attachmentError = null) }
             when (val result = attachmentReader.read(uri)) {
-                is com.omnix.assistant.domain.files.FileTextExtractor.Result.Success -> {
-                    // Файл и фото к одному сообщению не берём: выбранное позже заменяет прежнее.
-                    _uiState.value.pendingImageId?.let(imageStore::delete)
-                    _uiState.update {
-                        it.copy(
-                            attachment = PendingAttachmentUi(result.name, result.text, result.truncated),
-                            attachmentError = null,
-                            pendingImageId = null,
-                            imageError = null
+                is com.omnix.assistant.domain.files.FileTextExtractor.Result.Success ->
+                    acceptAttachment(
+                        PendingAttachmentUi(
+                            name = result.name,
+                            text = result.text,
+                            truncated = result.truncated,
+                            kind = result.kind,
+                            sizeBytes = result.sizeBytes,
+                            documentId = result.documentId
                         )
-                    }
-                }
+                    )
                 is com.omnix.assistant.domain.files.FileTextExtractor.Result.Failure ->
-                    _uiState.update { it.copy(attachmentError = result.reason) }
+                    _uiState.update { it.copy(attachmentProcessing = null, attachmentError = result.reason) }
+                is com.omnix.assistant.domain.files.FileTextExtractor.Result.Media ->
+                    if (result.kind == com.omnix.assistant.domain.files.FileKind.IMAGE) {
+                        _uiState.update { it.copy(attachmentProcessing = null) }
+                        onImagePicked(uri)
+                    } else {
+                        transcribeAudio(uri, result.name)
+                    }
             }
         }
     }
 
+    private suspend fun transcribeAudio(uri: android.net.Uri, name: String) {
+        _uiState.update { it.copy(attachmentProcessing = AttachmentWork.TRANSCRIBING) }
+        val size = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            attachmentReader.info(uri).sizeBytes
+        }
+        val reason = when (val outcome = audioTranscriber.transcribe(uri)) {
+            is com.omnix.assistant.data.files.AudioTranscriber.Outcome.Success -> {
+                val fitted = com.omnix.assistant.domain.files.TextBudget.fit(
+                    outcome.text,
+                    com.omnix.assistant.domain.files.FileTextExtractor.MAX_TEXT_TOKENS
+                )
+                acceptAttachment(
+                    PendingAttachmentUi(
+                        name = name,
+                        text = fitted.text,
+                        truncated = fitted.truncated || outcome.truncated,
+                        kind = com.omnix.assistant.domain.files.FileKind.AUDIO,
+                        sizeBytes = size
+                    )
+                )
+                return
+            }
+            com.omnix.assistant.data.files.AudioTranscriber.Outcome.Unreadable ->
+                com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNREADABLE
+            com.omnix.assistant.data.files.AudioTranscriber.Outcome.Empty ->
+                com.omnix.assistant.domain.files.FileTextExtractor.Reason.EMPTY
+            com.omnix.assistant.data.files.AudioTranscriber.Outcome.Failed ->
+                com.omnix.assistant.domain.files.FileTextExtractor.Reason.TRANSCRIPTION_FAILED
+        }
+        _uiState.update { it.copy(attachmentProcessing = null, attachmentError = reason) }
+    }
+
+    /** Файл и фото к одному сообщению не берём: выбранное позже заменяет прежнее. */
+    private fun acceptAttachment(pending: PendingAttachmentUi) {
+        _uiState.value.pendingImageId?.let(imageStore::delete)
+        _uiState.value.attachment?.documentId?.let(documentStore::delete)
+        _uiState.update {
+            it.copy(
+                attachment = pending,
+                attachmentError = null,
+                attachmentProcessing = null,
+                pendingImageId = null,
+                imageError = null
+            )
+        }
+    }
+
     fun clearAttachment() {
-        _uiState.update { it.copy(attachment = null, attachmentError = null) }
+        _uiState.value.attachment?.documentId?.let(documentStore::delete)
+        _uiState.update { it.copy(attachment = null, attachmentError = null, attachmentProcessing = null) }
     }
 
     /** Пользователь выбрал фото (галерея или камера): сжимаем и кладём в поле ввода. */
@@ -375,6 +446,7 @@ class ChatViewModel @Inject constructor(
             when (result) {
                 is com.omnix.assistant.data.files.ChatImageStore.ImportResult.Success -> {
                     _uiState.value.pendingImageId?.let(imageStore::delete)
+                    _uiState.value.attachment?.documentId?.let(documentStore::delete)
                     _uiState.update {
                         it.copy(
                             pendingImageId = result.id,
@@ -411,7 +483,16 @@ class ChatViewModel @Inject constructor(
                     typed.ifBlank { context.getString(com.omnix.assistant.R.string.omnix_chat_image_default_question) }
                 )
             attachment != null && !isConfirmation ->
-                com.omnix.assistant.domain.files.ChatAttachmentCodec.encode(attachment.name, attachment.text, typed)
+                com.omnix.assistant.domain.files.ChatAttachmentCodec.encode(
+                    fileName = attachment.name,
+                    content = attachment.text,
+                    question = typed.ifBlank {
+                        context.getString(com.omnix.assistant.R.string.omnix_chat_file_default_question)
+                    },
+                    kind = attachment.kind,
+                    sizeBytes = attachment.sizeBytes,
+                    documentId = attachment.documentId
+                )
             else -> typed
         }
         _uiState.update { it.copy(localOnlyAnswer = null) }
@@ -752,7 +833,10 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             clearChatHistoryUseCase()
             // Вместе с историей стираем и сжатые фото из чата.
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { imageStore.deleteAll() }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                imageStore.deleteAll()
+                documentStore.deleteAll()
+            }
         }
     }
 }

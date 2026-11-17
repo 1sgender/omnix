@@ -21,6 +21,8 @@ data class ProviderRequirements(
     val requiresToolCalling: Boolean = false,
     /** В запросе есть картинки: подходят только провайдеры с vision. */
     val requiresVision: Boolean = false,
+    /** PDF без текста (скан): прочесть может только модель с чтением документов. */
+    val requiresDocuments: Boolean = false,
     val costClass: com.omnix.server.cost.CostClass = com.omnix.server.cost.CostClass.MEDIUM,
     /**
      * Тест моделей админом: только этот провайдер, без fallback на другие —
@@ -98,7 +100,8 @@ class DefaultProviderSelectionPolicy(
             val caps = provider.capabilities
             (!requirements.requiresWeb || caps.supportsWeb) &&
                 (!requirements.requiresToolCalling || caps.supportsToolCalling) &&
-                (!requirements.requiresVision || caps.supportsVision)
+                (!requirements.requiresVision || caps.supportsVision) &&
+                (!requirements.requiresDocuments || caps.supportsDocuments)
         }
         .filter { health.isAvailable(it.id) }
         .sortedWith(

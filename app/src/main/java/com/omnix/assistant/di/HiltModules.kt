@@ -396,6 +396,16 @@ abstract class ExecutionDecisionModule {
     @Singleton
     abstract fun bindChatImageSource(impl: com.omnix.assistant.data.files.ChatImageStore): com.omnix.assistant.domain.files.ChatImageSource
 
+    /** PDF из чата для облачного клиента. */
+    @Binds
+    @Singleton
+    abstract fun bindChatDocumentSource(impl: com.omnix.assistant.data.files.ChatDocumentStore): com.omnix.assistant.domain.files.ChatDocumentSource
+
+    /** Расшифровка аудиофайлов из чата серверным Whisper. */
+    @Binds
+    @Singleton
+    abstract fun bindAudioTranscriber(impl: com.omnix.assistant.data.files.ServerAudioTranscriber): com.omnix.assistant.data.files.AudioTranscriber
+
     @Binds
     @Singleton
     abstract fun bindAgentExecutor(impl: CognitiveAgentExecutor): AgentExecutor

@@ -31,6 +31,11 @@ import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Audiotrack
+import androidx.compose.material.icons.outlined.PictureAsPdf
+import androidx.compose.material.icons.outlined.Slideshow
+import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -403,6 +408,7 @@ private fun ChatThread(
             onToggleDictation = onToggleDictation,
             attachment = state.attachment,
             attachmentError = state.attachmentError,
+            attachmentProcessing = state.attachmentProcessing,
             onAttach = onAttach,
             onClearAttachment = onClearAttachment,
             imageId = state.pendingImageId,
@@ -578,12 +584,12 @@ private fun MessageRow(
         // Фото лежит в сообщении ссылкой: в ленте миниатюра, ссылка не видна.
         val image = remember(message.text) { com.omnix.assistant.domain.files.ChatImageCodec.decode(message.text) }
         val decoded = remember(message.text) { com.omnix.assistant.domain.files.ChatAttachmentCodec.decode(image.question) }
-        val shown = listOfNotNull(decoded.fileName?.let { "\uD83D\uDCCE $it" }, decoded.question.ifEmpty { null })
-            .joinToString("\n")
+        val shown = decoded.question
+        val fileLabel = decoded.fileName?.let { name -> listOfNotNull(name, fileSizeLabel(decoded.sizeBytes ?: -1)).joinToString(", ") }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { contentDescription = "$sender: $shown" },
+                .semantics { contentDescription = listOfNotNull("$sender:", fileLabel, shown.ifEmpty { null }).joinToString(" ") },
             contentAlignment = Alignment.CenterEnd
         ) {
             Column(
@@ -591,6 +597,14 @@ private fun MessageRow(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 image.imageIds.forEach { id -> ChatImageThumb(imageId = id, size = 180.dp) }
+                decoded.fileName?.let { name ->
+                    ChatFileCard(
+                        name = name,
+                        kind = decoded.kind,
+                        sizeBytes = decoded.sizeBytes ?: -1,
+                        maxWidth = threadWidth * 0.78f
+                    )
+                }
                 if (shown.isNotEmpty()) {
                     SelectionContainer {
                         Text(
@@ -926,6 +940,7 @@ private fun ChatComposer(
     onToggleDictation: () -> Unit,
     attachment: PendingAttachmentUi? = null,
     attachmentError: com.omnix.assistant.domain.files.FileTextExtractor.Reason? = null,
+    attachmentProcessing: AttachmentWork? = null,
     onAttach: () -> Unit = {},
     onClearAttachment: () -> Unit = {},
     imageId: String? = null,
@@ -946,7 +961,7 @@ private fun ChatComposer(
 
     Column(modifier = Modifier.fillMaxWidth()) {
     ImageStrip(imageId, imageProcessing, imageError, onClearImage)
-    AttachmentStrip(attachment, attachmentError, onClearAttachment)
+    AttachmentStrip(attachment, attachmentError, attachmentProcessing, onClearAttachment)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1097,6 +1112,7 @@ private fun ChatComposer(
 private fun AttachmentStrip(
     attachment: PendingAttachmentUi?,
     error: com.omnix.assistant.domain.files.FileTextExtractor.Reason?,
+    processing: AttachmentWork?,
     onClear: () -> Unit
 ) {
     val colors = OmnixTheme.colors
@@ -1110,14 +1126,29 @@ private fun AttachmentStrip(
                 .padding(start = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                imageVector = fileKindIcon(attachment.kind),
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = attachment.name,
                 style = FieldText,
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 220.dp)
+                modifier = Modifier.widthIn(max = 200.dp)
             )
+            fileSizeLabel(attachment.sizeBytes)?.let { size ->
+                Text(
+                    text = " · $size",
+                    style = FieldText,
+                    color = colors.textTertiary,
+                    maxLines = 1
+                )
+            }
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -1145,6 +1176,18 @@ private fun AttachmentStrip(
                 modifier = Modifier.padding(start = 20.dp, top = 2.dp)
             )
         }
+    } else if (processing != null) {
+        Text(
+            text = stringResource(
+                when (processing) {
+                    AttachmentWork.READING -> R.string.omnix_chat_attach_reading
+                    AttachmentWork.TRANSCRIBING -> R.string.omnix_chat_attach_transcribing
+                }
+            ),
+            style = FieldText,
+            color = colors.textTertiary,
+            modifier = Modifier.padding(start = 20.dp, top = 6.dp)
+        )
     } else if (error != null) {
         Text(
             text = stringResource(
@@ -1153,6 +1196,8 @@ private fun AttachmentStrip(
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNSUPPORTED -> R.string.omnix_chat_attach_unsupported
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.EMPTY -> R.string.omnix_chat_attach_empty
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNREADABLE -> R.string.omnix_chat_attach_unreadable
+                    com.omnix.assistant.domain.files.FileTextExtractor.Reason.TRANSCRIPTION_FAILED ->
+                        R.string.omnix_chat_attach_transcription_failed
                 }
             ),
             style = FieldText.copy(fontSize = 14.sp, lineHeight = 20.sp),
@@ -1305,5 +1350,81 @@ private fun ImageStrip(
                 .border(BorderStroke(1.dp, colors.stateError.copy(alpha = 0.4f)), ErrorShape)
                 .padding(horizontal = 14.dp, vertical = 10.dp)
         )
+    }
+}
+
+/** Значок по типу файла. */
+private fun fileKindIcon(kind: com.omnix.assistant.domain.files.FileKind?): androidx.compose.ui.graphics.vector.ImageVector =
+    when (kind) {
+        com.omnix.assistant.domain.files.FileKind.PDF -> Icons.Outlined.PictureAsPdf
+        com.omnix.assistant.domain.files.FileKind.XLSX,
+        com.omnix.assistant.domain.files.FileKind.SPREADSHEET_TEXT -> Icons.Outlined.TableChart
+        com.omnix.assistant.domain.files.FileKind.PPTX -> Icons.Outlined.Slideshow
+        com.omnix.assistant.domain.files.FileKind.AUDIO -> Icons.Outlined.Audiotrack
+        com.omnix.assistant.domain.files.FileKind.IMAGE -> Icons.Outlined.Image
+        com.omnix.assistant.domain.files.FileKind.TEXT -> Icons.Outlined.Article
+        else -> Icons.Outlined.Description
+    }
+
+/** «1,2 МБ» по правилам языка системы; null — размер неизвестен. */
+@Composable
+private fun fileSizeLabel(sizeBytes: Long): String? {
+    if (sizeBytes < 0) return null
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return android.text.format.Formatter.formatShortFileSize(context, sizeBytes)
+}
+
+/** Карточка файла в пузыре сообщения: значок, имя, тип и размер. */
+@Composable
+private fun ChatFileCard(
+    name: String,
+    kind: com.omnix.assistant.domain.files.FileKind?,
+    sizeBytes: Long,
+    maxWidth: Dp
+) {
+    val colors = OmnixTheme.colors
+    val extension = name.substringAfterLast('.', "").uppercase().take(6)
+    val details = listOfNotNull(extension.ifEmpty { null }, fileSizeLabel(sizeBytes)).joinToString(" · ")
+    Row(
+        modifier = Modifier
+            .widthIn(max = maxWidth)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surfaceElevated)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(colors.surface),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = fileKindIcon(kind),
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Column {
+            Text(
+                text = name,
+                style = FieldText,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (details.isNotEmpty()) {
+                Text(
+                    text = details,
+                    style = FieldText.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                    color = colors.textTertiary,
+                    maxLines = 1
+                )
+            }
+        }
     }
 }

@@ -547,6 +547,57 @@ class ApiIntegrationTest {
         assertEquals(0, p.calls.get())
     }
 
+    /** Текст файла больше обычного предела тела (32 КБ) принимается и доходит до провайдера. */
+    @Test
+    fun `long text attachment is accepted and reaches provider`() = runBlocking {
+        val p = FakeAiProvider.ok(ProviderId.GROQ, "ответ по файлу")
+        val h = harness(providers = listOf(p))
+        val text = "строка файла ".repeat(2_500)
+        val body = """{"text":"О чём файл?","source":"CHAT","privacyLevel":"NORMAL","requiresWeb":false,""" +
+            """"attachments":[{"name":"a.docx","text":"$text","kind":"docx"}]}"""
+
+        val response = h.handler.handle(post(body))
+
+        assertEquals(200, response.status)
+        assertEquals(1, p.lastRequest!!.attachments.size)
+        assertEquals("a.docx", p.lastRequest!!.attachments[0].name)
+    }
+
+    /** PDF без текста (скан) уходит только модели, которая читает документы. */
+    @Test
+    fun `scanned pdf goes only to document provider`() = runBlocking {
+        val plain = FakeAiProvider.ok(ProviderId.GROQ, "не читает pdf")
+        val reader = FakeAiProvider(
+            ProviderId.GEMINI,
+            listOf(com.omnix.server.provider.ProviderResult.Success("в pdf договор", "m", 1, 1, 2)),
+            capabilities = com.omnix.server.provider.ProviderCapabilities(supportsDocuments = true)
+        )
+        val h = harness(providers = listOf(plain, reader))
+        val data = java.util.Base64.getEncoder().encodeToString("%PDF-1.4\n".toByteArray() + ByteArray(50_000))
+        val body = """{"text":"Что в документе?","source":"CHAT","privacyLevel":"NORMAL","requiresWeb":false,""" +
+            """"documents":[{"mimeType":"application/pdf","data":"$data","name":"скан.pdf"}]}"""
+
+        val response = h.handler.handle(post(body))
+
+        assertEquals(200, response.status)
+        assertEquals(0, plain.calls.get())
+        assertEquals(1, reader.lastRequest!!.documents.size)
+    }
+
+    @Test
+    fun `fake pdf is rejected`() = runBlocking {
+        val p = FakeAiProvider.ok(ProviderId.GROQ)
+        val h = harness(providers = listOf(p))
+        val data = java.util.Base64.getEncoder().encodeToString("not a pdf".toByteArray())
+        val body = """{"text":"Что в документе?","source":"CHAT","privacyLevel":"NORMAL","requiresWeb":false,""" +
+            """"documents":[{"mimeType":"application/pdf","data":"$data","name":"x.pdf","fallbackText":"x"}]}"""
+
+        val response = h.handler.handle(post(body))
+
+        assertEquals(400, response.status)
+        assertEquals(0, p.calls.get())
+    }
+
     @Test
     fun `big body without images is still rejected`() = runBlocking {
         val h = harness()

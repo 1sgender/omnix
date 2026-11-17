@@ -44,6 +44,30 @@ data class ImageDto(
 )
 
 /**
+ * Текст приложенного файла (docx, xlsx, pptx, текст, расшифровка аудио),
+ * уже извлечённый клиентом. `kind` — подсказка для подписи (`audio`, `xlsx`…).
+ */
+@Serializable
+data class AttachmentDto(
+    @SerialName("name") val name: String,
+    @SerialName("text") val text: String,
+    @SerialName("kind") val kind: String? = null
+)
+
+/**
+ * PDF целиком для моделей, которые читают документы (Gemini, Claude).
+ * [fallbackText] — его текст для остальных; пустой (скан) — только модели с
+ * поддержкой документов.
+ */
+@Serializable
+data class DocumentDto(
+    @SerialName("mimeType") val mimeType: String,
+    @SerialName("data") val data: String,
+    @SerialName("name") val name: String,
+    @SerialName("fallbackText") val fallbackText: String = ""
+)
+
+/**
  * Запрос на выполнение.
  *
  * Намеренно НЕТ поля `provider`: клиент не имеет права выбирать провайдера
@@ -125,7 +149,13 @@ data class AiExecutionRequest(
      * провайдеров с vision (Gemini, Claude); остальные из отбора исключаются.
      * Пустой список = прежнее поведение.
      */
-    @SerialName("images") val images: List<ImageDto> = emptyList()
+    @SerialName("images") val images: List<ImageDto> = emptyList(),
+
+    /** Тексты приложенных файлов; у них свой лимит, отдельный от [text]. */
+    @SerialName("attachments") val attachments: List<AttachmentDto> = emptyList(),
+
+    /** PDF для нативного чтения моделью. */
+    @SerialName("documents") val documents: List<DocumentDto> = emptyList()
 ) {
     companion object {
         // P2-cleanup (Этап 5): компактный memory-контекст (AR-04) был полуготовым

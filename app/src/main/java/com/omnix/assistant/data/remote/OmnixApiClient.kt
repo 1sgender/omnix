@@ -67,6 +67,23 @@ data class OmniAiImageDto(
     @SerialName("data") val data: String
 )
 
+/** Текст приложенного файла. Зеркалит server `AttachmentDto`. */
+@Serializable
+data class OmniAiAttachmentDto(
+    @SerialName("name") val name: String,
+    @SerialName("text") val text: String,
+    @SerialName("kind") val kind: String? = null
+)
+
+/** PDF целиком для моделей, которые читают документы. Зеркалит server `DocumentDto`. */
+@Serializable
+data class OmniAiDocumentDto(
+    @SerialName("mimeType") val mimeType: String,
+    @SerialName("data") val data: String,
+    @SerialName("name") val name: String,
+    @SerialName("fallbackText") val fallbackText: String = ""
+)
+
 @Serializable
 data class OmniAiRequestDto(
     @SerialName("text") val text: String,
@@ -82,7 +99,11 @@ data class OmniAiRequestDto(
     /** "pro" — просим Claude (выбран Pro и он есть в тарифе); null — Flash, как раньше. */
     @SerialName("tier") val tier: String? = null,
     /** Картинки к текущему сообщению (фото из чата); пусто — обычный запрос. */
-    @SerialName("images") val images: List<OmniAiImageDto> = emptyList()
+    @SerialName("images") val images: List<OmniAiImageDto> = emptyList(),
+    /** Тексты приложенных файлов (docx, xlsx, pptx, текст, расшифровка аудио). */
+    @SerialName("attachments") val attachments: List<OmniAiAttachmentDto> = emptyList(),
+    /** PDF к сообщению. */
+    @SerialName("documents") val documents: List<OmniAiDocumentDto> = emptyList()
 )
 
 @Serializable
@@ -229,7 +250,11 @@ class OmnixApiClient @Inject constructor(
         /** Flash (по умолчанию) или Pro. Pro — пожелание: сервер может ответить Flash. */
         tier: AiTier = AiTier.FLASH,
         /** Фото к сообщению: сервер отдаст их модели с vision (Gemini/Claude). */
-        images: List<OmniAiImageDto> = emptyList()
+        images: List<OmniAiImageDto> = emptyList(),
+        /** Тексты приложенных файлов: у сервера для них отдельный лимит. */
+        attachments: List<OmniAiAttachmentDto> = emptyList(),
+        /** PDF целиком (Gemini/Claude читают сами, остальным — текст). */
+        documents: List<OmniAiDocumentDto> = emptyList()
     ): Resource<String> = withContext(Dispatchers.IO) {
         val token = securityManager.getAccessToken()
         if (!AccessTokenPolicy.isValid(token)) {
@@ -261,7 +286,9 @@ class OmnixApiClient @Inject constructor(
                 history = history.filter { it.content.isNotBlank() },
                 adminProvider = (adminModels.pin() as? AdminModelPin.Cloud)?.provider,
                 tier = tier.takeIf { it == AiTier.PRO }?.wireValue,
-                images = images
+                images = images,
+                attachments = attachments,
+                documents = documents
             )
         )
         val callContext = CallContext(

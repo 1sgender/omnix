@@ -87,7 +87,8 @@ class AnthropicProvider(
         supportsWeb = false,
         supportsStreaming = false,
         supportsToolCalling = false,
-        supportsVision = true
+        supportsVision = true,
+        supportsDocuments = true
     )
 
     override fun endpointUrl() = config.baseUrl
@@ -152,7 +153,8 @@ class AnthropicProvider(
 
     /** Текущее сообщение: чистый текст или блоки (картинки, затем вопрос). */
     private fun currentContent(request: ProviderRequest): JsonElement {
-        if (request.images.isEmpty()) return JsonPrimitive(request.prompt)
+        val text = request.promptWithFiles(nativeDocuments = true)
+        if (request.images.isEmpty() && request.documents.isEmpty()) return JsonPrimitive(text)
         return JsonArray(
             request.images.map { image ->
                 buildJsonObject {
@@ -163,9 +165,18 @@ class AnthropicProvider(
                         put("data", image.base64Data)
                     })
                 }
+            } + request.documents.map { doc ->
+                buildJsonObject {
+                    put("type", "document")
+                    put("source", buildJsonObject {
+                        put("type", "base64")
+                        put("media_type", doc.mimeType)
+                        put("data", doc.base64Data)
+                    })
+                }
             } + buildJsonObject {
                 put("type", "text")
-                put("text", request.prompt)
+                put("text", text)
             }
         )
     }

@@ -185,7 +185,17 @@ data class ValidationConfig(
     val maxImageBytes: Int = 1_500_000,
     val maxImagesPerRequest: Int = 3,
     /** Сумма всех картинок запроса после декодирования. */
-    val maxImagesTotalBytes: Int = 2_500_000
+    val maxImagesTotalBytes: Int = 2_500_000,
+    /** Текст одного приложенного файла (символов); клиент режет до ~36 000. */
+    val maxAttachmentChars: Int = 40_000,
+    val maxAttachmentsPerRequest: Int = 3,
+    /** Тело запроса с текстами файлов (без PDF/картинок). */
+    val maxAttachmentBodyBytes: Long = 512L * 1024,
+    /** PDF для нативного чтения моделью, после декодирования base64. */
+    val maxDocumentBytes: Int = 6_000_000,
+    val maxDocumentsPerRequest: Int = 1,
+    /** Тело запроса с PDF: 6 МБ в base64 (+33%) и текст файла. */
+    val maxDocumentBodyBytes: Long = 10L * 1024 * 1024
 ) {
     init {
         require(maxTextLength > 0) { "maxTextLength must be positive" }
@@ -201,7 +211,23 @@ data class ValidationConfig(
         require(maxImageBytes > 0 && maxImagesPerRequest in 1..10 && maxImagesTotalBytes > 0) {
             "image limits must be positive"
         }
+        require(maxAttachmentChars > 0 && maxAttachmentsPerRequest in 1..10) {
+            "attachment limits must be positive"
+        }
+        require(maxAttachmentBodyBytes in 1..(10L * 1024 * 1024)) {
+            "maxAttachmentBodyBytes must be in 1..10 MiB"
+        }
+        require(maxDocumentBytes > 0 && maxDocumentsPerRequest in 1..5) {
+            "document limits must be positive"
+        }
+        require(maxDocumentBodyBytes in 1..(32L * 1024 * 1024)) {
+            "maxDocumentBodyBytes must be in 1..32 MiB"
+        }
     }
+
+    /** Самое большое тело /v1/ai/execute (запрос с PDF, картинками или текстами файлов). */
+    fun maxExecuteBodyBytes(): Long =
+        maxOf(maxBodyBytes, maxImageBodyBytes, maxAttachmentBodyBytes, maxDocumentBodyBytes)
 }
 
 /**
@@ -546,7 +572,8 @@ data class ServerConfig(
                 validation = ValidationConfig(
                     maxTextLength = int("MAX_TEXT_LENGTH", 8_000),
                     maxBodyBytes = long("MAX_BODY_BYTES", 32 * 1024),
-                    maxImageBodyBytes = long("MAX_IMAGE_BODY_BYTES", 4L * 1024 * 1024)
+                    maxImageBodyBytes = long("MAX_IMAGE_BODY_BYTES", 4L * 1024 * 1024),
+                    maxDocumentBodyBytes = long("MAX_DOCUMENT_BODY_BYTES", 10L * 1024 * 1024)
                 ),
                 privacy = PrivacyPolicyConfig(
                     allowPrivate = bool("ALLOW_PRIVATE_CLOUD", false),

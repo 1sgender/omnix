@@ -320,7 +320,8 @@ abstract class BaseHttpProvider(
         return buildList {
             add(OaiMessage("system", request.systemPrompt))
             addAll(trimmed)
-            add(OaiMessage("user", request.prompt))
+            // Groq/OpenRouter PDF не читают: текст документа идёт в сообщении.
+            add(OaiMessage("user", request.promptWithFiles(nativeDocuments = false)))
         }
     }
 
@@ -463,7 +464,9 @@ class GeminiProvider(
         // Картинки идут перед текстом вопроса (так модель читает их лучше).
         val currentParts = request.images.map {
             GemPart(inlineData = GemInlineData(mimeType = it.mimeType, data = it.base64Data))
-        } + GemPart(text = request.prompt)
+        } + request.documents.map {
+            GemPart(inlineData = GemInlineData(mimeType = it.mimeType, data = it.base64Data))
+        } + GemPart(text = request.promptWithFiles(nativeDocuments = true))
         val contents = trimmedHistory + GemContent(role = "user", parts = currentParts)
 
         val tools: List<GemGoogleSearchRetrieval> =
@@ -507,7 +510,8 @@ class GeminiProvider(
         supportsWeb = true,
         supportsStreaming = false,
         supportsToolCalling = false,
-        supportsVision = true
+        supportsVision = true,
+        supportsDocuments = true
     )
 
     /** Маппинг OpenAI-ролей на Gemini-роли: assistant → model. */

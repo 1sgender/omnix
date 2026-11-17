@@ -767,7 +767,7 @@ private suspend fun handleExchange(
                 } else if (exchange.requestURI.path == OmnixApiHandler.PATH_EXECUTE) {
                     // Чат с картинками: тело больше обычного; без картинок
                     // обработчик всё равно отклонит всё, что выше maxBodyBytes.
-                    maxOf(config.validation.maxBodyBytes, config.validation.maxImageBodyBytes)
+                    config.validation.maxExecuteBodyBytes()
                 } else {
                     config.validation.maxBodyBytes
                 }
