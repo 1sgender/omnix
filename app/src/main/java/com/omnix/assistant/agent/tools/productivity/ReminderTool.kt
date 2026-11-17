@@ -1,6 +1,7 @@
 package com.omnix.assistant.agent.tools.productivity
 
 import android.Manifest
+import android.os.Build
 import android.content.Context
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.core.OmniTool
@@ -100,7 +101,9 @@ class ReminderTool @Inject constructor(
             warnings += context.getString(R.string.omnix_reminder_warn_inexact)
         }
         if (!access.notificationsEnabled()) {
-            PermissionPrompts.request(listOf(Manifest.permission.POST_NOTIFICATIONS))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                PermissionPrompts.request(listOf(Manifest.permission.POST_NOTIFICATIONS))
+            }
             warnings += context.getString(R.string.omnix_reminder_warn_notifications)
         } else if (!access.canUseFullScreen()) {
             warnings += context.getString(R.string.omnix_reminder_warn_fullscreen)
