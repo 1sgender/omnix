@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Яндекс Музыка: плеер внутри OMNIX -->
+    <string name="ymusic_settings_title">Яндекс Музыка</string>
+    <string name="ymusic_settings_hint">Музыка играет прямо в OMNIX из твоей Яндекс Музыки (нужна подписка Плюс). Вставь токен своего аккаунта: он хранится только на этом телефоне в зашифрованном виде и никуда не отправляется, кроме самой Яндекс Музыки.</string>
+    <string name="ymusic_token_label">Токен</string>
+    <string name="ymusic_token_saved">Токен сохранён на телефоне</string>
+    <string name="ymusic_token_missing">Токен не введён</string>
+    <string name="ymusic_token_remove">Удалить</string>
+    <string name="ymusic_token_input_title">Новый токен</string>
+    <string name="ymusic_token_placeholder">Вставь токен Яндекс Музыки</string>
+    <string name="ymusic_token_invalid">Это не похоже на токен</string>
+    <string name="ymusic_token_save">Сохранить токен</string>
+    <string name="ymusic_unofficial_warning">Внимание: у Яндекс Музыки нет официального API. Этот доступ неофициальный, может перестать работать в любой момент и нарушает условия сервиса Яндекса. Использовать или нет, решаешь ты.</string>
+    <string name="ymusic_need_token">Вставь токен Яндекс Музыки в настройках</string>
+    <string name="ymusic_now_playing">Играю «%1$s» — %2$s</string>
+    <string name="ymusic_now_playing_no_artist">Играю «%1$s»</string>
+    <string name="ymusic_token_rejected">Яндекс Музыка не приняла токен. Вставь новый в настройках</string>
+    <string name="ymusic_fallback_search">Не получилось сыграть внутри OMNIX, ищу «%1$s» в Яндекс Музыке</string>
+    <string name="ymusic_notif_channel">Музыка OMNIX</string>
+    <string name="ymusic_notif_loading">Загружаю…</string>
+    <string name="ymusic_action_pause">Пауза</string>
+    <string name="ymusic_action_play">Играть</string>
+    <string name="ymusic_action_previous">Назад</string>
+    <string name="ymusic_action_next">Дальше</string>
+    <string name="ymusic_action_stop">Стоп</string>
+
+</resources>

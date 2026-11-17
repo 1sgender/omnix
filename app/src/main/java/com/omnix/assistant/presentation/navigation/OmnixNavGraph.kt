@@ -56,6 +56,8 @@ import com.omnix.assistant.presentation.settings.SECTION_AI
 import com.omnix.assistant.presentation.settings.SECTION_APPEARANCE
 import com.omnix.assistant.presentation.settings.SECTION_LANGUAGE
 import com.omnix.assistant.presentation.settings.SECTION_VOICE
+import com.omnix.assistant.presentation.settings.SECTION_YANDEX_MUSIC
+import com.omnix.assistant.agent.media.ymusic.YandexMusicSettingsRequest
 import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.voice.audio.Haptics
@@ -83,6 +85,15 @@ fun OmnixNavGraph(
     val exitMs = OmnixTheme.motion.screenExitMs
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+
+    // Голосовая просьба «включи песню» без токена просит открыть настройки Яндекс Музыки.
+    val ymusicSettingsRequested by YandexMusicSettingsRequest.pending.collectAsState()
+    LaunchedEffect(ymusicSettingsRequested) {
+        if (ymusicSettingsRequested) {
+            YandexMusicSettingsRequest.consume()
+            navController.navigateSingleTop(OmnixDestination.SettingsSection(SECTION_YANDEX_MUSIC))
+        }
+    }
 
     Column(
         modifier = modifier

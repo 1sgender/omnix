@@ -12,6 +12,7 @@
     <!-- Foreground Service & Power (Ear Mode & Background Execution) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -105,17 +106,9 @@
         <intent>
             <action android:name="android.intent.action.DIAL" />
         </intent>
-        <!-- «Найди песню X»: поиск открывается в Яндекс Музыке, затем в любом
-             музыкальном приложении, YouTube Music и YouTube (media.play_search). -->
-        <intent>
-            <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.SEARCH" />
-        </intent>
+        <!-- «Найди песню X»: запасной вариант, если внутри OMNIX не сыграло, это
+             приложение Яндекс Музыка (media.play_search). YouTube не используется. -->
         <package android:name="ru.yandex.music" />
-        <package android:name="com.google.android.apps.youtube.music" />
-        <package android:name="com.google.android.youtube" />
     </queries>
 
     <application
@@ -145,6 +138,12 @@
         </activity>
 
         <!-- Background Voice Service for Ear Mode -->
+        <!-- Плеер Яндекс Музыки внутри OMNIX: уведомление с управлением. -->
+        <service
+            android:name=".agent.media.ymusic.YandexMusicPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <service
             android:name=".voice.service.OmnixVoiceService"
             android:enabled="true"

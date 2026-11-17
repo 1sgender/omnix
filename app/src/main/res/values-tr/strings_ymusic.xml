@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Яндекс Музыка: плеер внутри OMNIX -->
+    <string name="ymusic_settings_title">Yandex Music</string>
+    <string name="ymusic_settings_hint">Müzik, Yandex Music hesabınızdan doğrudan OMNIX içinde çalar (Plus aboneliği gerekir). Hesabınızın jetonunu yapıştırın: yalnızca bu telefonda şifrelenmiş olarak saklanır ve Yandex Music dışında hiçbir yere gönderilmez.</string>
+    <string name="ymusic_token_label">Jeton</string>
+    <string name="ymusic_token_saved">Jeton telefonda kayıtlı</string>
+    <string name="ymusic_token_missing">Jeton girilmedi</string>
+    <string name="ymusic_token_remove">Sil</string>
+    <string name="ymusic_token_input_title">Yeni jeton</string>
+    <string name="ymusic_token_placeholder">Yandex Music jetonunu yapıştırın</string>
+    <string name="ymusic_token_invalid">Bu bir jetona benzemiyor</string>
+    <string name="ymusic_token_save">Jetonu kaydet</string>
+    <string name="ymusic_unofficial_warning">Dikkat: Yandex Music’in resmî bir API’si yok. Bu erişim resmî değildir, her an çalışmayı bırakabilir ve Yandex hizmet şartlarını ihlal eder. Kullanıp kullanmamak size kalmış.</string>
+    <string name="ymusic_need_token">Ayarlara Yandex Music jetonunu yapıştırın</string>
+    <string name="ymusic_now_playing">Çalıyorum: “%1$s” — %2$s</string>
+    <string name="ymusic_now_playing_no_artist">Çalıyorum: “%1$s”</string>
+    <string name="ymusic_token_rejected">Yandex Music jetonu kabul etmedi. Ayarlarda yeni bir jeton yapıştırın</string>
+    <string name="ymusic_fallback_search">OMNIX içinde çalınamadı, Yandex Music’te “%1$s” aranıyor</string>
+    <string name="ymusic_notif_channel">OMNIX Müzik</string>
+    <string name="ymusic_notif_loading">Yükleniyor…</string>
+    <string name="ymusic_action_pause">Duraklat</string>
+    <string name="ymusic_action_play">Oynat</string>
+    <string name="ymusic_action_previous">Önceki</string>
+    <string name="ymusic_action_next">Sonraki</string>
+    <string name="ymusic_action_stop">Durdur</string>
+
+</resources>

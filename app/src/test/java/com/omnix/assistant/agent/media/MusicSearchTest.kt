@@ -88,14 +88,13 @@ class MusicSearchTest {
     // ------------------------------------------------------------ план
 
     @Test
-    fun `plan starts with Yandex Music then system search then YouTube and ends in the browser`() {
+    fun `plan has only Yandex Music app then its web page and never YouTube`() {
         val steps = MusicSearchPlan.steps("глаза не врут")
 
         assertEquals(
             listOf(
                 MusicSearchTarget.YANDEX_MUSIC_APP, MusicSearchTarget.YANDEX_MUSIC_APP,
-                MusicSearchTarget.SYSTEM_MEDIA_SEARCH, MusicSearchTarget.YOUTUBE_MUSIC,
-                MusicSearchTarget.YOUTUBE, MusicSearchTarget.YANDEX_MUSIC_WEB
+                MusicSearchTarget.YANDEX_MUSIC_WEB
             ),
             steps.map { it.target }
         )
@@ -103,11 +102,9 @@ class MusicSearchTest {
         assertTrue(steps[1].uri!!.startsWith("https://music.yandex.ru/search?text="))
         assertEquals(MusicSearchPlan.PKG_YANDEX_MUSIC, steps[0].packageName)
         assertEquals(MusicSearchPlan.PKG_YANDEX_MUSIC, steps[1].packageName)
-        assertEquals(MusicIntentKind.MEDIA_PLAY_FROM_SEARCH, steps[2].kind)
-        assertEquals(MusicSearchPlan.PKG_YOUTUBE_MUSIC, steps[3].packageName)
-        assertEquals(MusicSearchPlan.PKG_YOUTUBE, steps[4].packageName)
-        assertNull(steps[5].packageName)
-        assertTrue(steps[5].uri!!.startsWith("https://music.yandex.ru/search?text="))
+        assertNull(steps[2].packageName)
+        assertTrue(steps[2].uri!!.startsWith("https://music.yandex.ru/search?text="))
+        assertTrue(steps.none { (it.uri.orEmpty() + it.packageName.orEmpty()).contains("youtube", ignoreCase = true) })
     }
 
     @Test
@@ -115,14 +112,14 @@ class MusicSearchTest {
         val tried = mutableListOf<MusicSearchTarget>()
         val outcome = MusicSearchRunner.run("x y") { step ->
             tried += step.target
-            step.target == MusicSearchTarget.YOUTUBE_MUSIC
+            step.target == MusicSearchTarget.YANDEX_MUSIC_WEB
         }
 
-        assertEquals(MusicSearchTarget.YOUTUBE_MUSIC, (outcome as MusicSearchOutcome.Opened).target)
+        assertEquals(MusicSearchTarget.YANDEX_MUSIC_WEB, (outcome as MusicSearchOutcome.Opened).target)
         assertEquals(
             listOf(
                 MusicSearchTarget.YANDEX_MUSIC_APP, MusicSearchTarget.YANDEX_MUSIC_APP,
-                MusicSearchTarget.SYSTEM_MEDIA_SEARCH, MusicSearchTarget.YOUTUBE_MUSIC
+                MusicSearchTarget.YANDEX_MUSIC_WEB
             ),
             tried
         )
@@ -134,10 +131,10 @@ class MusicSearchTest {
         assertEquals(MusicSearchTarget.YANDEX_MUSIC_APP, first.target)
 
         val afterCrash = MusicSearchRunner.run("q") { step ->
-            if (step.kind == MusicIntentKind.MEDIA_PLAY_FROM_SEARCH) throw IllegalStateException("boom")
-            step.target == MusicSearchTarget.YOUTUBE
+            if (step.target == MusicSearchTarget.YANDEX_MUSIC_APP) throw IllegalStateException("boom")
+            true
         }
-        assertEquals(MusicSearchTarget.YOUTUBE, (afterCrash as MusicSearchOutcome.Opened).target)
+        assertEquals(MusicSearchTarget.YANDEX_MUSIC_WEB, (afterCrash as MusicSearchOutcome.Opened).target)
     }
 
     @Test
