@@ -272,7 +272,7 @@ class OmnixViewModel @Inject constructor(
         // идёт (перезагрузка, обновление, система убила процесс) — приложение
         // на экране, поднимать микрофонную службу сейчас можно.
         if (AssistantAutoStart.isEnabled(context) && !orchestrator.serviceActive.value) {
-            startAssistant(userInitiated = false)
+            startAssistant()
         }
 
         // A real, persisted signal for progressive disclosure: one increment
@@ -369,7 +369,7 @@ class OmnixViewModel @Inject constructor(
         if (orchestrator.serviceActive.value) stopAssistant() else startAssistant()
     }
 
-    private fun startAssistant(userInitiated: Boolean = true) {
+    private fun startAssistant() {
         powerError.value = null
         refreshPermissions()
         if (!hasMicrophonePermission()) {
@@ -391,7 +391,7 @@ class OmnixViewModel @Inject constructor(
             powerTransition.value = null
             // Один раз при первом включении: без исключения из оптимизации
             // батареи One UI усыпляет OMNIX в фоне, и «Омни» перестаёт работать.
-            if (started && userInitiated && AssistantAutoStart.shouldAskBatteryExemption(context)) {
+            if (started && AssistantAutoStart.shouldAskBatteryExemption(context)) {
                 AssistantAutoStart.markBatteryExemptionAsked(context)
                 BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(context)
             }
