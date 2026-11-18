@@ -153,6 +153,7 @@ object AsrPostProcessor {
             val previous = out.lastOrNull()
             val repeat = index < LEADING_WINDOW && previous != null &&
                 word.core.length > 1 && word.core.none { it.isDigit() } &&
+                LEXICONS.none { isNumberStart(it, word.lower) } &&
                 previous.lower == word.lower
             if (repeat) out[out.size - 1] = word else out += word
         }
