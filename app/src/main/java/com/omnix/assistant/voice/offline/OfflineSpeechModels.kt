@@ -70,7 +70,7 @@ object OfflineSpeechModels {
     val RU_ASR = OfflineSpeechModel(
         id = "ru-asr-gigaam",
         dirName = "ru-asr-gigaam",
-        url = "",
+        url = "https://omnix.144.31.14.236.sslip.io/models/ru-asr-gigaam.zip",
         sizeBytes = 159216698L,
         sha256 = "b2aa0122501e9cc93d80f0f3e3e9eb32803d851fbf3c76ea2762033c0e6bb355",
         requiredFiles = listOf("model.int8.onnx", "tokens.txt")
