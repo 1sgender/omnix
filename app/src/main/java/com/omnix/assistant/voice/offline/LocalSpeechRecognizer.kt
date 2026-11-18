@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.k2fsa.sherpa.onnx.FeatureConfig
 import com.k2fsa.sherpa.onnx.OfflineModelConfig
+import com.k2fsa.sherpa.onnx.OfflineNemoEncDecCtcModelConfig
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
 import com.k2fsa.sherpa.onnx.OfflineRecognizerConfig
 import com.k2fsa.sherpa.onnx.OfflineOmnilingualAsrCtcModelConfig
@@ -25,7 +26,8 @@ import javax.inject.Singleton
  * Распознавание речи на телефоне, без интернета (sherpa-onnx):
  *  - туркменский — Omnilingual ASR CTC 300M (Meta), скачивается отдельным пакетом
  *    ([OfflineSpeechModels.TK_ASR]);
- *  - русский — маленькая потоковая модель Vosk, она уже лежит в APK ради слова вызова.
+ *  - русский — если скачана улучшенная модель GigaAM v3 ([OfflineSpeechModels.RU_ASR]), то она;
+ *    иначе маленькая потоковая модель Vosk, она уже лежит в APK ради слова вызова.
  *
  * Фраза записывается целиком (границы по паузе ставит UtteranceSegmenter), поэтому
  * потоковость не нужна: модель получает готовые отсчёты 16 кГц.
@@ -39,6 +41,7 @@ class LocalSpeechRecognizer @Inject constructor(
     private val mutex = Mutex()
     private var turkmen: OfflineRecognizer? = null
     private var russian: OnlineRecognizer? = null
+    private var russianHq: OfflineRecognizer? = null
 
     /** Модель для языка [languageHint] ("tk", "ru") готова к работе. */
     fun isReady(languageHint: String): Boolean = when (languageHint) {
@@ -57,7 +60,7 @@ class LocalSpeechRecognizer @Inject constructor(
                 val floats = FloatArray(samples.size) { samples[it] / PCM_SCALE }
                 when (languageHint) {
                     LANG_TK -> decodeTurkmen(floats)
-                    LANG_RU -> decodeRussian(floats)
+                    LANG_RU -> decodeRussianHq(floats) ?: decodeRussian(floats)
                     else -> null
                 }?.trim()?.takeIf { it.isNotEmpty() }
             } catch (e: Exception) {
@@ -76,6 +79,8 @@ class LocalSpeechRecognizer @Inject constructor(
         turkmen = null
         russian?.release()
         russian = null
+        russianHq?.release()
+        russianHq = null
     }
 
     private fun decodeTurkmen(samples: FloatArray): String? {
@@ -106,6 +111,36 @@ class LocalSpeechRecognizer @Inject constructor(
         )
         return runCatching { OfflineRecognizer(config = config) }
             .onFailure { Log.e(TAG, "cannot load turkmen recognizer", it) }
+            .getOrNull()
+    }
+
+    /** Улучшенная русская модель; null, если она не скачана или не загрузилась (тогда Vosk). */
+    private fun decodeRussianHq(samples: FloatArray): String? {
+        val recognizer = russianHq ?: createRussianHq()?.also { russianHq = it } ?: return null
+        val stream = recognizer.createStream()
+        try {
+            stream.acceptWaveform(samples, SAMPLE_RATE)
+            recognizer.decode(stream)
+            return recognizer.getResult(stream).text
+        } finally {
+            stream.release()
+        }
+    }
+
+    private fun createRussianHq(): OfflineRecognizer? {
+        if (!store.isInstalled(OfflineSpeechModels.RU_ASR)) return null
+        val dir = store.dirOf(OfflineSpeechModels.RU_ASR)
+        val config = OfflineRecognizerConfig(
+            featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = FEATURE_DIM),
+            modelConfig = OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(model = "${dir.path}/model.int8.onnx"),
+                tokens = "${dir.path}/tokens.txt",
+                numThreads = THREADS,
+                provider = "cpu"
+            )
+        )
+        return runCatching { OfflineRecognizer(config = config) }
+            .onFailure { Log.e(TAG, "cannot load improved russian recognizer", it) }
             .getOrNull()
     }
 
