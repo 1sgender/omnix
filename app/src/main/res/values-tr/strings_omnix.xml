@@ -560,6 +560,7 @@
     <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
     <string name="omnix_offline_tk_asr">Türkmence konuşma tanıma</string>
     <string name="omnix_offline_ru_asr">Rusça konuşma tanıma</string>
+    <string name="omnix_offline_ru_asr_hq">Rusça, geliştirilmiş</string>
     <string name="omnix_offline_state_soon">Yakında</string>
     <string name="omnix_offline_state_installed">Yüklendi</string>
     <string name="omnix_offline_state_not_installed">İndirilmedi · %1$d MB</string>
