@@ -28,6 +28,7 @@ import com.omnix.assistant.domain.models.VoiceAssistantState
 import com.omnix.assistant.domain.usecases.GetSettingsUseCase
 import com.omnix.assistant.domain.usecases.SendPromptUseCase
 import com.omnix.assistant.voice.audio.BluetoothAudioRouter
+import com.omnix.assistant.voice.stt.AsrPostProcessor
 import com.omnix.assistant.voice.stt.SpeechRecognitionEvent
 import com.omnix.assistant.voice.stt.SpeechRecognizerManager
 import com.omnix.assistant.voice.tts.TextToSpeechManager
@@ -72,7 +73,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
     companion object {
         private const val TAG = "VoiceOrchestrator"
         
-        private const val SILENCE_AFTER_PARTIAL_MS = 1200L
+        /**
+         * Сколько ждать новых слов после последнего промежуточного результата, прежде чем
+         * считать фразу законченной. Было 1,2 с и обрезало речь на паузе-раздумье.
+         */
+        private const val SILENCE_AFTER_PARTIAL_MS = 2_400L
         private const val FOLLOW_UP_WINDOW_MS = 8000L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
@@ -503,7 +508,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     is SpeechRecognitionEvent.PartialResult -> {
                         if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
-                            val cleaned = WakeWordExtractor.extractQuery(event.partialText, wakeKeywords) ?: event.partialText
+                            val cleaned = WakeWordExtractor.extractQuery(AsrPostProcessor.process(event.partialText), wakeKeywords)
+                                ?: event.partialText
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
                             _lastQuery.value = cleaned
 

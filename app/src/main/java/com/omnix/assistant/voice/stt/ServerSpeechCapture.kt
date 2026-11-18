@@ -43,18 +43,20 @@ class ServerSpeechCapture @Inject constructor(
      * Ждёт начала речи до [waitForSpeechMs], пишет фразу и отправляет на сервер.
      *
      * @param languageHint код языка для Whisper, например «tk».
+     * @param prompt подсказка Whisper (слово вызова, названия функций); без личных данных.
      * @param onLevel громкость 0..1 для индикатора на экране.
      */
     @SuppressLint("MissingPermission") // Голосовой ввод запускается только с разрешением на микрофон.
     suspend fun listen(
         languageHint: String,
         waitForSpeechMs: Long = WAIT_FOR_SPEECH_MS,
+        prompt: String? = null,
         onLevel: (Float) -> Unit = {}
     ): Outcome = withContext(Dispatchers.IO) {
         when (val captured = record(waitForSpeechMs, onLevel)) {
             Captured.Busy -> Outcome.MicrophoneBusy
             Captured.Quiet -> Outcome.Silence
-            is Captured.Speech -> recognizeOnPhoneThenServer(captured.samples, languageHint)
+            is Captured.Speech -> recognizeOnPhoneThenServer(captured.samples, languageHint, prompt)
         }
     }
 
@@ -62,13 +64,13 @@ class ServerSpeechCapture @Inject constructor(
      * Офлайн прежде всего (решение владельца 2026-11-09): если на телефоне есть модель
      * для языка, фраза распознаётся без интернета. Не услышала или модели нет — сервер.
      */
-    private suspend fun recognizeOnPhoneThenServer(samples: ShortArray, languageHint: String): Outcome {
+    private suspend fun recognizeOnPhoneThenServer(samples: ShortArray, languageHint: String, prompt: String?): Outcome {
         if (local.isReady(languageHint)) {
             val text = local.transcribe(samples, languageHint)
             if (text != null && text.length >= MIN_TEXT_CHARS) return Outcome.Heard(text)
         }
         pairAccess.blockedMessage(com.omnix.assistant.agent.decision.CloudUse.FULL)?.let { return Outcome.Failed(it) }
-        return when (val stt = api.transcribe(PcmWav.encode(samples, SAMPLE_RATE), languageHint)) {
+        return when (val stt = api.transcribe(PcmWav.encode(samples, SAMPLE_RATE), languageHint, prompt)) {
             is Resource.Success -> {
                 val text = stt.data.text.trim()
                 if (text.length < MIN_TEXT_CHARS) Outcome.Silence else Outcome.Heard(text)
@@ -103,7 +105,7 @@ class ServerSpeechCapture @Inject constructor(
             record.release()
             return Captured.Busy
         }
-        val segmenter = UtteranceSegmenter(SAMPLE_RATE)
+        val segmenter = UtteranceSegmenter(SAMPLE_RATE, endSilenceMs = END_OF_PHRASE_SILENCE_MS)
         val frame = ShortArray(FRAME)
         var waitedSamples = 0L
         val waitLimit = SAMPLE_RATE * waitForSpeechMs / 1000
@@ -140,6 +142,12 @@ class ServerSpeechCapture @Inject constructor(
         const val SAMPLE_RATE = 16_000
         const val FRAME = 320
         const val WAIT_FOR_SPEECH_MS = 8_000L
+
+        /**
+         * Пауза, после которой фраза считается законченной. Стандартные 0,7 с режут
+         * речь, когда человек задумывается; 1,6 с терпимо по задержке и не обрезает.
+         */
+        const val END_OF_PHRASE_SILENCE_MS = 1_600
         const val MIN_TEXT_CHARS = 2
         const val LEVEL_LOUD = 6_000.0
     }
