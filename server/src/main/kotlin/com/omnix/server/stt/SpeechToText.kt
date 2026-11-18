@@ -23,6 +23,23 @@ sealed interface SttOutcome {
 
 interface SpeechToText {
     suspend fun transcribe(wav: ByteArray, languageHint: String?): SttOutcome
+
+    /**
+     * То же с подсказкой словаря [prompt]. По умолчанию подсказка игнорируется, так что
+     * провайдеры, которым она не нужна, ничего не меняют.
+     */
+    suspend fun transcribe(wav: ByteArray, languageHint: String?, prompt: String?): SttOutcome =
+        transcribe(wav, languageHint)
+}
+
+/** Подсказка Whisper от клиента: короткая строка без управляющих символов. */
+object SttPrompt {
+    const val MAX_CHARS = 400
+
+    fun sanitize(raw: String?): String? {
+        val cleaned = raw?.filter { !it.isISOControl() || it == ' ' }?.trim().orEmpty()
+        return cleaned.take(MAX_CHARS).takeIf { it.isNotEmpty() }
+    }
 }
 
 @Serializable
@@ -42,12 +59,16 @@ class GroqWhisperSpeechToText(
     private val json: Json = Json { ignoreUnknownKeys = true }
 ) : SpeechToText {
 
-    override suspend fun transcribe(wav: ByteArray, languageHint: String?): SttOutcome {
+    override suspend fun transcribe(wav: ByteArray, languageHint: String?): SttOutcome =
+        transcribe(wav, languageHint, null)
+
+    override suspend fun transcribe(wav: ByteArray, languageHint: String?, prompt: String?): SttOutcome {
         val fields = buildList {
             add("model" to model)
             add("response_format" to "verbose_json")
             add("temperature" to "0")
             WhisperLanguages.isoCode(languageHint)?.let { add("language" to it) }
+            SttPrompt.sanitize(prompt)?.let { add("prompt" to it) }
         }
         val boundary = "omnix-" + UUID.randomUUID().toString().replace("-", "")
         val body = multipartBody(boundary, fields, fileField = "file", fileName = "speech.wav", fileType = "audio/wav", file = wav)

@@ -17,10 +17,13 @@ class ChainedSpeechToText(
         require(providers.isNotEmpty()) { "STT chain must not be empty" }
     }
 
-    override suspend fun transcribe(wav: ByteArray, languageHint: String?): SttOutcome {
+    override suspend fun transcribe(wav: ByteArray, languageHint: String?): SttOutcome =
+        transcribe(wav, languageHint, null)
+
+    override suspend fun transcribe(wav: ByteArray, languageHint: String?, prompt: String?): SttOutcome {
         var last: SttOutcome = SttOutcome.Failure(ProviderFailureKind.NOT_CONFIGURED)
         for ((name, stt) in providers) {
-            val outcome = stt.transcribe(wav, languageHint)
+            val outcome = stt.transcribe(wav, languageHint, prompt)
             if (outcome is SttOutcome.Success) {
                 logger?.info("stt recognized", "provider" to name)
                 return outcome

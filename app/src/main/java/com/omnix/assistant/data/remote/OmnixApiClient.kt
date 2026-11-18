@@ -124,7 +124,9 @@ data class OmniAiResponseDto(
 data class SttRequestDto(
     @SerialName("audio") val audio: String,
     @SerialName("languageHint") val languageHint: String? = null,
-    @SerialName("requestId") val requestId: String
+    @SerialName("requestId") val requestId: String,
+    /** Подсказка словаря для Whisper; старый сервер поле игнорирует. */
+    @SerialName("prompt") val prompt: String? = null
 )
 
 /** Распознанная фраза: текст и код языка (ru, tk, en…). */
@@ -371,8 +373,13 @@ class OmnixApiClient @Inject constructor(
      *
      * @param wav WAV PCM 16 кГц моно, не длиннее 30 с.
      * @param languageHint код языка, если он известен заранее; null — Whisper определит.
+     * @param prompt подсказка словаря (слово вызова, названия функций), без личных данных.
      */
-    suspend fun transcribe(wav: ByteArray, languageHint: String? = null): Resource<SttResultDto> = withContext(Dispatchers.IO) {
+    suspend fun transcribe(
+        wav: ByteArray,
+        languageHint: String? = null,
+        prompt: String? = null
+    ): Resource<SttResultDto> = withContext(Dispatchers.IO) {
         val token = securityManager.getAccessToken()
         if (!AccessTokenPolicy.isValid(token)) {
             return@withContext Resource.Error(
@@ -386,7 +393,8 @@ class OmnixApiClient @Inject constructor(
             SttRequestDto(
                 audio = android.util.Base64.encodeToString(wav, android.util.Base64.NO_WRAP),
                 languageHint = languageHint,
-                requestId = requestId
+                requestId = requestId,
+                prompt = prompt
             )
         )
         val request = Request.Builder()
