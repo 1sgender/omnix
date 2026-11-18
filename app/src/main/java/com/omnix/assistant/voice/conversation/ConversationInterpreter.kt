@@ -153,6 +153,7 @@ class ConversationInterpreter @Inject constructor(
             _state.update { it.copy(problem = ConversationProblem.MICROPHONE) }
             return
         }
+        val effects = com.omnix.assistant.voice.audio.MicEffects.attach(record.audioSessionId)
         val segmenter = UtteranceSegmenter(SAMPLE_RATE)
         val frame = ShortArray(FRAME)
         try {
@@ -166,10 +167,15 @@ class ConversationInterpreter @Inject constructor(
                 }
                 val utterance = segmenter.accept(if (read == FRAME) frame.copyOf() else frame.copyOf(read))
                 _state.update { if (it.hearing != segmenter.isCapturing) it.copy(hearing = segmenter.isCapturing) else it }
-                if (utterance != null) out.trySend(utterance)
+                if (utterance != null) {
+                    val enhanced = runCatching { com.omnix.assistant.voice.audio.SpeechEnhancer.process(utterance, SAMPLE_RATE) }
+                        .getOrDefault(utterance)
+                    out.trySend(enhanced)
+                }
             }
         } finally {
             runCatching { record.stop() }
+            effects.release()
             record.release()
             out.close()
         }

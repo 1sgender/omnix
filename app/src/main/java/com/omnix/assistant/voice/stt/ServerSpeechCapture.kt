@@ -7,6 +7,8 @@ import android.media.MediaRecorder
 import android.util.Log
 import com.omnix.assistant.core.result.Resource
 import com.omnix.assistant.data.remote.OmnixApiClient
+import com.omnix.assistant.voice.audio.MicEffects
+import com.omnix.assistant.voice.audio.SpeechEnhancer
 import com.omnix.assistant.voice.conversation.PcmWav
 import com.omnix.assistant.voice.conversation.UtteranceSegmenter
 import com.omnix.assistant.voice.offline.LocalSpeechRecognizer
@@ -54,7 +56,7 @@ class ServerSpeechCapture @Inject constructor(
         when (val captured = record(waitForSpeechMs, onLevel)) {
             Captured.Busy -> Outcome.MicrophoneBusy
             Captured.Quiet -> Outcome.Silence
-            is Captured.Speech -> recognizeOnPhoneThenServer(captured.samples, languageHint)
+            is Captured.Speech -> recognizeOnPhoneThenServer(enhance(captured.samples), languageHint)
         }
     }
 
@@ -103,6 +105,7 @@ class ServerSpeechCapture @Inject constructor(
             record.release()
             return Captured.Busy
         }
+        val effects = MicEffects.attach(record.audioSessionId)
         val segmenter = UtteranceSegmenter(SAMPLE_RATE)
         val frame = ShortArray(FRAME)
         var waitedSamples = 0L
@@ -124,9 +127,14 @@ class ServerSpeechCapture @Inject constructor(
             return Captured.Quiet
         } finally {
             runCatching { record.stop() }
+            effects.release()
             record.release()
         }
     }
+
+    /** Фильтр 80 Гц и выравнивание громкости; при любом сбое фраза уходит как записана. */
+    private fun enhance(samples: ShortArray): ShortArray =
+        runCatching { SpeechEnhancer.process(samples, SAMPLE_RATE) }.getOrDefault(samples)
 
     private fun level(frame: ShortArray): Float {
         if (frame.isEmpty()) return 0f
