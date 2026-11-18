@@ -75,6 +75,27 @@ class OmnixDatabaseMigrationTest {
         v6.close()
     }
 
+    @Test
+    fun migration6To7AddsTheRemindersTableAndKeepsMessages() {
+        val v6 = helper.createDatabase(TEST_DB, 6)
+        v6.execSQL(
+            "INSERT INTO messages (role, text, timestamp, conversation_id) VALUES ('user', 'до напоминаний', 1, 0)"
+        )
+        v6.close()
+
+        val v7 = helper.runMigrationsAndValidate(TEST_DB, 7, true, OmnixMigrations.MIGRATION_6_7)
+        v7.execSQL("INSERT INTO reminders (text, trigger_at, status) VALUES ('Позвонить маме', 1, 'PENDING')")
+        v7.query("SELECT COUNT(*) FROM reminders").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(1, cursor.getInt(0))
+        }
+        v7.query("SELECT text FROM messages").use { cursor ->
+            assertTrue("Сообщение должно пережить миграцию", cursor.moveToFirst())
+            assertEquals("до напоминаний", cursor.getString(0))
+        }
+        v7.close()
+    }
+
     /** Полная цепочка через настоящую Room: схема после миграций совпадает с кодом. */
     @Test
     fun roomOpensV5DatabaseThroughAllMigrations() {

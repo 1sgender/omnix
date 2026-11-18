@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AI model picker in chat: chip by the input, bottom sheet, voice confirmation. -->
+<resources>
+    <string name="omnix_model_sheet_title">Kim yanıtlıyor</string>
+    <string name="omnix_model_chip_cd">Yapay zekâ modeli: %1$s. Değiştir</string>
+    <string name="omnix_model_line_auto">Kendisi seçer: telefon ya da bulut</string>
+    <string name="omnix_model_line_on_device">İnternetsiz, daha basit yanıtlar</string>
+    <string name="omnix_model_line_flash">Hızlı</string>
+    <string name="omnix_model_line_pro">Daha akıllı, daha uzun düşünür</string>
+    <string name="omnix_model_left_today">Bugün kalan: %1$d / %2$d</string>
+    <string name="omnix_model_limit_today">Bugün: en fazla %1$d</string>
+    <string name="omnix_model_no_limit">Sınırsız</string>
+    <string name="omnix_model_see_plans">Paketleri gör</string>
+    <string name="omnix_ai_model_voice_switched">Tamam, artık %1$s yanıtlıyor</string>
+    <string name="omnix_ai_model_voice_pro_locked">Pro, Pro ve Max paketlerinde var. Şimdilik %1$s yanıtlıyor</string>
+</resources>

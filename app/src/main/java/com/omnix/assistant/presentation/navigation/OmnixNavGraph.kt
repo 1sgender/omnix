@@ -34,10 +34,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.automations.AutomationsScreen
+import com.omnix.assistant.presentation.chat.ChatModelPickerState
 import com.omnix.assistant.presentation.chat.ChatViewModel
 import com.omnix.assistant.presentation.chat.ChatHandoffViewModel
 import com.omnix.assistant.presentation.chat.OmnixChatScreen
 import com.omnix.assistant.presentation.chat.PinnedChatsViewModel
+import com.omnix.assistant.presentation.reminders.RemindersScreen
 import com.omnix.assistant.presentation.components.ConfirmationSheet
 import com.omnix.assistant.presentation.design.OmnixTheme
 import com.omnix.assistant.presentation.devices.DevicesScreen
@@ -56,6 +58,8 @@ import com.omnix.assistant.presentation.settings.SECTION_AI
 import com.omnix.assistant.presentation.settings.SECTION_APPEARANCE
 import com.omnix.assistant.presentation.settings.SECTION_LANGUAGE
 import com.omnix.assistant.presentation.settings.SECTION_VOICE
+import com.omnix.assistant.presentation.settings.SECTION_YANDEX_MUSIC
+import com.omnix.assistant.agent.media.ymusic.YandexMusicSettingsRequest
 import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.voice.audio.Haptics
@@ -83,6 +87,15 @@ fun OmnixNavGraph(
     val exitMs = OmnixTheme.motion.screenExitMs
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+
+    // Голосовая просьба «включи песню» без токена просит открыть настройки Яндекс Музыки.
+    val ymusicSettingsRequested by YandexMusicSettingsRequest.pending.collectAsState()
+    LaunchedEffect(ymusicSettingsRequested) {
+        if (ymusicSettingsRequested) {
+            YandexMusicSettingsRequest.consume()
+            navController.navigateSingleTop(OmnixDestination.SettingsSection(SECTION_YANDEX_MUSIC))
+        }
+    }
 
     Column(
         modifier = modifier
@@ -124,6 +137,13 @@ fun OmnixNavGraph(
                 val pinnedChats by pinnedViewModel.pinned.collectAsState()
                 val chatTitles by pinnedViewModel.titles.collectAsState()
                 val chatHandoff: ChatHandoffViewModel = hiltViewModel()
+                val modelViewModel: com.omnix.assistant.presentation.settings.AiModelViewModel = hiltViewModel()
+                val modelChoice by modelViewModel.choice.collectAsState()
+                val modelApplying by modelViewModel.applying.collectAsState()
+                val modelFailure by modelViewModel.failure.collectAsState()
+                val modelPro by modelViewModel.proAvailable.collectAsState()
+                val modelRemaining by modelViewModel.remaining.collectAsState()
+                val modelLocal by modelViewModel.localModelState.collectAsState()
                 LaunchedEffect(Unit) {
                     chatHandoff.take()?.let { chatViewModel.sendTextMessage(it) }
                 }
@@ -139,6 +159,8 @@ fun OmnixNavGraph(
                     onCancel = chatViewModel::cancelPendingAction,
                     onAttachmentPicked = chatViewModel::onAttachmentPicked,
                     onClearAttachment = chatViewModel::clearAttachment,
+                    onImagePicked = chatViewModel::onImagePicked,
+                    onClearImage = chatViewModel::clearImage,
                     onNewChat = chatViewModel::startNewConversation,
                     onOpenHistory = chatViewModel::openHistory,
                     onCloseHistory = chatViewModel::closeHistory,
@@ -154,7 +176,23 @@ fun OmnixNavGraph(
                     onAllowCloud = chatViewModel::confirmCloudConsent,
                     onKeepLocal = chatViewModel::denyCloudConsent,
                     onToggleDictation = chatViewModel::toggleVoiceDictation,
-                    onSwitchToFlash = chatViewModel::switchToFlash
+                    onSwitchToFlash = chatViewModel::switchToFlash,
+                    modelPicker = ChatModelPickerState(
+                        choice = modelChoice,
+                        applying = modelApplying,
+                        failure = modelFailure,
+                        proAvailable = modelPro,
+                        remaining = modelRemaining,
+                        localModelState = modelLocal
+                    ),
+                    onSelectModel = modelViewModel::select,
+                    onOpenTariffs = {
+                        navController.navigateSingleTop(
+                            OmnixDestination.SettingsSection(com.omnix.assistant.presentation.settings.SECTION_TARIFFS)
+                        )
+                    },
+                    onCancelReminder = chatViewModel::cancelReminder,
+                    onEditReminder = chatViewModel::editReminder
                 )
             }
 
@@ -270,6 +308,10 @@ fun OmnixNavGraph(
                     onRemoveFact = memoryViewModel::removeFact,
                     onRemoveProcedure = memoryViewModel::removeProcedure
                 )
+            }
+
+            composable(OmnixDestination.Reminders.route) {
+                RemindersScreen(onBack = navController::popBackStack)
             }
 
             composable(OmnixDestination.Automations.route) {

@@ -53,7 +53,13 @@ interface ContextualCloudAIClient {
 class OmnixApiAiClient @Inject constructor(
     private val apiClient: OmnixApiClient,
     /** Выбор Flash/Pro: только для запросов движка решений, не для legacy-вызовов (переводчик). */
-    private val tierPreference: AiTierPreference = AiTierPreference.FLASH
+    private val tierPreference: AiTierPreference = AiTierPreference.FLASH,
+    /** Файлы картинок чата: по id из сообщения отдаёт готовый JPEG. */
+    private val imageSource: com.omnix.assistant.domain.files.ChatImageSource =
+        com.omnix.assistant.domain.files.ChatImageSource.NONE,
+    /** PDF из чата: по id из сообщения отдаёт файл целиком. */
+    private val documentSource: com.omnix.assistant.domain.files.ChatDocumentSource =
+        com.omnix.assistant.domain.files.ChatDocumentSource.NONE
 ) : AIClient, ContextualCloudAIClient {
 
     override suspend fun complete(
@@ -102,8 +108,54 @@ class OmnixApiAiClient @Inject constructor(
                 "Облачная обработка запрещена политикой приватности"
             )
         }
+        // Фото лежит в сообщении ссылкой: сам файл подставляем здесь, а в тексте
+        // остаётся только вопрос.
+        val decoded = com.omnix.assistant.domain.files.ChatImageCodec.decode(prompt)
+        val images = decoded.imageIds.mapNotNull { id ->
+            imageSource.base64Jpeg(id)?.let { com.omnix.assistant.data.remote.OmniAiImageDto("image/jpeg", it) }
+        }
+        if (decoded.imageIds.isNotEmpty() && images.isEmpty()) {
+            return Resource.Error(
+                IllegalStateException("IMAGE_MISSING"),
+                "Фото больше нет на устройстве. Прикрепите его ещё раз."
+            )
+        }
+        val withoutImages = if (images.isEmpty()) prompt else decoded.question.ifBlank { "Что на этом фото?" }
+
+        // Файл лежит в сообщении блоком: текст файла уходит отдельным полем (у сервера
+        // для него свой лимит), PDF — целиком, если он сохранён на устройстве.
+        val file = com.omnix.assistant.domain.files.ChatAttachmentCodec.decode(withoutImages)
+        var text = withoutImages
+        val attachments = ArrayList<com.omnix.assistant.data.remote.OmniAiAttachmentDto>()
+        val documents = ArrayList<com.omnix.assistant.data.remote.OmniAiDocumentDto>()
+        val fileName = file.fileName
+        if (fileName != null) {
+            text = file.question.ifBlank { "Разбери приложенный файл." }
+            val content = file.content.orEmpty()
+            val pdf = file.documentId?.let { documentSource.base64Pdf(it) }
+            when {
+                pdf != null -> documents += com.omnix.assistant.data.remote.OmniAiDocumentDto(
+                    mimeType = "application/pdf",
+                    data = pdf,
+                    name = fileName,
+                    fallbackText = content
+                )
+                content.isNotBlank() -> attachments += com.omnix.assistant.data.remote.OmniAiAttachmentDto(
+                    name = fileName,
+                    text = content,
+                    kind = file.kind?.wire
+                )
+                else -> return Resource.Error(
+                    IllegalStateException("FILE_MISSING"),
+                    "Файла больше нет на устройстве. Прикрепите его ещё раз."
+                )
+            }
+        }
         return apiClient.execute(
-            text = prompt,
+            text = text,
+            images = images,
+            attachments = attachments,
+            documents = documents,
             source = source,
             privacyLevel = effectivePrivacyLevel.name,
             requiresWeb = requiresWeb,
@@ -124,7 +176,11 @@ class OmnixApiAiClient @Inject constructor(
                 .map {
                     com.omnix.assistant.data.remote.MessageDto(
                         role = it.role.value,
-                        content = it.text
+                        // Фото из прошлых реплик в историю не идёт: только пометка.
+                        // Файл в истории укорочен: целиком он уходит только со своим сообщением.
+                        content = com.omnix.assistant.domain.files.ChatAttachmentCodec.forHistory(
+                            com.omnix.assistant.domain.files.ChatImageCodec.forHistory(it.text)
+                        )
                     )
                 }
         )

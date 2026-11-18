@@ -12,6 +12,7 @@
     <!-- Foreground Service & Power (Ear Mode & Background Execution) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -23,6 +24,9 @@
          the scheduler checks canScheduleExactAlarms() and otherwise falls back to inexact. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Напоминание поверх блокировки: полноэкранное уведомление открывает экран
+         «Готово / Отложить». На Android 14 доступ проверяется canUseFullScreenIntent(). -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- AlarmClock ACTION_SET_ALARM требует это normal-permission. -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
@@ -105,17 +109,9 @@
         <intent>
             <action android:name="android.intent.action.DIAL" />
         </intent>
-        <!-- «Найди песню X»: поиск открывается в Яндекс Музыке, затем в любом
-             музыкальном приложении, YouTube Music и YouTube (media.play_search). -->
-        <intent>
-            <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.SEARCH" />
-        </intent>
+        <!-- «Найди песню X»: запасной вариант, если внутри OMNIX не сыграло, это
+             приложение Яндекс Музыка (media.play_search). YouTube не используется. -->
         <package android:name="ru.yandex.music" />
-        <package android:name="com.google.android.apps.youtube.music" />
-        <package android:name="com.google.android.youtube" />
     </queries>
 
     <application
@@ -145,6 +141,12 @@
         </activity>
 
         <!-- Background Voice Service for Ear Mode -->
+        <!-- Плеер Яндекс Музыки внутри OMNIX: уведомление с управлением. -->
+        <service
+            android:name=".agent.media.ymusic.YandexMusicPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <service
             android:name=".voice.service.OmnixVoiceService"
             android:enabled="true"
@@ -188,6 +190,31 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Напоминания: будильник, «Готово» / «Отложить» из уведомления и перепланирование
+             после перезагрузки, смены времени и обновления. -->
+        <receiver
+            android:name=".agent.reminder.ReminderReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Сработавшее напоминание поверх блокировки экрана. -->
+        <activity
+            android:name=".presentation.reminders.ReminderAlertActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.OmniAssistant"
+            android:turnScreenOn="true" />
 
         <!-- Самообновление: отдаёт APK системному установщику (см. update_file_paths). -->
         <provider

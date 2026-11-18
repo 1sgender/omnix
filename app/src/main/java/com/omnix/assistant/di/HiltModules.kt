@@ -62,6 +62,7 @@ import com.omnix.assistant.agent.tools.productivity.CalendarTool
 import com.omnix.assistant.agent.tools.productivity.ClipboardTool
 import com.omnix.assistant.agent.tools.productivity.CreateAutomationTool
 import com.omnix.assistant.agent.tools.productivity.EarBriefingTool
+import com.omnix.assistant.agent.tools.productivity.ReminderTool
 import com.omnix.assistant.agent.tools.system.*
 import com.omnix.assistant.ai.AIClient
 import com.omnix.assistant.ai.OmnixApiAiClient
@@ -197,6 +198,7 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindGetDeviceInfoTool(tool: GetDeviceInfoTool): OmniTool
     @Binds @IntoSet abstract fun bindGetBatteryTool(tool: GetBatteryTool): OmniTool
     @Binds @IntoSet abstract fun bindGetTimeTool(tool: GetTimeTool): OmniTool
+    @Binds @IntoSet abstract fun bindAiModelSwitchTool(tool: com.omnix.assistant.agent.tools.system.AiModelSwitchTool): OmniTool
     @Binds @IntoSet abstract fun bindGetNetworkStatusTool(tool: GetNetworkStatusTool): OmniTool
 
     // 2. Управление устройством (Device & Media)
@@ -226,6 +228,7 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindClipboardTool(tool: ClipboardTool): OmniTool
     @Binds @IntoSet abstract fun bindCreateAutomationTool(tool: CreateAutomationTool): OmniTool
     @Binds @IntoSet abstract fun bindEarBriefingTool(tool: EarBriefingTool): OmniTool
+    @Binds @IntoSet abstract fun bindReminderTool(tool: ReminderTool): OmniTool
 
     // 5. Локация и навигация (Location)
     @Binds @IntoSet abstract fun bindLocationNavigationTool(tool: LocationNavigationTool): OmniTool
@@ -390,6 +393,26 @@ abstract class ExecutionDecisionModule {
     @Binds
     @Singleton
     abstract fun bindAiTierSwitch(impl: com.omnix.assistant.data.preferences.AiModelChoiceStore): com.omnix.assistant.agent.decision.AiTierSwitch
+
+    /** Файлы картинок чата для облачного клиента. */
+    @Binds
+    @Singleton
+    abstract fun bindChatImageSource(impl: com.omnix.assistant.data.files.ChatImageStore): com.omnix.assistant.domain.files.ChatImageSource
+
+    /** PDF из чата для облачного клиента. */
+    @Binds
+    @Singleton
+    abstract fun bindChatDocumentSource(impl: com.omnix.assistant.data.files.ChatDocumentStore): com.omnix.assistant.domain.files.ChatDocumentSource
+
+    /** Расшифровка аудиофайлов из чата серверным Whisper. */
+    @Binds
+    @Singleton
+    abstract fun bindAudioTranscriber(impl: com.omnix.assistant.data.files.ServerAudioTranscriber): com.omnix.assistant.data.files.AudioTranscriber
+
+    /** Смена модели с проверкой: лист выбора в чате и голосовая команда. */
+    @Binds
+    @Singleton
+    abstract fun bindAiModelSwitch(impl: com.omnix.assistant.data.preferences.AiModelSwitcher): com.omnix.assistant.agent.decision.AiModelSwitch
 
     @Binds
     @Singleton

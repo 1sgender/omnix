@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AI model picker in chat: chip by the input, bottom sheet, voice confirmation. -->
+<resources>
+    <string name="omnix_model_sheet_title">Kim jogap berýär</string>
+    <string name="omnix_model_chip_cd">EA modeli: %1$s. Üýtgetmek</string>
+    <string name="omnix_model_line_auto">Özi saýlaýar: telefon ýa-da bulut</string>
+    <string name="omnix_model_line_on_device">Internetsiz, jogaplar ýönekeýräk</string>
+    <string name="omnix_model_line_flash">Çalt</string>
+    <string name="omnix_model_line_pro">Has akylly, uzagrak pikirlenýär</string>
+    <string name="omnix_model_left_today">Şu gün galdy: %1$d / %2$d</string>
+    <string name="omnix_model_limit_today">Şu gün: %1$d çenli</string>
+    <string name="omnix_model_no_limit">Çäksiz</string>
+    <string name="omnix_model_see_plans">Tarifleri gör</string>
+    <string name="omnix_ai_model_voice_switched">Boldy, indi %1$s jogap berýär</string>
+    <string name="omnix_ai_model_voice_pro_locked">Pro diňe Pro we Max tariflerinde bar. Häzirlikçe %1$s jogap berýär</string>
+</resources>

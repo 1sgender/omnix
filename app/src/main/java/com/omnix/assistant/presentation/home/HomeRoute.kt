@@ -53,7 +53,7 @@ fun HomeRoute(
         onLogoTap = viewModel::onLogoTap,
         onClipTap = onClipTap,
         onTranslatorTap = { onOpen(OmnixDestination.Translator) },
-        onRemindersTap = { onOpen(OmnixDestination.Chat) },
+        onRemindersTap = { onOpen(OmnixDestination.Reminders) },
         onAutomationsTap = { onOpen(OmnixDestination.Automations) },
         microphoneSettingsNeeded = settingsNeeded,
         onPowerErrorAction = { error ->

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reminders: chat card, alert screen, list. -->
+<resources>
+    <string name="omnix_reminder_label">Eslatma</string>
+    <string name="omnix_reminder_today">bugun</string>
+    <string name="omnix_reminder_tomorrow">ertaga</string>
+    <string name="omnix_reminder_edit">Oʻzgartirish</string>
+    <string name="omnix_reminder_cancel">Bekor qilish</string>
+    <string name="omnix_reminder_done">Tayyor</string>
+    <string name="omnix_reminder_snooze">10 daqiqaga kechiktirish</string>
+    <string name="omnix_reminder_status_cancelled">Bekor qilindi</string>
+    <string name="omnix_reminder_set">%1$s eslataman: %2$s</string>
+    <string name="omnix_reminder_warn_inexact">aniq vaqt kafolatlanmaydi: sozlamalarda aniq signallarga ruxsat bering</string>
+    <string name="omnix_reminder_warn_notifications">bildirishnomalar oʻchirilgan, eslatma faqat ovoz bilan chiqadi</string>
+    <string name="omnix_reminder_warn_fullscreen">ekran oʻzi yonmaydi: sozlamalarda toʻliq ekran bildirishnomalariga ruxsat bering</string>
+    <string name="omnix_reminder_no_time">Qachon eslatay? Masalan: soat 18:00 da onamga qoʻngʻiroq qilishni eslat</string>
+    <string name="omnix_reminder_no_text">Nima haqida eslatay?</string>
+    <string name="omnix_reminder_voice">Eslatib qoʻyaman: %1$s</string>
+    <string name="omnix_reminders_title">Eslatmalar</string>
+    <string name="omnix_reminders_empty">Hozircha eslatma yoʻq. Ayting: soat 18:00 da onamga qoʻngʻiroq qilishni eslat</string>
+    <string name="omnix_reminder_delete">Oʻchirish</string>
+</resources>

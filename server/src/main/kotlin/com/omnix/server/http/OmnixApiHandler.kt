@@ -179,6 +179,14 @@ class OmnixApiHandler(
         }
     }
 
+    private fun allowedBodyBytes(parsed: AiExecutionRequest?): Long = when {
+        parsed == null -> validation.maxBodyBytes
+        parsed.documents.isNotEmpty() -> maxOf(validation.maxBodyBytes, validation.maxDocumentBodyBytes)
+        parsed.images.isNotEmpty() -> maxOf(validation.maxBodyBytes, validation.maxImageBodyBytes)
+        parsed.attachments.isNotEmpty() -> maxOf(validation.maxBodyBytes, validation.maxAttachmentBodyBytes)
+        else -> validation.maxBodyBytes
+    }
+
     private suspend fun handleExecute(
         request: HttpRequestContext
     ): HttpResponseContext {
@@ -190,8 +198,20 @@ class OmnixApiHandler(
         // ByteArray создаётся один раз и отпускается; парсинг идёт
         // напрямую из строки без повторного выделения.
         val bodySize = request.body.toByteArray(Charsets.UTF_8).size.toLong()
-        if (request.contentLength > validation.maxBodyBytes ||
+        val overTextLimit = request.contentLength > validation.maxBodyBytes ||
             bodySize > validation.maxBodyBytes
+        // Тело больше обычного допустимо только у запроса с картинками, PDF или
+        // текстами файлов, каждому свой предел. Тяжёлое тело без таких полей
+        // отклоняем ДО парсинга: парсить мегабайты до аутентификации незачем.
+        val hardLimit = validation.maxExecuteBodyBytes()
+        val mayCarryFiles = request.body.contains("\"images\"") ||
+            request.body.contains("\"documents\"") ||
+            request.body.contains("\"attachments\"")
+        if (overTextLimit && (
+                request.contentLength > hardLimit ||
+                    bodySize > hardLimit ||
+                    !mayCarryFiles
+                )
         ) {
             return error(ApiErrorCode.PAYLOAD_TOO_LARGE, newRequestId())
         }
@@ -207,6 +227,11 @@ class OmnixApiHandler(
         } catch (e: Exception) {
             parseError = e.javaClass.simpleName
             null
+        }
+
+        // Предел по тому, что реально пришло: без файлов — обычный, с PDF — самый большой.
+        if (overTextLimit && maxOf(request.contentLength, bodySize) > allowedBodyBytes(parsed)) {
+            return error(ApiErrorCode.PAYLOAD_TOO_LARGE, newRequestId())
         }
 
         // Сквозной requestId: клиентский (если валидный), либо свой.

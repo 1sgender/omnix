@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reminders: chat card, alert screen, list. -->
+<resources>
+    <string name="omnix_reminder_label">Reminder</string>
+    <string name="omnix_reminder_today">today</string>
+    <string name="omnix_reminder_tomorrow">tomorrow</string>
+    <string name="omnix_reminder_edit">Edit</string>
+    <string name="omnix_reminder_cancel">Cancel</string>
+    <string name="omnix_reminder_done">Done</string>
+    <string name="omnix_reminder_snooze">Snooze 10 min</string>
+    <string name="omnix_reminder_status_cancelled">Cancelled</string>
+    <string name="omnix_reminder_set">Reminder set for %1$s: %2$s</string>
+    <string name="omnix_reminder_warn_inexact">exact time is not guaranteed: allow exact alarms in settings</string>
+    <string name="omnix_reminder_warn_notifications">notifications are off, the reminder will only sound</string>
+    <string name="omnix_reminder_warn_fullscreen">the screen will not wake: allow full-screen notifications in settings</string>
+    <string name="omnix_reminder_no_time">When should I remind you? For example: remind me at 18:00 to call mom</string>
+    <string name="omnix_reminder_no_text">What should I remind you about?</string>
+    <string name="omnix_reminder_voice">Reminding you: %1$s</string>
+    <string name="omnix_reminders_title">Reminders</string>
+    <string name="omnix_reminders_empty">No reminders yet. Say: remind me at 18:00 to call mom</string>
+    <string name="omnix_reminder_delete">Delete</string>
+</resources>

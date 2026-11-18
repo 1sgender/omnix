@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reminders: chat card, alert screen, list. -->
+<resources>
+    <string name="omnix_reminder_label">Ýatlatma</string>
+    <string name="omnix_reminder_today">şu gün</string>
+    <string name="omnix_reminder_tomorrow">ertir</string>
+    <string name="omnix_reminder_edit">Üýtget</string>
+    <string name="omnix_reminder_cancel">Ýatyr</string>
+    <string name="omnix_reminder_done">Taýýar</string>
+    <string name="omnix_reminder_snooze">10 min yza süýşür</string>
+    <string name="omnix_reminder_status_cancelled">Ýatyryldy</string>
+    <string name="omnix_reminder_set">Ýatlaryn %1$s: %2$s</string>
+    <string name="omnix_reminder_warn_inexact">takyk wagt kepillendirilmeýär: sazlamalarda takyk duýduryşlara rugsat beriň</string>
+    <string name="omnix_reminder_warn_notifications">bildirişler öçürilen, ýatlatma diňe ses bilen bolar</string>
+    <string name="omnix_reminder_warn_fullscreen">ekran özi ýanmaz: sazlamalarda tutuş ekran bildirişlerine rugsat beriň</string>
+    <string name="omnix_reminder_no_time">Haçan ýatladaýyn? Mysal üçin: sagat 18:00-da ejeme jaň etmegi ýatla</string>
+    <string name="omnix_reminder_no_text">Näme barada ýatladaýyn?</string>
+    <string name="omnix_reminder_voice">Ýatladýaryn: %1$s</string>
+    <string name="omnix_reminders_title">Ýatlatmalar</string>
+    <string name="omnix_reminders_empty">Heniz ýatlatma ýok. Aýdyň: sagat 18:00-da ejeme jaň etmegi ýatla</string>
+    <string name="omnix_reminder_delete">Poz</string>
+</resources>

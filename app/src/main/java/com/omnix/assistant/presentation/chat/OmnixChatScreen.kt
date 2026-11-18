@@ -5,6 +5,7 @@ import java.util.Locale
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.firstrun.OmnixRingMark
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +28,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Audiotrack
+import androidx.compose.material.icons.outlined.PictureAsPdf
+import androidx.compose.material.icons.outlined.Slideshow
+import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,6 +94,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
 import com.omnix.assistant.agent.decision.PrivacyLevel
+import com.omnix.assistant.agent.reminder.ReminderMessage
 import com.omnix.assistant.domain.models.Message
 import com.omnix.assistant.domain.models.MessageRole
 import com.omnix.assistant.presentation.components.ConfirmationSheet
@@ -143,13 +153,34 @@ fun OmnixChatScreen(
     customTitles: Map<Long, String> = emptyMap(),
     onRename: (Long, String) -> Unit = { _, _ -> },
     onSwitchToFlash: () -> Unit = {},
+    modelPicker: ChatModelPickerState? = null,
+    onSelectModel: (com.omnix.assistant.agent.decision.AiModelChoice) -> Unit = {},
+    onOpenTariffs: () -> Unit = {},
     onAttachmentPicked: (android.net.Uri) -> Unit = {},
-    onClearAttachment: () -> Unit = {}
+    onClearAttachment: () -> Unit = {},
+    onImagePicked: (android.net.Uri) -> Unit = {},
+    onClearImage: () -> Unit = {},
+    onCancelReminder: (Long) -> Unit = {},
+    onEditReminder: (Long, Int, Int) -> Unit = { _, _, _ -> }
 ) {
     val colors = OmnixTheme.colors
     val attachPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
     ) { uri -> if (uri != null) onAttachmentPicked(uri) }
+    // Системный Photo Picker (на старых телефонах сам превращается в обычный выбор файла).
+    val photoPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) onImagePicked(uri) }
+    // Камера: снимок кладётся во временный файл приложения, права на камеру не нужны.
+    val chatContext = androidx.compose.ui.platform.LocalContext.current
+    var cameraUri by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<android.net.Uri?>(null) }
+    val cameraLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.TakePicture()
+    ) { saved ->
+        val target = cameraUri
+        if (saved && target != null) onImagePicked(target)
+    }
+    var modelSheetOpen by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         ChatThread(
@@ -163,8 +194,29 @@ fun OmnixChatScreen(
             onKeepLocal = onKeepLocal,
             onToggleDictation = onToggleDictation,
             onSwitchToFlash = onSwitchToFlash,
+            modelPicker = modelPicker,
+            onOpenModelSheet = { modelSheetOpen = true },
             onAttach = { attachPicker.launch(arrayOf("*/*")) },
-            onClearAttachment = onClearAttachment
+            onClearAttachment = onClearAttachment,
+            onPickPhoto = {
+                photoPicker.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+            },
+            onTakePhoto = {
+                val target = com.omnix.assistant.data.files.ChatImageStore.newCameraUri(chatContext)
+                cameraUri = target
+                try {
+                    cameraLauncher.launch(target)
+                } catch (_: android.content.ActivityNotFoundException) {
+                    // Нет приложения камеры: остаётся галерея.
+                }
+            },
+            onClearImage = onClearImage,
+            onCancelReminder = onCancelReminder,
+            onEditReminder = onEditReminder
         )
     }
 
@@ -223,6 +275,16 @@ fun OmnixChatScreen(
         }
     }
 
+    // Лист выбора модели: чип у поля ввода → «Кто отвечает».
+    if (modelSheetOpen && modelPicker != null) {
+        ChatModelSheet(
+            state = modelPicker,
+            onSelect = onSelectModel,
+            onOpenTariffs = onOpenTariffs,
+            onDismiss = { modelSheetOpen = false }
+        )
+    }
+
     // Confirmation reuses the one shared sheet: the tap path and the voice
     // path resolve the same pending call in the executor (§17).
     state.pendingConfirmation?.let { pending ->
@@ -252,8 +314,15 @@ private fun ChatThread(
     onKeepLocal: () -> Unit,
     onToggleDictation: () -> Unit,
     onSwitchToFlash: () -> Unit,
+    modelPicker: ChatModelPickerState?,
+    onOpenModelSheet: () -> Unit,
     onAttach: () -> Unit,
-    onClearAttachment: () -> Unit
+    onClearAttachment: () -> Unit,
+    onPickPhoto: () -> Unit,
+    onTakePhoto: () -> Unit,
+    onClearImage: () -> Unit,
+    onCancelReminder: (Long) -> Unit,
+    onEditReminder: (Long, Int, Int) -> Unit
 ) {
     val colors = OmnixTheme.colors
     val listState = rememberLazyListState()
@@ -314,12 +383,22 @@ private fun ChatThread(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     items(state.messages, key = { "msg-${it.id}" }) { message ->
+                        if (message.role == MessageRole.REMINDER) {
+                            val reminderId = ReminderMessage.decode(message.text)
+                            ReminderCard(
+                                reminder = reminderId?.let { state.reminders[it] },
+                                onEdit = { hour, minute -> reminderId?.let { onEditReminder(it, hour, minute) } },
+                                onCancel = { reminderId?.let(onCancelReminder) }
+                            )
+                            return@items
+                        }
                         val question = repeatTargets[message.id]
                         MessageRow(
                             message = message,
                             fromCloud = message.id in state.cloudMessageIds,
                             adminLabel = state.adminLabels[message.id],
                             flashFallback = message.id in state.flashFallbackIds,
+                            tier = state.answeredTiers[message.id],
                             onSwitchToFlash = if (message.id in state.proQuotaIds) onSwitchToFlash else null,
                             threadWidth = threadWidth,
                             onRepeat = if (question != null && !state.isSending) {
@@ -355,6 +434,15 @@ private fun ChatThread(
 
         ConsentAndBadge(state = state, onAllowCloud = onAllowCloud, onKeepLocal = onKeepLocal)
 
+        if (modelPicker != null) {
+            ChatModelChip(
+                choice = modelPicker.choice,
+                checking = modelPicker.applying != null,
+                onClick = onOpenModelSheet,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+        }
+
         ChatComposer(
             text = state.inputText,
             isSending = state.isSending,
@@ -364,8 +452,15 @@ private fun ChatThread(
             onToggleDictation = onToggleDictation,
             attachment = state.attachment,
             attachmentError = state.attachmentError,
+            attachmentProcessing = state.attachmentProcessing,
             onAttach = onAttach,
-            onClearAttachment = onClearAttachment
+            onClearAttachment = onClearAttachment,
+            imageId = state.pendingImageId,
+            imageProcessing = state.imageProcessing,
+            imageError = state.imageError,
+            onPickPhoto = onPickPhoto,
+            onTakePhoto = onTakePhoto,
+            onClearImage = onClearImage
         )
     }
 }
@@ -512,6 +607,7 @@ private fun MessageRow(
     threadWidth: Dp,
     adminLabel: String? = null,
     flashFallback: Boolean = false,
+    tier: com.omnix.assistant.agent.decision.AiTier? = null,
     onSwitchToFlash: (() -> Unit)? = null,
     onRepeat: (() -> Unit)? = null
 ) {
@@ -530,26 +626,44 @@ private fun MessageRow(
 
     if (isUser) {
         // Файл из сообщения не показываем целиком: имя файла и вопрос.
-        val decoded = remember(message.text) { com.omnix.assistant.domain.files.ChatAttachmentCodec.decode(message.text) }
-        val shown = listOfNotNull(decoded.fileName?.let { "\uD83D\uDCCE $it" }, decoded.question.ifEmpty { null })
-            .joinToString("\n")
+        // Фото лежит в сообщении ссылкой: в ленте миниатюра, ссылка не видна.
+        val image = remember(message.text) { com.omnix.assistant.domain.files.ChatImageCodec.decode(message.text) }
+        val decoded = remember(message.text) { com.omnix.assistant.domain.files.ChatAttachmentCodec.decode(image.question) }
+        val shown = decoded.question
+        val fileLabel = decoded.fileName?.let { name -> listOfNotNull(name, fileSizeLabel(decoded.sizeBytes ?: -1)).joinToString(", ") }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { contentDescription = "$sender: $shown" },
+                .semantics { contentDescription = listOfNotNull("$sender:", fileLabel, shown.ifEmpty { null }).joinToString(" ") },
             contentAlignment = Alignment.CenterEnd
         ) {
-            SelectionContainer {
-                Text(
-                    text = shown,
-                    style = BubbleText,
-                    color = colors.onActionPrimary,
-                    modifier = Modifier
-                        .widthIn(max = threadWidth * 0.78f)
-                        .clip(UserBubbleShape)
-                        .background(colors.actionPrimary)
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                )
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                image.imageIds.forEach { id -> ChatImageThumb(imageId = id, size = 180.dp) }
+                decoded.fileName?.let { name ->
+                    ChatFileCard(
+                        name = name,
+                        kind = decoded.kind,
+                        sizeBytes = decoded.sizeBytes ?: -1,
+                        maxWidth = threadWidth * 0.78f
+                    )
+                }
+                if (shown.isNotEmpty()) {
+                    SelectionContainer {
+                        Text(
+                            text = shown,
+                            style = BubbleText,
+                            color = colors.onActionPrimary,
+                            modifier = Modifier
+                                .widthIn(max = threadWidth * 0.78f)
+                                .clip(UserBubbleShape)
+                                .background(colors.actionPrimary)
+                                .padding(horizontal = 16.dp, vertical = 10.dp)
+                        )
+                    }
+                }
             }
         }
         return
@@ -631,6 +745,14 @@ private fun MessageRow(
                         .clip(CircleShape)
                         .clickable(onClick = onRepeat)
                         .padding(horizontal = 10.dp, vertical = 8.dp)
+                )
+            }
+            // Моно-метка «чем отвечено»; не дублирует «Ответил Flash» и подпись админа.
+            if (tier != null && adminLabel == null && !flashFallback) {
+                Text(
+                    text = if (tier == com.omnix.assistant.agent.decision.AiTier.PRO) "PRO" else "FLASH",
+                    style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+                    color = colors.textTertiary
                 )
             }
             if (caption != null) {
@@ -871,11 +993,19 @@ private fun ChatComposer(
     onToggleDictation: () -> Unit,
     attachment: PendingAttachmentUi? = null,
     attachmentError: com.omnix.assistant.domain.files.FileTextExtractor.Reason? = null,
+    attachmentProcessing: AttachmentWork? = null,
     onAttach: () -> Unit = {},
-    onClearAttachment: () -> Unit = {}
+    onClearAttachment: () -> Unit = {},
+    imageId: String? = null,
+    imageProcessing: Boolean = false,
+    imageError: com.omnix.assistant.domain.files.ChatImageRules.Reject? = null,
+    onPickPhoto: () -> Unit = {},
+    onTakePhoto: () -> Unit = {},
+    onClearImage: () -> Unit = {}
 ) {
     val colors = OmnixTheme.colors
-    val hasText = text.isNotBlank() || attachment != null
+    val hasText = text.isNotBlank() || attachment != null || imageId != null
+    var attachMenuOpen by remember { mutableStateOf(false) }
     val attachLabel = stringResource(R.string.omnix_chat_attach)
     val sendLabel = stringResource(R.string.omnix_chat_send)
     val dictationLabel = stringResource(
@@ -883,7 +1013,8 @@ private fun ChatComposer(
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
-    AttachmentStrip(attachment, attachmentError, onClearAttachment)
+    ImageStrip(imageId, imageProcessing, imageError, onClearImage)
+    AttachmentStrip(attachment, attachmentError, attachmentProcessing, onClearAttachment)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -928,12 +1059,12 @@ private fun ChatComposer(
             )
         }
 
-        // Скрепка: выбрать файл, он уйдёт вместе со следующим сообщением.
+        // Скрепка: меню «Файл / Фото из галереи / Снимок»; выбранное уйдёт со следующим сообщением.
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .clickable(onClick = onAttach)
+                .clickable { attachMenuOpen = true }
                 .clearAndSetSemantics {
                     contentDescription = attachLabel
                     role = Role.Button
@@ -946,6 +1077,35 @@ private fun ChatComposer(
                 tint = colors.textSecondary,
                 modifier = Modifier.size(22.dp)
             )
+            androidx.compose.material3.DropdownMenu(
+                expanded = attachMenuOpen,
+                onDismissRequest = { attachMenuOpen = false }
+            ) {
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.omnix_chat_attach_file)) },
+                    leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
+                    onClick = {
+                        attachMenuOpen = false
+                        onAttach()
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.omnix_chat_attach_photo)) },
+                    leadingIcon = { Icon(Icons.Outlined.Image, contentDescription = null) },
+                    onClick = {
+                        attachMenuOpen = false
+                        onPickPhoto()
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.omnix_chat_attach_camera)) },
+                    leadingIcon = { Icon(Icons.Outlined.PhotoCamera, contentDescription = null) },
+                    onClick = {
+                        attachMenuOpen = false
+                        onTakePhoto()
+                    }
+                )
+            }
         }
 
         // Диктовка: текст дописывается в поле, отправляет пользователь.
@@ -1005,6 +1165,7 @@ private fun ChatComposer(
 private fun AttachmentStrip(
     attachment: PendingAttachmentUi?,
     error: com.omnix.assistant.domain.files.FileTextExtractor.Reason?,
+    processing: AttachmentWork?,
     onClear: () -> Unit
 ) {
     val colors = OmnixTheme.colors
@@ -1018,14 +1179,29 @@ private fun AttachmentStrip(
                 .padding(start = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                imageVector = fileKindIcon(attachment.kind),
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = attachment.name,
                 style = FieldText,
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 220.dp)
+                modifier = Modifier.widthIn(max = 200.dp)
             )
+            fileSizeLabel(attachment.sizeBytes)?.let { size ->
+                Text(
+                    text = " · $size",
+                    style = FieldText,
+                    color = colors.textTertiary,
+                    maxLines = 1
+                )
+            }
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -1053,6 +1229,18 @@ private fun AttachmentStrip(
                 modifier = Modifier.padding(start = 20.dp, top = 2.dp)
             )
         }
+    } else if (processing != null) {
+        Text(
+            text = stringResource(
+                when (processing) {
+                    AttachmentWork.READING -> R.string.omnix_chat_attach_reading
+                    AttachmentWork.TRANSCRIBING -> R.string.omnix_chat_attach_transcribing
+                }
+            ),
+            style = FieldText,
+            color = colors.textTertiary,
+            modifier = Modifier.padding(start = 20.dp, top = 6.dp)
+        )
     } else if (error != null) {
         Text(
             text = stringResource(
@@ -1061,6 +1249,8 @@ private fun AttachmentStrip(
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNSUPPORTED -> R.string.omnix_chat_attach_unsupported
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.EMPTY -> R.string.omnix_chat_attach_empty
                     com.omnix.assistant.domain.files.FileTextExtractor.Reason.UNREADABLE -> R.string.omnix_chat_attach_unreadable
+                    com.omnix.assistant.domain.files.FileTextExtractor.Reason.TRANSCRIPTION_FAILED ->
+                        R.string.omnix_chat_attach_transcription_failed
                 }
             ),
             style = FieldText.copy(fontSize = 14.sp, lineHeight = 20.sp),
@@ -1110,5 +1300,184 @@ private fun ErrorAction(text: String, onClick: () -> Unit) {
                 .border(BorderStroke(1.dp, colors.border), CircleShape)
                 .padding(horizontal = 14.dp, vertical = 8.dp)
         )
+    }
+}
+
+/** Миниатюра фото из сообщения: читается из файла приложения, не из базы. */
+@Composable
+private fun ChatImageThumb(imageId: String, size: Dp) {
+    val colors = OmnixTheme.colors
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val store = remember(context) { com.omnix.assistant.data.files.ChatImageStore(context.applicationContext) }
+    val bitmap by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(null, imageId) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            store.thumbnail(imageId, 512)
+        }
+    }
+    val label = stringResource(R.string.omnix_chat_image_description)
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surfaceElevated)
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center
+    ) {
+        val loaded = bitmap
+        if (loaded != null) {
+            androidx.compose.foundation.Image(
+                bitmap = loaded.asImageBitmap(),
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Outlined.Image,
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+/** Над полем ввода: превью выбранного фото, «готовлю фото…» или причина отказа. */
+@Composable
+private fun ImageStrip(
+    imageId: String?,
+    processing: Boolean,
+    error: com.omnix.assistant.domain.files.ChatImageRules.Reject?,
+    onClear: () -> Unit
+) {
+    val colors = OmnixTheme.colors
+    if (imageId != null) {
+        val removeLabel = stringResource(R.string.omnix_chat_image_remove)
+        Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp)) {
+            ChatImageThumb(imageId = imageId, size = 72.dp)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(colors.surface)
+                    .clickable(onClick = onClear)
+                    .clearAndSetSemantics {
+                        contentDescription = removeLabel
+                        role = Role.Button
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = null,
+                    tint = colors.textSecondary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    } else if (processing) {
+        Text(
+            text = stringResource(R.string.omnix_chat_image_processing),
+            style = FieldText,
+            color = colors.textTertiary,
+            modifier = Modifier.padding(start = 20.dp, top = 6.dp)
+        )
+    } else if (error != null) {
+        Text(
+            text = stringResource(
+                when (error) {
+                    com.omnix.assistant.domain.files.ChatImageRules.Reject.UNSUPPORTED -> R.string.omnix_chat_image_unsupported
+                    com.omnix.assistant.domain.files.ChatImageRules.Reject.TOO_LARGE -> R.string.omnix_chat_image_too_large
+                    com.omnix.assistant.domain.files.ChatImageRules.Reject.UNREADABLE -> R.string.omnix_chat_image_unreadable
+                }
+            ),
+            style = FieldText.copy(fontSize = 14.sp, lineHeight = 20.sp),
+            color = colors.stateError,
+            softWrap = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 12.dp, top = 6.dp)
+                .clip(ErrorShape)
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.stateError.copy(alpha = 0.4f)), ErrorShape)
+                .padding(horizontal = 14.dp, vertical = 10.dp)
+        )
+    }
+}
+
+/** Значок по типу файла. */
+private fun fileKindIcon(kind: com.omnix.assistant.domain.files.FileKind?): androidx.compose.ui.graphics.vector.ImageVector =
+    when (kind) {
+        com.omnix.assistant.domain.files.FileKind.PDF -> Icons.Outlined.PictureAsPdf
+        com.omnix.assistant.domain.files.FileKind.XLSX,
+        com.omnix.assistant.domain.files.FileKind.SPREADSHEET_TEXT -> Icons.Outlined.TableChart
+        com.omnix.assistant.domain.files.FileKind.PPTX -> Icons.Outlined.Slideshow
+        com.omnix.assistant.domain.files.FileKind.AUDIO -> Icons.Outlined.Audiotrack
+        com.omnix.assistant.domain.files.FileKind.IMAGE -> Icons.Outlined.Image
+        com.omnix.assistant.domain.files.FileKind.TEXT -> Icons.Outlined.Article
+        else -> Icons.Outlined.Description
+    }
+
+/** «1,2 МБ» по правилам языка системы; null — размер неизвестен. */
+@Composable
+private fun fileSizeLabel(sizeBytes: Long): String? {
+    if (sizeBytes < 0) return null
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return android.text.format.Formatter.formatShortFileSize(context, sizeBytes)
+}
+
+/** Карточка файла в пузыре сообщения: значок, имя, тип и размер. */
+@Composable
+private fun ChatFileCard(
+    name: String,
+    kind: com.omnix.assistant.domain.files.FileKind?,
+    sizeBytes: Long,
+    maxWidth: Dp
+) {
+    val colors = OmnixTheme.colors
+    val extension = name.substringAfterLast('.', "").uppercase().take(6)
+    val details = listOfNotNull(extension.ifEmpty { null }, fileSizeLabel(sizeBytes)).joinToString(" · ")
+    Row(
+        modifier = Modifier
+            .widthIn(max = maxWidth)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surfaceElevated)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(colors.surface),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = fileKindIcon(kind),
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Column {
+            Text(
+                text = name,
+                style = FieldText,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (details.isNotEmpty()) {
+                Text(
+                    text = details,
+                    style = FieldText.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                    color = colors.textTertiary,
+                    maxLines = 1
+                )
+            }
+        }
     }
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Яндекс Музыка: плеер внутри OMNIX -->
+    <string name="ymusic_settings_title">Яндекс Музыка</string>
+    <string name="ymusic_settings_hint">Музыка тікелей OMNIX ішінде сіздің Яндекс Музыка аккаунтыңыздан ойнайды (Плюс жазылымы қажет). Аккаунт токенін қойыңыз: ол тек осы телефонда шифрланған күйде сақталады және Яндекс Музыкадан басқа ешқайда жіберілмейді.</string>
+    <string name="ymusic_token_label">Токен</string>
+    <string name="ymusic_token_saved">Токен телефонда сақталды</string>
+    <string name="ymusic_token_missing">Токен енгізілмеген</string>
+    <string name="ymusic_token_remove">Жою</string>
+    <string name="ymusic_token_input_title">Жаңа токен</string>
+    <string name="ymusic_token_placeholder">Яндекс Музыка токенін қойыңыз</string>
+    <string name="ymusic_token_invalid">Бұл токенге ұқсамайды</string>
+    <string name="ymusic_token_save">Токенді сақтау</string>
+    <string name="ymusic_unofficial_warning">Назар аударыңыз: Яндекс Музыканың ресми API-і жоқ. Бұл қолжетімділік ресми емес, кез келген уақытта жұмыс істеуін тоқтатуы мүмкін және Яндекстің қызмет көрсету шарттарын бұзады. Пайдалану немесе пайдаланбау өзіңіздің шешіміңіз.</string>
+    <string name="ymusic_need_token">Параметрлерге Яндекс Музыка токенін қойыңыз</string>
+    <string name="ymusic_now_playing">«%1$s» — %2$s ойнатып жатырмын</string>
+    <string name="ymusic_now_playing_no_artist">«%1$s» ойнатып жатырмын</string>
+    <string name="ymusic_token_rejected">Яндекс Музыка токенді қабылдамады. Параметрлерге жаңасын қойыңыз</string>
+    <string name="ymusic_fallback_search">OMNIX ішінде ойнату мүмкін болмады, Яндекс Музыкадан «%1$s» іздеп жатырмын</string>
+    <string name="ymusic_notif_channel">OMNIX Музыка</string>
+    <string name="ymusic_notif_loading">Жүктелуде…</string>
+    <string name="ymusic_action_pause">Кідірту</string>
+    <string name="ymusic_action_play">Ойнату</string>
+    <string name="ymusic_action_previous">Алдыңғы</string>
+    <string name="ymusic_action_next">Келесі</string>
+    <string name="ymusic_action_stop">Тоқтату</string>
+
+</resources>

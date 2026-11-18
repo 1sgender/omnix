@@ -17,7 +17,6 @@ import com.omnix.assistant.presentation.components.OmnixLockLineIcon
 import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
 import com.omnix.assistant.presentation.components.OmnixSparkLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
-import com.omnix.assistant.agent.decision.AiModelChoice
 import com.omnix.assistant.presentation.design.OmnixAppearance
 import com.omnix.assistant.presentation.navigation.OmnixDestination
 import java.util.Locale
@@ -32,8 +31,8 @@ import java.util.Locale
  *
  * The headphones live in their own tab and are not repeated here. Support
  * pages are behind the version at the bottom (tap — About, long press —
- * Diagnostics). Values are real: the automation count, the chosen AI model,
- * the appearance in use.
+ * Diagnostics). Values are real: the automation count, the plan, the
+ * appearance in use. The AI model is picked in the chat, not here.
  */
 @Composable
 fun MeRoute(
@@ -46,7 +45,6 @@ fun MeRoute(
 ) {
     val settings by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val appearance by appearanceViewModel.uiState.collectAsStateWithLifecycle()
-    val aiChoice by aiModelViewModel.choice.collectAsStateWithLifecycle()
     val planState by planViewModel.state.collectAsStateWithLifecycle()
     // Остатки лимитов лежат в prefs без событий: перечитываем при каждом показе вкладки.
     LaunchedEffect(Unit) { planViewModel.refresh() }
@@ -58,14 +56,6 @@ fun MeRoute(
             OmnixAppearance.System -> R.string.omnix_appearance_system
             OmnixAppearance.Dark -> R.string.omnix_appearance_dark
             OmnixAppearance.Light -> R.string.omnix_appearance_light
-        }
-    )
-    val aiValue = stringResource(
-        when (aiChoice) {
-            AiModelChoice.AUTO -> R.string.omnix_ai_model_auto
-            AiModelChoice.ON_DEVICE -> R.string.omnix_ai_model_on_device
-            AiModelChoice.CLOUD -> R.string.omnix_ai_model_cloud
-            AiModelChoice.PRO -> R.string.omnix_tier_pro
         }
     )
 
@@ -120,10 +110,12 @@ fun MeRoute(
                         value = "",
                         destination = OmnixDestination.Devices
                     ),
+                    // Модель выбирается в чате; здесь — характер ответов,
+                    // модель на телефоне и остаток по тарифу.
                     MeRow(
                         icon = OmnixSparkLineIcon,
                         label = stringResource(R.string.omnix_ai_title),
-                        value = aiValue,
+                        value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_AI)
                     ),
                     MeRow(
@@ -144,6 +136,13 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_offline_title),
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_OFFLINE_SPEECH)
+                    ),
+                    // Музыка: токен Яндекс Музыки для плеера внутри OMNIX.
+                    MeRow(
+                        icon = OmnixHeadphonesLineIcon,
+                        label = stringResource(R.string.ymusic_settings_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_YANDEX_MUSIC)
                     )
                 )
             )
