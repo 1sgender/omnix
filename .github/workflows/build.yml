@@ -28,9 +28,10 @@ on:
 # (еженедельный security-скан нельзя молча гасить коммитом);
 # github.ref — группа per-PR/per-ветка. Публикации не затронуты:
 # у release.yml своя группа ota-staging-release без cancel-in-progress.
+# Прогоны пушей в main не отменяем: от их результата зависит авто-релиз (OTA).
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # C-01 gate: обязательная быстрая проверка, что оба модуля КОМПИЛИРУЮТСЯ.
