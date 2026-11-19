@@ -193,7 +193,9 @@ data class SttRequest(
     @SerialName("audio") val audioBase64: String,
     /** Подсказка языка (код ISO); null — Whisper определяет язык сам. */
     @SerialName("languageHint") val languageHint: String? = null,
-    @SerialName("requestId") val requestId: String? = null
+    @SerialName("requestId") val requestId: String? = null,
+    /** Необязательная подсказка словаря для Whisper (слово вызова, названия функций); старые клиенты не шлют. */
+    @SerialName("prompt") val prompt: String? = null
 )
 
 @Serializable

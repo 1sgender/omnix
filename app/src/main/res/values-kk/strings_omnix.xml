@@ -560,6 +560,7 @@
     <string name="omnix_offline_tk_voice">OMNIX түрікмен дауысы</string>
     <string name="omnix_offline_tk_asr">Түрікмен сөзін тану</string>
     <string name="omnix_offline_ru_asr">Орыс сөзін тану</string>
+    <string name="omnix_offline_ru_asr_hq">Орыс тілі, жақсартылған</string>
     <string name="omnix_offline_state_soon">Жақында</string>
     <string name="omnix_offline_state_installed">Орнатылды</string>
     <string name="omnix_offline_state_not_installed">Жүктелмеген · %1$d МБ</string>

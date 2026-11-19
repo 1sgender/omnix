@@ -638,6 +638,7 @@
     <string name="omnix_offline_tk_voice">Turkmen voice OMNIX</string>
     <string name="omnix_offline_tk_asr">Turkmen speech recognition</string>
     <string name="omnix_offline_ru_asr">Russian speech recognition</string>
+    <string name="omnix_offline_ru_asr_hq">Russian, improved</string>
     <string name="omnix_offline_state_soon">Coming soon</string>
     <string name="omnix_offline_state_installed">Installed</string>
     <string name="omnix_offline_state_not_installed">Not downloaded · %1$d MB</string>

@@ -141,6 +141,13 @@ internal fun OfflineSpeechScreen(
                 subtitle = stringResource(R.string.omnix_offline_state_builtin),
                 inset = true
             )
+            OmnixGroupDivider()
+            ModelRow(
+                title = stringResource(R.string.omnix_offline_ru_asr_hq),
+                model = OfflineSpeechModels.RU_ASR,
+                state = states[OfflineSpeechModels.RU_ASR.id],
+                viewModel = viewModel
+            )
         }
     }
 }

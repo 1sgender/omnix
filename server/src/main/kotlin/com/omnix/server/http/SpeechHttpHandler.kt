@@ -87,7 +87,7 @@ class SpeechHttpHandler(
             "clientId" to client.clientId,
             "audioBytes" to wav.size.toString()
         )
-        return when (val outcome = stt.transcribe(wav, sttRequest.languageHint)) {
+        return when (val outcome = stt.transcribe(wav, sttRequest.languageHint, sttRequest.prompt)) {
             is com.omnix.server.stt.SttOutcome.Success -> HttpResponseContext(
                 status = 200,
                 body = json.encodeToString(

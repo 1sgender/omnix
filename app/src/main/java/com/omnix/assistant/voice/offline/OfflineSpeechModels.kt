@@ -62,5 +62,19 @@ object OfflineSpeechModels {
         requiredFiles = listOf("model.int8.onnx", "tokens.txt")
     )
 
-    val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, TK_ASR)
+    /**
+     * Русское распознавание речи «улучшенное»: GigaAM v3 CTC (SberDevices, MIT), int8, сборка
+     * sherpa-onnx. На русских бенчмарках заметно точнее маленькой встроенной модели Vosk.
+     * Скачивается по желанию; пока пакет не скачан, работает встроенная модель.
+     */
+    val RU_ASR = OfflineSpeechModel(
+        id = "ru-asr-gigaam",
+        dirName = "ru-asr-gigaam",
+        url = "https://omnix.144.31.14.236.sslip.io/models/ru-asr-gigaam.zip",
+        sizeBytes = 159216698L,
+        sha256 = "b2aa0122501e9cc93d80f0f3e3e9eb32803d851fbf3c76ea2762033c0e6bb355",
+        requiredFiles = listOf("model.int8.onnx", "tokens.txt")
+    )
+
+    val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, TK_ASR, RU_ASR)
 }
