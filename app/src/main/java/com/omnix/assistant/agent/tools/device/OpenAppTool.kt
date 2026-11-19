@@ -176,7 +176,7 @@ class OpenAppTool @Inject constructor(
     private fun isBackgroundLaunchBlocked(): Boolean = BackgroundLaunchPolicy.isBlocked(
         sdkInt = Build.VERSION.SDK_INT,
         appVisible = AppVisibility.isForeground,
-        canDrawOverlays = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(context)
+        canDrawOverlays = Settings.canDrawOverlays(context)
     )
 
     /**
