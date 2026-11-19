@@ -9,11 +9,18 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.omnix.assistant.presentation.chat.ChatModelSheet
+import com.omnix.assistant.presentation.chat.collectModelPickerState
 import com.omnix.assistant.presentation.navigation.OmnixDestination
+import com.omnix.assistant.presentation.settings.AiModelViewModel
 import com.omnix.assistant.presentation.state.AssistantPowerError
 import com.omnix.assistant.presentation.state.OmnixUiState
 import com.omnix.assistant.presentation.state.OmnixViewModel
@@ -30,9 +37,14 @@ fun HomeRoute(
     viewModel: OmnixViewModel,
     onClipTap: () -> Unit,
     onOpen: (OmnixDestination) -> Unit,
+    onOpenTariffs: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    // Тот же выбор модели, что в шапке чата: одно состояние и один лист.
+    val modelViewModel: AiModelViewModel = hiltViewModel()
+    val modelPicker = collectModelPickerState(modelViewModel)
+    var modelSheetOpen by remember { mutableStateOf(false) }
     val microphonePrompted by viewModel.microphonePrompted.collectAsStateWithLifecycle()
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -55,6 +67,8 @@ fun HomeRoute(
         onTranslatorTap = { onOpen(OmnixDestination.Translator) },
         onRemindersTap = { onOpen(OmnixDestination.Reminders) },
         onAutomationsTap = { onOpen(OmnixDestination.Automations) },
+        modelPicker = modelPicker,
+        onOpenModelPicker = { modelSheetOpen = true },
         microphoneSettingsNeeded = settingsNeeded,
         onPowerErrorAction = { error ->
             when {
@@ -83,4 +97,13 @@ fun HomeRoute(
         onPowerErrorDismiss = viewModel::dismissPowerError,
         onSystemStateAction = viewModel::refreshPermissions
     )
+
+    if (modelSheetOpen) {
+        ChatModelSheet(
+            state = modelPicker,
+            onSelect = modelViewModel::select,
+            onOpenTariffs = onOpenTariffs,
+            onDismiss = { modelSheetOpen = false }
+        )
+    }
 }

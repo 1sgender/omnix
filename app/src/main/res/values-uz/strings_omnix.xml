@@ -114,7 +114,6 @@
     <string name="omnix_chat_delete">Chatni oʻchirish</string>
     <string name="omnix_chat_delete_confirm_title">Bu chat oʻchirilsinmi?</string>
     <string name="omnix_chat_subtitle_on_device">Qurilmada javob beradi</string>
-    <string name="omnix_chat_subtitle_online">Qurilmada va bulutda javob beradi</string>
     <string name="omnix_chat_today">Bugun</string>
     <string name="omnix_chat_yesterday">Kecha</string>
     <string name="omnix_chat_from_cloud">Bulutdan javob</string>

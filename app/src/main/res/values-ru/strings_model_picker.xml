@@ -13,4 +13,5 @@
     <string name="omnix_model_see_plans">Посмотреть тарифы</string>
     <string name="omnix_ai_model_voice_switched">Готово, теперь отвечает %1$s</string>
     <string name="omnix_ai_model_voice_pro_locked">Pro есть в тарифах Pro и Max. Пока отвечает %1$s</string>
+    <string name="omnix_ai_model_voice_current">Сейчас отвечает %1$s</string>
 </resources>

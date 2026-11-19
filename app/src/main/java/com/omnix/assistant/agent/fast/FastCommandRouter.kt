@@ -46,13 +46,17 @@ class FastCommandRouter @Inject constructor() {
 
         // 0. Смена модели ИИ голосом («переключись на Pro», «ответь умнее»).
         //    Раньше остальных правил: «модель» ниже — это вопрос о телефоне.
-        AiModelVoiceCommand.parse(q)?.let { choice ->
+        AiModelVoiceCommand.parse(q)?.let { command ->
+            val (argument, reply) = when (command) {
+                is AiModelVoiceCommand.Command.Switch -> command.choice.storageKey to "Переключаю модель."
+                AiModelVoiceCommand.Command.Ask -> AiModelVoiceCommand.ARG_CURRENT to "Смотрю."
+            }
             return FastRouteResult.HandledLocally(
                 toolCall = ToolCall(
                     toolId = AiModelVoiceCommand.TOOL_ID,
-                    arguments = buildJsonObject { put("choice", choice.storageKey) }
+                    arguments = buildJsonObject { put("choice", argument) }
                 ),
-                immediateVoiceResponse = "Переключаю модель."
+                immediateVoiceResponse = reply
             )
         }
 
