@@ -46,7 +46,7 @@ object AiModelVoiceCommand {
         )
     ).flatMap { (choice, names) -> names.map { it to choice } }.toMap()
 
-    private val RU_NOUN = "(?:модель|ии)"
+    private const val RU_NOUN = "(?:модель|ии)"
 
     /** «переключи(сь)/перейди/поставь/смени [модель] на|в <имя> [модель]». */
     private val SWITCH_RU = Regex(
@@ -92,9 +92,9 @@ object AiModelVoiceCommand {
     )
 
     /** Падежные окончания после названия: «flaşa», «pro-a», «Proga», «бұлтқа», «Pro-ға». */
-    private val SUFFIX = "(?:-?(?:ya|ye|ga|ge|ka|ke|qa|na|ne|a|e|ға|ге|қа|ке|а|е)| (?:ga|ka|qa))?"
-    private val NOUN = "(?:(?:model|mod|rejim|režim|seçim|saýlaw|tanlov|модель|режим|таңдау)\\p{L}*)"
-    private val VERB = "(?:geç|gec|geçir|gecir|geçiň|geciň|geçiş yap|değiştir|otkaz|otkazing|oting|otish|" +
+    private const val SUFFIX = "(?:-?(?:ya|ye|ga|ge|ka|ke|qa|na|ne|a|e|ға|ге|қа|ке|а|е)| (?:ga|ka|qa))?"
+    private const val NOUN = "(?:(?:model|mod|rejim|režim|seçim|saýlaw|tanlov|модель|режим|таңдау)\\p{L}*)"
+    private const val VERB = "(?:geç|gec|geçir|gecir|geçiň|geciň|geçiş yap|değiştir|otkaz|otkazing|oting|otish|" +
         "almashtir|almashtiring|ауыстыр|ауыстырыңыз|ауыстыршы|ауыс|көш)"
 
     /**
