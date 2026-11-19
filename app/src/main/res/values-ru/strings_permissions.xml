@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_perm_kind_contacts">контакты</string>
+    <string name="omnix_perm_kind_calls">звонки</string>
+    <string name="omnix_perm_kind_sms">отправку SMS</string>
+    <string name="omnix_perm_kind_notifications">уведомления</string>
+    <string name="omnix_perm_kind_location">геолокацию</string>
+    <string name="omnix_perm_kind_microphone">микрофон</string>
+    <string name="omnix_perm_kind_calendar">календарь</string>
+    <string name="omnix_perm_kind_other">нужные разрешения</string>
+    <string name="omnix_perm_voice_request">Нужен доступ: %1$s. Разрешите в окне на экране.</string>
+    <string name="omnix_perm_voice_notification">Нужен доступ: %1$s. Нажмите на уведомление OMNIX и разрешите.</string>
+    <string name="omnix_perm_granted_repeat">Доступ выдан. Повторите команду.</string>
+    <string name="omnix_perm_denied">Без этого доступа команду выполнить нельзя.</string>
+    <string name="omnix_perm_settings_title">Нужен доступ</string>
+    <string name="omnix_perm_settings_body">Чтобы выполнить команду, OMNIX нужен доступ: %1$s. Он запрещён насовсем, поэтому включите его вручную в настройках приложения.</string>
+    <string name="omnix_perm_settings_open">Открыть настройки приложения</string>
+    <string name="omnix_perm_settings_later">Не сейчас</string>
+    <string name="omnix_perm_notif_channel">Запросы доступа</string>
+    <string name="omnix_perm_notif_title">OMNIX нужно ваше разрешение</string>
+    <string name="omnix_perm_notif_text">Нажмите, чтобы разрешить: %1$s</string>
+    <string name="omnix_perm_launch_channel">Открытие приложений</string>
+    <string name="omnix_perm_launch_title">Открыть %1$s</string>
+    <string name="omnix_perm_launch_text">Android не даёт открывать приложения, пока OMNIX не на экране. Нажмите, чтобы открыть.</string>
+    <string name="omnix_perm_launch_overlay">Разрешить поверх других окон</string>
+    <string name="omnix_perm_launch_blocked">Не могу открыть %1$s, пока OMNIX не на экране. Нажмите на уведомление или разрешите OMNIX показываться поверх других приложений, тогда голосовые команды работают и при выключенном экране.</string>
+</resources>

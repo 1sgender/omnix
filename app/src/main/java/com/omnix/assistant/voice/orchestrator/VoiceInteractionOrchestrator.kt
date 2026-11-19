@@ -29,6 +29,10 @@ import com.omnix.assistant.domain.usecases.GetSettingsUseCase
 import com.omnix.assistant.domain.usecases.SendPromptUseCase
 import com.omnix.assistant.voice.audio.BluetoothAudioRouter
 import com.omnix.assistant.voice.stt.AsrPostProcessor
+import com.omnix.assistant.core.permission.AppVisibility
+import com.omnix.assistant.core.permission.PermissionPrompts
+import com.omnix.assistant.core.permission.PermissionRequestNotifier
+import com.omnix.assistant.core.permission.PermissionTexts
 import com.omnix.assistant.voice.stt.SpeechRecognitionEvent
 import com.omnix.assistant.voice.stt.SpeechRecognizerManager
 import com.omnix.assistant.voice.tts.TextToSpeechManager
@@ -233,6 +237,70 @@ class VoiceInteractionOrchestrator @Inject constructor(
         observeWakeEngine()
         observeSpeechRecognizer()
         observeTtsEngine()
+        observeSpeakingWatchdog()
+        observePermissionOutcomes()
+    }
+
+    /** Голосовой запрос ждёт ответа на системное окно разрешений. */
+    @Volatile
+    private var awaitingPermissionOutcome = false
+
+    /**
+     * Инструмент упёрся в разрешение: вместо сухого ответа инструмента говорим,
+     * что разрешить и где. Экран закрыт: окно показать нельзя, зовём
+     * уведомлением (его тап запускает приложение законно).
+     */
+    private fun permissionHintOr(text: String): String {
+        val requested = PermissionPrompts.consumeRecent(System.currentTimeMillis()) ?: return text
+        awaitingPermissionOutcome = true
+        val label = PermissionTexts.describe(context, requested)
+        if (AppVisibility.isForeground) {
+            return context.getString(R.string.omnix_perm_voice_request, label)
+        }
+        PermissionRequestNotifier.show(context, label)
+        return context.getString(R.string.omnix_perm_voice_notification, label)
+    }
+
+    /** Итог запроса (повтор команды или отказ) озвучиваем, если команда была голосовой. */
+    private fun observePermissionOutcomes() {
+        scope.launch {
+            PermissionPrompts.outcomes.collect { message ->
+                if (!awaitingPermissionOutcome || !isServiceActive) return@collect
+                awaitingPermissionOutcome = false
+                speechRecognizerManager.stopListening()
+                _currentMode.value = OrchestratorMode.TTS_SPEAKING
+                _assistantState.value = VoiceAssistantState.Speaking(message)
+                _lastAnswer.value = message
+                textToSpeechManager.speak(message, speechRate, speechPitch)
+            }
+        }
+    }
+
+    /**
+     * Страж субтитров ответа: режим TTS_SPEAKING выходит только по событию
+     * синтезатора «Done». Если оно не пришло (стрим дозвучал раньше, чем режим
+     * сменился, или озвучку прервала система), текст ответа висел на экране
+     * бесконечно. Страж возвращает ассистента в слушающий режим.
+     */
+    private fun observeSpeakingWatchdog() {
+        scope.launch {
+            _currentMode.collectLatest { mode ->
+                if (mode != OrchestratorMode.TTS_SPEAKING) return@collectLatest
+                val text = (_assistantState.value as? VoiceAssistantState.Speaking)?.answerText.orEmpty()
+                var elapsed = 0L
+                while (_currentMode.value == OrchestratorMode.TTS_SPEAKING) {
+                    delay(SubtitleLifecycle.WATCHDOG_POLL_MS)
+                    elapsed += SubtitleLifecycle.WATCHDOG_POLL_MS
+                    val ttsState = textToSpeechManager.ttsState.value
+                    val speaking = ttsState is TtsState.Speaking || ttsState is TtsState.Initializing
+                    if (SubtitleLifecycle.isSpeakingStuck(elapsed, speaking, text)) {
+                        Log.w(TAG, "speaking watchdog: no TTS completion event, releasing subtitles")
+                        openContinuousConversationWindow()
+                        return@collectLatest
+                    }
+                }
+            }
+        }
     }
 
     fun startServicePipeline() {
@@ -517,7 +585,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             silenceJob = scope.launch {
                                 delay(SILENCE_AFTER_PARTIAL_MS)
                                 val current = _currentMode.value
-                                if ((current == OrchestratorMode.LISTENING_USER_QUERY || current == OrchestratorMode.CONTINUOUS_CONVERSATION) && cleaned.isNotBlank()) {
+                                val listening = current == OrchestratorMode.LISTENING_USER_QUERY ||
+                                    current == OrchestratorMode.CONTINUOUS_CONVERSATION
+                                if (listening && SubtitleLifecycle.shouldDropEmptyRecognition(cleaned)) {
+                                    // Одно имя ассистента без команды: субтитр не оставляем.
+                                    _assistantState.value = VoiceAssistantState.Listening
+                                } else if (listening) {
                                     speechRecognizerManager.stopListening()
                                     processUserQuery(cleaned)
                                 }
@@ -608,8 +681,20 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
-                            delay(300)
-                            startStandbyMode()
+                            // Субтитр распознавания убираем сразу. Отложенный возврат в
+                            // standby идёт отдельной корутиной: collectLatest отменял
+                            // блок с delay при любом новом событии распознавателя, и
+                            // ассистент навсегда оставался в Recognizing.
+                            _assistantState.value = VoiceAssistantState.Listening
+                            scope.launch {
+                                delay(300)
+                                val now = _currentMode.value
+                                if (now == OrchestratorMode.LISTENING_USER_QUERY ||
+                                    now == OrchestratorMode.CONTINUOUS_CONVERSATION
+                                ) {
+                                    startStandbyMode()
+                                }
+                            }
                         }
                     }
                     else -> Unit
@@ -773,7 +858,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 }
                             }
                             is PromptExecutionResult.DirectAnswer -> {
-                                val answer = execution.text
+                                val answer = permissionHintOr(execution.text)
                                 _lastAnswer.value = answer
                                 // Voice Latency «Tool → TTS»: от получения
                                 // результата до вызова озвучки.
@@ -912,7 +997,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         result.isSuccess -> "${result.summary}."
                         // Разрешение/системный UI/неподдерживаемая возможность —
                         // это не «ошибка выполнения», а понятное объяснение.
-                        result.isBlockedByAndroid -> result.summary
+                        result.isBlockedByAndroid -> permissionHintOr(result.summary)
                         else -> "Не удалось выполнить: ${result.error ?: result.summary}"
                     }
                     _lastAnswer.value = voiceResponse

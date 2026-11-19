@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_perm_kind_contacts">kontaktlar</string>
+    <string name="omnix_perm_kind_calls">telefon qoʻngʻiroqlari</string>
+    <string name="omnix_perm_kind_sms">SMS yuborish</string>
+    <string name="omnix_perm_kind_notifications">bildirishnomalar</string>
+    <string name="omnix_perm_kind_location">joylashuv</string>
+    <string name="omnix_perm_kind_microphone">mikrofon</string>
+    <string name="omnix_perm_kind_calendar">kalendar</string>
+    <string name="omnix_perm_kind_other">kerakli ruxsatlar</string>
+    <string name="omnix_perm_voice_request">OMNIX uchun quyidagiga ruxsat kerak: %1$s. Ekrandagi oynada ruxsat bering.</string>
+    <string name="omnix_perm_voice_notification">OMNIX uchun quyidagiga ruxsat kerak: %1$s. OMNIX bildirishnomasini bosib, ruxsat bering.</string>
+    <string name="omnix_perm_granted_repeat">Ruxsat berildi. Buyruqni takrorlang.</string>
+    <string name="omnix_perm_denied">Bu ruxsatsiz buyruqni bajarib boʻlmaydi.</string>
+    <string name="omnix_perm_settings_title">Ruxsat kerak</string>
+    <string name="omnix_perm_settings_body">Bu buyruq uchun OMNIX quyidagiga ruxsat olishi kerak: %1$s. U butunlay taqiqlangan, shuning uchun uni ilova sozlamalarida oʻzingiz yoqing.</string>
+    <string name="omnix_perm_settings_open">Ilova sozlamalarini ochish</string>
+    <string name="omnix_perm_settings_later">Hozir emas</string>
+    <string name="omnix_perm_notif_channel">Ruxsat soʻrovlari</string>
+    <string name="omnix_perm_notif_title">OMNIX ruxsatingizni soʻrayapti</string>
+    <string name="omnix_perm_notif_text">Ruxsat berish uchun bosing: %1$s</string>
+    <string name="omnix_perm_launch_channel">Ilovalarni ochish</string>
+    <string name="omnix_perm_launch_title">%1$s ilovasini ochish</string>
+    <string name="omnix_perm_launch_text">OMNIX ekranda boʻlmasa, Android ilovalarni ochishga yoʻl qoʻymaydi. Ochish uchun bosing.</string>
+    <string name="omnix_perm_launch_overlay">Boshqa ilovalar ustida koʻrsatishga ruxsat</string>
+    <string name="omnix_perm_launch_blocked">OMNIX ekranda boʻlmasa, %1$s ilovasini ocha olmayman. Bildirishnomani bosing yoki OMNIX uchun boshqa ilovalar ustida koʻrsatishga ruxsat bering, shunda ovozli buyruqlar ekran oʻchiq boʻlganda ham ishlaydi.</string>
+</resources>

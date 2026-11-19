@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_perm_kind_contacts">contacts</string>
+    <string name="omnix_perm_kind_calls">phone calls</string>
+    <string name="omnix_perm_kind_sms">sending SMS</string>
+    <string name="omnix_perm_kind_notifications">notifications</string>
+    <string name="omnix_perm_kind_location">location</string>
+    <string name="omnix_perm_kind_microphone">microphone</string>
+    <string name="omnix_perm_kind_calendar">calendar</string>
+    <string name="omnix_perm_kind_other">required permissions</string>
+    <string name="omnix_perm_voice_request">OMNIX needs access to: %1$s. Please allow it in the window on the screen.</string>
+    <string name="omnix_perm_voice_notification">OMNIX needs access to: %1$s. Tap the OMNIX notification and allow it.</string>
+    <string name="omnix_perm_granted_repeat">Access granted. Please repeat the command.</string>
+    <string name="omnix_perm_denied">Without this access the command cannot be done.</string>
+    <string name="omnix_perm_settings_title">Access needed</string>
+    <string name="omnix_perm_settings_body">To run this command OMNIX needs access to: %1$s. It was denied permanently, so turn it on manually in the app settings.</string>
+    <string name="omnix_perm_settings_open">Open app settings</string>
+    <string name="omnix_perm_settings_later">Not now</string>
+    <string name="omnix_perm_notif_channel">Access requests</string>
+    <string name="omnix_perm_notif_title">OMNIX needs your permission</string>
+    <string name="omnix_perm_notif_text">Tap to allow: %1$s</string>
+    <string name="omnix_perm_launch_channel">Opening apps</string>
+    <string name="omnix_perm_launch_title">Open %1$s</string>
+    <string name="omnix_perm_launch_text">Android blocks opening apps while OMNIX is not on screen. Tap to open.</string>
+    <string name="omnix_perm_launch_overlay">Allow over other apps</string>
+    <string name="omnix_perm_launch_blocked">I cannot open %1$s while OMNIX is not on screen. Tap the notification, or allow OMNIX to display over other apps so voice commands work with the screen off.</string>
+</resources>

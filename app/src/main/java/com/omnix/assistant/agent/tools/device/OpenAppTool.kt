@@ -3,6 +3,11 @@ package com.omnix.assistant.agent.tools.device
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import com.omnix.assistant.R
+import com.omnix.assistant.core.permission.AppVisibility
+import com.omnix.assistant.core.permission.UserActionNotifier
 import com.omnix.assistant.agent.apps.AppResolution
 import com.omnix.assistant.agent.apps.AppResolver
 import com.omnix.assistant.agent.capability.DangerLevel
@@ -39,6 +44,11 @@ class OpenAppTool @Inject constructor(
     @ApplicationContext private val context: Context,
     private val appResolver: AppResolver
 ) : CapabilityAwareTool {
+
+    private companion object {
+        const val LAUNCH_CHANNEL_ID = "omnix_app_launch"
+        const val LAUNCH_NOTIFICATION_ID = 7411
+    }
 
     override val toolId: String = "device.open_app"
     override val description: String = "Открывает установленное приложение на телефоне по названию (Telegram, YouTube, WhatsApp, Камера, Chrome, Карты, Настройки)"
@@ -120,6 +130,7 @@ class OpenAppTool @Inject constructor(
                     error = "SYSTEM_SCREEN_UNAVAILABLE"
                 )
             }
+            if (isBackgroundLaunchBlocked()) return backgroundBlocked(rawName, intent)
             return try {
                 context.startActivity(intent)
                 ToolExecutionResult.success(
@@ -138,6 +149,7 @@ class OpenAppTool @Inject constructor(
             )
 
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (isBackgroundLaunchBlocked()) return backgroundBlocked(resolution.label, launchIntent)
         return try {
             context.startActivity(launchIntent)
             ToolExecutionResult.success(
@@ -159,6 +171,43 @@ class OpenAppTool @Inject constructor(
                 error = "LAUNCH_DENIED"
             )
         }
+    }
+
+    private fun isBackgroundLaunchBlocked(): Boolean = BackgroundLaunchPolicy.isBlocked(
+        sdkInt = Build.VERSION.SDK_INT,
+        appVisible = AppVisibility.isForeground,
+        canDrawOverlays = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(context)
+    )
+
+    /**
+     * Экран OMNIX закрыт, и Android молча отбросил бы запуск: раньше инструмент
+     * отвечал «Открываю…» и ничего не открывалось. Теперь честно говорим причину
+     * и даём законный путь: уведомление (тап по нему запускает приложение) и
+     * кнопку выдачи разрешения «Поверх других приложений».
+     */
+    private fun backgroundBlocked(label: String, intent: Intent): ToolExecutionResult {
+        val overlaySettings = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:${context.packageName}")
+        )
+        UserActionNotifier.show(
+            context = context,
+            channelId = LAUNCH_CHANNEL_ID,
+            channelName = context.getString(R.string.omnix_perm_launch_channel),
+            notificationId = LAUNCH_NOTIFICATION_ID,
+            title = context.getString(R.string.omnix_perm_launch_title, label),
+            text = context.getString(R.string.omnix_perm_launch_text),
+            open = intent,
+            extra = UserActionNotifier.ExtraAction(
+                label = context.getString(R.string.omnix_perm_launch_overlay),
+                intent = overlaySettings
+            )
+        )
+        return ToolExecutionResult.userActionRequired(
+            summary = context.getString(R.string.omnix_perm_launch_blocked, label),
+            reason = "BACKGROUND_LAUNCH_BLOCKED",
+            data = buildJsonObject { put("label", label) }
+        )
     }
 
     /** Предлагает установить приложение — вызывается явно, а не молча вместо запуска. */

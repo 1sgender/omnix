@@ -464,11 +464,12 @@ class FastCommandRouter @Inject constructor() {
         if (!q.contains("блютуз") && !q.contains("bluetooth") &&
             !q.contains("вайфай") && !q.contains("wifi") && !q.contains("wi-fi") &&
             (q.startsWith("открой") || q.startsWith("запусти") || q.startsWith("включи") ||
-                q.startsWith("перейди в") || q.startsWith("вруби"))
+                q.startsWith("перейди в") || q.startsWith("вруби") ||
+                VoiceAppCommand.hasLaunchVerb(q))
         ) {
             val app = when {
                 q.contains("телеграм") || q.contains("telegram") || q.contains("телегу") || q.contains("тг") || q.contains("tg") -> "telegram"
-                q.contains("ютуб") || q.contains("youtube") -> "youtube"
+                VoiceAppCommand.mentionsYoutube(q) -> "youtube"
                 q.contains("ватсап") || q.contains("whatsapp") || q.contains("вацап") -> "whatsapp"
                 q.contains("камер") || q.contains("camera") || q.contains("фотк") -> "camera"
                 q.contains("хром") || q.contains("chrome") || q.contains("браузер") -> "chrome"
