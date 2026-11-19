@@ -5,6 +5,7 @@ import com.omnix.assistant.R
 import com.omnix.assistant.voice.offline.LocalSpeechRecognizer
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -53,7 +54,8 @@ sealed interface SpeechRecognitionEvent {
 class SpeechRecognizerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val serverCapture: ServerSpeechCapture,
-    private val local: LocalSpeechRecognizer
+    private val local: LocalSpeechRecognizer,
+    private val hints: AsrHintsProvider
 ) : RecognitionListener {
 
     companion object {
@@ -64,6 +66,14 @@ class SpeechRecognizerManager @Inject constructor(
 
         /** Loud-speech ceiling of SpeechRecognizer.onRmsChanged, in dB. */
         private const val RMS_CEILING_DB = 10f
+
+        /**
+         * Терпеливое ожидание конца фразы: Android по умолчанию режет речь на паузе
+         * около 0,5-1 с, а человек думает вслух («напомни... в шесть... позвонить маме»).
+         * Ниже значения, которые распознаватель получает в EXTRA_SPEECH_INPUT_*.
+         */
+        const val COMPLETE_SILENCE_MS = 2_200L
+        const val POSSIBLY_COMPLETE_SILENCE_MS = 1_800L
     }
 
     private val disposed = AtomicBoolean(false)
@@ -157,6 +167,8 @@ class SpeechRecognizerManager @Inject constructor(
             }
 
             val session = generation.incrementAndGet()
+            // Имена контактов подтянутся в кэш для следующей фразы (чтение вне главного потока).
+            scope.launch { hints.refreshIfStale() }
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -167,6 +179,17 @@ class SpeechRecognizerManager @Inject constructor(
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
                 putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, COMPLETE_SILENCE_MS)
+                putExtra(
+                    RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
+                    POSSIBLY_COMPLETE_SILENCE_MS
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    putStringArrayListExtra(
+                        RecognizerIntent.EXTRA_BIASING_STRINGS,
+                        ArrayList(hints.cachedBiasing())
+                    )
+                }
             }
 
             isListening = true
@@ -189,15 +212,17 @@ class SpeechRecognizerManager @Inject constructor(
         isListening = true
         _speechState.value = SpeechRecognitionEvent.ReadyForSpeech
         serverJob = scope.launch {
-            val outcome = serverCapture.listen(languageHint, onLevel = {
-                if (isCurrentSession(session)) _audioLevel.value = it
-            })
+            val outcome = serverCapture.listen(
+                languageHint,
+                prompt = AsrContextHints.serverPrompt(),
+                onLevel = { if (isCurrentSession(session)) _audioLevel.value = it }
+            )
             if (!isCurrentSession(session)) return@launch
             isListening = false
             _audioLevel.value = 0f
             when (outcome) {
                 is ServerSpeechCapture.Outcome.Heard -> {
-                    _speechState.value = SpeechRecognitionEvent.FinalResult(outcome.text)
+                    _speechState.value = finalResult(outcome.text)
                     if (isContinuousMode) scheduleContinuousRestart(30)
                 }
                 ServerSpeechCapture.Outcome.Silence -> {
@@ -359,13 +384,21 @@ class SpeechRecognizerManager @Inject constructor(
         val best = matches?.firstOrNull()?.trim().orEmpty()
 
         if (best.isNotEmpty()) {
-            _speechState.value = SpeechRecognitionEvent.FinalResult(best)
+            _speechState.value = finalResult(best)
         }
 
         if (isContinuousMode) {
             scheduleContinuousRestart(30)
         }
     }
+
+    /**
+     * Единая точка выхода финального текста всех движков (Android, сервер, телефон):
+     * здесь он проходит пост-коррекцию [AsrPostProcessor]. Её результат читают и
+     * оркестратор голосового ассистента, и диктовка в чате.
+     */
+    private fun finalResult(text: String): SpeechRecognitionEvent.FinalResult =
+        SpeechRecognitionEvent.FinalResult(AsrPostProcessor.process(text))
 
     private fun isNetworkError(error: Int): Boolean =
         error == SpeechRecognizer.ERROR_NETWORK ||

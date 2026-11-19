@@ -5,6 +5,7 @@ import com.omnix.server.provider.HttpTransportResponse
 import com.omnix.server.provider.ProviderFailureKind
 import com.omnix.server.stt.GroqWhisperSpeechToText
 import com.omnix.server.stt.SttOutcome
+import com.omnix.server.stt.SttPrompt
 import com.omnix.server.stt.WavCheck
 import com.omnix.server.stt.WhisperLanguages
 import com.omnix.server.stt.multipartBody
@@ -73,6 +74,25 @@ class SpeechToTextTest {
         val transport = FakeBinaryTransport(HttpTransportResponse(200, """{"text":"Привет","language":"russian"}"""))
         GroqWhisperSpeechToText(transport, apiKey = "k").transcribe(wav(), languageHint = "ru")
         assertTrue(String(transport.body!!, Charsets.ISO_8859_1).contains("name=\"language\"\r\n\r\nru\r\n"))
+    }
+
+    @Test
+    fun `a prompt is sent to whisper, a blank one is not`() = runBlocking {
+        val withPrompt = FakeBinaryTransport(HttpTransportResponse(200, """{"text":"ok","language":"russian"}"""))
+        GroqWhisperSpeechToText(withPrompt, apiKey = "k").transcribe(wav(), "ru", "Омни, напомни")
+        assertTrue(String(withPrompt.body!!, Charsets.ISO_8859_1).contains("name=\"prompt\""))
+
+        val blank = FakeBinaryTransport(HttpTransportResponse(200, """{"text":"ok","language":"russian"}"""))
+        GroqWhisperSpeechToText(blank, apiKey = "k").transcribe(wav(), "ru", "   ")
+        assertFalse(String(blank.body!!, Charsets.ISO_8859_1).contains("name=\"prompt\""))
+    }
+
+    @Test
+    fun `prompt sanitizer drops control characters and caps length`() {
+        assertNull(SttPrompt.sanitize(null))
+        assertNull(SttPrompt.sanitize(" \n\t "))
+        assertEquals("Омни напомни", SttPrompt.sanitize("Омни\r\n напомни"))
+        assertEquals(SttPrompt.MAX_CHARS, SttPrompt.sanitize("а".repeat(SttPrompt.MAX_CHARS * 2))!!.length)
     }
 
     @Test
