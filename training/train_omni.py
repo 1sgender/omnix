@@ -236,7 +236,11 @@ def main():
 
     def export_nn(nn_model, path):
         model_to_save = copy.deepcopy(nn_model).to("cpu").eval()
-        torch.onnx.export(model_to_save, torch.rand(1, 16, 96), str(path))
+        dummy = torch.rand(1, 16, 96)
+        try:  # новый torch по умолчанию экспортирует через dynamo (нужен onnxscript)
+            torch.onnx.export(model_to_save, dummy, str(path), dynamo=False)
+        except TypeError:  # старый torch: аргумента dynamo нет
+            torch.onnx.export(model_to_save, dummy, str(path))
         m = onnx.load(str(path))
         onnx.save_model(m, str(path), save_as_external_data=False)
 
