@@ -68,7 +68,7 @@ jobs:
       - name: Compile all production Kotlin
         shell: bash
         run: |
-          bash ./gradlew \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew \
             :server:compileKotlin \
             :app:compileDevDebugKotlin \
             --stacktrace --no-daemon
@@ -119,7 +119,7 @@ jobs:
       - name: Verify dependency locks and checksums
         shell: bash
         run: |
-          bash ./gradlew :app:dependencies :server:dependencies --write-locks --no-daemon
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:dependencies :server:dependencies --write-locks --no-daemon
           git diff --exit-code -- '**/gradle.lockfile' 'gradle/verification-metadata.xml'
 
       - name: Test Android dev and verify JVM coverage
