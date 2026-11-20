@@ -275,7 +275,7 @@ fun OmnixChatScreen(
         }
     }
 
-    // Лист выбора модели: чип у поля ввода → «Кто отвечает».
+    // Лист выбора модели: заголовок «Omnix ▾» в шапке → «Кто отвечает».
     if (modelSheetOpen && modelPicker != null) {
         ChatModelSheet(
             state = modelPicker,
@@ -359,7 +359,13 @@ private fun ChatThread(
             .background(colors.background)
             .imePadding()
     ) {
-        ChatHeader(isOnline = isOnline, onOpenHistory = onOpenHistory, onNewChat = onNewChat)
+        ChatHeader(
+            isOnline = isOnline,
+            modelPicker = modelPicker,
+            onOpenModelSheet = onOpenModelSheet,
+            onOpenHistory = onOpenHistory,
+            onNewChat = onNewChat
+        )
 
         if (rowCount == 0) {
             EmptyChat(
@@ -434,15 +440,6 @@ private fun ChatThread(
 
         ConsentAndBadge(state = state, onAllowCloud = onAllowCloud, onKeepLocal = onKeepLocal)
 
-        if (modelPicker != null) {
-            ChatModelChip(
-                choice = modelPicker.choice,
-                checking = modelPicker.applying != null,
-                onClick = onOpenModelSheet,
-                modifier = Modifier.padding(start = 16.dp)
-            )
-        }
-
         ChatComposer(
             text = state.inputText,
             isSending = state.isSending,
@@ -466,7 +463,13 @@ private fun ChatThread(
 }
 
 @Composable
-private fun ChatHeader(isOnline: Boolean, onOpenHistory: () -> Unit, onNewChat: () -> Unit) {
+private fun ChatHeader(
+    isOnline: Boolean,
+    modelPicker: ChatModelPickerState?,
+    onOpenModelSheet: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onNewChat: () -> Unit
+) {
     val colors = OmnixTheme.colors
     Column {
         Row(
@@ -485,22 +488,29 @@ private fun ChatHeader(isOnline: Boolean, onOpenHistory: () -> Unit, onNewChat: 
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.omnix_chat_title),
-                    style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
-                    color = colors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = stringResource(
-                        if (isOnline) R.string.omnix_chat_subtitle_online else R.string.omnix_chat_subtitle_on_device
-                    ).uppercase(Locale.getDefault()),
-                    style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
-                    color = colors.textTertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                val title = stringResource(R.string.omnix_chat_title)
+                if (modelPicker != null) {
+                    // Офлайн отвечает только телефон; иначе под заголовком текущая модель.
+                    val subtitle = if (isOnline) {
+                        modelName(modelPicker.choice)
+                    } else {
+                        stringResource(R.string.omnix_chat_subtitle_on_device)
+                    }
+                    ChatModelTitle(
+                        picker = modelPicker,
+                        title = title,
+                        subtitle = subtitle.uppercase(Locale.getDefault()),
+                        onClick = onOpenModelSheet
+                    )
+                } else {
+                    Text(
+                        text = title,
+                        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+                        color = colors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
             HeaderIconButton(
                 icon = OmnixNewChatLineIcon,

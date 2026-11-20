@@ -162,7 +162,6 @@
     <string name="omnix_chat_delete">Çaty poz</string>
     <string name="omnix_chat_delete_confirm_title">Bu çaty pozmalymy?</string>
     <string name="omnix_chat_subtitle_on_device">Enjamda jogap berýär</string>
-    <string name="omnix_chat_subtitle_online">Enjamda we bulutda jogap berýär</string>
     <string name="omnix_chat_today">Şu gün</string>
     <string name="omnix_chat_yesterday">Düýn</string>
     <string name="omnix_chat_from_cloud">Bulutdan jogap</string>

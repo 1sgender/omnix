@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_perm_kind_contacts">kontaktlar</string>
+    <string name="omnix_perm_kind_calls">jaňlar</string>
+    <string name="omnix_perm_kind_sms">SMS ugratmak</string>
+    <string name="omnix_perm_kind_notifications">bildirişler</string>
+    <string name="omnix_perm_kind_location">ýerleşiş</string>
+    <string name="omnix_perm_kind_microphone">mikrofon</string>
+    <string name="omnix_perm_kind_calendar">senenama</string>
+    <string name="omnix_perm_kind_other">gerekli rugsatlar</string>
+    <string name="omnix_perm_voice_request">OMNIX-e şu zatlara ygtyýar gerek: %1$s. Ekrandaky penjirede rugsat beriň.</string>
+    <string name="omnix_perm_voice_notification">OMNIX-e şu zatlara ygtyýar gerek: %1$s. OMNIX bildirişine basyp rugsat beriň.</string>
+    <string name="omnix_perm_granted_repeat">Ygtyýar berildi. Buýrugy gaýtalaň.</string>
+    <string name="omnix_perm_denied">Bu ygtyýarsyz buýruk ýerine ýetirilip bilinmez.</string>
+    <string name="omnix_perm_settings_title">Ygtyýar gerek</string>
+    <string name="omnix_perm_settings_body">Bu buýruk üçin OMNIX-e şu zatlara ygtyýar gerek: %1$s. Ol bütinleý gadagan edilipdi, şonuň üçin ony programmanyň sazlamalarynda özüňiz açyň.</string>
+    <string name="omnix_perm_settings_open">Programmanyň sazlamalaryny açmak</string>
+    <string name="omnix_perm_settings_later">Häzir däl</string>
+    <string name="omnix_perm_notif_channel">Ygtyýar soraglary</string>
+    <string name="omnix_perm_notif_title">OMNIX-iň rugsadyňyza mätäçligi bar</string>
+    <string name="omnix_perm_notif_text">Rugsat bermek üçin basyň: %1$s</string>
+    <string name="omnix_perm_launch_channel">Programmalary açmak</string>
+    <string name="omnix_perm_launch_title">%1$s açmak</string>
+    <string name="omnix_perm_launch_text">OMNIX ekranda bolmasa, Android programmalary açmaga ýol bermeýär. Açmak üçin basyň.</string>
+    <string name="omnix_perm_launch_overlay">Beýleki programmalaryň üstünde rugsat ber</string>
+    <string name="omnix_perm_launch_blocked">OMNIX ekranda bolmasa, %1$s açyp bilemok. Bildirişe basyň ýa-da OMNIX-e beýleki programmalaryň üstünde görkezilmäge rugsat beriň, şonda ses buýruklary ekran öçükkä hem işleýär.</string>
+</resources>

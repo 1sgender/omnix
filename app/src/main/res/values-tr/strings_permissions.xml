@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_perm_kind_contacts">kişiler</string>
+    <string name="omnix_perm_kind_calls">telefon aramaları</string>
+    <string name="omnix_perm_kind_sms">SMS gönderme</string>
+    <string name="omnix_perm_kind_notifications">bildirimler</string>
+    <string name="omnix_perm_kind_location">konum</string>
+    <string name="omnix_perm_kind_microphone">mikrofon</string>
+    <string name="omnix_perm_kind_calendar">takvim</string>
+    <string name="omnix_perm_kind_other">gerekli izinler</string>
+    <string name="omnix_perm_voice_request">OMNIX şuna erişmek istiyor: %1$s. Ekrandaki pencerede izin verin.</string>
+    <string name="omnix_perm_voice_notification">OMNIX şuna erişmek istiyor: %1$s. OMNIX bildirimine dokunup izin verin.</string>
+    <string name="omnix_perm_granted_repeat">Erişim verildi. Lütfen komutu tekrarlayın.</string>
+    <string name="omnix_perm_denied">Bu erişim olmadan komut yapılamaz.</string>
+    <string name="omnix_perm_settings_title">Erişim gerekli</string>
+    <string name="omnix_perm_settings_body">Bu komut için OMNIX şuna erişmek zorunda: %1$s. İzin kalıcı olarak reddedilmiş, bu yüzden uygulama ayarlarından elle açın.</string>
+    <string name="omnix_perm_settings_open">Uygulama ayarlarını aç</string>
+    <string name="omnix_perm_settings_later">Şimdi değil</string>
+    <string name="omnix_perm_notif_channel">Erişim istekleri</string>
+    <string name="omnix_perm_notif_title">OMNIX izninize ihtiyaç duyuyor</string>
+    <string name="omnix_perm_notif_text">İzin vermek için dokunun: %1$s</string>
+    <string name="omnix_perm_launch_channel">Uygulama açma</string>
+    <string name="omnix_perm_launch_title">%1$s uygulamasını aç</string>
+    <string name="omnix_perm_launch_text">OMNIX ekranda değilken Android uygulama açmayı engelliyor. Açmak için dokunun.</string>
+    <string name="omnix_perm_launch_overlay">Diğer uygulamaların üzerinde göstermeye izin ver</string>
+    <string name="omnix_perm_launch_blocked">OMNIX ekranda değilken %1$s uygulamasını açamıyorum. Bildirime dokunun ya da OMNIX için diğer uygulamaların üzerinde gösterme iznini verin, böylece sesli komutlar ekran kapalıyken de çalışır.</string>
+</resources>

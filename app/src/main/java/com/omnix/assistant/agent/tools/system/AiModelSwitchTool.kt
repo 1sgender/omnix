@@ -36,7 +36,7 @@ class AiModelSwitchTool @Inject constructor(
 ) : OmniTool {
 
     override val toolId: String = AiModelVoiceCommand.TOOL_ID
-    override val description: String = "Меняет модель ИИ, которая отвечает: Flash (быстро) или Pro (умнее)"
+    override val description: String = "Меняет модель ИИ, которая отвечает (Авто, Локально, Flash, Pro), или называет текущую"
     override val category: ToolCategory = ToolCategory.SYSTEM
     override val riskLevel: ToolRisk = ToolRisk.LOW
     override val isOffline: Boolean = true
@@ -49,7 +49,7 @@ class AiModelSwitchTool @Inject constructor(
         putJsonObject("properties") {
             putJsonObject("choice") {
                 put("type", "string")
-                put("description", "auto, on_device, cloud (Flash) или pro")
+                put("description", "auto, on_device, cloud (Flash), pro или current (назвать текущую)")
             }
         }
         put("required", buildJsonArray { add("choice") })
@@ -57,6 +57,7 @@ class AiModelSwitchTool @Inject constructor(
 
     override suspend fun execute(arguments: JsonObject): ToolExecutionResult {
         val key = arguments["choice"]?.jsonPrimitive?.contentOrNull
+        if (key == AiModelVoiceCommand.ARG_CURRENT) return currentModel()
         val target = AiModelChoice.entries.firstOrNull { it.storageKey == key }
             ?: return ToolExecutionResult.failure("Не указано, какую модель включить", "MISSING_CHOICE")
         val result = switch.switchTo(target)
@@ -71,6 +72,18 @@ class AiModelSwitchTool @Inject constructor(
             data = buildJsonObject {
                 put("choice", (if (result == AiModelActivation.Applied) target else switch.selected()).storageKey)
                 put("applied", result == AiModelActivation.Applied)
+            }
+        )
+    }
+
+    /** «Какая сейчас модель?»: просто называем сохранённый выбор, ничего не меняя. */
+    private fun currentModel(): ToolExecutionResult {
+        val current = switch.selected()
+        return ToolExecutionResult.success(
+            summary = context.getString(R.string.omnix_ai_model_voice_current, nameOf(current)).trim().trimEnd('.'),
+            data = buildJsonObject {
+                put("choice", current.storageKey)
+                put("applied", false)
             }
         )
     }

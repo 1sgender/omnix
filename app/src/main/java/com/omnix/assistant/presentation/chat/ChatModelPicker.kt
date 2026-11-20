@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
@@ -50,6 +52,7 @@ import com.omnix.assistant.presentation.components.OmnixSheet
 import com.omnix.assistant.presentation.design.OmnixMonoLabelStyle
 import com.omnix.assistant.presentation.design.OmnixSans
 import com.omnix.assistant.presentation.design.OmnixTheme
+import com.omnix.assistant.presentation.settings.AiModelViewModel
 import com.omnix.assistant.presentation.settings.failureText
 import com.omnix.assistant.presentation.settings.localStatus
 import java.util.Locale
@@ -64,6 +67,28 @@ data class ChatModelPickerState(
     val localModelState: LocalModelState
 )
 
+/**
+ * Состояние выбора модели из [AiModelViewModel] одним объектом: шапка чата и
+ * голосовой экран берут его отсюда и открывают один и тот же [ChatModelSheet].
+ */
+@Composable
+internal fun collectModelPickerState(viewModel: AiModelViewModel): ChatModelPickerState {
+    val choice by viewModel.choice.collectAsState()
+    val applying by viewModel.applying.collectAsState()
+    val failure by viewModel.failure.collectAsState()
+    val proAvailable by viewModel.proAvailable.collectAsState()
+    val remaining by viewModel.remaining.collectAsState()
+    val localModelState by viewModel.localModelState.collectAsState()
+    return ChatModelPickerState(
+        choice = choice,
+        applying = applying,
+        failure = failure,
+        proAvailable = proAvailable,
+        remaining = remaining,
+        localModelState = localModelState
+    )
+}
+
 /** Название варианта: «Авто», «Локально», «Flash», «Pro». */
 @Composable
 internal fun modelName(choice: AiModelChoice): String = stringResource(
@@ -76,7 +101,57 @@ internal fun modelName(choice: AiModelChoice): String = stringResource(
 )
 
 /**
- * Чип у поля ввода: «FLASH ▾» — тонкая рамка, моно-подпись. Видимая часть
+ * Заголовок шапки чата «Omnix ▾»: под ним [subtitle] (текущая модель), тап
+ * открывает лист выбора. Зона нажатия не меньше 48dp.
+ */
+@Composable
+internal fun ChatModelTitle(
+    picker: ChatModelPickerState,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    val description = stringResource(R.string.omnix_model_chip_cd, modelName(picker.choice))
+    Column(
+        modifier = modifier
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp)
+            .clearAndSetSemantics {
+                contentDescription = description
+                role = Role.Button
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(text = CHEVRON, style = OmnixMonoLabelStyle.copy(fontSize = 12.sp), color = colors.textTertiary)
+        }
+        Text(
+            text = subtitle,
+            style = OmnixMonoLabelStyle.copy(fontSize = 10.sp),
+            color = if (picker.applying != null) colors.accentBrand else colors.textTertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Чип с названием модели на голосовом экране: «FLASH ▾» — тонкая рамка, моно-подпись. Видимая часть
  * компактная, зона нажатия не меньше 48dp.
  */
 @Composable

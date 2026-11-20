@@ -27,6 +27,8 @@
     <!-- Напоминание поверх блокировки: полноэкранное уведомление открывает экран
          «Готово / Отложить». На Android 14 доступ проверяется canUseFullScreenIntent(). -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Выдача по желанию: разрешает открывать приложения голосом при закрытом экране (Android блокирует фоновый запуск). -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- AlarmClock ACTION_SET_ALARM требует это normal-permission. -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />

@@ -57,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.omnix.assistant.R
+import com.omnix.assistant.presentation.chat.ChatModelChip
+import com.omnix.assistant.presentation.chat.ChatModelPickerState
 import com.omnix.assistant.presentation.components.OmnixAlarmLineIcon
 import com.omnix.assistant.presentation.components.OmnixBoltLineIcon
 import com.omnix.assistant.presentation.components.OmnixMicLineIcon
@@ -107,6 +109,8 @@ fun HomeScreen(
     onRemindersTap: () -> Unit = {},
     onAutomationsTap: () -> Unit = {},
     onSystemStateAction: () -> Unit = {},
+    modelPicker: ChatModelPickerState? = null,
+    onOpenModelPicker: () -> Unit = {},
     microphoneSettingsNeeded: Boolean = false
 ) {
     val on = state.assistantPower == AssistantPower.ON
@@ -158,6 +162,15 @@ fun HomeScreen(
                 exit = fadeOut(tween(OmnixTheme.motion.contentFadeMs)) + shrinkVertically()
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Модель можно сменить и в голосовом режиме (или голосом: «переключи на Flash»).
+                    if (modelPicker != null) {
+                        Spacer(Modifier.height(16.dp))
+                        ChatModelChip(
+                            choice = modelPicker.choice,
+                            checking = modelPicker.applying != null,
+                            onClick = onOpenModelPicker
+                        )
+                    }
                     if (!state.isOnline) {
                         Spacer(Modifier.height(16.dp))
                         OnDevicePill()

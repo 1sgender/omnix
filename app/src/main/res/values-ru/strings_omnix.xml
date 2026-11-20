@@ -161,7 +161,6 @@
     <string name="omnix_chat_delete">Удалить чат</string>
     <string name="omnix_chat_delete_confirm_title">Удалить этот чат?</string>
     <string name="omnix_chat_subtitle_on_device">Отвечает на устройстве</string>
-    <string name="omnix_chat_subtitle_online">Отвечает на устройстве и в облаке</string>
     <string name="omnix_chat_today">Сегодня</string>
     <string name="omnix_chat_yesterday">Вчера</string>
     <string name="omnix_chat_from_cloud">Ответ из облака</string>

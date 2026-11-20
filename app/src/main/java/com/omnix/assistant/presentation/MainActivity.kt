@@ -1,6 +1,10 @@
 package com.omnix.assistant.presentation
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,9 +13,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import com.omnix.assistant.R
 import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.core.license.LicenseManager
+import com.omnix.assistant.core.permission.PermissionOutcome
+import com.omnix.assistant.core.permission.PermissionPrompts
+import com.omnix.assistant.core.permission.PermissionTexts
+import com.omnix.assistant.presentation.permission.PermissionSettingsDialog
 import com.omnix.assistant.domain.chat.ChatConversationStore
 import com.omnix.assistant.presentation.activation.ActivationScreen
 import com.omnix.assistant.presentation.localmodel.OfflinePackDialog
@@ -62,7 +71,42 @@ class MainActivity : ComponentActivity() {
 
     private val permissionPromptLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
-    ) { }
+    ) { grants -> onPermissionPromptResult(grants) }
+
+    /** Разрешения, отказанные насовсем: непустой список показывает диалог «Открыть настройки». */
+    private var settingsPromptPermissions: List<String> by mutableStateOf(emptyList())
+
+    /**
+     * Ответ на системный запрос от инструмента. Выдали: команда повторяется
+     * сама и её итог объявляется (чат показывает, голос озвучивает). Отказали
+     * насовсем: системный диалог больше не покажется, ведём в настройки.
+     */
+    private fun onPermissionPromptResult(grants: Map<String, Boolean>) {
+        if (grants.isEmpty()) return
+        val denied = grants.filterValues { granted -> !granted }.keys.toList()
+        val retry = PermissionPrompts.takeRetry()
+        if (denied.isEmpty()) {
+            if (retry == null) return
+            lifecycleScope.launch {
+                val outcome = runCatching { retry() }.getOrNull()
+                announcePermissionOutcome(outcome ?: getString(R.string.omnix_perm_granted_repeat))
+            }
+            return
+        }
+        val permanent = PermissionOutcome.permanentlyDenied(denied) { shouldShowRequestPermissionRationale(it) }
+        if (permanent.isNotEmpty()) settingsPromptPermissions = permanent
+        announcePermissionOutcome(getString(R.string.omnix_perm_denied))
+    }
+
+    private fun announcePermissionOutcome(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        PermissionPrompts.announce(message)
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
+        runCatching { startActivity(intent) }
+    }
 
     /** Guards the first frame while stored preferences are read. */
     private var splashHeld: Boolean by mutableStateOf(true)
@@ -223,6 +267,16 @@ class MainActivity : ComponentActivity() {
                     // иначе баг в активации лечится только ручной переустановкой.
                     // На остальных флейворах молчит.
                     AppUpdatePrompt(otaDownloadMonitor)
+                    if (settingsPromptPermissions.isNotEmpty()) {
+                        PermissionSettingsDialog(
+                            accessLabel = PermissionTexts.describe(this@MainActivity, settingsPromptPermissions),
+                            onOpenSettings = {
+                                settingsPromptPermissions = emptyList()
+                                openAppSettings()
+                            },
+                            onDismiss = { settingsPromptPermissions = emptyList() }
+                        )
+                    }
                 }
             }
         }
