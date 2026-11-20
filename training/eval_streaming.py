@@ -19,6 +19,8 @@ from openwakeword.utils import AudioFeatures
 ROOT = Path(__file__).resolve().parent
 APK = ROOT.parent / "app/src/main/assets/wakeword"
 MODEL = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "model" / "omni_v0.1.onnx")
+# необязательный 2-й аргумент: корень raw-данных с test/{positive,negative} (v0.2: raw_v2)
+RAW = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "raw"
 
 F = AudioFeatures(melspec_model_path=str(APK / "melspectrogram.onnx"),
                   embedding_model_path=str(APK / "embedding_model.onnx"), ncpu=2)
@@ -72,8 +74,8 @@ def build_eval_clip(word, pre=1.6, post=0.4):
 def main():
     for thr in [0.3, 0.4, 0.5, 0.6, 0.7]:
         results = {}
-        for split, folder in [("pos_test", ROOT / "raw" / "test" / "positive"),
-                              ("neg_test", ROOT / "raw" / "test" / "negative")]:
+        for split, folder in [("pos_test", RAW / "test" / "positive"),
+                              ("neg_test", RAW / "test" / "negative")]:
             fired = 0
             files = sorted(folder.glob("*.wav"))
             scores_max = []
