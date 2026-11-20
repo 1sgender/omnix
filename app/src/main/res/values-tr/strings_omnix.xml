@@ -114,7 +114,6 @@
     <string name="omnix_chat_delete">Sohbeti sil</string>
     <string name="omnix_chat_delete_confirm_title">Bu sohbet silinsin mi?</string>
     <string name="omnix_chat_subtitle_on_device">Cihazda yanıtlar</string>
-    <string name="omnix_chat_subtitle_online">Cihazda ve bulutta yanıtlar</string>
     <string name="omnix_chat_today">Bugün</string>
     <string name="omnix_chat_yesterday">Dün</string>
     <string name="omnix_chat_from_cloud">Buluttan yanıt</string>

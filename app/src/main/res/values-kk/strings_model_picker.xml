@@ -13,4 +13,5 @@
     <string name="omnix_model_see_plans">Тарифтерді көру</string>
     <string name="omnix_ai_model_voice_switched">Дайын, енді %1$s жауап береді</string>
     <string name="omnix_ai_model_voice_pro_locked">Pro тек Pro және Max тарифтерінде бар. Әзірге %1$s жауап береді</string>
+    <string name="omnix_ai_model_voice_current">Қазір %1$s жауап беріп тұр</string>
 </resources>

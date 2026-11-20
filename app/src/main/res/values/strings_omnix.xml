@@ -163,7 +163,6 @@
     <string name="omnix_chat_delete">Delete chat</string>
     <string name="omnix_chat_delete_confirm_title">Delete this chat?</string>
     <string name="omnix_chat_subtitle_on_device">Answers on the device</string>
-    <string name="omnix_chat_subtitle_online">Answers on the device and in the cloud</string>
     <string name="omnix_chat_today">Today</string>
     <string name="omnix_chat_yesterday">Yesterday</string>
     <string name="omnix_chat_from_cloud">Answer from the cloud</string>

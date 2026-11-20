@@ -34,7 +34,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.omnix.assistant.R
 import com.omnix.assistant.presentation.automations.AutomationsScreen
-import com.omnix.assistant.presentation.chat.ChatModelPickerState
+import com.omnix.assistant.presentation.chat.collectModelPickerState
 import com.omnix.assistant.presentation.chat.ChatViewModel
 import com.omnix.assistant.presentation.chat.ChatHandoffViewModel
 import com.omnix.assistant.presentation.chat.OmnixChatScreen
@@ -121,7 +121,12 @@ fun OmnixNavGraph(
                     state = uiState,
                     viewModel = omnixViewModel,
                     onClipTap = { navController.navigateSingleTop(OmnixDestination.Devices) },
-                    onOpen = { navController.navigateSingleTop(it) }
+                    onOpen = { navController.navigateSingleTop(it) },
+                    onOpenTariffs = {
+                        navController.navigateSingleTop(
+                            OmnixDestination.SettingsSection(com.omnix.assistant.presentation.settings.SECTION_TARIFFS)
+                        )
+                    }
                 )
             }
 
@@ -138,12 +143,6 @@ fun OmnixNavGraph(
                 val chatTitles by pinnedViewModel.titles.collectAsState()
                 val chatHandoff: ChatHandoffViewModel = hiltViewModel()
                 val modelViewModel: com.omnix.assistant.presentation.settings.AiModelViewModel = hiltViewModel()
-                val modelChoice by modelViewModel.choice.collectAsState()
-                val modelApplying by modelViewModel.applying.collectAsState()
-                val modelFailure by modelViewModel.failure.collectAsState()
-                val modelPro by modelViewModel.proAvailable.collectAsState()
-                val modelRemaining by modelViewModel.remaining.collectAsState()
-                val modelLocal by modelViewModel.localModelState.collectAsState()
                 LaunchedEffect(Unit) {
                     chatHandoff.take()?.let { chatViewModel.sendTextMessage(it) }
                 }
@@ -177,14 +176,7 @@ fun OmnixNavGraph(
                     onKeepLocal = chatViewModel::denyCloudConsent,
                     onToggleDictation = chatViewModel::toggleVoiceDictation,
                     onSwitchToFlash = chatViewModel::switchToFlash,
-                    modelPicker = ChatModelPickerState(
-                        choice = modelChoice,
-                        applying = modelApplying,
-                        failure = modelFailure,
-                        proAvailable = modelPro,
-                        remaining = modelRemaining,
-                        localModelState = modelLocal
-                    ),
+                    modelPicker = collectModelPickerState(modelViewModel),
                     onSelectModel = modelViewModel::select,
                     onOpenTariffs = {
                         navController.navigateSingleTop(
