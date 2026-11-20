@@ -348,12 +348,48 @@ class ToolExecutor @Inject constructor(
      */
     suspend fun execute(
         call: ToolCall,
-        origin: ActionOrigin = ActionOrigin.USER_REQUEST
+        origin: ActionOrigin = ActionOrigin.USER_REQUEST,
+        promptOnPermission: Boolean = true
     ): ToolExecutionResult {
         val result = executeChecked(call, origin)
         // Не хватило доступа: системный запрос показываем сразу, а не только текстом.
+        // После выдачи доступа команда повторяется сама («позвони маме»).
+        if (promptOnPermission && result.status == ToolExecutionStatus.PERMISSION_REQUIRED) {
+            PermissionPrompts.request(result.missingPermissions) { retryAfterGrant(call, origin) }
+        }
+        return result
+    }
+
+    /**
+     * Повтор команды после выдачи доступа. Если теперь нужно подтверждение
+     * (звонок, SMS), его очередь чистим и просим повторить фразу: голосовой и
+     * чат-слой о таком вызове не знают. Возвращает текст итога либо null.
+     */
+    private suspend fun retryAfterGrant(call: ToolCall, origin: ActionOrigin): String? {
+        val result = execute(call, origin, promptOnPermission = false)
+        if (result.status == ToolExecutionStatus.REQUIRES_USER_CONFIRMATION) {
+            removePendingConfirmation(call)
+            return null
+        }
+        return result.summary
+    }
+
+    /** Повтор уже подтверждённого пользователем вызова после выдачи доступа. */
+    private suspend fun rerunConfirmedAfterGrant(call: ToolCall): String? = withContext(Dispatchers.IO) {
+        val tool = registry.getTool(call.toolId) ?: return@withContext null
+        when (val preflight = permissionManager.preflight(tool, call, ActionOrigin.USER_REQUEST)) {
+            is PreflightVerdict.PermissionsMissing -> preflight.explanation
+            is PreflightVerdict.Unsupported -> preflight.reason
+            PreflightVerdict.Allowed,
+            is PreflightVerdict.ConfirmationRequired ->
+                runVerified(tool, call, System.currentTimeMillis()).summary
+        }
+    }
+
+    /** Подтверждённый вызов упёрся в разрешение: просим его и запоминаем повтор. */
+    private fun promptForConfirmedCall(call: ToolCall, result: ToolExecutionResult): ToolExecutionResult {
         if (result.status == ToolExecutionStatus.PERMISSION_REQUIRED) {
-            PermissionPrompts.request(result.missingPermissions)
+            PermissionPrompts.request(result.missingPermissions) { rerunConfirmedAfterGrant(call) }
         }
         return result
     }
@@ -458,9 +494,12 @@ class ToolExecutor @Inject constructor(
         // валидного подтверждения пользователя мы сюда не доходим).
         when (val preflight = permissionManager.preflight(tool, call, ActionOrigin.USER_REQUEST)) {
             is PreflightVerdict.PermissionsMissing ->
-                return@withContext ToolExecutionResult.permissionRequired(
-                    preflight.explanation,
-                    preflight.permissions
+                return@withContext promptForConfirmedCall(
+                    call,
+                    ToolExecutionResult.permissionRequired(
+                        preflight.explanation,
+                        preflight.permissions
+                    )
                 )
             is PreflightVerdict.Unsupported ->
                 return@withContext ToolExecutionResult.unsupported(
@@ -472,7 +511,7 @@ class ToolExecutor @Inject constructor(
         }
 
         val startTime = System.currentTimeMillis()
-        runVerified(tool, call, startTime)
+        promptForConfirmedCall(call, runVerified(tool, call, startTime))
     }
 
     /**

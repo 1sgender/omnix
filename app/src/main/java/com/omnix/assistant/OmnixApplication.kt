@@ -2,6 +2,7 @@ package com.omnix.assistant
 
 import android.app.Application
 import com.omnix.assistant.core.crash.CrashCapture
+import com.omnix.assistant.core.permission.AppVisibility
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -12,6 +13,7 @@ class OmnixApplication : Application() {
         // стека нет. Системный диалог «приложение закрыто» сохраняется.
         CrashCapture.install(this)
         super.onCreate()
+        AppVisibility.attach(this)
         // H-06: автоматический reconcile на холодный старт убран.
         //
         // Раньше здесь дёргался AutomationScheduleReceiver напрямую — это

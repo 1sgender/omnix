@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_perm_kind_contacts">байланыстар</string>
+    <string name="omnix_perm_kind_calls">телефон қоңыраулары</string>
+    <string name="omnix_perm_kind_sms">SMS жіберу</string>
+    <string name="omnix_perm_kind_notifications">хабарландырулар</string>
+    <string name="omnix_perm_kind_location">орналасқан жер</string>
+    <string name="omnix_perm_kind_microphone">микрофон</string>
+    <string name="omnix_perm_kind_calendar">күнтізбе</string>
+    <string name="omnix_perm_kind_other">қажетті рұқсаттар</string>
+    <string name="omnix_perm_voice_request">OMNIX үшін мынаған рұқсат керек: %1$s. Экрандағы терезеде рұқсат беріңіз.</string>
+    <string name="omnix_perm_voice_notification">OMNIX үшін мынаған рұқсат керек: %1$s. OMNIX хабарландыруын басып, рұқсат беріңіз.</string>
+    <string name="omnix_perm_granted_repeat">Рұқсат берілді. Пәрменді қайталаңыз.</string>
+    <string name="omnix_perm_denied">Бұл рұқсатсыз пәрменді орындау мүмкін емес.</string>
+    <string name="omnix_perm_settings_title">Рұқсат керек</string>
+    <string name="omnix_perm_settings_body">Бұл пәрмен үшін OMNIX мынаған рұқсат алуы керек: %1$s. Ол біржола тыйым салынған, сондықтан қосымша параметрлерінде өзіңіз қосыңыз.</string>
+    <string name="omnix_perm_settings_open">Қосымша параметрлерін ашу</string>
+    <string name="omnix_perm_settings_later">Қазір емес</string>
+    <string name="omnix_perm_notif_channel">Рұқсат сұраулары</string>
+    <string name="omnix_perm_notif_title">OMNIX рұқсатыңызды сұрайды</string>
+    <string name="omnix_perm_notif_text">Рұқсат беру үшін басыңыз: %1$s</string>
+    <string name="omnix_perm_launch_channel">Қосымшаларды ашу</string>
+    <string name="omnix_perm_launch_title">%1$s қосымшасын ашу</string>
+    <string name="omnix_perm_launch_text">OMNIX экранда болмаса, Android қосымшаларды ашуға жол бермейді. Ашу үшін басыңыз.</string>
+    <string name="omnix_perm_launch_overlay">Басқа қосымшалардың үстінен көрсетуге рұқсат</string>
+    <string name="omnix_perm_launch_blocked">OMNIX экранда болмаса, %1$s қосымшасын аша алмаймын. Хабарландыруды басыңыз немесе OMNIX-ке басқа қосымшалардың үстінен көрсетуге рұқсат беріңіз, сонда дауыстық пәрмендер экран сөніп тұрғанда да жұмыс істейді.</string>
+</resources>
