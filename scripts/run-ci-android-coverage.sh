@@ -7,7 +7,7 @@ mkdir -p "$LOG_DIR"
 
 # Сбои загрузки плагинов/зависимостей (инфраструктура сети) не должны валить
 # сборку main: до 3 попыток, только если в логе именно такая ошибка.
-INFRA_RE='UnknownPluginException|Could not resolve|Could not GET|Could not HEAD|Read timed out|Connection reset|Remote host terminated'
+INFRA_RE='UnknownPluginException|Could not resolve|could not resolve plugin artifact|was not found in any of the following sources|Could not GET|Could not HEAD|Read timed out|Connection reset|Remote host terminated|TLS handshake'
 attempt=1
 while true; do
   set +e
