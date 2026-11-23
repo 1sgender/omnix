@@ -114,9 +114,7 @@ class SmsTool @Inject constructor(
         val phoneNumber = when (resolution) {
             is ContactResolution.Resolved -> resolution.phoneNumber
             is ContactResolution.Ambiguous -> return ToolExecutionResult.failure(
-                summary = "Найдено несколько контактов: " +
-                    resolution.candidates.joinToString(", ") { (name, number) -> "$name ($number)" } +
-                    ". Уточните получателя.",
+                summary = ambiguityMessage(resolution.candidates),
                 error = "AMBIGUOUS_CONTACT"
             )
             is ContactResolution.PermissionRequired -> return ToolExecutionResult.permissionRequired(
