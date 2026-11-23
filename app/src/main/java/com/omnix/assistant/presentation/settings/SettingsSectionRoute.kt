@@ -85,7 +85,6 @@ fun SettingsSectionRoute(
             )
             val aiModelViewModel: AiModelViewModel = hiltViewModel()
             val adminModels by aiModelViewModel.admin.collectAsState()
-            val veniceModels by aiModelViewModel.venice.collectAsState()
             val wakeListening by aiModelViewModel.wakeListening.collectAsState()
             val aiRemaining by aiModelViewModel.remaining.collectAsState()
             AiSettingsScreen(
@@ -99,8 +98,6 @@ fun SettingsSectionRoute(
                         AdminModelSection(
                             state = adminModels,
                             onPin = aiModelViewModel::pinAdminModel,
-                            venice = veniceModels,
-                            onLoadVenice = aiModelViewModel::loadVeniceModels,
                             modifier = Modifier.padding(top = 20.dp)
                         )
                         AdminWakeSection(

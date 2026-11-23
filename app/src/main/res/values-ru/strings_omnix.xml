@@ -310,12 +310,6 @@
     <string name="omnix_admin_models_restart">Модель на телефоне сменится после перезапуска приложения. Если её ещё нет на телефоне, скачайте её на этом экране.</string>
     <string name="omnix_admin_answer_phone">Телефон · %1$s</string>
     <string name="omnix_admin_answer_cloud">Облако</string>
-    <string name="omnix_admin_venice_title">Venice AI (только админ)</string>
-    <string name="omnix_admin_venice_body">Модели Venice работают через ваш сервер. Видно и доступно только вам: обычный и автоматический выбор Venice никогда не использует. Часть моделей без цензуры.</string>
-    <string name="omnix_admin_venice_loading">Загружаю модели Venice…</string>
-    <string name="omnix_admin_venice_unavailable">Venice недоступен: на сервере нет ключа или сервис не отвечает.</string>
-    <string name="omnix_admin_venice_meta">контекст %1$s · %2$s / %3$s USD за 1M токенов · %4$s</string>
-    <string name="omnix_admin_venice_uncensored">Модель без цензуры: содержимое не фильтруется</string>
     <string name="omnix_admin_wake_title">Тест фразы вызова (админ)</string>
     <string name="omnix_admin_wake_body">Сравните на своём телефоне. Сменится при следующем запуске прослушивания.</string>
     <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — по умолчанию</string>
