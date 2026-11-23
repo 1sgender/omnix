@@ -16,6 +16,10 @@
     <string name="omnix_reminder_no_time">Qachon eslatay? Masalan: soat 18:00 da onamga qoʻngʻiroq qilishni eslat</string>
     <string name="omnix_reminder_no_text">Nima haqida eslatay?</string>
     <string name="omnix_reminder_voice">Eslatib qoʻyaman: %1$s</string>
+    <string name="omnix_reminder_voice_none">Faol eslatma yoʻq</string>
+    <string name="omnix_reminder_voice_done">Bajarildi: %1$s</string>
+    <string name="omnix_reminder_voice_snoozed_minutes">%1$d daqiqaga kechiktirdim: %2$s</string>
+    <string name="omnix_reminder_voice_snoozed_hours">%1$d soatga kechiktirdim: %2$s</string>
     <string name="omnix_reminders_title">Eslatmalar</string>
     <string name="omnix_reminders_empty">Hozircha eslatma yoʻq. Ayting: soat 18:00 da onamga qoʻngʻiroq qilishni eslat</string>
     <string name="omnix_reminder_delete">Oʻchirish</string>

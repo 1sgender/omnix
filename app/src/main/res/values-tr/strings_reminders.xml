@@ -16,6 +16,10 @@
     <string name="omnix_reminder_no_time">Ne zaman hatırlatayım? Örneğin: saat 18:00\'de anneyi aramayı hatırlat</string>
     <string name="omnix_reminder_no_text">Ne hakkında hatırlatayım?</string>
     <string name="omnix_reminder_voice">Hatırlatıyorum: %1$s</string>
+    <string name="omnix_reminder_voice_none">Etkin hatırlatma yok</string>
+    <string name="omnix_reminder_voice_done">Tamamlandı: %1$s</string>
+    <string name="omnix_reminder_voice_snoozed_minutes">%1$d dakika erteledim: %2$s</string>
+    <string name="omnix_reminder_voice_snoozed_hours">%1$d saat erteledim: %2$s</string>
     <string name="omnix_reminders_title">Hatırlatmalar</string>
     <string name="omnix_reminders_empty">Henüz hatırlatma yok. Şunu söyleyin: saat 18:00\'de anneyi aramayı hatırlat</string>
     <string name="omnix_reminder_delete">Sil</string>

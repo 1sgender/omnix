@@ -5,6 +5,7 @@ import com.omnix.assistant.agent.media.MediaIntentParser
 import com.omnix.assistant.agent.media.MusicRequestParser
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.reminder.ReminderTimeParser
+import com.omnix.assistant.agent.reminder.ReminderVoiceCommand
 import com.omnix.assistant.agent.tools.productivity.ReminderTool
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -57,6 +58,26 @@ class FastCommandRouter @Inject constructor() {
                     arguments = buildJsonObject { put("choice", argument) }
                 ),
                 immediateVoiceResponse = reply
+            )
+        }
+
+        // 0.8 Ответ на сработавшее напоминание: «готово», «отложи на 10 минут».
+        //     Только фраза целиком; есть ли что отмечать, решает инструмент
+        //     («нет активного напоминания»). Раньше правила 0.9: «напомни позже».
+        ReminderVoiceCommand.parse(q)?.let { command ->
+            val (action, minutes) = when (command) {
+                ReminderVoiceCommand.Command.Done -> ReminderVoiceCommand.ACTION_DONE to 0
+                is ReminderVoiceCommand.Command.Snooze -> ReminderVoiceCommand.ACTION_SNOOZE to command.minutes
+            }
+            return FastRouteResult.HandledLocally(
+                toolCall = ToolCall(
+                    toolId = ReminderVoiceCommand.TOOL_ID,
+                    arguments = buildJsonObject {
+                        put(ReminderVoiceCommand.ARG_ACTION, action)
+                        if (minutes > 0) put(ReminderVoiceCommand.ARG_MINUTES, minutes)
+                    }
+                ),
+                immediateVoiceResponse = "Секунду."
             )
         }
 
