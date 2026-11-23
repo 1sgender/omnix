@@ -16,6 +16,10 @@
     <string name="omnix_reminder_no_time">Қашан еске салайын? Мысалы: сағат 18:00-де анама қоңырау шалуды еске сал</string>
     <string name="omnix_reminder_no_text">Не туралы еске салайын?</string>
     <string name="omnix_reminder_voice">Еске салам: %1$s</string>
+    <string name="omnix_reminder_voice_none">Белсенді еске салу жоқ</string>
+    <string name="omnix_reminder_voice_done">Орындалды: %1$s</string>
+    <string name="omnix_reminder_voice_snoozed_minutes">%1$d минутқа кейінге қалдырдым: %2$s</string>
+    <string name="omnix_reminder_voice_snoozed_hours">%1$d сағатқа кейінге қалдырдым: %2$s</string>
     <string name="omnix_reminders_title">Еске салулар</string>
     <string name="omnix_reminders_empty">Еске салулар әзірге жоқ. Айтыңыз: сағат 18:00-де анама қоңырау шалуды еске сал</string>
     <string name="omnix_reminder_delete">Жою</string>

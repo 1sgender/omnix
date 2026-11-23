@@ -146,6 +146,35 @@ class ReminderManagerTest {
     }
 
     @Test
+    fun `latest fired is the newest fired one and ignores waiting and finished`() = runTest {
+        assertNull(manager.latestFired())
+        val waiting = manager.create("ждёт", now + 10_000).reminder.id
+        assertNull(manager.latestFired())
+
+        val older = manager.create("старое", now).reminder.id
+        val newer = manager.create("новое", now + 5_000).reminder.id
+        manager.onFired(older)
+        manager.onFired(newer)
+        assertEquals(newer, manager.latestFired()?.id)
+
+        manager.done(newer)
+        assertEquals(older, manager.latestFired()?.id)
+        manager.snooze(older, now = now)
+        assertNull(manager.latestFired())
+        assertEquals(ReminderStatus.PENDING, manager.get(waiting)?.status)
+    }
+
+    @Test
+    fun `snooze with custom minutes moves the alarm by that much`() = runTest {
+        val id = manager.create("a", now).reminder.id
+        manager.onFired(id)
+
+        manager.snooze(id, minutes = 60, now = now)
+
+        assertEquals(now + 60 * 60_000L, alarms.scheduled[id])
+    }
+
+    @Test
     fun `snooze of a missing reminder does nothing`() = runTest {
         assertNull(manager.snooze(42, now = now))
         assertTrue(alarms.scheduled.isEmpty())

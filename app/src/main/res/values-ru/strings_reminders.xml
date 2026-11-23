@@ -16,6 +16,10 @@
     <string name="omnix_reminder_no_time">Когда напомнить? Например: напомни в 18:00 позвонить маме</string>
     <string name="omnix_reminder_no_text">О чём напомнить?</string>
     <string name="omnix_reminder_voice">Напоминаю: %1$s</string>
+    <string name="omnix_reminder_voice_none">Нет активного напоминания</string>
+    <string name="omnix_reminder_voice_done">Готово: %1$s</string>
+    <string name="omnix_reminder_voice_snoozed_minutes">Отложил на %1$d мин: %2$s</string>
+    <string name="omnix_reminder_voice_snoozed_hours">Отложил на %1$d ч: %2$s</string>
     <string name="omnix_reminders_title">Напоминания</string>
     <string name="omnix_reminders_empty">Напоминаний пока нет. Скажите: напомни в 18:00 позвонить маме</string>
     <string name="omnix_reminder_delete">Удалить</string>

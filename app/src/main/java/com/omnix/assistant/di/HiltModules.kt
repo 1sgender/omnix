@@ -229,6 +229,7 @@ abstract class SecurityAndNetworkBindingModule {
     @Binds @IntoSet abstract fun bindCreateAutomationTool(tool: CreateAutomationTool): OmniTool
     @Binds @IntoSet abstract fun bindEarBriefingTool(tool: EarBriefingTool): OmniTool
     @Binds @IntoSet abstract fun bindReminderTool(tool: ReminderTool): OmniTool
+    @Binds @IntoSet abstract fun bindReminderVoiceTool(tool: com.omnix.assistant.agent.tools.productivity.ReminderVoiceTool): OmniTool
 
     // 5. Локация и навигация (Location)
     @Binds @IntoSet abstract fun bindLocationNavigationTool(tool: LocationNavigationTool): OmniTool

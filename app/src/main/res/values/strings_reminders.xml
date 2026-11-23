@@ -16,6 +16,10 @@
     <string name="omnix_reminder_no_time">When should I remind you? For example: remind me at 18:00 to call mom</string>
     <string name="omnix_reminder_no_text">What should I remind you about?</string>
     <string name="omnix_reminder_voice">Reminding you: %1$s</string>
+    <string name="omnix_reminder_voice_none">No active reminder</string>
+    <string name="omnix_reminder_voice_done">Done: %1$s</string>
+    <string name="omnix_reminder_voice_snoozed_minutes">Snoozed for %1$d min: %2$s</string>
+    <string name="omnix_reminder_voice_snoozed_hours">Snoozed for %1$d h: %2$s</string>
     <string name="omnix_reminders_title">Reminders</string>
     <string name="omnix_reminders_empty">No reminders yet. Say: remind me at 18:00 to call mom</string>
     <string name="omnix_reminder_delete">Delete</string>

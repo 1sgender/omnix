@@ -1,5 +1,6 @@
 package com.omnix.assistant.agent.fast
 
+import com.omnix.assistant.agent.reminder.ReminderVoiceCommand
 import com.omnix.assistant.agent.tools.productivity.ReminderTool
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -35,5 +36,28 @@ class FastCommandRouterReminderTest {
     fun `a question about reminders is not a request`() {
         assertNotEquals(ReminderTool.TOOL_ID, toolIdOf("какие у меня напоминания"))
         assertNotEquals(ReminderTool.TOOL_ID, toolIdOf("позвони маме"))
+    }
+
+    private fun argsOf(phrase: String) =
+        (router.route(phrase) as FastRouteResult.HandledLocally).toolCall!!.arguments
+
+    @Test
+    fun `done and snooze go to the reply tool`() {
+        assertEquals(ReminderVoiceCommand.TOOL_ID, toolIdOf("Готово"))
+        assertEquals(ReminderVoiceCommand.TOOL_ID, toolIdOf("done"))
+        assertEquals(ReminderVoiceCommand.TOOL_ID, toolIdOf("отложи на час"))
+        assertEquals(ReminderVoiceCommand.TOOL_ID, toolIdOf("омни, snooze"))
+
+        assertEquals("done", argsOf("готово")[ReminderVoiceCommand.ARG_ACTION]?.jsonPrimitive?.content)
+        val snooze = argsOf("отложи на 10 минут")
+        assertEquals("snooze", snooze[ReminderVoiceCommand.ARG_ACTION]?.jsonPrimitive?.content)
+        assertEquals(10, snooze[ReminderVoiceCommand.ARG_MINUTES]?.jsonPrimitive?.content?.toInt())
+        assertEquals(60, argsOf("отложи на час")[ReminderVoiceCommand.ARG_MINUTES]?.jsonPrimitive?.content?.toInt())
+    }
+
+    @Test
+    fun `a new reminder is not taken for a reply`() {
+        assertEquals(ReminderTool.TOOL_ID, toolIdOf("напомни через 10 минут позвонить маме"))
+        assertNotEquals(ReminderVoiceCommand.TOOL_ID, toolIdOf("отложи звонок маме"))
     }
 }

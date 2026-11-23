@@ -16,6 +16,10 @@
     <string name="omnix_reminder_no_time">Haçan ýatladaýyn? Mysal üçin: sagat 18:00-da ejeme jaň etmegi ýatla</string>
     <string name="omnix_reminder_no_text">Näme barada ýatladaýyn?</string>
     <string name="omnix_reminder_voice">Ýatladýaryn: %1$s</string>
+    <string name="omnix_reminder_voice_none">Işjeň ýatlatma ýok</string>
+    <string name="omnix_reminder_voice_done">Taýýar: %1$s</string>
+    <string name="omnix_reminder_voice_snoozed_minutes">%1$d minut yza goýdum: %2$s</string>
+    <string name="omnix_reminder_voice_snoozed_hours">%1$d sagat yza goýdum: %2$s</string>
     <string name="omnix_reminders_title">Ýatlatmalar</string>
     <string name="omnix_reminders_empty">Heniz ýatlatma ýok. Aýdyň: sagat 18:00-da ejeme jaň etmegi ýatla</string>
     <string name="omnix_reminder_delete">Poz</string>

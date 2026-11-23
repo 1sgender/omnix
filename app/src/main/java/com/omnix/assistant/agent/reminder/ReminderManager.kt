@@ -53,6 +53,13 @@ class ReminderManager @Inject constructor(
 
     suspend fun get(id: Long): ReminderEntity? = dao.get(id)
 
+    /**
+     * Напоминание, которое сейчас ждёт «Готово» или «Отложить»: из сработавших
+     * самое свежее. null — сослаться не на что (голосовой ответ скажет об этом).
+     */
+    suspend fun latestFired(): ReminderEntity? =
+        dao.active().filter { it.status == ReminderStatus.FIRED }.maxByOrNull { it.triggerAt }
+
     suspend fun create(text: String, triggerAt: Long): Created {
         val id = dao.insert(ReminderEntity(text = text, triggerAt = triggerAt))
         val exact = alarms.schedule(id, triggerAt)
