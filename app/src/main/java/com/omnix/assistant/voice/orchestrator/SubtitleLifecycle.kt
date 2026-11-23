@@ -36,6 +36,21 @@ object SubtitleLifecycle {
     }
 
     /**
+     * Синтезатор занят: состояние Speaking/Initializing ИЛИ есть невыданные
+     * фразы (офлайн-голос переходит в Speaking лишь в onStart, а синтез
+     * длинной фразы идёт до этого секунды; без учёта очереди страж вернул бы
+     * слушание, и голос зазвучал бы поверх микрофона).
+     */
+    fun isTtsEngaged(stateSpeaking: Boolean, utterancesPending: Boolean): Boolean =
+        stateSpeaking || utterancesPending
+
+    /**
+     * Возвращая слушание по жёсткому лимиту, синтезатор нужно остановить, если
+     * он всё ещё занят: иначе речь продолжится поверх прослушивания.
+     */
+    fun shouldStopTtsBeforeListening(ttsEngaged: Boolean): Boolean = ttsEngaged
+
+    /**
      * Фраза распознана, но после очистки и снятия имени ассистента текста нет:
      * ждать нечего, субтитр «Recognizing» нужно сбросить в «Слушаю».
      */

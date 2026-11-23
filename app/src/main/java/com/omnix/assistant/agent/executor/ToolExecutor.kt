@@ -353,9 +353,17 @@ class ToolExecutor @Inject constructor(
     ): ToolExecutionResult {
         val result = executeChecked(call, origin)
         // Не хватило доступа: системный запрос показываем сразу, а не только текстом.
-        // После выдачи доступа команда повторяется сама («позвони маме»).
+        // После выдачи доступа команда повторяется сама («позвони маме»), но только
+        // если её дал пользователь: автоматизация без человека рядом не должна
+        // «оживать» по случайной выдаче доступа (ключ повтора = callId вызова).
         if (promptOnPermission && result.status == ToolExecutionStatus.PERMISSION_REQUIRED) {
-            PermissionPrompts.request(result.missingPermissions) { retryAfterGrant(call, origin) }
+            if (origin == ActionOrigin.USER_REQUEST) {
+                PermissionPrompts.request(result.missingPermissions, key = call.callId) {
+                    retryAfterGrant(call, origin)
+                }
+            } else {
+                PermissionPrompts.request(result.missingPermissions, key = call.callId)
+            }
         }
         return result
     }
@@ -365,7 +373,7 @@ class ToolExecutor @Inject constructor(
      * (звонок, SMS), его очередь чистим и просим повторить фразу: голосовой и
      * чат-слой о таком вызове не знают. Возвращает текст итога либо null.
      */
-    private suspend fun retryAfterGrant(call: ToolCall, origin: ActionOrigin): String? {
+    internal suspend fun retryAfterGrant(call: ToolCall, origin: ActionOrigin): String? {
         val result = execute(call, origin, promptOnPermission = false)
         if (result.status == ToolExecutionStatus.REQUIRES_USER_CONFIRMATION) {
             removePendingConfirmation(call)
@@ -374,14 +382,19 @@ class ToolExecutor @Inject constructor(
         return result.summary
     }
 
-    /** Повтор уже подтверждённого пользователем вызова после выдачи доступа. */
-    private suspend fun rerunConfirmedAfterGrant(call: ToolCall): String? = withContext(Dispatchers.IO) {
+    /**
+     * Повтор уже подтверждённого вызова после выдачи доступа. Подтверждение
+     * относилось к тому моменту и к тому составу действия: если политика и
+     * теперь требует подтверждения (звонок, SMS), вызов НЕ выполняется молча,
+     * а пользователя просят повторить фразу (null → «доступ выдан, повторите»).
+     */
+    internal suspend fun rerunConfirmedAfterGrant(call: ToolCall): String? = withContext(Dispatchers.IO) {
         val tool = registry.getTool(call.toolId) ?: return@withContext null
         when (val preflight = permissionManager.preflight(tool, call, ActionOrigin.USER_REQUEST)) {
             is PreflightVerdict.PermissionsMissing -> preflight.explanation
             is PreflightVerdict.Unsupported -> preflight.reason
-            PreflightVerdict.Allowed,
-            is PreflightVerdict.ConfirmationRequired ->
+            is PreflightVerdict.ConfirmationRequired -> null
+            PreflightVerdict.Allowed ->
                 runVerified(tool, call, System.currentTimeMillis()).summary
         }
     }
@@ -389,7 +402,9 @@ class ToolExecutor @Inject constructor(
     /** Подтверждённый вызов упёрся в разрешение: просим его и запоминаем повтор. */
     private fun promptForConfirmedCall(call: ToolCall, result: ToolExecutionResult): ToolExecutionResult {
         if (result.status == ToolExecutionStatus.PERMISSION_REQUIRED) {
-            PermissionPrompts.request(result.missingPermissions) { rerunConfirmedAfterGrant(call) }
+            PermissionPrompts.request(result.missingPermissions, key = call.callId) {
+                rerunConfirmedAfterGrant(call)
+            }
         }
         return result
     }

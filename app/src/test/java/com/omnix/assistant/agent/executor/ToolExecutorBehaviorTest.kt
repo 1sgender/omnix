@@ -20,7 +20,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import com.omnix.assistant.agent.policy.ActionOrigin
+import com.omnix.assistant.core.permission.PermissionPrompts
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -328,5 +332,100 @@ class ToolExecutorBehaviorTest {
 
         assertEquals(ToolExecutionStatus.FAILURE, result.status)
         assertEquals("IllegalStateException", result.error)
+    }
+
+    // --- повтор команды после выдачи разрешения ---
+
+    private val contactsPermission = "android.permission.READ_CONTACTS"
+
+    private fun executorWith(capabilities: FakeCapabilityRegistry, tool: OmniTool): ToolExecutor {
+        val registry = ToolRegistry(setOf(tool), ToolDiscoveryEngine(SemanticTextMatcher()))
+        return ToolExecutor(registry, ToolPermissionManager(capabilities))
+    }
+
+    private fun resetPrompts() {
+        PermissionPrompts.cancelRetries()
+        PermissionPrompts.forgetRecent()
+        PermissionPrompts.clear()
+    }
+
+    @Test
+    fun `automation origin does not queue a retry after permission prompt`() = runBlocking {
+        resetPrompts()
+        val tool = ScriptedTool("contacts.tool", requiredPermissions = listOf(contactsPermission)) {
+            ToolExecutionResult.success("готово")
+        }
+        val executor = executorWith(FakeCapabilityRegistry.create(), tool)
+
+        val automated = executor.execute(call("contacts.tool"), ActionOrigin.AUTOMATION)
+        assertEquals(ToolExecutionStatus.PERMISSION_REQUIRED, automated.status)
+        assertNull("автоматизация не ставит повтор", PermissionPrompts.takeRetry())
+
+        executor.execute(call("contacts.tool"), ActionOrigin.USER_REQUEST)
+        assertNotNull("прямой запрос пользователя ставит повтор", PermissionPrompts.takeRetry())
+        resetPrompts()
+    }
+
+    @Test
+    fun `retry after grant runs the command once access is granted`() = runBlocking {
+        resetPrompts()
+        val runs = AtomicInteger(0)
+        val tool = ScriptedTool("contacts.tool", requiredPermissions = listOf(contactsPermission)) {
+            runs.incrementAndGet()
+            ToolExecutionResult.success("готово")
+        }
+        val capabilities = FakeCapabilityRegistry.create()
+        val executor = executorWith(capabilities, tool)
+
+        executor.execute(call("contacts.tool"))
+        val retry = PermissionPrompts.takeRetry()
+        assertNotNull(retry)
+        capabilities.grant(contactsPermission)
+
+        assertEquals("готово", retry!!.invoke())
+        assertEquals(1, runs.get())
+        resetPrompts()
+    }
+
+    @Test
+    fun `retry after grant asks for confirmation again instead of running silently`() = runBlocking {
+        resetPrompts()
+        val runs = AtomicInteger(0)
+        val tool = ScriptedTool(
+            "communication.sms",
+            requiredPermissions = listOf("android.permission.SEND_SMS"),
+            riskLevelForPolicy = ToolRisk.CONFIRMATION_REQUIRED
+        ) {
+            runs.incrementAndGet()
+            ToolExecutionResult.success("отправлено")
+        }
+        val capabilities = FakeCapabilityRegistry.create().grant("android.permission.SEND_SMS")
+        val executor = executorWith(capabilities, tool)
+
+        assertNull("повтор не выполняет SMS и просит повторить фразу", executor.retryAfterGrant(call("communication.sms"), ActionOrigin.USER_REQUEST))
+        assertEquals(0, runs.get())
+        resetPrompts()
+    }
+
+    @Test
+    fun `confirmed rerun after grant does not execute a call that needs confirmation again`() = runBlocking {
+        resetPrompts()
+        val runs = AtomicInteger(0)
+        val sms = ScriptedTool("communication.sms", riskLevelForPolicy = ToolRisk.CONFIRMATION_REQUIRED) {
+            runs.incrementAndGet()
+            ToolExecutionResult.success("отправлено")
+        }
+        val executor = executorWith(FakeCapabilityRegistry.create(), sms)
+
+        assertNull(executor.rerunConfirmedAfterGrant(call("communication.sms")))
+        assertEquals("подтверждённый давно вызов не уходит молча", 0, runs.get())
+
+        val safe = ScriptedTool("safe.tool") {
+            runs.incrementAndGet()
+            ToolExecutionResult.success("сделано")
+        }
+        assertEquals("сделано", executorWith(FakeCapabilityRegistry.create(), safe).rerunConfirmedAfterGrant(call("safe.tool")))
+        assertEquals(1, runs.get())
+        resetPrompts()
     }
 }

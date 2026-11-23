@@ -99,6 +99,24 @@ class WakeWordExtractorTest {
     }
 
     @Test
+    fun `составные слова с омни через дефис не срезаются`() {
+        listOf(
+            "омни-канальная стратегия продаж", "Омни-канальный подход", "omni-channel strategy",
+            "омни‐канальная"
+        ).forEach {
+            assertEquals(it, WakeWordExtractor.extractQuery(it))
+            assertFalse("'$it' не слово вызова", WakeWordExtractor.containsWakeWord(it))
+        }
+    }
+
+    @Test
+    fun `обращение через запятую или тире по-прежнему срезается`() {
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни, позвони маме"))
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни - позвони маме"))
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни — позвони маме"))
+    }
+
+    @Test
     fun `обычные слова не срезаются`() {
         listOf(
             "помни про встречу", "омлет на завтрак", "омар в ресторане", "амнистия объявлена",
