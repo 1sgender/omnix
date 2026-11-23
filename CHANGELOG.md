@@ -8,6 +8,21 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Added (speech hints)
+
+- Подсказки распознаванию на телефоне: sherpa-onnx умеет hotwords только у трансдьюсеров с
+  modified_beam_search, а наши модели CTC (туркменская Omnilingual, русская GigaAM v3) или
+  жадный Vosk, поэтому добавлена пост-коррекция `AsrHintCorrector`: слово на месте имени
+  после «позвони/смс/open» сверяется с именами контактов и названиями приложений
+  (транслит-ключи `NameTranslit`, неоднозначные совпадения не трогаются). Список контактов
+  остаётся в памяти устройства.
+
+### Fixed (SMS)
+
+- SMS: «отправлено» теперь только по отчёту системы (sentIntent на каждую часть), а не
+  по факту вызова `sendTextMessage`; ошибки модема, режим полёта, нет сети и неизвестный
+  результат озвучиваются честно, SIM выбирается по системной SIM для SMS.
+
 ### Added (Venice, admin only)
 
 - Venice AI как провайдер только для админа: ключ `VENICE_API_KEY` лишь в окружении

@@ -37,6 +37,9 @@ object AsrContextHints {
         "фонарик", "громкость", "яркость", "jaň et", "ýatla"
     )
 
+    /** Однословные названия для пост-коррекции после «открой …» (см. [AsrHintCorrector]). */
+    val APP_WORDS = listOf("OMNIX", "Spotify", "YouTube", "Telegram", "WhatsApp", "Bluetooth")
+
     /**
      * Строки для EXTRA_BIASING_STRINGS: «Омни», имена контактов (полное имя и первое слово),
      * затем названия функций. Без повторов (без учёта регистра), не больше [MAX_BIASING_STRINGS].
@@ -74,6 +77,12 @@ class AsrHintsProvider @Inject constructor(
 
     @Volatile
     private var loadedAtMs = NEVER_LOADED
+
+    /**
+     * Имена контактов из кэша для пост-коррекции текста локального распознавателя.
+     * Остаются в памяти устройства; наружу (сервер, логи) не передаются.
+     */
+    fun cachedContactNames(): List<String> = cachedNames
 
     /** Подсказки из кэша: мгновенно, можно звать с главного потока. */
     fun cachedBiasing(): List<String> = AsrContextHints.biasingStrings(cachedNames)
