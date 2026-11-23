@@ -185,6 +185,8 @@ object NameTranslit {
         val c = rest[0]
         if (c == 'y') return 1 to (if (prevVowel) listOf("й") else listOf("ы", "и", "й"))
         if (c in APOSTROPHES) return 1 to listOf("")
+        // «John» → «Джон»: h после гласной часто не читается
+        if (c == 'h' && prevVowel) return 1 to listOf("х", "")
         return 1 to (LAT_TO_CYR_SINGLE[c] ?: listOf(c.toString()))
     }
 
