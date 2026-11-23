@@ -3,12 +3,15 @@ package com.omnix.assistant.agent.decision
 import android.util.Log
 import com.omnix.assistant.agent.executor.ToolExecutor
 import com.omnix.assistant.agent.fast.FastCommandRouter
+import com.omnix.assistant.agent.fast.SmsDialogManager
 import com.omnix.assistant.agent.memory.WorkingMemory
 import com.omnix.assistant.agent.metrics.ExecutionRouterMetrics
 import com.omnix.assistant.agent.metrics.VoiceLatencyMetrics
 import com.omnix.assistant.agent.model.ToolExecutionStatus
 import com.omnix.assistant.core.result.Resource
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -65,7 +68,10 @@ class ExecutionDecisionEngine @Inject constructor(
     // Выбор ИИ-модели пользователем (Я → ИИ-модель). Читается на каждый
     // запрос, поэтому смена выбора действует сразу и для чата, и для голоса.
     // Дефолт «Авто» — прежнее поведение (тесты, сборка без DI).
-    private val modelChoice: AiModelChoiceSource = AiModelChoiceSource.fixed()
+    private val modelChoice: AiModelChoiceSource = AiModelChoiceSource.fixed(),
+    // Диалог «отправь смс …»: недостающий получатель/текст спрашивает сам OMNIX,
+    // а не облачная модель (которая отвечала «не могу отправлять SMS»).
+    private val smsDialog: SmsDialogManager = SmsDialogManager()
 ) {
 
     private fun recordLaneStage(lane: VoiceLatencyMetrics.VoiceLane, stage: VoiceLatencyMetrics.VoiceStage, fromMs: Long) {
@@ -167,6 +173,7 @@ class ExecutionDecisionEngine @Inject constructor(
         val decidedAt = latency.nowMs()
         // ------------------------------------------------ PRIORITY 1: DEVICE TOOL
         val routing = FastRouteConfidence.from(fastCommandRouter.route(request.text))
+        trySmsDialog(request, routing)?.let { return it }
         val deviceResult = tryDeviceTool(request, routing, decidedAt)
         if (deviceResult != null) return deviceResult
 
@@ -295,6 +302,38 @@ class ExecutionDecisionEngine @Inject constructor(
         // ------------------------------------------------ PRIORITY 3: CLOUD AI
         recordLaneStage(VoiceLatencyMetrics.VoiceLane.CLOUD, VoiceLatencyMetrics.VoiceStage.ROUTER_DISPATCH, decidedAt)
         return runCloud(request, routing, trace, localFallbackReason)
+    }
+
+    /**
+     * SMS: «отправь смс Осману привет» → `communication.sms` (с подтверждением);
+     * без текста или получателя — вопрос пользователю, следующая реплика — ответ.
+     */
+    private suspend fun trySmsDialog(request: ExecutionRequest, routing: CommandRoutingResult): ExecutionResult? {
+        val otherCommand = routing is CommandRoutingResult.DeviceCommand
+        return when (val step = smsDialog.handle(request.text, isOtherCommand = otherCommand)) {
+            SmsDialogManager.Step.NotHandled -> null
+            is SmsDialogManager.Step.Ask -> ExecutionResult.ClarificationRequired(step.prompt)
+            is SmsDialogManager.Step.Cancelled -> ExecutionResult.Success(
+                text = step.text,
+                executionType = ExecutionType.DEVICE_TOOL,
+                metadata = mapOf("request_id" to request.requestId)
+            )
+            is SmsDialogManager.Step.Send -> {
+                logRoute(ExecutionType.DEVICE_TOOL, DecisionReason.FAST_ROUTER_CONFIDENT, FastRouteConfidence.TOOL_MATCH, request.requestId)
+                metrics.noteToolExecution()
+                executeSingleToolCall(
+                    request,
+                    com.omnix.assistant.agent.model.ToolCall(
+                        toolId = "communication.sms",
+                        arguments = buildJsonObject {
+                            put("recipient", step.recipient)
+                            put("message", step.message)
+                        }
+                    ),
+                    FastRouteConfidence.TOOL_MATCH
+                )
+            }
+        }
     }
 
     // =====================================================================
