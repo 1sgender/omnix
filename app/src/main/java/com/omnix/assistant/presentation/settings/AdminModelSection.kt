@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,8 +48,12 @@ import com.omnix.assistant.voice.wakeword.phrase.WakePhrase
 fun AdminModelSection(
     state: AdminModelState,
     onPin: (AdminModelPin) -> Unit,
+    venice: VeniceUiState,
+    onLoadVenice: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Список Venice запрашивается у сервера при открытии раздела; сервер отдаёт его только админу.
+    LaunchedEffect(state.isAdmin) { if (state.isAdmin) onLoadVenice() }
     val colors = OmnixTheme.colors
     val activeSpec = rememberLocalModelSpec()
     val options = buildList {
@@ -96,6 +101,7 @@ fun AdminModelSection(
                 PinRow(title = label, selected = option == pin, onClick = { onPin(option) })
             }
         }
+        VeniceBlock(venice = venice, pin = pin, onPin = onPin)
         if (restartNeeded) {
             Text(
                 text = stringResource(R.string.omnix_admin_models_restart),
@@ -165,8 +171,84 @@ fun AdminWakeSection(
     }
 }
 
+/**
+ * Venice AI (только админ): модели приходят с сервера вместе с контекстом,
+ * ценой и признаком приватности; модели без цензуры помечены прямо в списке.
+ */
 @Composable
-private fun PinRow(title: String, selected: Boolean, onClick: () -> Unit) {
+private fun VeniceBlock(venice: VeniceUiState, pin: AdminModelPin, onPin: (AdminModelPin) -> Unit) {
+    val colors = OmnixTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.omnix_admin_venice_title),
+            style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 15.sp),
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 0.dp)
+        )
+        Text(
+            text = stringResource(R.string.omnix_admin_venice_body),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 17.sp),
+            color = colors.textSecondary,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        when (venice) {
+            VeniceUiState.Idle, VeniceUiState.Loading -> Text(
+                text = stringResource(R.string.omnix_admin_venice_loading),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp),
+                color = colors.textSecondary,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+            VeniceUiState.Unavailable -> Text(
+                text = stringResource(R.string.omnix_admin_venice_unavailable),
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 13.sp, lineHeight = 19.sp),
+                color = colors.stateWarning,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+            is VeniceUiState.Loaded -> Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(colors.surface)
+                    .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+                    .selectableGroup()
+            ) {
+                venice.models.forEachIndexed { index, model ->
+                    if (index > 0) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(colors.textPrimary.copy(alpha = 0.06f))
+                        )
+                    }
+                    val option = AdminModelPin.Venice(model.id)
+                    PinRow(
+                        title = cloudModelLabel("VENICE", model.id),
+                        subtitle = stringResource(
+                            R.string.omnix_admin_venice_meta,
+                            model.contextTokens?.toString() ?: "?",
+                            model.inputUsdPerMillion?.toString() ?: "?",
+                            model.outputUsdPerMillion?.toString() ?: "?",
+                            model.privacy
+                        ),
+                        warning = if (model.uncensored) stringResource(R.string.omnix_admin_venice_uncensored) else null,
+                        selected = option == pin,
+                        onClick = { onPin(option) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PinRow(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    warning: String? = null
+) {
     val colors = OmnixTheme.colors
     Row(
         modifier = Modifier
@@ -177,12 +259,27 @@ private fun PinRow(title: String, selected: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
-            text = title,
-            style = TextStyle(fontFamily = OmnixSans, fontSize = 14.sp),
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = TextStyle(fontFamily = OmnixSans, fontSize = 14.sp),
+                color = colors.textPrimary
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 16.sp),
+                    color = colors.textSecondary
+                )
+            }
+            if (warning != null) {
+                Text(
+                    text = warning,
+                    style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp, lineHeight = 16.sp),
+                    color = colors.stateWarning
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .size(22.dp)

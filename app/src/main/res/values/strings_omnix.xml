@@ -312,6 +312,12 @@
     <string name="omnix_admin_models_restart">The phone model changes after the app restarts. If it is not on the phone yet, download it on this screen.</string>
     <string name="omnix_admin_answer_phone">Phone · %1$s</string>
     <string name="omnix_admin_answer_cloud">Cloud</string>
+    <string name="omnix_admin_venice_title">Venice AI (admin only)</string>
+    <string name="omnix_admin_venice_body">Venice models run through your server. Only you can see and use them: the normal and automatic choice never uses Venice. Some models are uncensored.</string>
+    <string name="omnix_admin_venice_loading">Loading Venice models…</string>
+    <string name="omnix_admin_venice_unavailable">Venice is unavailable: the server has no key or the service is not responding.</string>
+    <string name="omnix_admin_venice_meta">context %1$s · %2$s / %3$s USD per 1M tokens · %4$s</string>
+    <string name="omnix_admin_venice_uncensored">Uncensored model: no content filtering</string>
     <string name="omnix_admin_wake_title">Wake phrase testing (admin)</string>
     <string name="omnix_admin_wake_body">Compare on your phone. Applies the next time OMNIX starts listening.</string>
     <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okay Omni” — default</string>

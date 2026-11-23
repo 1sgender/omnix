@@ -298,6 +298,8 @@ enum class ApiErrorCode(val httpStatus: Int, val safeMessage: String) {
     CLIP_PAIR_LIMIT(409, "Earbud pair limit reached for this account"),
     CLIP_RECOVERY_LIMIT(429, "Earbuds were moved between phones too often today"),
     CLIP_ALREADY_REGISTERED(409, "Earbuds with this serial or address are already registered"),
+    /** Venice (только админ): ключ не задан, ключ отклонён или сервис недоступен. */
+    VENICE_UNAVAILABLE(503, "Venice is not available"),
     INTERNAL_ERROR(500, "Internal server error");
 
     fun toResponse(requestId: String, overrideMessage: String? = null, retryAfterSeconds: Int? = null) = ApiErrorResponse(

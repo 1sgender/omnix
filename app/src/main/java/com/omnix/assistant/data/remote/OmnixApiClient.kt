@@ -5,7 +5,6 @@ import com.omnix.assistant.agent.decision.AiTier
 import com.omnix.assistant.agent.tools.intelligence.ServerSearchOutcome
 import com.omnix.assistant.agent.tools.intelligence.ServerSearchResult
 import com.omnix.assistant.agent.tools.intelligence.ServerWebSearch
-import com.omnix.assistant.core.admin.AdminModelPin
 import com.omnix.assistant.core.admin.AdminModelTesting
 import com.omnix.assistant.core.constants.AppConstants
 import com.omnix.assistant.core.license.AiTierLedger
@@ -286,7 +285,7 @@ class OmnixApiClient @Inject constructor(
                 // CR-03: отсылаем только непустые сообщения. Роли подгоняем под
                 // OpenAI-каноничный вид (user/assistant/system).
                 history = history.filter { it.content.isNotBlank() },
-                adminProvider = (adminModels.pin() as? AdminModelPin.Cloud)?.provider,
+                adminProvider = adminModels.pin().cloudRequestValue,
                 tier = tier.takeIf { it == AiTier.PRO }?.wireValue,
                 images = images,
                 attachments = attachments,
