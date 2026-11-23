@@ -13,7 +13,8 @@ class AdminModelTestingTest {
         listOf(
             AdminModelPin.None,
             AdminModelPin.Phone("qwen2.5-1.5b-instruct-q8"),
-            AdminModelPin.Cloud("GEMINI")
+            AdminModelPin.Cloud("GEMINI"),
+            AdminModelPin.Venice("venice-uncensored-1-2")
         ).forEach { pin ->
             assertEquals(pin, AdminModelPin.fromStorageKey(pin.storageKey))
         }
@@ -21,7 +22,7 @@ class AdminModelTestingTest {
 
     @Test
     fun `unknown or empty storage values mean no pin`() {
-        listOf(null, "", "phone:", "cloud:", "groq", "tablet:x").forEach { raw ->
+        listOf(null, "", "phone:", "cloud:", "venice:", "groq", "tablet:x").forEach { raw ->
             assertEquals(AdminModelPin.None, AdminModelPin.fromStorageKey(raw))
         }
     }
@@ -31,6 +32,20 @@ class AdminModelTestingTest {
         assertNull(AdminModelPin.None.routing)
         assertEquals(AiModelChoice.ON_DEVICE, AdminModelPin.Phone("qwen2.5-0.5b-instruct-q8").routing)
         assertEquals(AiModelChoice.CLOUD, AdminModelPin.Cloud("GROQ").routing)
+        assertEquals(AiModelChoice.CLOUD, AdminModelPin.Venice("llama-3.3-70b").routing)
+    }
+
+    @Test
+    fun `only cloud pins put a provider into the request, venice as venice-colon-model`() {
+        assertNull(AdminModelPin.None.cloudRequestValue)
+        assertNull(AdminModelPin.Phone("qwen2.5-0.5b-instruct-q8").cloudRequestValue)
+        assertEquals("GROQ", AdminModelPin.Cloud("GROQ").cloudRequestValue)
+        assertEquals("venice:llama-3.3-70b", AdminModelPin.Venice("llama-3.3-70b").cloudRequestValue)
+    }
+
+    @Test
+    fun `venice answer is labelled as venice with its model`() {
+        assertEquals("Venice · venice-uncensored-1-2", cloudModelLabel("VENICE", "venice-uncensored-1-2"))
     }
 
     @Test

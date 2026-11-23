@@ -31,11 +31,26 @@ sealed interface AdminModelPin {
     /** Облачный провайдер: GROQ / GEMINI / OPENROUTER. */
     data class Cloud(val provider: String) : AdminModelPin
 
+    /**
+     * Модель Venice AI: вызывает только сервер и только для админа (ключ Venice
+     * в приложение не попадает). [modelId] — id модели из списка сервера.
+     */
+    data class Venice(val modelId: String) : AdminModelPin
+
     val storageKey: String
         get() = when (this) {
             None -> ""
             is Phone -> PHONE_PREFIX + specId
             is Cloud -> CLOUD_PREFIX + provider
+            is Venice -> VENICE_PREFIX + modelId
+        }
+
+    /** Значение поля `adminProvider` в облачном запросе; null — модель не облачная. */
+    val cloudRequestValue: String?
+        get() = when (this) {
+            is Cloud -> provider
+            is Venice -> VENICE_PREFIX + modelId
+            None, is Phone -> null
         }
 
     /** Маршрут, без которого закреплённая модель не ответит; null — решает выбор пользователя. */
@@ -43,17 +58,19 @@ sealed interface AdminModelPin {
         get() = when (this) {
             None -> null
             is Phone -> AiModelChoice.ON_DEVICE
-            is Cloud -> AiModelChoice.CLOUD
+            is Cloud, is Venice -> AiModelChoice.CLOUD
         }
 
     companion object {
         private const val PHONE_PREFIX = "phone:"
         private const val CLOUD_PREFIX = "cloud:"
+        private const val VENICE_PREFIX = "venice:"
 
         fun fromStorageKey(raw: String?): AdminModelPin = when {
             raw == null -> None
             raw.startsWith(PHONE_PREFIX) && raw.length > PHONE_PREFIX.length -> Phone(raw.removePrefix(PHONE_PREFIX))
             raw.startsWith(CLOUD_PREFIX) && raw.length > CLOUD_PREFIX.length -> Cloud(raw.removePrefix(CLOUD_PREFIX))
+            raw.startsWith(VENICE_PREFIX) && raw.length > VENICE_PREFIX.length -> Venice(raw.removePrefix(VENICE_PREFIX))
             else -> None
         }
     }
@@ -89,6 +106,7 @@ fun providerDisplayName(provider: String): String = when (provider.uppercase()) 
     "GROQ" -> "Groq"
     "GEMINI" -> "Gemini"
     "OPENROUTER" -> "OpenRouter"
+    "VENICE" -> "Venice"
     else -> provider
 }
 
