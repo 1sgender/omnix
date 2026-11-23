@@ -436,7 +436,7 @@ class Model(nn.Module):
     def train_model(self, X, max_steps, warmup_steps, hold_steps, X_val=None,
                     false_positive_val_data=None, positive_test_clips=None,
                     negative_weight_schedule=[1],
-                    val_steps=[250], lr=0.0001, val_set_hrs=1):
+                    val_steps=[250], lr=0.0001, val_set_hrs=1, save_all=False):
         # Move models and main class to target device
         self.to(self.device)
         self.model.to(self.device)
@@ -557,8 +557,9 @@ class Model(nn.Module):
             # Save models with a validation score above/below the 90th percentile
             # of the validation scores up to that point
             if step_ndx in val_steps and step_ndx > 1:
-                if self.history["val_n_fp"][-1] <= np.percentile(self.history["val_n_fp"], 50) and \
-                   self.history["val_recall"][-1] >= np.percentile(self.history["val_recall"], 5):
+                # save_all (fp-fix): копим ВСЕ чекпойнты, отбор делает train_omni по своим метрикам
+                if save_all or (self.history["val_n_fp"][-1] <= np.percentile(self.history["val_n_fp"], 50) and
+                                self.history["val_recall"][-1] >= np.percentile(self.history["val_recall"], 5)):
                     # logging.info("Saving checkpoint with metrics >= to targets!")
                     self.best_models.append(copy.deepcopy(self.model))
                     self.best_model_scores.append({"training_step_ndx": step_ndx, "val_n_fp": self.history["val_n_fp"][-1],

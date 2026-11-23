@@ -15,7 +15,7 @@ data class VoiceSettings(
     @Deprecated("Model selection is server-managed; kept only for DataStore backwards compatibility.")
     val selectedModel: String = "server-managed",
     val isHeadsetOnlyMode: Boolean = false,
-    val wakeWordSensitivity: Float = 0.65f
+    val wakeWordSensitivity: Float = 0.5f
 )
 
 sealed interface VoiceAssistantState {

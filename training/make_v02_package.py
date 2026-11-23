@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent
 SCRIPTS = ["train_omni.py", "oww_train.py", "eval_streaming.py", "eval_live.py",
            "verify_model.py", "requirements.txt"]
-APK_FILES = ["melspectrogram.onnx", "embedding_model.onnx", "omni_v0.1.onnx"]
+APK_FILES = ["melspectrogram.onnx", "embedding_model.onnx", "omni_v0.2fp.onnx"]
 
 
 def data_report(work):

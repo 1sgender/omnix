@@ -2,12 +2,11 @@
 """Phase A v0.2: расширенный синтез raw-данных Piper TTS для wake-word «Омни».
 
 Отличия от gen_raw.py (v0.1):
-  * больше голосов и многоголосые модели (vctk, l2arctic, libritts_r, ...):
+  * больше голосов и многоголосые модели (vctk):
     у них каждый speaker_id считается отдельным диктором, а test-дикторы
     выбираются по id (speaker-disjoint внутри одной модели);
-  * языки: ru, en (в т.ч. неродные акценты l2arctic), tr, kk (ближайший к
-    туркменскому/узбекскому из доступных в rhasspy/piper-voices), плюс
-    славянские/европейские голоса, читающие «omni» со своим акцентом;
+  * языки: ru, en, kk (ближайший к
+    туркменскому/узбекскому из доступных в rhasspy/piper-voices);
   * варианты фразы: «омни», «Омни?», «о-мни», «omni», «hey omni»,
     «окей омни», «эй омни», ... (см. POS_PHRASES);
   * негативы: трудные слова (умный, помни, тони, many, money, ...),
@@ -40,46 +39,28 @@ VOICES = Path(os.environ.get("PIPER_VOICES", str(ROOT / "voices")))
 
 # --- каталог голосов: имя -> (язык текстов, роль, n_pos, n_neg) ---------------
 # роль: "train" | "test" | "split" (многоголосая: часть speaker_id в test)
-# n_* — на всю модель (для split — суммарно по всем дикторам train-части);
+# n_* - на всю модель (для split - суммарно по всем дикторам train-части);
 # test-часть split-модели генерируется отдельно: TEST_PER_SPLIT_VOICE.
+#
+# ЛИЦЕНЗИИ (проверено по MODEL_CARD в rhasspy/piper-voices, 2026-11-23). В каталоге
+# ТОЛЬКО голоса, чей корпус разрешает коммерческое использование (CC0 / CC BY):
+# модель идёт в платное приложение. Исключены и НЕ должны возвращаться:
+#   en_US-l2arctic (CC BY-NC 4.0), en_US-ryan (CC BY-NC-SA 4.0), tr_TR-dfki (CC BY-NC-SA 4.0),
+#   ru_RU-ruslan (CC BY-NC-SA 4.0), en_US-lessac (исследовательская лицензия Blizzard 2013),
+#   ru_RU-irina (лицензия "Unknown"), en_GB-jenny_dioco, en_GB-alan, en_US-amy (карточка
+#   отсылает на URL с нестандартной/неясной лицензией), en_GB-northern_english_male (CC BY-SA),
+#   а также все голоса, чья лицензия не проверена (joe, john, hfc_*, kristin, arctic,
+#   issai, европейские de/pl/cs/fr/it/pt/es/uk). Подробности - NOTICE и docs/WAKEWORD_NEURAL.md.
 CATALOG = {
-    # русский
-    "ru_RU-irina-medium": ("ru", "train", 200, 200),
-    "ru_RU-dmitri-medium": ("ru", "train", 200, 200),
-    "ru_RU-denis-medium": ("ru", "train", 200, 200),
-    "ru_RU-ruslan-medium": ("ru", "test", 120, 60),
-    # английский, одноголосые
-    "en_US-lessac-medium": ("en", "train", 130, 130),
-    "en_US-ryan-medium": ("en", "train", 130, 130),
-    "en_US-amy-medium": ("en", "train", 130, 130),
-    "en_GB-alan-medium": ("en", "train", 130, 130),
-    "en_GB-northern_english_male-medium": ("en", "train", 130, 130),
-    "en_GB-alba-medium": ("en", "train", 130, 130),
-    "en_US-joe-medium": ("en", "train", 130, 130),
-    "en_US-john-medium": ("en", "train", 130, 130),
-    "en_US-hfc_female-medium": ("en", "train", 130, 130),
-    "en_US-hfc_male-medium": ("en", "train", 130, 130),
-    "en_GB-jenny_dioco-medium": ("en", "test", 120, 60),
-    "en_US-kristin-medium": ("en", "test", 80, 40),
-    # английский, многоголосые (в т.ч. неродные акценты l2arctic)
+    # русский: CC0 (OHF-Voice/voice-datasets); dmitri - тестовый (speaker-disjoint от denis)
+    "ru_RU-denis-medium": ("ru", "train", 500, 300),
+    "ru_RU-dmitri-medium": ("ru", "test", 120, 60),
+    # английский: CC BY 4.0 (109 дикторов; alba и libritts_r тоже CC BY, но их файлы в локальном
+    # каталоге оказались обрезаны, поэтому в обучении не участвовали)
     "en_GB-vctk-medium": ("en", "split", 400, 400),
-    "en_US-l2arctic-medium": ("en", "split", 400, 400),
-    "en_US-libritts_r-medium": ("en", "split", 400, 400),
-    "en_US-arctic-medium": ("en", "split", 200, 200),
-    # турецкий / казахский (ближайшие тюркские; туркменского и узбекского нет)
-    "tr_TR-dfki-medium": ("tr", "train", 200, 200),
+    # казахский (ближайший тюркский к туркменскому из доступных): CC BY 4.0 (IS2AI)
     "kk_KZ-raya-x_low": ("kk", "train", 100, 100),
-    "kk_KZ-issai-high": ("kk", "split", 150, 150),
     "kk_KZ-iseke-x_low": ("kk", "test", 80, 40),
-    # европейские голоса: «omni» с чужим акцентом
-    "de_DE-thorsten-medium": ("en", "train", 40, 100),
-    "pl_PL-darkman-medium": ("en", "train", 40, 100),
-    "cs_CZ-jirka-medium": ("en", "train", 40, 100),
-    "fr_FR-siwis-medium": ("en", "train", 40, 100),
-    "it_IT-riccardo-x_low": ("en", "train", 40, 100),
-    "pt_BR-faber-medium": ("en", "train", 40, 100),
-    "uk_UA-ukrainian_tts-medium": ("ru", "train", 40, 100),
-    "es_ES-carlfm-x_low": ("en", "train", 40, 100),
 }
 
 # Голоса, чьи ДАТАСЕТЫ под некоммерческой лицензией (CC BY-NC / BY-NC-SA по

@@ -34,49 +34,36 @@ On-device model
   (converted from alphacep/vosk-model-small-streaming-ru) — Alpha Cephei and
   k2-fsa — Apache License 2.0. Downloaded by the build (SHA-256 pinned) into
   assets/wakeword/phrase/.
-- omni_v0.1.onnx (wake word «Omni») — trained for this project with the
-  openWakeWord v0.6.0 training stack (dscripka/openWakeWord, MIT) on
-  synthetic speech from Piper voices (rhasspy/piper-voices; voices under
-  individual CC BY licenses, training output MIT-compatible for this use).
-  Metrics and provenance: training/OMNI_V0.1_REPORT.md. Vendored/adapted
-  openwakeword train code (MIT): training/oww_train.py.
-- omni_v0.2 training data (training/gen_raw_v2.py) — synthetic speech from
-  many more Piper voices. The licenses below are quoted from the official
-  MODEL_CARD of each voice in huggingface.co/rhasspy/piper-voices (checked
-  2026-11-23). The licenses of the DATASETS differ from the Piper code license
-  and are NOT all commercial-friendly:
-    * NON-COMMERCIAL (CC BY-NC / CC BY-NC-SA): en_US-l2arctic (CC BY-NC 4.0),
-      en_US-ryan (CC BY-NC-SA 4.0), en_US-hfc_female and en_US-hfc_male
-      (CC BY-NC-SA 4.0), ru_RU-ruslan (CC BY-NC-SA 4.0), tr_TR-dfki
-      (CC BY-NC-SA 4.0). Do NOT use these voices for any model that ships in
-      the commercial app; gen_raw_v2.py prints a warning and can skip them
-      with --exclude-nc. ru_RU-ruslan is used only as a held-out test voice
-      (its audio never enters model weights), the others are training voices.
-    * Share-alike: en_GB-northern_english_male (CC BY-SA 4.0): attribution and
-      share-alike obligations; avoid for shipped models unless counsel agrees.
-    * Attribution (CC BY 4.0): en_US-libritts_r, en_GB-alba, en_GB-vctk,
-      fr_FR-siwis, kk_KZ-raya, kk_KZ-issai, kk_KZ-iseke — credit the dataset
-      authors.
-    * Custom terms: en_GB-jenny_dioco (commercial use allowed, attribution as
-      "Jenny (Dioco)" required); en_US-lessac (Lessac Technologies Blizzard
-      2013 license, needs a per-organisation license request: treat as
-      restricted).
-    * Public domain / CC0: en_US-joe, en_US-john, en_US-kristin, ru_RU-dmitri,
-      ru_RU-denis, de_DE-thorsten, pl_PL-darkman, cs_CZ-jirka, pt_BR-faber,
-      uk_UA-ukrainian_tts, es_ES-carlfm.
-    * License not stated or "see URL" in the model card, to be verified before
-      a commercial release: en_US-amy, en_US-arctic (CMU ARCTIC license file),
-      en_GB-alan, it_IT-riccardo, ru_RU-irina (RHVoice, "Unknown").
-  Until the NON-COMMERCIAL and unverified voices are removed from the
-  training set (or the owner confirms in writing that a model trained on their
-  synthetic output is acceptable), omni_v0.2.onnx must not be bundled into a
-  commercial release.
-- openWakeWord models (melspectrogram.onnx, embedding_model.onnx,
-  hey_jarvis_v0.1.onnx, v0.5.1) — dscripka/openWakeWord —
-  (melspectrogram/embedding reused as acoustic frontend;
-  hey_jarvis_v0.1 = legacy fallback phrase) —
-  Apache License 2.0. Bundled under app/src/main/assets/wakeword/.
-  SHA256 pins: see SHA256SUMS in the same directory.
+- omni_v0.2fp.onnx (wake word «Омни» / «Omni») — a small classifier head
+  trained for this project with the openWakeWord v0.6.0 training stack
+  (dscripka/openWakeWord code, Apache 2.0; vendored/adapted train code in
+  training/oww_train.py). Training data, all with licenses that allow
+  commercial use:
+  * synthetic speech generated with Piper TTS (OHF-Voice/piper1-gpl, used only
+    as an offline tool, its code and output are not shipped) from these
+    voices of rhasspy/piper-voices (license of the underlying corpus, per the
+    voice MODEL_CARD): ru_RU-denis and ru_RU-dmitri (OHF-Voice/voice-datasets,
+    CC0), en_GB-vctk (CSTR VCTK, 109 speakers, CC BY 4.0), kk_KZ-raya and
+    kk_KZ-iseke (IS2AI Kazakh TTS, CC BY 4.0);
+  * recordings of the project owner's own voice (own data, consent given);
+  * synthetic noise only (no third-party noise or speech corpora).
+  Voices with non-commercial, research-only or unverified licenses were
+  excluded from data and tests (en_US-l2arctic, en_US-ryan, tr_TR-dfki,
+  ru_RU-ruslan: CC BY-NC(-SA); en_US-lessac: Blizzard 2013 research license;
+  ru_RU-irina, en_GB-jenny_dioco, en_GB-alan, en_US-amy and others: license
+  unknown or non-standard). Metrics and provenance: training/OMNI_V0.2FP_REPORT.md.
+  The CC BY corpora require attribution, given here: VCTK (Yamagishi et al.,
+  CSTR, University of Edinburgh), Kazakh TTS corpora (IS2AI, Nazarbayev
+  University).
+  The earlier model omni_v0.1.onnx is no longer distributed: it was trained on
+  Piper voices whose commercial-use terms are not confirmed.
+- openWakeWord frontend models (melspectrogram.onnx, embedding_model.onnx,
+  v0.5.1) — dscripka/openWakeWord — reused as the acoustic frontend; the
+  embedding network comes from Google's speech_embedding (TF Hub), Apache
+  License 2.0. Bundled under app/src/main/assets/wakeword/. The openWakeWord
+  pre-trained WAKE-WORD models (e.g. hey_jarvis) are CC BY-NC-SA 4.0 and are
+  therefore not distributed with the app. SHA256 pins: see SHA256SUMS in the
+  same directory.
 - Gemma (on-device LLM used via MediaPipe, optional user-installed model) is
   governed by the Google Gemma Terms of Use and Gemma Prohibited Use Policy:
   https://ai.google.dev/gemma/terms

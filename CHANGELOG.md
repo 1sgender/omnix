@@ -17,6 +17,14 @@ must be added only when the repository owner creates an actual release.
   потолок 20 запросов в минуту и 1024 токена ответа, учёт токенов и стоимости. Модели
   в «Тест моделей (админ)». См. `docs/VENICE_ADMIN.md`.
 
+### Changed (wake word)
+
+- Wake word «Омни»: модель по умолчанию `omni_v0.2fp.onnx` вместо `omni_v0.1.onnx`,
+  порог 0.5 (новый ключ `wakeword.threshold.v02fp`, старый порог 0.35 не наследуется).
+  Переобучена только на голосах Piper с лицензиями CC0 / CC BY и живом голосе владельца;
+  `omni_v0.1` и `hey_jarvis_v0.1` (NC / неподтверждённые данные) убраны из APK.
+  Метрики и ограничения: training/OMNI_V0.2FP_REPORT.md.
+
 ### Added (reminders)
 
 - Напоминания: «напомни в 18:00 позвонить маме», «через 20 минут…», «завтра в 10…»

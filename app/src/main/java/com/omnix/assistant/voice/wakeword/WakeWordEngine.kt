@@ -14,15 +14,16 @@ import kotlinx.coroutines.flow.SharedFlow
 data class WakeWordConfig(
     val enabled: Boolean = true,
     val wakeWord: String = "Omni",
-    // omni_v0.1: собственная synthetic-data модель на фразу «Omni»
-    // (training/OMNI_V0.1_REPORT.md). hey_jarvis_v0.1 сохранён в assets как
-    // legacy-фолбэк до приёмки real-data v0.2 (training/README.md).
-    val modelAssetPath: String = "wakeword/omni_v0.1.onnx",
+    // omni_v0.2fp: собственная модель на фразу «Омни» (Piper-голоса только с
+    // коммерчески чистыми лицензиями + живой голос владельца,
+    // training/OMNI_V0.2FP_REPORT.md). omni_v0.1 и hey_jarvis_v0.1 из APK убраны:
+    // лицензии их обучающих данных не позволяют коммерческий релиз (см. NOTICE).
+    val modelAssetPath: String = "wakeword/omni_v0.2fp.onnx",
     val melAssetPath: String = "wakeword/melspectrogram.onnx",
     val embeddingAssetPath: String = "wakeword/embedding_model.onnx",
-    // 0.35: recall 0.93 / FP 4% на held-out голосах (см. отчёт); регулируется
-    // настройкой WAKEWORD_THRESHOLD.
-    val threshold: Float = 0.35f,
+    // 0.5: рабочая точка omni_v0.2fp (training/OMNI_V0.2FP_REPORT.md);
+    // регулируется настройкой WAKEWORD_THRESHOLD.
+    val threshold: Float = 0.5f,
     /** Сколько подряд фреймов (по 80 мс) выше порога нужно для срабатывания (oWW 'patience'). */
     val patienceFrames: Int = 2,
     val cooldownMs: Long = 2000L,
