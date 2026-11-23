@@ -24,4 +24,5 @@
     <string name="omnix_perm_launch_text">OMNIX экранда болмаса, Android қосымшаларды ашуға жол бермейді. Ашу үшін басыңыз.</string>
     <string name="omnix_perm_launch_overlay">Басқа қосымшалардың үстінен көрсетуге рұқсат</string>
     <string name="omnix_perm_launch_blocked">OMNIX экранда болмаса, %1$s қосымшасын аша алмаймын. Хабарландыруды басыңыз немесе OMNIX-ке басқа қосымшалардың үстінен көрсетуге рұқсат беріңіз, сонда дауыстық пәрмендер экран сөніп тұрғанда да жұмыс істейді.</string>
+    <string name="omnix_launch_overlay_opening">%1$s ашылуда…</string>
 </resources>

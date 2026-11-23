@@ -62,3 +62,12 @@ training/features/
 training/model/
 training/voices/
 __pycache__/
+
+# Wake-word v0.2: сырой синтез, фичи, живые записи владельца (личные данные), пакеты.
+training/raw_v2/
+training/features_v2/
+training/live_test/
+training/*.wav
+training/**/*.wav
+training/v0.2-package.zip
+training/model_*

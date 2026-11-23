@@ -3,10 +3,8 @@ package com.omnix.assistant.agent.tools.device
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import com.omnix.assistant.R
-import com.omnix.assistant.core.permission.AppVisibility
 import com.omnix.assistant.core.permission.UserActionNotifier
 import com.omnix.assistant.agent.apps.AppResolution
 import com.omnix.assistant.agent.apps.AppResolver
@@ -44,6 +42,8 @@ class OpenAppTool @Inject constructor(
     @ApplicationContext private val context: Context,
     private val appResolver: AppResolver
 ) : CapabilityAwareTool {
+
+    private val executor = BackgroundLaunchExecutor(context)
 
     private companion object {
         const val LAUNCH_CHANNEL_ID = "omnix_app_launch"
@@ -120,7 +120,7 @@ class OpenAppTool @Inject constructor(
         }
     }
 
-    private fun launch(resolution: AppResolution.Resolved, rawName: String): ToolExecutionResult {
+    private suspend fun launch(resolution: AppResolution.Resolved, rawName: String): ToolExecutionResult {
         // Системные экраны (настройки, камера) открываются через action, а не launch intent.
         appResolver.systemActions[resolution.packageName]?.let { action ->
             val intent = Intent(action).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
@@ -130,15 +130,16 @@ class OpenAppTool @Inject constructor(
                     error = "SYSTEM_SCREEN_UNAVAILABLE"
                 )
             }
-            if (isBackgroundLaunchBlocked()) return backgroundBlocked(rawName, intent)
-            return try {
-                context.startActivity(intent)
-                ToolExecutionResult.success(
+            return when (executor.launch(intent, rawName)) {
+                BackgroundLaunchExecutor.Result.Started -> ToolExecutionResult.success(
                     summary = "Открываю $rawName",
                     data = buildJsonObject { put("action", action) }
                 )
-            } catch (e: android.content.ActivityNotFoundException) {
-                ToolExecutionResult.failure("Не удалось открыть $rawName", "ACTIVITY_NOT_FOUND")
+                BackgroundLaunchExecutor.Result.Blocked -> backgroundBlocked(rawName, intent)
+                BackgroundLaunchExecutor.Result.NotFound ->
+                    ToolExecutionResult.failure("Не удалось открыть $rawName", "ACTIVITY_NOT_FOUND")
+                BackgroundLaunchExecutor.Result.Denied ->
+                    ToolExecutionResult.failure("Система запретила открыть $rawName", "LAUNCH_DENIED")
             }
         }
 
@@ -149,10 +150,8 @@ class OpenAppTool @Inject constructor(
             )
 
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (isBackgroundLaunchBlocked()) return backgroundBlocked(resolution.label, launchIntent)
-        return try {
-            context.startActivity(launchIntent)
-            ToolExecutionResult.success(
+        return when (executor.launch(launchIntent, resolution.label)) {
+            BackgroundLaunchExecutor.Result.Started -> ToolExecutionResult.success(
                 summary = "Открываю ${resolution.label}",
                 data = buildJsonObject {
                     put("package", resolution.packageName)
@@ -160,24 +159,17 @@ class OpenAppTool @Inject constructor(
                     put("matched_by", resolution.matchedBy.name)
                 }
             )
-        } catch (e: android.content.ActivityNotFoundException) {
-            ToolExecutionResult.failure(
+            BackgroundLaunchExecutor.Result.Blocked -> backgroundBlocked(resolution.label, launchIntent)
+            BackgroundLaunchExecutor.Result.NotFound -> ToolExecutionResult.failure(
                 summary = "Не удалось запустить ${resolution.label}",
                 error = "ACTIVITY_NOT_FOUND"
             )
-        } catch (e: SecurityException) {
-            ToolExecutionResult.failure(
+            BackgroundLaunchExecutor.Result.Denied -> ToolExecutionResult.failure(
                 summary = "Система запретила запуск ${resolution.label}",
                 error = "LAUNCH_DENIED"
             )
         }
     }
-
-    private fun isBackgroundLaunchBlocked(): Boolean = BackgroundLaunchPolicy.isBlocked(
-        sdkInt = Build.VERSION.SDK_INT,
-        appVisible = AppVisibility.isForeground,
-        canDrawOverlays = Settings.canDrawOverlays(context)
-    )
 
     /**
      * Экран OMNIX закрыт, и Android молча отбросил бы запуск: раньше инструмент

@@ -84,7 +84,7 @@ Output) -> скачать:
 - `model/omni_v0.2.onnx`  главный результат;
 - `model/metrics_v0.2.json`, `eval_live_v0.2.json` для отчёта.
 
-Положить `omni_v0.2.onnx` в `C:\Users\User\Desktop\claude edit\omnix-voice-work\wakeword-real\`
+Положить `omni_v0.2.onnx` в `<папка>/wakeword-real/`
 и локально повторить проверки:
 
 ```powershell

@@ -451,8 +451,13 @@ class TextToSpeechManager @Inject constructor(
     }
 
     /**
-     * Проверяет, идёт ли сейчас воспроизведение
+     * Синтезатор занят в широком смысле: играет, синтезирует офлайн либо в очереди
+     * есть невыданные фразы. Нужен стражу субтитров: [isSpeaking] видит офлайн-голос
+     * только после первого звука.
      */
+    fun isBusy(): Boolean = !disposed.get() && (activeUtterances.get() > 0 || isSpeaking())
+
+    /** Проверяет, идёт ли сейчас воспроизведение. */
     fun isSpeaking(): Boolean {
         return if (disposed.get()) false else tts?.isSpeaking == true || offlineActive.get() > 0
     }

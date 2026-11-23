@@ -24,4 +24,5 @@
     <string name="omnix_perm_launch_text">OMNIX ekranda değilken Android uygulama açmayı engelliyor. Açmak için dokunun.</string>
     <string name="omnix_perm_launch_overlay">Diğer uygulamaların üzerinde göstermeye izin ver</string>
     <string name="omnix_perm_launch_blocked">OMNIX ekranda değilken %1$s uygulamasını açamıyorum. Bildirime dokunun ya da OMNIX için diğer uygulamaların üzerinde gösterme iznini verin, böylece sesli komutlar ekran kapalıyken de çalışır.</string>
+    <string name="omnix_launch_overlay_opening">%1$s açılıyor…</string>
 </resources>

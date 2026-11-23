@@ -24,4 +24,5 @@
     <string name="omnix_perm_launch_text">Android blocks opening apps while OMNIX is not on screen. Tap to open.</string>
     <string name="omnix_perm_launch_overlay">Allow over other apps</string>
     <string name="omnix_perm_launch_blocked">I cannot open %1$s while OMNIX is not on screen. Tap the notification, or allow OMNIX to display over other apps so voice commands work with the screen off.</string>
+    <string name="omnix_launch_overlay_opening">Opening %1$s…</string>
 </resources>

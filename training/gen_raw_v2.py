@@ -81,6 +81,19 @@ CATALOG = {
     "uk_UA-ukrainian_tts-medium": ("ru", "train", 40, 100),
     "es_ES-carlfm-x_low": ("en", "train", 40, 100),
 }
+
+# Голоса, чьи ДАТАСЕТЫ под некоммерческой лицензией (CC BY-NC / BY-NC-SA по
+# MODEL_CARD в rhasspy/piper-voices) либо с неподтверждённой лицензией. Модель,
+# обученная на их синтезе, не должна уходить в коммерческий релиз; подробности
+# и ссылки: раздел omni_v0.2 в NOTICE.
+NON_COMMERCIAL = {
+    "en_US-l2arctic-medium", "en_US-ryan-medium", "en_US-hfc_female-medium",
+    "en_US-hfc_male-medium", "ru_RU-ruslan-medium", "tr_TR-dfki-medium",
+}
+LICENSE_UNVERIFIED = {
+    "en_US-lessac-medium", "en_US-amy-medium", "en_US-arctic-medium", "en_GB-alan-medium",
+    "it_IT-riccardo-x_low", "ru_RU-irina-medium", "en_GB-northern_english_male-medium",
+}
 TEST_PER_SPLIT_VOICE = (80, 40)  # (pos, neg) test-диктора на split-модель
 TEST_MOD = 7                     # speaker_id % 7 == 3 -> test-диктор
 
@@ -315,6 +328,10 @@ def main():
     ap.add_argument("--out", required=True, help="папка raw_v2 (train/test/...)")
     ap.add_argument("--scale", type=float, default=1.0, help="множитель объёма (0.1 = быстрый прогон)")
     ap.add_argument("--only", help="подстрока имени голоса (отладка)")
+    ap.add_argument("--exclude-nc", action="store_true",
+                    help="пропустить голоса с некоммерческой лицензией датасета (для коммерческого релиза)")
+    ap.add_argument("--exclude-unverified", action="store_true",
+                    help="пропустить голоса с неподтверждённой лицензией")
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -326,6 +343,16 @@ def main():
     for name, (lang, role, n_pos, n_neg) in CATALOG.items():
         if args.only and args.only not in name:
             continue
+        if name in NON_COMMERCIAL:
+            if args.exclude_nc:
+                print(f"[{name}] пропущен: некоммерческая лицензия датасета", flush=True)
+                continue
+            print(f"[{name}] ВНИМАНИЕ: датасет NC, модель нельзя в коммерческий релиз", flush=True)
+        if name in LICENSE_UNVERIFIED:
+            if args.exclude_unverified:
+                print(f"[{name}] пропущен: лицензия не подтверждена", flush=True)
+                continue
+            print(f"[{name}] внимание: лицензия датасета не подтверждена", flush=True)
         onnx = VOICES / f"{name}.onnx"
         if not onnx.exists():
             missing.append(name)

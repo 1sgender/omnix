@@ -1,7 +1,6 @@
 package com.omnix.assistant.core.permission
 
 import android.content.Context
-import android.content.Intent
 import com.omnix.assistant.R
 
 /** Голосовая команда ждёт разрешения, а экран закрыт: зовём пользователя уведомлением. */
@@ -10,7 +9,8 @@ object PermissionRequestNotifier {
     private const val NOTIFICATION_ID = 7410
 
     fun show(context: Context, accessLabel: String): Boolean {
-        val open = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: Intent()
+        // Пустой Intent() при тапе ничего не открывает: без launch-intent уведомление не показываем.
+        val open = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return false
         return UserActionNotifier.show(
             context = context,
             channelId = CHANNEL_ID,
