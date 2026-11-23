@@ -1,11 +1,12 @@
 """Доп. hard-негативы Piper для v0.2 fp-fix (только train-голоса и train-дикторы)."""
-import sys, random, csv
+import os, sys, random, csv
 from pathlib import Path
-sys.path.insert(0, "C:/Users/User/Desktop/claude edit/omnix-wake-v02/training")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gen_raw_v2 as g
 from piper import PiperVoice
+# Запуск: PIPER_VOICES=<папка голосов> python gen_hardneg_val.py <out raw_hn> <N на голос>
 OUT = Path(sys.argv[1]); N = int(sys.argv[2])
-g.VOICES = Path("C:/Users/User/Desktop/claude edit/omnix-voice-work/wakeword-real/piper-voices")
+g.VOICES = Path(os.environ["PIPER_VOICES"])
 
 RU_SIM = ["помни", "помни меня", "не помни", "вспомни", "напомни", "обо мне", "о мне", "расскажи о мне",
  "омлет", "омлет на завтрак", "умный", "умный дом", "умная колонка", "тони", "тони пришёл", "омар", "омар хайям",

@@ -22,8 +22,10 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 /**
  * Порог срабатывания wake-word по умолчанию; должен совпадать с
  * [WakeWordConfig.threshold] (дефолт движка, если чтение настроек упало).
+ * 0.5 откалиброван под omni_v0.2fp (training/OMNI_V0.2FP_REPORT.md); прежний
+ * дефолт 0.35 подходил только модели omni_v0.1.
  */
-internal const val DEFAULT_WAKE_WORD_THRESHOLD = 0.35f
+internal const val DEFAULT_WAKE_WORD_THRESHOLD = 0.5f
 
 /** Клампы порога: даже «максимальная чувствительность» не вырождается в
  * порог 0 (= срабатывает на каждый кадр), «минимальная» — в 1 (никогда). */
@@ -31,20 +33,22 @@ internal const val MIN_WAKE_WORD_THRESHOLD = 0.05f
 internal const val MAX_WAKE_WORD_THRESHOLD = 0.95f
 
 /**
- * Порог wake-word из настроек с миграцией legacy-чувствительности.
+ * Порог wake-word из настроек (слайдер «чувствительность» пишет сюда же).
  *
- * До фикса аудита слайдер «чувствительность» писал ключ wake_word_sensitivity,
- * который движок не читал: настройка не влияла на детекцию. Теперь слайдер
- * пишет wakeword.threshold, а старое значение (если порог ещё никогда не
- * записывался) мигрируется один раз: threshold = 1 − sensitivity.
+ * Миграция на модель omni_v0.2fp: порог хранится под НОВЫМ ключом
+ * ([WAKEWORD_THRESHOLD_KEY_NAME]). Значения старых ключей (wakeword.threshold,
+ * подобранный под omni_v0.1, чаще всего 0.35, и legacy wake_word_sensitivity)
+ * намеренно не читаются: для новой модели они дают лишние ложные срабатывания,
+ * и пользователь, никогда не трогавший слайдер, получает дефолт 0.5. Тот, кто
+ * выставит порог заново, сохранит его уже под новым ключом.
  *
  * Чистая функция — тестируется в JVM-юнит-тесте без Context.
  */
-internal fun resolveWakeWordThreshold(stored: Float?, legacySensitivity: Float?): Float {
-    if (stored != null) return stored
-    if (legacySensitivity == null) return DEFAULT_WAKE_WORD_THRESHOLD
-    return (1f - legacySensitivity).coerceIn(MIN_WAKE_WORD_THRESHOLD, MAX_WAKE_WORD_THRESHOLD)
-}
+internal fun resolveWakeWordThreshold(stored: Float?): Float =
+    (stored ?: DEFAULT_WAKE_WORD_THRESHOLD).coerceIn(MIN_WAKE_WORD_THRESHOLD, MAX_WAKE_WORD_THRESHOLD)
+
+/** Имя ключа порога. Версионировано: смена модели с другим масштабом скоров = новое имя. */
+internal const val WAKEWORD_THRESHOLD_KEY_NAME = "wakeword.threshold.v02fp"
 
 /**
  * Near-miss захват (данные v0.2). Семантика (решение владельца 2026-09-26 —
@@ -76,11 +80,10 @@ class SettingsDataStore @Inject constructor(
         val SPEECH_PITCH = floatPreferencesKey("speech_pitch")
         val SELECTED_MODEL = stringPreferencesKey("selected_model")
         val HEADSET_ONLY_MODE = booleanPreferencesKey("headset_only_mode")
-        val WAKE_WORD_SENSITIVITY = floatPreferencesKey("wake_word_sensitivity")
         val WAKEWORD_ENABLED = booleanPreferencesKey("wakeword.enabled")
         val TRANSLATOR_TO_HEADPHONES = booleanPreferencesKey("translator.to_headphones")
         val AI_MODEL_CHOICE = stringPreferencesKey("ai.model_choice")
-        val WAKEWORD_THRESHOLD = floatPreferencesKey("wakeword.threshold")
+        val WAKEWORD_THRESHOLD = floatPreferencesKey(WAKEWORD_THRESHOLD_KEY_NAME)
         val WAKEWORD_PATIENCE = intPreferencesKey("wakeword.patience_frames")
         val WAKEWORD_COOLDOWN_MS = longPreferencesKey("wakeword.cooldown_ms")
         val WAKEWORD_DEBUG = booleanPreferencesKey("wakeword.debug_logging")
@@ -146,8 +149,7 @@ class SettingsDataStore @Inject constructor(
     /**
      * Чувствительность wake-word (0..1: выше = срабатывает легче).
      * Единый источник правды — ключ wakeword.threshold (его читает движок
-     * при старте): sensitivity = 1 − threshold. Legacy-ключ
-     * wake_word_sensitivity задействован только как источник миграции
+     * при старте): sensitivity = 1 − threshold. Миграция старых значений —
      * в [resolveWakeWordThreshold].
      */
     val wakeWordSensitivityFlow: Flow<Float> = context.dataStore.data
@@ -155,10 +157,7 @@ class SettingsDataStore @Inject constructor(
             if (exception is IOException) emit(emptyPreferences()) else throw exception
         }
         .map { preferences ->
-            1f - resolveWakeWordThreshold(
-                preferences[PreferencesKeys.WAKEWORD_THRESHOLD],
-                preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY]
-            )
+            1f - resolveWakeWordThreshold(preferences[PreferencesKeys.WAKEWORD_THRESHOLD])
         }
 
     suspend fun setUserName(name: String) {
@@ -208,8 +207,8 @@ class SettingsDataStore @Inject constructor(
 
     /**
      * Neural wake-word конфиг (§11 ТЗ). Дефолты совпадают с [WakeWordConfig].
-     * Порог — через [resolveWakeWordThreshold]: ключ wakeword.threshold,
-     * при его отсутствии — однократная миграция с legacy-чувствительности.
+     * Порог — через [resolveWakeWordThreshold]: ключ [WAKEWORD_THRESHOLD_KEY_NAME],
+     * при его отсутствии — дефолт под omni_v0.2fp.
      * nearMissCapture — dev/staging: включено ПО УМОЛЧАНИЮ (сбор датасета
      * v0.2, решение владельца 2026-09-26), явный off пользователя respected;
      * prod — всегда false ([resolveNearMissCapture]).
@@ -221,10 +220,7 @@ class SettingsDataStore @Inject constructor(
         .map { preferences ->
             WakeWordConfig(
                 enabled = preferences[PreferencesKeys.WAKEWORD_ENABLED] ?: true,
-                threshold = resolveWakeWordThreshold(
-                    preferences[PreferencesKeys.WAKEWORD_THRESHOLD],
-                    preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY]
-                ),
+                threshold = resolveWakeWordThreshold(preferences[PreferencesKeys.WAKEWORD_THRESHOLD]),
                 patienceFrames = preferences[PreferencesKeys.WAKEWORD_PATIENCE] ?: 2,
                 cooldownMs = preferences[PreferencesKeys.WAKEWORD_COOLDOWN_MS] ?: 2000L,
                 debugLogging = preferences[PreferencesKeys.WAKEWORD_DEBUG] ?: false,
@@ -403,7 +399,6 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.SPEECH_PITCH] = AppConstants.DEFAULT_SPEECH_PITCH
             preferences[PreferencesKeys.SELECTED_MODEL] = AppConstants.DEFAULT_MODEL
             preferences[PreferencesKeys.HEADSET_ONLY_MODE] = false
-            preferences[PreferencesKeys.WAKE_WORD_SENSITIVITY] = 0.65f
             preferences[PreferencesKeys.WAKEWORD_ENABLED] = true
             preferences[PreferencesKeys.TRANSLATOR_TO_HEADPHONES] = true
             preferences[PreferencesKeys.WAKEWORD_THRESHOLD] = DEFAULT_WAKE_WORD_THRESHOLD

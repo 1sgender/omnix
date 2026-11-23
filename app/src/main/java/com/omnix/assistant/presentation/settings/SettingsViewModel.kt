@@ -39,7 +39,7 @@ data class SettingsUiState(
     val speechPitch: Float = 1.0f,
     val selectedModel: String = "server-managed",
     val isHeadsetOnlyMode: Boolean = false,
-    val wakeWordSensitivity: Float = 0.65f,
+    val wakeWordSensitivity: Float = 0.5f,
     /** Near-miss захват (данные v0.2): доступен только в dev/staging. */
     val nearMissCapture: Boolean = false,
     /** Мастер-выключатель wake-word «Omni» (план пересборки фронта, блок 7). */
