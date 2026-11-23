@@ -57,9 +57,7 @@ object LogSanitizer {
         Regex("""sk-or-[A-Za-z0-9._\-]+"""),
         Regex("""gsk_[A-Za-z0-9._\-]+"""),
         Regex("""sk-[A-Za-z0-9._\-]{10,}"""),
-        Regex("""AIza[A-Za-z0-9._\-]{10,}"""),
-        // Venice: inference- и admin-ключи.
-        Regex("""VENICE_(?:INFERENCE|ADMIN)_KEY_[A-Za-z0-9._\-]+""")
+        Regex("""AIza[A-Za-z0-9._\-]{10,}""")
     )
 
     fun redact(value: String): String =
@@ -133,10 +131,6 @@ class Metrics {
     private val namedCounters = ConcurrentHashMap<String, AtomicLong>()
     fun increment(name: String): Long =
         namedCounters.computeIfAbsent(name) { AtomicLong(0) }.incrementAndGet()
-
-    /** Как [increment], но на произвольную величину (токены, микродоллары). */
-    fun add(name: String, delta: Long): Long =
-        namedCounters.computeIfAbsent(name) { AtomicLong(0) }.addAndGet(delta)
 
     fun snapshot(): Map<String, Any> = buildMap {
         put("requests_total", requestsTotal.get())

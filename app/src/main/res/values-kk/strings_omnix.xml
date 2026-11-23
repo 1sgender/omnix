@@ -256,12 +256,6 @@
     <string name="omnix_admin_models_restart">Телефон моделі қолданба қайта іске қосылғанда ауысады. Әлі телефонда болмаса, осы экранда жүктеңіз.</string>
     <string name="omnix_admin_answer_phone">Телефон · %1$s</string>
     <string name="omnix_admin_answer_cloud">Бұлт</string>
-    <string name="omnix_admin_venice_title">Venice AI (тек админге)</string>
-    <string name="omnix_admin_venice_body">Venice модельдері сіздің серверіңіз арқылы жұмыс істейді. Тек сізге көрінеді және қолжетімді: қарапайым және автоматты таңдау Venice-ті ешқашан қолданбайды. Кейбір модельдер цензурасыз.</string>
-    <string name="omnix_admin_venice_loading">Venice модельдері жүктелуде…</string>
-    <string name="omnix_admin_venice_unavailable">Venice қолжетімсіз: серверде кілт жоқ немесе қызмет жауап бермейді.</string>
-    <string name="omnix_admin_venice_meta">контекст %1$s · 1M токен үшін %2$s / %3$s USD · %4$s</string>
-    <string name="omnix_admin_venice_uncensored">Цензурасыз модель: мазмұн сүзілмейді</string>
     <string name="omnix_admin_wake_title">Шақыру сөзін сынау (әкімші)</string>
     <string name="omnix_admin_wake_body">Телефоныңызда салыстырыңыз. OMNIX келесі рет тыңдай бастағанда қолданылады.</string>
     <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — әдепкі</string>

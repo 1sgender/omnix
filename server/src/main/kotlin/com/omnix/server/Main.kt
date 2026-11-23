@@ -331,17 +331,6 @@ object ServerBootstrap {
         // модели только для этих аккаунтов.
         val adminAccess = com.omnix.server.admin.AdminModelAccess(config.adminAccountIds, config.providers)
 
-        // Venice AI: только для админа; ключ VENICE_API_KEY из окружения сервера
-        // (deploy/.env.production). Без ключа провайдер выключен.
-        val veniceConfig = com.omnix.server.venice.VeniceConfig.fromEnv()
-        val veniceService = com.omnix.server.venice.VeniceService(
-            config = veniceConfig,
-            client = com.omnix.server.venice.VeniceClient(veniceConfig, transport, logger),
-            logger = logger,
-            metrics = metrics
-        )
-        if (veniceConfig.enabled) logger.info("venice provider enabled (admin only)")
-
         val router = AiRouter(
             providerManager = providerManager,
             usageRepository = usageRepository,
@@ -354,8 +343,7 @@ object ServerBootstrap {
             // Дневные квоты тарифа поверх Postgres (authoritative подсчёт).
             planQuotaGate = PlanQuotaGate(usageRepository),
             adminAccess = adminAccess,
-            proBudgetGuard = com.omnix.server.license.ProBudgetGuard(usageRepository, config.pro),
-            veniceService = veniceService
+            proBudgetGuard = com.omnix.server.license.ProBudgetGuard(usageRepository, config.pro)
         )
 
         val licenseCrypto = LicenseCrypto(licenseConfig.codePepper)
@@ -563,13 +551,6 @@ object ServerBootstrap {
         adminHttpHandler.applyOverrides(adminSettings.ai())
         bootstrapAdminAccount(adminAccountRepository, adminAuditLog, logger)
 
-        val veniceHandler = com.omnix.server.venice.VeniceHttpHandler(
-            authenticator = authenticator,
-            adminAccess = adminAccess,
-            service = veniceService,
-            logger = logger,
-            json = json
-        )
         val appUpdateHandler = AppUpdateHttpHandler()
         val handler = OmnixApiHandler(
             authenticator = authenticator,
@@ -597,7 +578,6 @@ object ServerBootstrap {
             // лицензионные (issue/revoke, redeem, checkout, webhooks) — следом.
             extensionHandler = { request ->
                 privacyPageHandler.handle(request) ?:
-                    veniceHandler.handle(request) ?:
                     adminSpaHandler.handle(request) ?:
                     clipAdminHandler.handle(request) ?:
                     adminHttpHandler.handle(request) ?:

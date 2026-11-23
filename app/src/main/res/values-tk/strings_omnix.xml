@@ -311,12 +311,6 @@
     <string name="omnix_admin_models_restart">Telefondaky model programma täzeden açylandan soň üýtgär. Ol entek telefonda ýok bolsa, şu ekranda ýükläp alyň.</string>
     <string name="omnix_admin_answer_phone">Telefon · %1$s</string>
     <string name="omnix_admin_answer_cloud">Bulut</string>
-    <string name="omnix_admin_venice_title">Venice AI (diňe admin üçin)</string>
-    <string name="omnix_admin_venice_body">Venice modelleri siziň serweriňiz arkaly işleýär. Diňe size görünýär we elýeterli: adaty we awtomatik saýlaw Venice-i hiç haçan ulanmaýar. Käbir modeller senzurasyz.</string>
-    <string name="omnix_admin_venice_loading">Venice modelleri ýüklenýär…</string>
-    <string name="omnix_admin_venice_unavailable">Venice elýeter däl: serwerde açar ýok ýa-da hyzmat jogap bermeýär.</string>
-    <string name="omnix_admin_venice_meta">kontekst %1$s · 1M token üçin %2$s / %3$s USD · %4$s</string>
-    <string name="omnix_admin_venice_uncensored">Senzurasyz model: mazmun süzülmeýär</string>
     <string name="omnix_admin_wake_title">Çagyryş sözlerini synag (admin)</string>
     <string name="omnix_admin_wake_body">Öz telefonyňyzda deňeşdiriň. Indiki diňlemek başlanda üýtgär.</string>
     <string name="omnix_admin_wake_all">«Omni», «Omniks», «Okeý, Omni» — adaty</string>

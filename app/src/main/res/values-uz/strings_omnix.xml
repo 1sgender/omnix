@@ -256,12 +256,6 @@
     <string name="omnix_admin_models_restart">Telefon modeli ilova qayta ishga tushganda almashadi. Hali telefonda boʻlmasa, shu ekranda yuklab oling.</string>
     <string name="omnix_admin_answer_phone">Telefon · %1$s</string>
     <string name="omnix_admin_answer_cloud">Bulut</string>
-    <string name="omnix_admin_venice_title">Venice AI (faqat admin uchun)</string>
-    <string name="omnix_admin_venice_body">Venice modellari sizning serveringiz orqali ishlaydi. Faqat sizga ko‘rinadi va ochiq: oddiy va avtomatik tanlov Venice’dan hech qachon foydalanmaydi. Ba’zi modellar tsenzurasiz.</string>
-    <string name="omnix_admin_venice_loading">Venice modellari yuklanmoqda…</string>
-    <string name="omnix_admin_venice_unavailable">Venice mavjud emas: serverda kalit yo‘q yoki xizmat javob bermayapti.</string>
-    <string name="omnix_admin_venice_meta">kontekst %1$s · 1M token uchun %2$s / %3$s USD · %4$s</string>
-    <string name="omnix_admin_venice_uncensored">Tsenzurasiz model: kontent filtrlanmaydi</string>
     <string name="omnix_admin_wake_title">Chaqiruv iborasini sinash (admin)</string>
     <string name="omnix_admin_wake_body">Telefoningizda solishtiring. OMNIX keyingi safar tinglashni boshlaganda qoʻllanadi.</string>
     <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okey Omni” — standart</string>

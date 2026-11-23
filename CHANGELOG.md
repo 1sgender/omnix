@@ -8,15 +8,6 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
-### Added (Venice, admin only)
-
-- Venice AI как провайдер только для админа: ключ `VENICE_API_KEY` лишь в окружении
-  сервера, эндпоинты `/v1/venice/models` и `/v1/venice/limits` скрыты от всех, кроме
-  аккаунтов из `ADMIN_ACCOUNT_IDS`, чат через `adminProvider = "venice:<модель>"`;
-  автовыбор модели Venice не видит. Повтор при 429/5xx с учётом `x-ratelimit-reset*`,
-  потолок 20 запросов в минуту и 1024 токена ответа, учёт токенов и стоимости. Модели
-  в «Тест моделей (админ)». См. `docs/VENICE_ADMIN.md`.
-
 ### Changed (wake word)
 
 - Wake word «Омни»: модель по умолчанию `omni_v0.2fp.onnx` вместо `omni_v0.1.onnx`,

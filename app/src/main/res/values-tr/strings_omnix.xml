@@ -256,12 +256,6 @@
     <string name="omnix_admin_models_restart">Telefon modeli uygulama yeniden başlatılınca değişir. Henüz telefonda yoksa bu ekrandan indirin.</string>
     <string name="omnix_admin_answer_phone">Telefon · %1$s</string>
     <string name="omnix_admin_answer_cloud">Bulut</string>
-    <string name="omnix_admin_venice_title">Venice AI (yalnızca yönetici)</string>
-    <string name="omnix_admin_venice_body">Venice modelleri sunucunuz üzerinden çalışır. Yalnızca siz görebilir ve kullanabilirsiniz: normal ve otomatik seçim Venice’i asla kullanmaz. Bazı modeller sansürsüzdür.</string>
-    <string name="omnix_admin_venice_loading">Venice modelleri yükleniyor…</string>
-    <string name="omnix_admin_venice_unavailable">Venice kullanılamıyor: sunucuda anahtar yok veya hizmet yanıt vermiyor.</string>
-    <string name="omnix_admin_venice_meta">bağlam %1$s · 1M belirteç başına %2$s / %3$s USD · %4$s</string>
-    <string name="omnix_admin_venice_uncensored">Sansürsüz model: içerik filtrelenmez</string>
     <string name="omnix_admin_wake_title">Uyandırma ifadesi testi (yönetici)</string>
     <string name="omnix_admin_wake_body">Telefonunuzda karşılaştırın. OMNIX bir sonraki dinlemeye başladığında uygulanır.</string>
     <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okey Omni” — varsayılan</string>

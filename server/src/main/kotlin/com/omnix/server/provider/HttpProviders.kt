@@ -51,15 +51,7 @@ interface HttpTransport {
     ): HttpTransportResponse = throw TransportException(ProviderFailureKind.UNKNOWN, "GET not supported")
 }
 
-/**
- * [headers]: заголовки ответа в нижнем регистре (нужны лимитам Venice,
- * x-ratelimit-*); транспорты и фейки, которым они не нужны, оставляют пусто.
- */
-data class HttpTransportResponse(
-    val status: Int,
-    val body: String,
-    val headers: Map<String, String> = emptyMap()
-)
+data class HttpTransportResponse(val status: Int, val body: String)
 
 /** Транспортный сбой — сеть/таймаут, до получения HTTP-статуса. */
 class TransportException(

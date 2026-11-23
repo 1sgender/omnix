@@ -21,7 +21,6 @@ import com.omnix.server.provider.ProviderId
 import com.omnix.server.provider.ProviderManager
 import com.omnix.server.provider.ProviderRequest
 import com.omnix.server.provider.ProviderRequirements
-import com.omnix.server.provider.promptWithFiles
 import com.omnix.server.privacy.PrivacyContent
 import com.omnix.server.privacy.PromptPrivacyClassifier
 import com.omnix.server.privacy.ServerPrivacyClassifier
@@ -29,17 +28,10 @@ import com.omnix.server.usage.AiUsageRecord
 import com.omnix.server.usage.AsyncUsageTracker
 import com.omnix.server.usage.UsageLimitResult
 import com.omnix.server.usage.UsageRepository
-import com.omnix.server.venice.VeniceFailureKind
-import com.omnix.server.venice.VeniceMessage
-import com.omnix.server.venice.VeniceResult
-import com.omnix.server.venice.VeniceService
 import java.time.Instant
 
 /** Rough characters-per-token ratio used only when a provider reports no token usage. */
 private const val APPROX_CHARS_PER_TOKEN = 4
-
-/** Подпись провайдера Venice в usage и в ответе админу (не ProviderId: в автовыборе его нет). */
-private const val VENICE_LABEL = "VENICE"
 
 /** Цепочка Pro: Claude, затем запасные каналы. */
 private val PRO_CHAIN = listOf(ProviderId.ANTHROPIC, ProviderId.GEMINI, ProviderId.GROQ)
@@ -105,13 +97,7 @@ class AiRouter(
     /** Тест моделей админом; null = админов нет, поле запроса игнорируется. */
     private val adminAccess: AdminModelAccess? = null,
     /** Предохранитель месячного бюджета Pro; null = без понижения по бюджету. */
-    private val proBudgetGuard: ProBudgetGuard? = null,
-    /**
-     * Venice AI, только для админа (`adminProvider = "venice:<model>"`). null
-     * или выключен: запрос идёт обычным путём. Venice НЕ входит в
-     * [ProviderManager], поэтому автоматический выбор модели его не видит.
-     */
-    private val veniceService: VeniceService? = null
+    private val proBudgetGuard: ProBudgetGuard? = null
 ) {
     init {
         require(usageRepository != null || usageTracker != null) {
@@ -163,7 +149,6 @@ class AiRouter(
         }
 
         val pinned = pinnedProvider(request, client, requestId)
-        val veniceModel = veniceRequestedModel(request, client, requestId)
 
         // Дневная квота тарифа (voice_ai / base_ai по source запроса).
         // После AR-05 (fail-fast дешёвых проверок), до privacy: отклонённые
@@ -202,7 +187,7 @@ class AiRouter(
         // месячного бюджета. Админский pin провайдера обходит уровни: это тест
         // конкретной модели, а не продуктовый запрос.
         var servePro = false
-        if (pinned == null && veniceModel == null && request.tier?.trim()?.equals("pro", ignoreCase = true) == true) {
+        if (pinned == null && request.tier?.trim()?.equals("pro", ignoreCase = true) == true) {
             val proVerdict = planQuotaGate?.check(client, PlanFeature.PRO_AI)
             if (proVerdict is PlanQuotaGate.Verdict.Limited) {
                 logger.warn(
@@ -364,14 +349,6 @@ class AiRouter(
             deadlineEpochMs = deadlineEpochMs
         )
 
-        // ------------------------------------------------ 3.9 Venice (только админ)
-        // Venice вне ProviderManager: сюда попадает лишь админ, закрепивший
-        // модель «venice:<id>». Остальным поле игнорируется (pinnedProvider
-        // уже отбросил его как неизвестный провайдер), и они идут обычным путём.
-        veniceModel?.let { model ->
-            return executeVenice(model, providerRequest, request, client, requestId, startedAt)
-        }
-
         // ----------------------------------------------- 4. Provider Manager
         val outcome = providerManager.execute(providerRequest, requirements)
         val totalLatency = clock() - startedAt
@@ -491,88 +468,6 @@ class AiRouter(
                 )
             }
             null
-        }
-    }
-
-    /**
-     * Модель Venice, закреплённая админом; null — обычный выбор сервера.
-     * Условия: Venice подключён и включён, вызывающий админ ([AdminModelAccess]).
-     * Просьбу не-админа логируем (без текста) и игнорируем.
-     */
-    private fun veniceRequestedModel(
-        request: AiExecutionRequest,
-        client: AuthenticatedClient,
-        requestId: String
-    ): String? {
-        val model = VeniceService.modelFromPin(request.adminProvider) ?: return null
-        val allowed = veniceService?.enabled == true && adminAccess?.isAdmin(client.accountId) == true
-        if (!allowed) {
-            logger.warn(
-                "venice request ignored",
-                "requestId" to requestId,
-                "clientId" to client.clientId,
-                "reason" to if (adminAccess?.isAdmin(client.accountId) == true) "venice disabled" else "not an admin account"
-            )
-            return null
-        }
-        return model
-    }
-
-    private suspend fun executeVenice(
-        model: String,
-        providerRequest: ProviderRequest,
-        request: AiExecutionRequest,
-        client: AuthenticatedClient,
-        requestId: String,
-        startedAt: Long
-    ): RouterResult {
-        val service = requireNotNull(veniceService)
-        val messages = buildList {
-            add(VeniceMessage("system", providerRequest.systemPrompt))
-            providerRequest.history.forEach { add(VeniceMessage(it.role, it.content)) }
-            add(VeniceMessage("user", providerRequest.promptWithFiles(nativeDocuments = false)))
-        }
-        val result = service.chat(
-            requestId = requestId,
-            model = model,
-            messages = messages,
-            requestedMaxTokens = providerRequest.maxTokens,
-            temperature = providerRequest.temperature
-        )
-        val latency = clock() - startedAt
-        return when (result) {
-            is VeniceResult.Success -> {
-                val reply = result.value.reply
-                metrics.recordSuccess(reply.totalTokens)
-                usageTracker?.accountFor(
-                    clientId = client.clientId,
-                    inputTokens = reply.inputTokens ?: 0,
-                    outputTokens = reply.outputTokens ?: 0,
-                    providerCostPer1k = null
-                )
-                recordUsage(
-                    requestId, client, VENICE_LABEL, reply.model, latency,
-                    Triple(reply.inputTokens, reply.outputTokens, reply.totalTokens),
-                    request, reply.text.length, null
-                )
-                RouterResult.Success(text = reply.text, requestId = requestId, provider = VENICE_LABEL, model = reply.model)
-            }
-            is VeniceResult.Failure -> {
-                val code = when (result.kind) {
-                    VeniceFailureKind.RATE_LIMITED -> ApiErrorCode.RATE_LIMITED
-                    VeniceFailureKind.TIMEOUT -> ApiErrorCode.PROVIDER_TIMEOUT
-                    VeniceFailureKind.DISABLED,
-                    VeniceFailureKind.NETWORK,
-                    VeniceFailureKind.UPSTREAM,
-                    VeniceFailureKind.ERROR_BUDGET -> ApiErrorCode.PROVIDER_UNAVAILABLE
-                    VeniceFailureKind.AUTH,
-                    VeniceFailureKind.PAYMENT,
-                    VeniceFailureKind.BAD_REQUEST -> ApiErrorCode.PROVIDER_ERROR
-                }
-                metrics.recordFailure()
-                recordUsage(requestId, client, VENICE_LABEL, model, latency, null, request, 0, code.name)
-                RouterResult.Failure(code, requestId, retryAfterSeconds = result.retryAfterSeconds)
-            }
         }
     }
 
