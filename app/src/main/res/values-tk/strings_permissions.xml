@@ -24,4 +24,5 @@
     <string name="omnix_perm_launch_text">OMNIX ekranda bolmasa, Android programmalary açmaga ýol bermeýär. Açmak üçin basyň.</string>
     <string name="omnix_perm_launch_overlay">Beýleki programmalaryň üstünde rugsat ber</string>
     <string name="omnix_perm_launch_blocked">OMNIX ekranda bolmasa, %1$s açyp bilemok. Bildirişe basyň ýa-da OMNIX-e beýleki programmalaryň üstünde görkezilmäge rugsat beriň, şonda ses buýruklary ekran öçükkä hem işleýär.</string>
+    <string name="omnix_launch_overlay_opening">%1$s açylýar…</string>
 </resources>

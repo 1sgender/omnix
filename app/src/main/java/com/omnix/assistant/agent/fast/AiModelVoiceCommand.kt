@@ -121,6 +121,26 @@ object AiModelVoiceCommand {
     private val PUNCTUATION = Regex("[,.!?«»\":;…]")
     private val SPACES = Regex("\\s+")
 
+    /** Слово «модель/ИИ» в любой из форм: признак, что речь именно о модели ассистента. */
+    private val MODEL_NOUN = Regex("(?:^| )(?:модель|ии|model|ai)(?: |$)")
+
+    /**
+     * Общие слова: «авто», «auto», «local», «offline» встречаются в чужих командах
+     * («смени режим на авто», «перейди в офлайн», «go to offline»). Без слова
+     * «модель/ИИ/model/AI» их принимаем только в явной форме «переключи(сь) на …»
+     * / «switch to …»; «офлайн» неоднозначно (режим сети), ему слово обязательно.
+     */
+    private val GENERIC_CHOICES = setOf(AiModelChoice.AUTO, AiModelChoice.ON_DEVICE)
+    private val OFFLINE_NAMES = setOf("офлайн", "оффлайн", "offline")
+    private val EXPLICIT_SWITCH = Regex("^(?:давай )?(?:переключи(?:сь)? на|switch to) ")
+
+    private fun isAllowed(q: String, name: String, choice: AiModelChoice): Boolean {
+        if (choice !in GENERIC_CHOICES) return true
+        if (MODEL_NOUN.containsMatchIn(q)) return true
+        if (name in OFFLINE_NAMES) return false
+        return EXPLICIT_SWITCH.containsMatchIn(q)
+    }
+
     /** Фраза пользователя → команда смены модели или вопрос о ней; null — это не про модель. */
     fun parse(text: String): Command? {
         val q = text.lowercase()
@@ -133,9 +153,13 @@ object AiModelVoiceCommand {
         if (ASK_RU.matches(q) || ASK_EN.matches(q) || ASK_TURKIC.matches(q)) return Command.Ask
         if (SMARTER.matches(q)) return Command.Switch(AiModelChoice.PRO)
         if (AUTO_RU.matches(q) || AUTO_EN.matches(q)) return Command.Switch(AiModelChoice.AUTO)
-        val name = listOf(SWITCH_RU, USE_RU, SWITCH_EN, USE_EN, SWITCH_TURKIC)
+        val general = listOf(SWITCH_RU, USE_RU, SWITCH_EN, USE_EN)
             .firstNotNullOfOrNull { it.matchEntire(q)?.groupValues?.get(1) }
-            ?: return null
-        return NAMES[name]?.let { Command.Switch(it) }
+        if (general != null) {
+            val choice = NAMES[general] ?: return null
+            return if (isAllowed(q, general, choice)) Command.Switch(choice) else null
+        }
+        val turkic = SWITCH_TURKIC.matchEntire(q)?.groupValues?.get(1) ?: return null
+        return NAMES[turkic]?.let { Command.Switch(it) }
     }
 }

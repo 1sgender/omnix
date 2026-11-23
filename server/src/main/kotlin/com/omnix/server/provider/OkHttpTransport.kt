@@ -116,6 +116,9 @@ class OkHttpTransport(
         }
         val charset = responseBody?.contentType()?.charset(StandardCharsets.UTF_8)
             ?: StandardCharsets.UTF_8
-        return HttpTransportResponse(response.code, String(bytes, charset))
+        val responseHeaders = response.headers.names().associate { name ->
+            name.lowercase() to (response.header(name) ?: "")
+        }
+        return HttpTransportResponse(response.code, String(bytes, charset), responseHeaders)
     }
 }

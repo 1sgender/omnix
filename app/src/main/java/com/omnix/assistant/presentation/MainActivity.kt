@@ -43,6 +43,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val TOAST_MAX_CHARS = 80
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -82,7 +84,11 @@ class MainActivity : ComponentActivity() {
      * насовсем: системный диалог больше не покажется, ведём в настройки.
      */
     private fun onPermissionPromptResult(grants: Map<String, Boolean>) {
-        if (grants.isEmpty()) return
+        if (grants.isEmpty()) {
+            // Диалог закрыт без ответа: отложенный повтор больше не актуален.
+            PermissionPrompts.cancelRetries()
+            return
+        }
         val denied = grants.filterValues { granted -> !granted }.keys.toList()
         val retry = PermissionPrompts.takeRetry()
         if (denied.isEmpty()) {
@@ -99,7 +105,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun announcePermissionOutcome(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        // Тост только для коротких статусов: длинный итог инструмента (текст, список)
+        // в тосте обрезается и пропадает, он доезжает через announce в чат и голос.
+        if (message.length <= TOAST_MAX_CHARS) Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         PermissionPrompts.announce(message)
     }
 

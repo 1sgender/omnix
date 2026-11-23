@@ -18,6 +18,9 @@ import com.omnix.assistant.core.license.LicenseInfo
 import com.omnix.assistant.core.license.LicenseManager
 import com.omnix.assistant.core.license.LocalAnswer
 import com.omnix.assistant.core.license.QuotaExceeded
+import com.omnix.assistant.data.remote.VeniceAdminApi
+import com.omnix.assistant.data.remote.VeniceModelInfo
+import com.omnix.assistant.data.remote.VeniceModelsResult
 import kotlinx.coroutines.flow.combine
 import com.omnix.assistant.data.preferences.AiModelChoiceStore
 import com.omnix.assistant.data.preferences.SettingsDataStore
@@ -33,6 +36,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Список моделей Venice для админа: приходит с сервера, не хранится в приложении. */
+sealed interface VeniceUiState {
+    data object Idle : VeniceUiState
+    data object Loading : VeniceUiState
+    data class Loaded(val models: List<VeniceModelInfo>) : VeniceUiState
+    data object Unavailable : VeniceUiState
+}
+
 /**
  * Выбор модели ИИ (лист у поля ввода в чате) и раздел «ИИ-модель» в «Я»:
  * текущий выбор, состояние модели на телефоне, остаток на сегодня, смена
@@ -47,7 +58,8 @@ class AiModelViewModel @Inject constructor(
     private val adminModels: AdminModelStore,
     private val settings: SettingsDataStore,
     private val licenseManager: LicenseManager,
-    private val tierLedger: AiTierLedger
+    private val tierLedger: AiTierLedger,
+    private val veniceApi: VeniceAdminApi
 ) : ViewModel() {
 
     val choice: StateFlow<AiModelChoice> = store.choice
@@ -107,6 +119,22 @@ class AiModelViewModel @Inject constructor(
     val admin: StateFlow<AdminModelState> = adminModels.state
 
     fun pinAdminModel(pin: AdminModelPin) = adminModels.setPin(pin)
+
+    private val _venice = MutableStateFlow<VeniceUiState>(VeniceUiState.Idle)
+
+    /** Модели Venice (только админ): без админ-флага список не запрашивается вовсе. */
+    val venice: StateFlow<VeniceUiState> = _venice.asStateFlow()
+
+    fun loadVeniceModels() {
+        if (!adminModels.state.value.isAdmin || _venice.value == VeniceUiState.Loading) return
+        _venice.value = VeniceUiState.Loading
+        viewModelScope.launch {
+            _venice.value = when (val result = veniceApi.models()) {
+                is VeniceModelsResult.Loaded -> VeniceUiState.Loaded(result.models)
+                VeniceModelsResult.Unavailable -> VeniceUiState.Unavailable
+            }
+        }
+    }
 
     /** Тест фразы вызова (админ): чем и что слушать сейчас. */
     val wakeListening: StateFlow<Pair<WakeEngineKind, WakePhrase>> = settings.wakeWordConfig

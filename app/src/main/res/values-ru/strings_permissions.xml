@@ -24,4 +24,5 @@
     <string name="omnix_perm_launch_text">Android не даёт открывать приложения, пока OMNIX не на экране. Нажмите, чтобы открыть.</string>
     <string name="omnix_perm_launch_overlay">Разрешить поверх других окон</string>
     <string name="omnix_perm_launch_blocked">Не могу открыть %1$s, пока OMNIX не на экране. Нажмите на уведомление или разрешите OMNIX показываться поверх других приложений, тогда голосовые команды работают и при выключенном экране.</string>
+    <string name="omnix_launch_overlay_opening">Открываю %1$s…</string>
 </resources>

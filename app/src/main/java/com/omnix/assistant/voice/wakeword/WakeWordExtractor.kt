@@ -54,12 +54,19 @@ object WakeWordExtractor {
         "(?:окей|окэй|океи|оки|ок|okay|okey|ok|hey|hi|эй|хэй|хей|ей|ey|hej|tamam)"
 
     /**
+     * Дефис сразу после слова вызова: «омни-канальная стратегия» это одно составное
+     * слово, а не обращение к ассистенту («омни, — привет» с пробелом/запятой
+     * по-прежнему обращение).
+     */
+    private const val HYPHEN = "[-\\u2010\\u2011]"
+
+    /**
      * Начало фразы: [NOISE]* [«окей» NOISE+] слово вызова, затем граница слова.
      * «умни» допустимо только после «окей»: русская модель слышит «okay omni»
      * как «окей умни(й)», а сам по себе «умни» это не слово вызова.
      */
     private val OMNI_START = Regex(
-        "(?iu)^$NOISE*(?:(?:$OMNI_LEAD)$NOISE+(?:$OMNI_BODY|умни)|$OMNI_BODY)(?![\\p{L}\\p{N}])$NOISE*"
+        "(?iu)^$NOISE*(?:(?:$OMNI_LEAD)$NOISE+(?:$OMNI_BODY|умни)|$OMNI_BODY)(?![\\p{L}\\p{N}]|$HYPHEN\\p{L})$NOISE*"
     )
 
     private const val ACUTE = "\u0301"
