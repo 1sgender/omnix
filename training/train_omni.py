@@ -17,6 +17,26 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset, IterableDataset
 
 # официальный Model-класс из openwakeword train.py
+def _install_shims():
+    """openwakeword.data тянет тяжёлые пакеты только для аугментации/TTS-пайплайна
+    (speechbrain, torchaudio, audiomentations, ...). Для обучения головы нужны лишь
+    Model и mmap_batch_generator, поэтому недостающие пакеты заменяем заглушками
+    (Kaggle/Colab без pip install openwakeword[full])."""
+    import types
+    from unittest import mock
+    names = ["pronouncing", "audiomentations", "torch_audiomentations", "speechbrain",
+             "speechbrain.dataio", "speechbrain.dataio.dataio", "speechbrain.processing",
+             "speechbrain.processing.signal_processing", "torchaudio", "mutagen", "acoustics"]
+    for n in names:
+        if n in sys.modules:
+            continue
+        try:
+            importlib.import_module(n)
+        except Exception:
+            sys.modules[n] = mock.MagicMock(name=n, __spec__=None)
+
+
+_install_shims()
 spec = importlib.util.spec_from_file_location("oww_train", str(Path(__file__).resolve().parent / "oww_train.py"))
 oww_train = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(oww_train)
@@ -24,9 +44,10 @@ OWWModel = oww_train.Model
 from openwakeword.data import mmap_batch_generator
 
 ROOT = Path(__file__).resolve().parent
+# значения по умолчанию = пайплайн v0.1; переопределяются аргументами (см. parse_args)
 FEAT = ROOT / "features"
 OUT = ROOT / "model"
-OUT.mkdir(parents=True, exist_ok=True)
+VERSION = "v0.1"
 
 torch.manual_seed(2024)
 np.random.seed(2024)
@@ -34,6 +55,22 @@ np.random.seed(2024)
 STEPS_1 = 25000
 STEPS_2 = 3000
 MAX_NEG_WEIGHT = 150
+
+
+def parse_args():
+    """--features/--out/--version/--steps1/--steps2; без аргументов = v0.1."""
+    import argparse
+    global FEAT, OUT, VERSION, STEPS_1, STEPS_2
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--features", default=str(FEAT))
+    ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--version", default=VERSION)
+    ap.add_argument("--steps1", type=int, default=STEPS_1)
+    ap.add_argument("--steps2", type=int, default=STEPS_2)
+    a = ap.parse_args()
+    FEAT, OUT, VERSION = Path(a.features), Path(a.out), a.version
+    STEPS_1, STEPS_2 = a.steps1, a.steps2
+    OUT.mkdir(parents=True, exist_ok=True)
 TARGET_FP_PER_HR = 1.0
 
 def build_train_loader():
@@ -103,6 +140,7 @@ def simulate_fires(scores, thr, patience=2):
     return fires
 
 def main():
+    parse_args()
     X_train = build_train_loader()
     X_val, n_pos, n_neg = build_val()
     fp_loader, val_hrs, fp_windows = build_fp()
@@ -186,11 +224,11 @@ def main():
         if score > best_score:
             best_score, best_thr = score, thr
     report["chosen_threshold"] = best_thr
-    # per-voice breakdown: первые 90 — en_GB-jenny, вторые 90 — ru_RU-ruslan
-    report["per_voice_recall_0.5"] = {
-        "jenny_en": float((pos_scores[:90] >= 0.5).mean()),
-        "ruslan_ru": float((pos_scores[90:] >= 0.5).mean()),
-    }
+    if VERSION == "v0.1":  # v0.1: первые 90 — en_GB-jenny, вторые 90 — ru_RU-ruslan
+        report["per_voice_recall_0.5"] = {
+            "jenny_en": float((pos_scores[:90] >= 0.5).mean()),
+            "ruslan_ru": float((pos_scores[90:] >= 0.5).mean()),
+        }
     print(f"\nвыбран порог: {best_thr}")
 
     # ===== Экспорт ONNX (контракт hey_jarvis: вход [1,16,96], выход [1,1]) =====
@@ -198,13 +236,18 @@ def main():
 
     def export_nn(nn_model, path):
         model_to_save = copy.deepcopy(nn_model).to("cpu").eval()
-        torch.onnx.export(model_to_save, torch.rand(1, 16, 96), str(path))
+        dummy = torch.rand(1, 16, 96)
+        try:  # новый torch по умолчанию экспортирует через dynamo (нужен onnxscript)
+            torch.onnx.export(model_to_save, dummy, str(path), dynamo=False)
+        except TypeError:  # старый torch: аргумента dynamo нет
+            torch.onnx.export(model_to_save, dummy, str(path))
         m = onnx.load(str(path))
         onnx.save_model(m, str(path), save_as_external_data=False)
 
-    export_nn(combined, OUT / "omni_v0.1.onnx")
-    export_nn(model.model, OUT / "omni_v0.1_final.onnx")
-    (OUT / "metrics.json").write_text(json.dumps(report, indent=2))
+    onnx_path = OUT / f"omni_{VERSION}.onnx"
+    export_nn(combined, onnx_path)
+    export_nn(model.model, OUT / f"omni_{VERSION}_final.onnx")
+    (OUT / f"metrics_{VERSION}.json").write_text(json.dumps(report, indent=2))
     print(f"\nсохранено: {onnx_path}")
     print("ГОТОВО")
 

@@ -24,4 +24,5 @@
     <string name="omnix_perm_launch_text">OMNIX ekranda boʻlmasa, Android ilovalarni ochishga yoʻl qoʻymaydi. Ochish uchun bosing.</string>
     <string name="omnix_perm_launch_overlay">Boshqa ilovalar ustida koʻrsatishga ruxsat</string>
     <string name="omnix_perm_launch_blocked">OMNIX ekranda boʻlmasa, %1$s ilovasini ocha olmayman. Bildirishnomani bosing yoki OMNIX uchun boshqa ilovalar ustida koʻrsatishga ruxsat bering, shunda ovozli buyruqlar ekran oʻchiq boʻlganda ham ishlaydi.</string>
+    <string name="omnix_launch_overlay_opening">%1$s ochilmoqda…</string>
 </resources>

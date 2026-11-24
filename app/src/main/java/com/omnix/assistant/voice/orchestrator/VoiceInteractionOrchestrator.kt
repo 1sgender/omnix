@@ -244,15 +244,37 @@ class VoiceInteractionOrchestrator @Inject constructor(
     /** Голосовой запрос ждёт ответа на системное окно разрешений. */
     @Volatile
     private var awaitingPermissionOutcome = false
+    private var awaitingExpiryJob: Job? = null
+
+    /**
+     * Начало обработки текущей реплики: запрос разрешения, сделанный ДО неё
+     * (другой командой), не должен подменять ответ на эту.
+     */
+    @Volatile
+    private var commandStartedAtMs = 0L
+
+    /** Новая реплика: ожидание итога прошлого запроса доступа больше не актуально. */
+    private fun beginCommand() {
+        commandStartedAtMs = System.currentTimeMillis()
+        awaitingPermissionOutcome = false
+        awaitingExpiryJob?.cancel()
+    }
 
     /**
      * Инструмент упёрся в разрешение: вместо сухого ответа инструмента говорим,
      * что разрешить и где. Экран закрыт: окно показать нельзя, зовём
-     * уведомлением (его тап запускает приложение законно).
+     * уведомлением (его тап запускает приложение законно). Подсказка привязана
+     * к запросу, сделанному при обработке этой реплики ([sinceMs]); ожидание
+     * итога само гаснет через срок годности повтора.
      */
-    private fun permissionHintOr(text: String): String {
-        val requested = PermissionPrompts.consumeRecent(System.currentTimeMillis()) ?: return text
+    private fun permissionHintOr(text: String, sinceMs: Long = commandStartedAtMs): String {
+        val requested = PermissionPrompts.consumeRecent(System.currentTimeMillis(), sinceMs) ?: return text
         awaitingPermissionOutcome = true
+        awaitingExpiryJob?.cancel()
+        awaitingExpiryJob = scope.launch {
+            delay(PermissionPrompts.RETRY_TTL_MS)
+            awaitingPermissionOutcome = false
+        }
         val label = PermissionTexts.describe(context, requested)
         if (AppVisibility.isForeground) {
             return context.getString(R.string.omnix_perm_voice_request, label)
@@ -292,9 +314,15 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     delay(SubtitleLifecycle.WATCHDOG_POLL_MS)
                     elapsed += SubtitleLifecycle.WATCHDOG_POLL_MS
                     val ttsState = textToSpeechManager.ttsState.value
-                    val speaking = ttsState is TtsState.Speaking || ttsState is TtsState.Initializing
-                    if (SubtitleLifecycle.isSpeakingStuck(elapsed, speaking, text)) {
+                    val engaged = SubtitleLifecycle.isTtsEngaged(
+                        stateSpeaking = ttsState is TtsState.Speaking || ttsState is TtsState.Initializing,
+                        utterancesPending = textToSpeechManager.isBusy()
+                    )
+                    if (SubtitleLifecycle.isSpeakingStuck(elapsed, engaged, text)) {
                         Log.w(TAG, "speaking watchdog: no TTS completion event, releasing subtitles")
+                        // Жёсткий лимит при всё ещё занятом синтезаторе: глушим его,
+                        // иначе голос зазвучит поверх прослушивания.
+                        if (SubtitleLifecycle.shouldStopTtsBeforeListening(engaged)) textToSpeechManager.stop()
                         openContinuousConversationWindow()
                         return@collectLatest
                     }
@@ -776,6 +804,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         // ниже). Если > 0 — финальный speak целиком пропускаем, чтобы не
         // дублировать ответ.
         val streamedSentences = AtomicInteger(0)
+        beginCommand()
         aiJob = scope.launch {
             try {
                 // CR-07: если пользователь успел перейти в standby до отправки запроса,
@@ -987,6 +1016,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 _currentToolCall.value = callToExecute
 
                 scope.launch {
+                    val confirmedStartedAtMs = System.currentTimeMillis()
                     val result = toolExecutor.executeWithBypass(
                         call = callToExecute,
                         confirmationToken = tokenToUse,
@@ -997,7 +1027,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         result.isSuccess -> "${result.summary}."
                         // Разрешение/системный UI/неподдерживаемая возможность —
                         // это не «ошибка выполнения», а понятное объяснение.
-                        result.isBlockedByAndroid -> permissionHintOr(result.summary)
+                        result.isBlockedByAndroid -> permissionHintOr(result.summary, confirmedStartedAtMs)
                         else -> "Не удалось выполнить: ${result.error ?: result.summary}"
                     }
                     _lastAnswer.value = voiceResponse

@@ -27,7 +27,7 @@
     <!-- Напоминание поверх блокировки: полноэкранное уведомление открывает экран
          «Готово / Отложить». На Android 14 доступ проверяется canUseFullScreenIntent(). -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <!-- Выдача по желанию: разрешает открывать приложения голосом при закрытом экране (Android блокирует фоновый запуск). -->
+    <!-- Выдача по желанию, не запрашивается автоматически: показывает плашку «Открываю…» и этим разрешает открывать приложения голосом при закрытом экране (Android 15+ учитывает SAW только при ВИДИМОМ оверлее). Google Play относит SAW к особо контролируемым разрешениям: перед публикацией в Play либо обосновать в Permissions Declaration, либо убрать его в Play-сборке (tools:node="remove"). -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- AlarmClock ACTION_SET_ALARM требует это normal-permission. -->

@@ -76,4 +76,99 @@ class WakeWordExtractorTest {
         assertFalse(WakeWordExtractor.containsWakeWord("какая погода"))
         assertFalse(WakeWordExtractor.containsWakeWord("сегодня жарко"))
     }
+
+    @Test
+    fun `Омни вырезается в начале фразы`() {
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("Омни, позвони маме"))
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни позвони маме"))
+        assertEquals("сколько времени", WakeWordExtractor.extractQuery("ОМНИ — сколько времени"))
+    }
+
+    @Test
+    fun `окей Омни с пунктуацией вырезается целиком`() {
+        assertEquals("открой ютуб", WakeWordExtractor.extractQuery("Окей, Омни! открой ютуб"))
+        assertEquals("открой ютуб", WakeWordExtractor.extractQuery("окей омни открой ютуб"))
+        assertEquals("открой ютуб", WakeWordExtractor.extractQuery("Эй, Омни, открой ютуб"))
+    }
+
+    @Test
+    fun `одно слово вызова без команды даёт null`() {
+        listOf("омни", "Омни!", "Окей, Омни", "okay omni", "Omnix", "омникс.").forEach {
+            assertNull("'$it' должно дать null", WakeWordExtractor.extractQuery(it))
+        }
+    }
+
+    @Test
+    fun `составные слова с омни через дефис не срезаются`() {
+        listOf(
+            "омни-канальная стратегия продаж", "Омни-канальный подход", "omni-channel strategy",
+            "омни‐канальная"
+        ).forEach {
+            assertEquals(it, WakeWordExtractor.extractQuery(it))
+            assertFalse("'$it' не слово вызова", WakeWordExtractor.containsWakeWord(it))
+        }
+    }
+
+    @Test
+    fun `обращение через запятую или тире по-прежнему срезается`() {
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни, позвони маме"))
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни - позвони маме"))
+        assertEquals("позвони маме", WakeWordExtractor.extractQuery("омни — позвони маме"))
+    }
+
+    @Test
+    fun `обычные слова не срезаются`() {
+        listOf(
+            "помни про встречу", "омлет на завтрак", "омар в ресторане", "амнистия объявлена",
+            "омнибус приехал", "умни голову", "омикрон опасен", "окей, умный дом включи свет"
+        ).forEach {
+            assertEquals(it, WakeWordExtractor.extractQuery(it))
+            assertFalse("'$it' не слово вызова", WakeWordExtractor.containsWakeWord(it))
+        }
+    }
+
+    @Test
+    fun `слово вызова в середине фразы Омни не вырезается`() {
+        assertEquals("скажи омни привет", WakeWordExtractor.extractQuery("скажи омни привет"))
+        assertFalse(WakeWordExtractor.containsWakeWord("скажи омни привет"))
+    }
+
+    @Test
+    fun `английские фразы вызова`() {
+        assertEquals("what time is it", WakeWordExtractor.extractQuery("hey omni what time is it"))
+        assertEquals("what time is it", WakeWordExtractor.extractQuery("Okay, Omni, what time is it"))
+        assertEquals("what time is it", WakeWordExtractor.extractQuery("OK Omni what time is it"))
+        assertEquals("call mom", WakeWordExtractor.extractQuery("Omnix, call mom"))
+    }
+
+    @Test
+    fun `ошибки распознавателя и варианты других языков`() {
+        mapOf(
+            "Оми, позвони маме" to "позвони маме",
+            "Омме позвони маме" to "позвони маме",
+            "Оммни, позвони маме" to "позвони маме",
+            "Омни\u0301, позвони маме" to "позвони маме",
+            "Омникс, позвони маме" to "позвони маме",
+            "Окей, умни, позвони маме" to "позвони маме",
+            "Ömni, call mom" to "call mom",
+            "Tamam omni, call mom" to "call mom",
+            "Оумни, позвони маме" to "позвони маме"
+        ).forEach { (raw, expected) ->
+            assertEquals(raw, expected, WakeWordExtractor.extractQuery(raw))
+            assertTrue(raw, WakeWordExtractor.containsWakeWord(raw))
+        }
+    }
+
+    @Test
+    fun `containsWakeWord для семейства Омни`() {
+        listOf("Омни", "омни, позвони", "Окей, Омни", "hey omni", "Эй омни", "Omnix", "  ...омни")
+            .forEach { assertTrue("'$it'", WakeWordExtractor.containsWakeWord(it)) }
+    }
+
+    @Test
+    fun `старое поведение для Джарвис не изменилось рядом с Омни`() {
+        assertEquals("включи свет", WakeWordExtractor.extractQuery("Джарвис включи свет"))
+        assertEquals("сколько времени", WakeWordExtractor.extractQuery("привет Джарвис сколько времени"))
+    }
 }
+

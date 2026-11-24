@@ -2,7 +2,6 @@ package com.omnix.assistant.agent.tools.communication
 
 import android.Manifest
 import android.content.Context
-import android.telephony.SmsManager
 import com.omnix.assistant.agent.capability.CapabilityStatus
 import com.omnix.assistant.agent.capability.DangerLevel
 import com.omnix.assistant.agent.capability.DeviceCapability
@@ -34,7 +33,8 @@ import javax.inject.Singleton
 class SmsTool @Inject constructor(
     @ApplicationContext private val context: Context,
     private val capabilities: DeviceCapabilityRegistry,
-    private val contactResolver: ContactResolver
+    private val contactResolver: ContactResolver,
+    private val transport: SmsTransport = SmsDispatcher(context)
 ) : CapabilityAwareTool {
 
     private companion object {
@@ -48,6 +48,9 @@ class SmsTool @Inject constructor(
     override val riskLevel: ToolRisk = ToolRisk.CONFIRMATION_REQUIRED
     override val isOffline: Boolean = true
     override val requiresForeground: Boolean = true
+
+    /** Ждём отчёт модема о каждой части сообщения (до 30 с в [SmsDispatcher]). */
+    override val executionTimeoutMs: Long = 45_000L
 
     override val capabilityContract = ToolCapabilityContract(
         capabilities = setOf(
@@ -111,12 +114,14 @@ class SmsTool @Inject constructor(
 
         // 2. Определение номера.
         val resolution = contactResolver.resolve(recipient)
+        var label = recipient
         val phoneNumber = when (resolution) {
-            is ContactResolution.Resolved -> resolution.phoneNumber
+            is ContactResolution.Resolved -> {
+                label = resolution.displayName?.takeIf { it.isNotBlank() } ?: recipient
+                resolution.phoneNumber
+            }
             is ContactResolution.Ambiguous -> return ToolExecutionResult.failure(
-                summary = "Найдено несколько контактов: " +
-                    resolution.candidates.joinToString(", ") { (name, number) -> "$name ($number)" } +
-                    ". Уточните получателя.",
+                summary = ambiguityMessage(resolution.candidates),
                 error = "AMBIGUOUS_CONTACT"
             )
             is ContactResolution.PermissionRequired -> return ToolExecutionResult.permissionRequired(
@@ -129,42 +134,44 @@ class SmsTool @Inject constructor(
             )
         }
 
-        // 3. Реальная отправка.
-        return try {
-            val smsManager = smsManager()
-                ?: return ToolExecutionResult.unsupported(
-                    summary = "Служба SMS недоступна на этом устройстве",
-                    reason = "SMS_MANAGER_UNAVAILABLE"
-                )
-
-            val parts = smsManager.divideMessage(message)
-            if (parts.size == 1) {
-                smsManager.sendTextMessage(phoneNumber, null, message, null, null)
-            } else {
-                smsManager.sendMultipartTextMessage(phoneNumber, null, parts, null, null)
-            }
-
-            ToolExecutionResult.success(
-                summary = "SMS отправлено для $recipient",
+        // 3. Реальная отправка: итог берём из отчёта системы, а не из факта вызова.
+        return when (val outcome = transport.send(phoneNumber, message)) {
+            is SmsSendOutcome.Sent -> ToolExecutionResult.success(
+                summary = sentSummary(label, outcome.parts),
                 data = buildJsonObject {
-                    put("recipient", recipient)
+                    put("recipient", label)
                     put("phone_number", phoneNumber)
                     put("message_preview", message.take(50))
-                    put("parts", parts.size)
+                    put("parts", outcome.parts)
                 }
             )
-        } catch (e: SecurityException) {
-            ToolExecutionResult.permissionRequired(
+            is SmsSendOutcome.Failed -> ToolExecutionResult.failure(
+                summary = "Не удалось отправить SMS для $label: ${outcome.reason}",
+                error = "SMS_SEND_FAILED"
+            )
+            is SmsSendOutcome.Unknown -> ToolExecutionResult.failure(
+                summary = "Не получил подтверждения отправки SMS для $label. Не знаю, ушло ли оно: " +
+                    "проверьте отправленные, прежде чем повторять.",
+                error = "SMS_RESULT_UNKNOWN"
+            )
+            SmsSendOutcome.Unavailable -> ToolExecutionResult.unsupported(
+                summary = "Служба SMS недоступна на этом устройстве",
+                reason = "SMS_MANAGER_UNAVAILABLE"
+            )
+            SmsSendOutcome.PermissionDenied -> ToolExecutionResult.permissionRequired(
                 summary = "Система отклонила отправку SMS: нет разрешения SEND_SMS",
                 permissions = listOf(Manifest.permission.SEND_SMS)
             )
-        } catch (e: IllegalArgumentException) {
-            ToolExecutionResult.failure(
+            SmsSendOutcome.InvalidArgument -> ToolExecutionResult.failure(
                 summary = "Не удалось отправить SMS: некорректный номер или пустое сообщение",
                 error = "SMS_INVALID_ARGUMENT"
             )
         }
     }
+
+    /** «Отправлено», а не «доставлено»: доставку подтверждает только оператор получателя. */
+    private fun sentSummary(label: String, parts: Int): String =
+        if (parts > 1) "SMS отправлено для $label (длинное сообщение, $parts SMS)" else "SMS отправлено для $label"
 
     /**
      * Открытие SMS-композера как «отправка» сознательно удалено: раньше это
@@ -172,12 +179,4 @@ class SmsTool @Inject constructor(
      * Единственный путь отправки — SEND_SMS через [SmsManager]; без разрешения
      * возвращается PERMISSION_REQUIRED, без фальшивого SUCCESS.
      */
-
-    @Suppress("DEPRECATION")
-    private fun smsManager(): SmsManager? =
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            context.getSystemService(SmsManager::class.java)
-        } else {
-            SmsManager.getDefault()
-        }
 }

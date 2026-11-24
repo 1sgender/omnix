@@ -39,7 +39,7 @@ class ModelDigestsTest {
 
     @Test
     fun verify_rejectsCorruptedBytes() {
-        val path = "wakeword/omni_v0.1.onnx"
+        val path = "wakeword/omni_v0.2fp.onnx"
         val result = ModelDigests.verify(path, byteArrayOf(0, 1, 2))
         assertNotNull("pin существует — проверка обязательна", result)
         assertFalse("чужие байты не должны проходить пин", result!!)

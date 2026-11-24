@@ -1,6 +1,9 @@
 # Фаза 2: кастомная модель «Omni»
 
-Статус: **v0.1 (synthetic) — SHIPPED**: `omni_v0.1.onnx` обучена на
+Статус: **v0.2fp — SHIPPED (2026-11-23)**: `omni_v0.2fp.onnx`, обучена только на
+коммерчески чистых голосах (отчёт — `OMNI_V0.2FP_REPORT.md`); `omni_v0.1` из APK
+убрана (NC/неподтверждённые голоса в обучении). Ниже история v0.1:
+v0.1 (synthetic): `omni_v0.1.onnx` обучена на
 синтетике Piper TTS и подключена по умолчанию (отчёт и метрики —
 `OMNI_V0.1_REPORT.md`). Осталось для v0.2: датасет живой речи (≥500
 произнесений, ≥20 дикторов) и приёмка по протоколу ниже.
@@ -59,6 +62,33 @@ legacy-фразу «Hey Jarvis») сохранена в assets как фолбэ
 (v0.6.0, класс Model); нужна для шага 3. Одиночные (оконные) метрики
 v0.1 — `training/metrics_v0.1.json`; итоговая модель —
 `app/src/main/assets/wakeword/omni_v0.1.onnx` (sha256 в SHA256SUMS).
+
+## Пайплайн v0.2 (данные + пакет для Kaggle)
+
+Подготовка данных идёт локально (CPU), обучение головы — на Kaggle/Colab
+(локального GPU нет). Все данные лежат ВНЕ репозитория (живые записи личные).
+
+1. `python3 training/live_augment.py slice --wav <запись.wav> --out <work>/clips
+   --speaker owner --test-idx 3,7,11,14 --exclude 1,4,...` — нарезка живой
+   записи на произнесения + `clips_manifest.json` (split train/test/excluded).
+   Отложенные (test) клипы в train не размножаются.
+2. `PIPER_VOICES=<папка> python3 training/gen_raw_v2.py --out <work>/raw_v2` —
+   синтетика Piper: больше голосов, многоголосые модели (vctk, l2arctic,
+   libritts_r), ru/en/tr/kk, варианты «омни / Омни? / о-мни / omni / hey omni /
+   окей омни», трудные и префиксные негативы. Модели — только из официального
+   rhasspy/piper-voices (huggingface).
+3. `python3 training/live_augment.py augment --clips <work>/clips --raw <work>/raw_v2
+   --variants 30` — 30+ вариантов на клип (pitch/скорость 0.8–1.25, шум, реверберация,
+   дистанция, шёпот, микрофон носимого), speaker=owner.
+4. `python3 training/make_features_v02.py --raw <work>/raw_v2 --out <work>/features_v2`.
+5. `python3 training/make_v02_package.py --work <work> --out <work>/v0.2-package.zip`
+   — zip для Kaggle; внутри RUN.md (`training/RUN_V0.2.md`).
+6. Обучение/проверка на Kaggle: `train_omni.py --features features_v2 --version v0.2`,
+   `verify_model.py`, `eval_streaming.py <модель> raw_v2`, `eval_live.py` (живые
+   отложенные клипы). Подробно — `RUN_V0.2.md`.
+
+`eval_live.py` измеряет recall по живым клипам и по длинной записи с несколькими
+произнесениями (стриминговая логика как на устройстве).
 
 ## Критерии приёмки фазы 2
 

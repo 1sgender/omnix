@@ -211,6 +211,8 @@ class SpeechRecognizerManager @Inject constructor(
         val session = generation.incrementAndGet()
         isListening = true
         _speechState.value = SpeechRecognitionEvent.ReadyForSpeech
+        // Имена контактов для пост-коррекции результата (только в памяти телефона).
+        scope.launch { hints.refreshIfStale() }
         serverJob = scope.launch {
             val outcome = serverCapture.listen(
                 languageHint,
@@ -398,7 +400,13 @@ class SpeechRecognizerManager @Inject constructor(
      * оркестратор голосового ассистента, и диктовка в чате.
      */
     private fun finalResult(text: String): SpeechRecognitionEvent.FinalResult =
-        SpeechRecognitionEvent.FinalResult(AsrPostProcessor.process(text))
+        SpeechRecognitionEvent.FinalResult(
+            AsrHintCorrector.correct(
+                AsrPostProcessor.process(text),
+                hints.cachedContactNames(),
+                AsrContextHints.APP_WORDS
+            )
+        )
 
     private fun isNetworkError(error: Int): Boolean =
         error == SpeechRecognizer.ERROR_NETWORK ||

@@ -3,6 +3,7 @@ package com.omnix.assistant.agent.tools.communication
 import android.Manifest
 import android.content.Context
 import android.provider.ContactsContract
+import android.provider.ContactsContract.CommonDataKinds.Phone
 import com.omnix.assistant.agent.capability.DeviceCapability
 import com.omnix.assistant.agent.capability.DeviceCapabilityRegistry
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -57,64 +58,85 @@ class ContactResolver @Inject constructor(
     /** Возвращает до [limit] совпадений — используется ContactsTool. */
     fun search(query: String, limit: Int = 3): List<Pair<String, String>> {
         if (!capabilities.statusOf(DeviceCapability.READ_CONTACTS).isAvailable) return emptyList()
-        val results = mutableListOf<Pair<String, String>>()
-        context.contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER
-            ),
-            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
-            arrayOf("%$query%"),
-            null
-        )?.use { cursor ->
-            val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-            val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            while (cursor.moveToNext() && results.size < limit) {
-                if (nameIdx != -1 && numIdx != -1) {
-                    results.add(cursor.getString(nameIdx) to cursor.getString(numIdx))
-                }
-            }
-        }
-        return results
+        return ContactMatcher.search(query, loadContacts(), limit)
     }
 
-    private fun queryContact(name: String): ContactResolution {
-        val matches = mutableListOf<Pair<String, String>>()
+    private fun queryContact(name: String): ContactResolution =
+        ContactMatcher.decide(name, loadContacts()).toResolution(name)
+
+    /**
+     * Читает телефонную книгу целиком и сопоставляет имена в Kotlin (а не SQL LIKE):
+     * только так работают транслитерация («Осман» ↔ «Osman»), падежи и поиск по части имени.
+     */
+    private fun loadContacts(): List<ContactEntry> {
+        val names = LinkedHashMap<String, String>()
+        val starred = HashSet<String>()
+        val phones = LinkedHashMap<String, MutableList<PhoneEntry>>()
         context.contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            Phone.CONTENT_URI,
             arrayOf(
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                Phone.CONTACT_ID,
+                Phone.DISPLAY_NAME,
+                Phone.NUMBER,
+                Phone.TYPE,
+                Phone.IS_PRIMARY,
+                Phone.STARRED
             ),
-            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?",
-            arrayOf("%$name%"),
+            null,
+            null,
             null
         )?.use { cursor ->
-            val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-            while (cursor.moveToNext() && matches.size < 20) {
-                if (numIdx == -1) continue
-                val number = cursor.getString(numIdx)?.let(::normalizeNumber).orEmpty()
+            while (cursor.moveToNext()) {
+                val id = cursor.getString(0) ?: continue
+                val number = cursor.getString(2)?.let(::normalizeNumber).orEmpty()
                 if (number.isBlank()) continue
-                val displayName = if (nameIdx != -1) cursor.getString(nameIdx).orEmpty() else ""
-                matches += displayName to number
+                names.putIfAbsent(id, cursor.getString(1).orEmpty())
+                if (cursor.getInt(5) == 1) starred += id
+                phones.getOrPut(id) { mutableListOf() } +=
+                    PhoneEntry(number, phoneKind(cursor.getInt(3)), cursor.getInt(4) != 0)
             }
         }
-
-        val distinct = matches.distinctBy { it.second }
-        if (distinct.isEmpty()) return ContactResolution.NotFound(name)
-
-        // Точное имя безопасно приоритетнее частичного LIKE, но два разных
-        // номера с тем же именем всё равно требуют выбора пользователя.
-        val exact = distinct.filter { it.first.equals(name, ignoreCase = true) }
-        val candidates = if (exact.isNotEmpty()) exact else distinct
-        return if (candidates.size == 1) {
-            val (displayName, number) = candidates.single()
-            ContactResolution.Resolved(number, displayName.takeIf { it.isNotBlank() })
-        } else {
-            ContactResolution.Ambiguous(candidates.take(3))
+        val extras = loadExtraNames()
+        return names.map { (id, displayName) ->
+            ContactEntry(
+                id = id,
+                displayName = displayName,
+                phones = phones[id].orEmpty(),
+                extraNames = extras[id].orEmpty(),
+                starred = id in starred
+            )
         }
+    }
+
+    /** Прозвища и организации контактов (если есть) — дополнительные слова для поиска. */
+    private fun loadExtraNames(): Map<String, List<String>> {
+        val result = HashMap<String, MutableList<String>>()
+        val data = ContactsContract.Data.CONTENT_URI
+        context.contentResolver.query(
+            data,
+            arrayOf(ContactsContract.Data.CONTACT_ID, ContactsContract.Data.DATA1),
+            "${ContactsContract.Data.MIMETYPE} IN (?, ?)",
+            arrayOf(
+                ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE,
+                ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE
+            ),
+            null
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                val id = cursor.getString(0) ?: continue
+                val value = cursor.getString(1)?.takeIf { it.isNotBlank() } ?: continue
+                result.getOrPut(id) { mutableListOf() } += value
+            }
+        }
+        return result
+    }
+
+    private fun phoneKind(type: Int): PhoneKind = when (type) {
+        Phone.TYPE_MOBILE -> PhoneKind.MOBILE
+        Phone.TYPE_WORK,
+        Phone.TYPE_WORK_MOBILE -> PhoneKind.WORK
+        Phone.TYPE_HOME -> PhoneKind.HOME
+        else -> PhoneKind.OTHER
     }
 
     companion object {
