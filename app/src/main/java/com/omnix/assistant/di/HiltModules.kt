@@ -217,6 +217,7 @@ abstract class SecurityAndNetworkBindingModule {
     // 3. Связь и коммуникации (Communication)
     @Binds @IntoSet abstract fun bindCallTool(tool: CallTool): OmniTool
     @Binds @IntoSet abstract fun bindSmsTool(tool: SmsTool): OmniTool
+    @Binds abstract fun bindSmsTransport(impl: SmsDispatcher): SmsTransport
     @Binds @IntoSet abstract fun bindContactsTool(tool: ContactsTool): OmniTool
     @Binds @IntoSet abstract fun bindShareTool(tool: ShareTool): OmniTool
     @Binds @IntoSet abstract fun bindCreateFileTool(tool: com.omnix.assistant.agent.tools.files.CreateFileTool): OmniTool
