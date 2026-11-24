@@ -205,6 +205,8 @@ fun SettingsSectionRoute(
 
         SECTION_YANDEX_MUSIC -> YandexMusicScreen(modifier = modifier, onBack = onBack)
 
+        SECTION_ACCESSIBILITY_WIZARD -> AccessibilityWizardScreen(modifier = modifier, onBack = onBack)
+
         SECTION_TARIFFS -> {
             val tariffsViewModel: TariffsViewModel = hiltViewModel()
             val tariffsState by tariffsViewModel.state.collectAsState()

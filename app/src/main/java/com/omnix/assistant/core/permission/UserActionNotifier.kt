@@ -27,7 +27,8 @@ object UserActionNotifier {
         title: String,
         text: String,
         open: Intent,
-        extra: ExtraAction? = null
+        extra: ExtraAction? = null,
+        secondExtra: ExtraAction? = null
     ): Boolean {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return false
         manager.createNotificationChannel(
@@ -45,6 +46,9 @@ object UserActionNotifier {
             .setContentIntent(pending(context, notificationId, open))
         extra?.let {
             builder.addAction(0, it.label, pending(context, notificationId + 1, it.intent))
+        }
+        secondExtra?.let {
+            builder.addAction(0, it.label, pending(context, notificationId + 2, it.intent))
         }
         manager.notify(notificationId, builder.build())
         return true
