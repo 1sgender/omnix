@@ -1,7 +1,6 @@
 package com.omnix.assistant.presentation.diagnostics
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -17,6 +16,7 @@ import android.speech.SpeechRecognizer
 import androidx.core.content.ContextCompat
 import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelState
+import com.omnix.assistant.agent.tools.accessibility.AccessibilityEnablement
 import com.omnix.assistant.agent.tools.accessibility.OmnixAccessibilityService
 import com.omnix.assistant.core.dispatcher.CoroutineDispatchers
 import com.omnix.assistant.core.license.LicenseManager
@@ -271,13 +271,16 @@ class DiagnosticsEngine @Inject constructor(
     }
 
     private fun checkAccessibility(): Pair<DiagnosticStatus, String> {
-        val expected = ComponentName(context, OmnixAccessibilityService::class.java)
-            .flattenToString()
         val enabled = Settings.Secure.getString(
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ).orEmpty().split(':')
-        return if (enabled.any { it.equals(expected, ignoreCase = true) }) {
+        )
+        return if (AccessibilityEnablement.isServiceEnabled(
+                enabled,
+                context.packageName,
+                OmnixAccessibilityService::class.java.name
+            )
+        ) {
             DiagnosticStatus.OK to "OmnixAccessibilityService enabled"
         } else {
             DiagnosticStatus.WARNING to "service not enabled (device actions limited)"

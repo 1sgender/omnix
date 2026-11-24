@@ -60,6 +60,8 @@ import com.omnix.assistant.presentation.settings.SECTION_LANGUAGE
 import com.omnix.assistant.presentation.settings.SECTION_VOICE
 import com.omnix.assistant.presentation.settings.SECTION_YANDEX_MUSIC
 import com.omnix.assistant.agent.media.ymusic.YandexMusicSettingsRequest
+import com.omnix.assistant.agent.tools.accessibility.AccessibilityWizardRequest
+import com.omnix.assistant.presentation.settings.SECTION_ACCESSIBILITY_WIZARD
 import com.omnix.assistant.presentation.settings.SettingsSectionRoute
 import com.omnix.assistant.presentation.state.OmnixViewModel
 import com.omnix.assistant.voice.audio.Haptics
@@ -94,6 +96,15 @@ fun OmnixNavGraph(
         if (ymusicSettingsRequested) {
             YandexMusicSettingsRequest.consume()
             navController.navigateSingleTop(OmnixDestination.SettingsSection(SECTION_YANDEX_MUSIC))
+        }
+    }
+
+    // Уведомление о заблокированном запуске приложения просит открыть мастер службы.
+    val a11yWizardRequested by AccessibilityWizardRequest.pending.collectAsState()
+    LaunchedEffect(a11yWizardRequested) {
+        if (a11yWizardRequested) {
+            AccessibilityWizardRequest.consume()
+            navController.navigateSingleTop(OmnixDestination.SettingsSection(SECTION_ACCESSIBILITY_WIZARD))
         }
     }
 
