@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_a11y_title">Accessibility service</string>
+    <string name="omnix_a11y_why">Why: the accessibility service lets OMNIX open apps by voice when Android does not allow launching them from the background (for example, with the screen off).</string>
+    <string name="omnix_a11y_optional">The service is optional. Without it OMNIX sends a notification: tap it and the app opens.</string>
+    <string name="omnix_a11y_block_warning">What Android will do: if OMNIX was not installed from a store (for example, from an APK file), Android 13 and newer first blocks turning the service on. In the list it is marked as controlled by restricted settings, and tapping it shows an access-denied window (the wording depends on the phone). This is not a fault: the restriction is lifted by hand in the steps below.</string>
+    <string name="omnix_a11y_step1_title">Step 1. Allow restricted settings</string>
+    <string name="omnix_a11y_step1_body">Open the OMNIX App info screen, tap ⋮ (three dots) in the top right corner and choose “Allow restricted settings”.</string>
+    <string name="omnix_a11y_step1_note">If that item is not in the ⋮ menu: do step 2 first and try to turn OMNIX on (Android will show the access-denied window), then come back here and repeat step 1. If it is still missing, the restriction may not apply on this phone: go on to step 2.</string>
+    <string name="omnix_a11y_step1_button">Open App info</string>
+    <string name="omnix_a11y_hint_samsung">Samsung (One UI): usually the same path: Settings → Apps → OMNIX → ⋮ at the top right. The item name may differ between One UI versions.</string>
+    <string name="omnix_a11y_hint_pixel">Pixel: Settings → Apps → OMNIX → ⋮ at the top right → “Allow restricted settings”.</string>
+    <string name="omnix_a11y_hint_xiaomi">Xiaomi, Redmi, POCO (HyperOS/MIUI): the item is usually also in the ⋮ menu of the App info screen; if it is not there, look for restricted settings on the app screen itself. Names depend on the shell version.</string>
+    <string name="omnix_a11y_hint_other">Other phones: the path is usually the same: Settings → Apps → OMNIX → ⋮. Names may differ.</string>
+    <string name="omnix_a11y_step2_title">Step 2. Turn the service on</string>
+    <string name="omnix_a11y_step2_body">Open the accessibility settings, find OMNIX in the list of services (it may be under “Installed apps”), turn the switch on and confirm.</string>
+    <string name="omnix_a11y_step2_button">Open accessibility settings</string>
+    <string name="omnix_a11y_step3_title">Step 3. Check</string>
+    <string name="omnix_a11y_step3_button">Check again</string>
+    <string name="omnix_a11y_state_enabled">Done: the OMNIX service is on.</string>
+    <string name="omnix_a11y_state_restricted">The service is still off. Android is most likely blocking it because the app is not from a store: do step 1, then step 2.</string>
+    <string name="omnix_a11y_state_disabled">The service is still off. Turn it on in step 2.</string>
+    <string name="omnix_a11y_hint_blocked_launch">You can turn on the optional OMNIX accessibility service (Me → Accessibility service): then apps open even with the screen off. Without it the notification stays as the fallback.</string>
+    <string name="omnix_a11y_notification_action">Turn on the service</string>
+</resources>

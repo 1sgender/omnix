@@ -137,6 +137,13 @@ fun MeRoute(
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_OFFLINE_SPEECH)
                     ),
+                    // Необязательная служба специальных возможностей: мастер включения.
+                    MeRow(
+                        icon = OmnixLockLineIcon,
+                        label = stringResource(R.string.omnix_a11y_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_ACCESSIBILITY_WIZARD)
+                    ),
                     // Музыка: токен Яндекс Музыки для плеера внутри OMNIX.
                     MeRow(
                         icon = OmnixHeadphonesLineIcon,

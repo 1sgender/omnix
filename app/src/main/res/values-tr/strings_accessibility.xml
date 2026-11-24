@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_a11y_title">Erişilebilirlik hizmeti</string>
+    <string name="omnix_a11y_why">Neden: erişilebilirlik hizmeti, Android uygulamaların arka plandan açılmasına izin vermediğinde (örneğin ekran kapalıyken) OMNIX\'in uygulamaları sesle açmasını sağlar.</string>
+    <string name="omnix_a11y_optional">Hizmet isteğe bağlıdır. Olmadan OMNIX bir bildirim gönderir: bildirime dokunun, uygulama açılır.</string>
+    <string name="omnix_a11y_block_warning">Android ne yapacak: OMNIX bir mağazadan değil de (örneğin APK dosyasından) kurulduysa, Android 13 ve üzeri hizmetin açılmasını önce engeller. Listede kısıtlı ayarlarla denetlenen olarak işaretlenir, dokunulunca erişim reddedildi penceresi çıkar (ifade telefona göre değişir). Bu bir arıza değil: kısıtlama aşağıdaki adımlarla elle kaldırılır.</string>
+    <string name="omnix_a11y_step1_title">Adım 1. Kısıtlı ayarlara izin ver</string>
+    <string name="omnix_a11y_step1_body">OMNIX\'in Uygulama bilgisi ekranını açın, sağ üstteki ⋮ (üç nokta) simgesine dokunun ve “Kısıtlı ayarlara izin ver” seçeneğini seçin.</string>
+    <string name="omnix_a11y_step1_note">Bu seçenek ⋮ menüsünde yoksa: önce 2. adımı yapıp OMNIX\'i açmayı deneyin (Android erişim reddedildi penceresini gösterir), sonra buraya dönüp 1. adımı tekrarlayın. Yine yoksa bu telefonda kısıtlama geçerli olmayabilir: 2. adıma geçin.</string>
+    <string name="omnix_a11y_step1_button">Uygulama bilgisini aç</string>
+    <string name="omnix_a11y_hint_samsung">Samsung (One UI): yol genellikle aynıdır: Ayarlar → Uygulamalar → OMNIX → sağ üstte ⋮. Seçeneğin adı One UI sürümüne göre değişebilir.</string>
+    <string name="omnix_a11y_hint_pixel">Pixel: Ayarlar → Uygulamalar → OMNIX → sağ üstte ⋮ → “Kısıtlı ayarlara izin ver”.</string>
+    <string name="omnix_a11y_hint_xiaomi">Xiaomi, Redmi, POCO (HyperOS/MIUI): seçenek genellikle Uygulama bilgisi ekranındaki ⋮ menüsündedir; orada yoksa uygulama ekranında kısıtlı ayarları arayın. Adlar arayüz sürümüne göre değişir.</string>
+    <string name="omnix_a11y_hint_other">Diğer telefonlar: yol genellikle aynıdır: Ayarlar → Uygulamalar → OMNIX → ⋮. Adlar değişebilir.</string>
+    <string name="omnix_a11y_step2_title">Adım 2. Hizmeti aç</string>
+    <string name="omnix_a11y_step2_body">Erişilebilirlik ayarlarını açın, hizmet listesinde OMNIX\'i bulun (“Yüklü uygulamalar” altında olabilir), anahtarı açın ve onaylayın.</string>
+    <string name="omnix_a11y_step2_button">Erişilebilirlik ayarlarını aç</string>
+    <string name="omnix_a11y_step3_title">Adım 3. Kontrol</string>
+    <string name="omnix_a11y_step3_button">Tekrar kontrol et</string>
+    <string name="omnix_a11y_state_enabled">Tamam: OMNIX hizmeti açık.</string>
+    <string name="omnix_a11y_state_restricted">Hizmet henüz kapalı. Büyük olasılıkla uygulama mağazadan olmadığı için Android engelliyor: önce 1. adımı, sonra 2. adımı yapın.</string>
+    <string name="omnix_a11y_state_disabled">Hizmet henüz kapalı. 2. adımda açın.</string>
+    <string name="omnix_a11y_hint_blocked_launch">İsteğe bağlı OMNIX erişilebilirlik hizmetini açabilirsiniz (Ben → Erişilebilirlik hizmeti): o zaman uygulamalar ekran kapalıyken de açılır. Olmadan bildirim yedek yol olarak kalır.</string>
+    <string name="omnix_a11y_notification_action">Hizmeti aç</string>
+</resources>

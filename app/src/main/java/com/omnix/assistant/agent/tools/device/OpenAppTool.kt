@@ -16,6 +16,9 @@ import com.omnix.assistant.agent.core.CapabilityAwareTool
 import com.omnix.assistant.agent.core.ToolCategory
 import com.omnix.assistant.agent.model.ToolExecutionResult
 import com.omnix.assistant.agent.model.ToolRisk
+import com.omnix.assistant.agent.tools.accessibility.AccessibilityEnablement
+import com.omnix.assistant.agent.tools.accessibility.AccessibilityStatusReader
+import com.omnix.assistant.agent.tools.accessibility.AccessibilityWizardRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.json.*
 import javax.inject.Inject
@@ -182,6 +185,14 @@ class OpenAppTool @Inject constructor(
             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
             Uri.parse("package:${context.packageName}")
         )
+        // Служба специальных возможностей необязательна: подсказываем её только пока
+        // она не включена, без навязывания, и сразу говорим про запасной путь.
+        val a11yStatus = runCatching { AccessibilityStatusReader.read(context) }.getOrNull()
+        val suggestA11y = a11yStatus != null &&
+            AccessibilityEnablement.shouldSuggestInBlockedLaunch(a11yStatus)
+        // Слой agent не знает про presentation: берём стартовое намерение своего пакета.
+        val wizardIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            ?.putExtra(AccessibilityWizardRequest.EXTRA_OPEN_WIZARD, true)
         UserActionNotifier.show(
             context = context,
             channelId = LAUNCH_CHANNEL_ID,
@@ -193,10 +204,23 @@ class OpenAppTool @Inject constructor(
             extra = UserActionNotifier.ExtraAction(
                 label = context.getString(R.string.omnix_perm_launch_overlay),
                 intent = overlaySettings
-            )
+            ),
+            secondExtra = if (suggestA11y && wizardIntent != null) {
+                UserActionNotifier.ExtraAction(
+                    label = context.getString(R.string.omnix_a11y_notification_action),
+                    intent = wizardIntent
+                )
+            } else {
+                null
+            }
         )
+        val blockedText = context.getString(R.string.omnix_perm_launch_blocked, label)
         return ToolExecutionResult.userActionRequired(
-            summary = context.getString(R.string.omnix_perm_launch_blocked, label),
+            summary = if (suggestA11y) {
+                blockedText + " " + context.getString(R.string.omnix_a11y_hint_blocked_launch)
+            } else {
+                blockedText
+            },
             reason = "BACKGROUND_LAUNCH_BLOCKED",
             data = buildJsonObject { put("label", label) }
         )

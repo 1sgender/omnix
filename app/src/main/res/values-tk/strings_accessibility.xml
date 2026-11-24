@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_a11y_title">Aýratyn mümkinçilikler hyzmaty</string>
+    <string name="omnix_a11y_why">Näme üçin: aýratyn mümkinçilikler hyzmaty Android programmalary fondan açmaga ýol bermeýän wagty (meselem, ekran öçükkä) OMNIX-e programmalary ses bilen açmaga mümkinçilik berýär.</string>
+    <string name="omnix_a11y_optional">Hyzmat hökmany däl. Ol bolmasa, OMNIX bildiriş iberýär: oňa basyň, programma açylar.</string>
+    <string name="omnix_a11y_block_warning">Android näme eder: OMNIX dükandan däl-de (meselem, APK faýlyndan) guralan bolsa, Android 13 we ondan täze wersiýalar hyzmatyň açylmagyny ilki bilen petikleýär. Sanawda ol çäklendirilen sazlamalar bilen dolandyrylýan diýip bellenýär, basanyňyzda bolsa girmek gadagan edilen penjire çykýar (sözleýiş telefona görä üýtgeýär). Bu näsazlyk däl: çäklendirme aşakdaky ädimler bilen elde aýrylýar.</string>
+    <string name="omnix_a11y_step1_title">1-nji ädim. Çäklendirilen sazlamalara rugsat bermek</string>
+    <string name="omnix_a11y_step1_body">OMNIX-iň «Programma barada» ekranyny açyň, ýokarky sag burçdaky ⋮ (üç nokat) düwmesine basyň we «Çäklendirilen sazlamalara rugsat ber» diýip saýlaň.</string>
+    <string name="omnix_a11y_step1_note">Eger bu bent ⋮ menýusynda ýok bolsa: ilki 2-nji ädimi ýerine ýetirip, OMNIX-i açmaga synanyşyň (Android girmek gadagan edilen penjiräni görkezer), soň bärde gaýdyp gelip, 1-nji ädimi gaýtalaň. Ýene-de ýok bolsa, bu telefonda çäklendirme güýje girmän biler: 2-nji ädime geçiň.</string>
+    <string name="omnix_a11y_step1_button">«Programma barada» açmak</string>
+    <string name="omnix_a11y_hint_samsung">Samsung (One UI): ýol adatça şol bir: Sazlamalar → Programmalar → OMNIX → ýokarky sagda ⋮. Bendiň ady One UI wersiýasyna görä tapawutlanyp biler.</string>
+    <string name="omnix_a11y_hint_pixel">Pixel: Sazlamalar → Programmalar → OMNIX → ýokarky sagda ⋮ → «Çäklendirilen sazlamalara rugsat ber».</string>
+    <string name="omnix_a11y_hint_xiaomi">Xiaomi, Redmi, POCO (HyperOS/MIUI): bent adatça «Programma barada» ekranynyň ⋮ menýusynda bolýar; ol ýerde ýok bolsa, programmanyň ekranynda çäklendirilen sazlamalary gözläň. Atlar gabygyň wersiýasyna bagly.</string>
+    <string name="omnix_a11y_hint_other">Beýleki telefonlar: ýol adatça şol bir: Sazlamalar → Programmalar → OMNIX → ⋮. Atlar tapawutlanyp biler.</string>
+    <string name="omnix_a11y_step2_title">2-nji ädim. Hyzmaty açmak</string>
+    <string name="omnix_a11y_step2_body">Aýratyn mümkinçilikler sazlamalaryny açyň, hyzmatlar sanawynda OMNIX-i tapyň («Guralan programmalar» bölüminde bolup biler), çalşyjyny açyň we tassyklaň.</string>
+    <string name="omnix_a11y_step2_button">Aýratyn mümkinçilikleri açmak</string>
+    <string name="omnix_a11y_step3_title">3-nji ädim. Barlamak</string>
+    <string name="omnix_a11y_step3_button">Ýene bir gezek barlamak</string>
+    <string name="omnix_a11y_state_enabled">Taýýar: OMNIX hyzmaty açyk.</string>
+    <string name="omnix_a11y_state_restricted">Hyzmat entek öçük. Programma dükandan bolmansoň, Android ony köplenç petikleýär: 1-nji, soň 2-nji ädimi ýerine ýetiriň.</string>
+    <string name="omnix_a11y_state_disabled">Hyzmat entek öçük. Ony 2-nji ädimde açyň.</string>
+    <string name="omnix_a11y_hint_blocked_launch">Hökmany bolmadyk OMNIX aýratyn mümkinçilikler hyzmatyny açyp bilersiňiz (Men → Aýratyn mümkinçilikler hyzmaty): şonda programmalar ekran öçükkä hem açylýar. Ol bolmasa, bildiriş ätiýaçlyk ýol bolup galýar.</string>
+    <string name="omnix_a11y_notification_action">Hyzmaty açmak</string>
+</resources>

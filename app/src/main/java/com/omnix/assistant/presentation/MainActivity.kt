@@ -119,9 +119,30 @@ class MainActivity : ComponentActivity() {
     /** Guards the first frame while stored preferences are read. */
     private var splashHeld: Boolean by mutableStateOf(true)
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleWizardExtra(intent)
+    }
+
+    /** Уведомление о заблокированном запуске просит открыть мастер службы доступности. */
+    private fun handleWizardExtra(intent: Intent?) {
+        if (intent?.getBooleanExtra(
+                com.omnix.assistant.agent.tools.accessibility.AccessibilityWizardRequest.EXTRA_OPEN_WIZARD,
+                false
+            ) == true
+        ) {
+            intent?.removeExtra(
+                com.omnix.assistant.agent.tools.accessibility.AccessibilityWizardRequest.EXTRA_OPEN_WIZARD
+            )
+            com.omnix.assistant.agent.tools.accessibility.AccessibilityWizardRequest.request()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) handleWizardExtra(intent)
         // Инструменту не хватило разрешения: спрашиваем системным диалогом сразу.
         lifecycleScope.launch {
             repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {

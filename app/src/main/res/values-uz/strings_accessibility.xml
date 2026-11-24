@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="omnix_a11y_title">Maxsus imkoniyatlar xizmati</string>
+    <string name="omnix_a11y_why">Nega kerak: maxsus imkoniyatlar xizmati Android ilovalarni fondan ochishga yoʻl qoʻymaganda (masalan, ekran oʻchiq boʻlganda) OMNIX-ga ilovalarni ovoz bilan ochish imkonini beradi.</string>
+    <string name="omnix_a11y_optional">Xizmat majburiy emas. Usiz OMNIX bildirishnoma yuboradi: unga bossangiz, ilova ochiladi.</string>
+    <string name="omnix_a11y_block_warning">Android nima qiladi: agar OMNIX doʻkondan emas (masalan, APK fayldan) oʻrnatilgan boʻlsa, Android 13 va undan yangi versiyalar xizmatni yoqishni avval bloklaydi. Roʻyxatda u cheklangan sozlamalar bilan boshqariladigan deb belgilanadi, bosganda esa kirish taqiqlangani haqidagi oyna chiqadi (soʻzlar telefonga qarab farq qiladi). Bu nosozlik emas: cheklov quyidagi qadamlar bilan qoʻlda olib tashlanadi.</string>
+    <string name="omnix_a11y_step1_title">1-qadam. Cheklangan sozlamalarga ruxsat berish</string>
+    <string name="omnix_a11y_step1_body">OMNIX-ning «Ilova haqida» ekranini oching, yuqori oʻng burchakdagi ⋮ (uch nuqta) tugmasini bosing va «Cheklangan sozlamalarga ruxsat berish» ni tanlang.</string>
+    <string name="omnix_a11y_step1_note">Agar bu band ⋮ menyusida boʻlmasa: avval 2-qadamni bajarib, OMNIX-ni yoqib koʻring (Android kirish taqiqlangani haqidagi oynani koʻrsatadi), keyin shu yerga qaytib, 1-qadamni takrorlang. Baribir boʻlmasa, bu telefonda cheklov amal qilmasligi mumkin: 2-qadamga oʻting.</string>
+    <string name="omnix_a11y_step1_button">«Ilova haqida» ni ochish</string>
+    <string name="omnix_a11y_hint_samsung">Samsung (One UI): yoʻl odatda shu: Sozlamalar → Ilovalar → OMNIX → yuqori oʻngdagi ⋮. Band nomi One UI versiyasiga qarab farq qilishi mumkin.</string>
+    <string name="omnix_a11y_hint_pixel">Pixel: Sozlamalar → Ilovalar → OMNIX → yuqori oʻngdagi ⋮ → «Cheklangan sozlamalarga ruxsat berish».</string>
+    <string name="omnix_a11y_hint_xiaomi">Xiaomi, Redmi, POCO (HyperOS/MIUI): band odatda «Ilova haqida» ekranidagi ⋮ menyusida boʻladi; u yerda boʻlmasa, ilova ekranida cheklangan sozlamalarni qidiring. Nomlar qobiq versiyasiga bogʻliq.</string>
+    <string name="omnix_a11y_hint_other">Boshqa telefonlar: yoʻl odatda shu: Sozlamalar → Ilovalar → OMNIX → ⋮. Nomlar farq qilishi mumkin.</string>
+    <string name="omnix_a11y_step2_title">2-qadam. Xizmatni yoqish</string>
+    <string name="omnix_a11y_step2_body">Maxsus imkoniyatlar sozlamalarini oching, xizmatlar roʻyxatidan OMNIX-ni toping («Oʻrnatilgan ilovalar» boʻlimida boʻlishi mumkin), tugmani yoqing va tasdiqlang.</string>
+    <string name="omnix_a11y_step2_button">Maxsus imkoniyatlarni ochish</string>
+    <string name="omnix_a11y_step3_title">3-qadam. Tekshirish</string>
+    <string name="omnix_a11y_step3_button">Yana tekshirish</string>
+    <string name="omnix_a11y_state_enabled">Tayyor: OMNIX xizmati yoqilgan.</string>
+    <string name="omnix_a11y_state_restricted">Xizmat hozircha oʻchiq. Ilova doʻkondan emasligi sababli Android uni koʻpincha bloklaydi: avval 1-qadamni, keyin 2-qadamni bajaring.</string>
+    <string name="omnix_a11y_state_disabled">Xizmat hozircha oʻchiq. Uni 2-qadamda yoqing.</string>
+    <string name="omnix_a11y_hint_blocked_launch">Majburiy boʻlmagan OMNIX maxsus imkoniyatlar xizmatini yoqishingiz mumkin (Men → Maxsus imkoniyatlar xizmati): shunda ilovalar ekran oʻchiq boʻlganda ham ochiladi. Usiz bildirishnoma zaxira yoʻl boʻlib qoladi.</string>
+    <string name="omnix_a11y_notification_action">Xizmatni yoqish</string>
+</resources>
