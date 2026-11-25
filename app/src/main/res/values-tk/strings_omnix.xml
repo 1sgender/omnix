@@ -633,6 +633,8 @@
     <string name="omnix_offline_title">Oflaýn tertip</string>
     <string name="omnix_offline_hint">Internetsiz işleýän ýerli emeli aň, ses we söz tanamak. Bir gezek ýükläp alyň.</string>
     <string name="omnix_offline_tk_voice">OMNIX türkmen sesi</string>
+    <string name="omnix_offline_ru_voice">OMNIX rus sesi (islege görä)</string>
+    <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Türkmen sözüni tanamak</string>
     <string name="omnix_offline_ru_asr">Rus sözüni tanamak</string>
     <string name="omnix_offline_ru_asr_hq">Rus dili, kämilleşdirilen</string>

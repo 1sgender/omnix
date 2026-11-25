@@ -130,6 +130,13 @@ internal fun OfflineSpeechScreen(
             )
             OmnixGroupDivider()
             ModelRow(
+                title = stringResource(R.string.omnix_offline_ru_voice),
+                model = OfflineSpeechModels.RU_VOICE,
+                state = states[OfflineSpeechModels.RU_VOICE.id],
+                viewModel = viewModel
+            )
+            OmnixGroupDivider()
+            ModelRow(
                 title = stringResource(R.string.omnix_offline_tk_asr),
                 model = OfflineSpeechModels.TK_ASR,
                 state = states[OfflineSpeechModels.TK_ASR.id],
@@ -149,6 +156,12 @@ internal fun OfflineSpeechScreen(
                 viewModel = viewModel
             )
         }
+        Spacer(Modifier.height(OmnixTheme.spacing.sm))
+        Text(
+            text = stringResource(R.string.omnix_offline_ru_voice_credit),
+            style = OmnixTheme.typography.caption,
+            color = OmnixTheme.colors.textSecondary
+        )
     }
 }
 

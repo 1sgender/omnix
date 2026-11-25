@@ -48,6 +48,20 @@ object OfflineSpeechModels {
     )
 
     /**
+     * Русский голос OMNIX: Piper (VITS) в формате sherpa-onnx, дообучен на записях одного диктора
+     * корпуса SOVA (CC BY 4.0, атрибуция в NOTICE и на экране «Лицензии»). Необязательная загрузка:
+     * без неё русский говорит системным голосом.
+     */
+    val RU_VOICE = OfflineSpeechModel(
+        id = "ru-voice",
+        dirName = "ru-voice",
+        url = "https://omnix.144.31.14.236.sslip.io/models/ru-voice.zip",
+        sizeBytes = 68_193_351L,
+        sha256 = "708cfee0563b598e0c0d6fe427863c2f8ff27228b3da8bfa62dfc8be0fffce60",
+        requiredFiles = listOf("model.onnx", "tokens.txt", "espeak-ng-data/phontab")
+    )
+
+    /**
      * Туркменское распознавание речи: Omnilingual ASR CTC 300M v2 (Meta, Apache-2.0), int8, готовая
      * сборка sherpa-onnx. Одна проходка по звуку, без пословной генерации, поэтому не «выдумывает»
      * фразы, как делал наш дообученный Whisper. На тестовых записях расходится с большой MMS на 5,9%
@@ -76,5 +90,5 @@ object OfflineSpeechModels {
         requiredFiles = listOf("model.int8.onnx", "tokens.txt")
     )
 
-    val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, TK_ASR, RU_ASR)
+    val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, RU_VOICE, TK_ASR, RU_ASR)
 }
