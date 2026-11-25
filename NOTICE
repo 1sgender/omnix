@@ -70,6 +70,17 @@ On-device model
   The model weights are NOT distributed with this repository; the user
   supplies them and is responsible for complying with Gemma terms.
 
+Russian voice (optional download)
+---------------------------------
+- Russian OMNIX voice is trained on the SOVA Dataset (RuAudiobooksDevices subset)
+  by Virtual Assistant, LLC (SOVA.ai), https://github.com/sovaai/sova-dataset ,
+  licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+  Changes: recordings of one speaker were selected, resampled to 22.05 kHz,
+  trimmed and loudness-normalised, and used to fine-tune a Piper (VITS)
+  text-to-speech model, itself fine-tuned from LibriTTS-R (CC BY 4.0).
+  The dataset authors do not endorse this application. The voice weights are
+  not distributed with this repository; the app downloads them on request.
+
 Server dependencies
 -------------------
 - PostgreSQL JDBC Driver — PostgreSQL Global Development Group — BSD-2-Clause
