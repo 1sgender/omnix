@@ -38,7 +38,6 @@
     <string name="live_ear_dual_unavailable">Этот телефон не умеет слушать два микрофона сразу. Слушаю через телефон.</string>
     <string name="live_ear_earbud_unavailable">Микрофон наушника недоступен. Слушаю через телефон.</string>
     <string name="live_ear_own_audio_unsupported">Распознаватель не принял звук от приложения. Слушаю микрофоном телефона напрямую.</string>
-    <string name="live_ear_lang_guard_downloading">Фильтр языка загружается по Wi-Fi; пока он не готов, переводится всё услышанное.</string>
     <string name="slushayu_prodolzhenie_dialoga">Слушаю продолжение диалога…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Фоновое распознавание ключевого слова и голосовые ответы</string>
     <string name="ya_ne_rasslyshal_zapros">Я не расслышал запрос.</string>

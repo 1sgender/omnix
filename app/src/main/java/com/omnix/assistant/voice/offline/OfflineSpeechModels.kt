@@ -90,18 +90,5 @@ object OfflineSpeechModels {
         requiredFiles = listOf("model.int8.onnx", "tokens.txt")
     )
 
-    /**
-     * Фильтр языка синхронного перевода: Whisper tiny (OpenAI, MIT; ONNX int8 от sherpa-onnx,
-     * Apache-2.0) только для определения языка речи. Качается по Wi-Fi при первом запуске перевода.
-     */
-    val LANG_ID = OfflineSpeechModel(
-        id = "lang-id",
-        dirName = "lang-id",
-        url = "https://omnix.144.31.14.236.sslip.io/models/lang-id.zip",
-        sizeBytes = 60_373_651L,
-        sha256 = "7d350eede1454f357b972c132a47f353155abda730346d3f5e188dc5e0c83b1d",
-        requiredFiles = listOf("tiny-encoder.int8.onnx", "tiny-decoder.int8.onnx")
-    )
-
-    val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, RU_VOICE, TK_ASR, RU_ASR, LANG_ID)
+    val ALL: List<OfflineSpeechModel> = listOf(TK_VOICE, RU_VOICE, TK_ASR, RU_ASR)
 }

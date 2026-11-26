@@ -155,13 +155,6 @@ internal fun OfflineSpeechScreen(
                 state = states[OfflineSpeechModels.RU_ASR.id],
                 viewModel = viewModel
             )
-            OmnixGroupDivider()
-            ModelRow(
-                title = stringResource(R.string.omnix_offline_lang_id),
-                model = OfflineSpeechModels.LANG_ID,
-                state = states[OfflineSpeechModels.LANG_ID.id],
-                viewModel = viewModel
-            )
         }
         Spacer(Modifier.height(OmnixTheme.spacing.sm))
         Text(

@@ -640,7 +640,6 @@
     <string name="omnix_offline_hint">Локальный ИИ, голос и распознавание речи, которые работают без интернета. Скачайте один раз.</string>
     <string name="omnix_offline_tk_voice">Туркменский голос OMNIX</string>
     <string name="omnix_offline_ru_voice">Русский голос OMNIX</string>
-    <string name="omnix_offline_lang_id">Фильтр языка для синхронного перевода</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Распознавание туркменской речи</string>
     <string name="omnix_offline_ru_asr">Распознавание русской речи</string>

@@ -1,10 +1,10 @@
 package com.omnix.assistant.voice.live
 
+import android.content.res.AssetManager
 import android.util.Log
 import com.k2fsa.sherpa.onnx.SpokenLanguageIdentification
 import com.k2fsa.sherpa.onnx.SpokenLanguageIdentificationConfig
 import com.k2fsa.sherpa.onnx.SpokenLanguageIdentificationWhisperConfig
-import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -42,7 +42,7 @@ class LanguageVerdicts(private val lookbackMs: Long = DEFAULT_LOOKBACK_MS) {
 }
 
 /**
- * Фильтр языка синхронного перевода: офлайн-модель (Whisper tiny через sherpa-onnx) раз в
+ * Фильтр языка синхронного перевода: встроенная офлайн-модель (Whisper tiny через sherpa-onnx) раз в
  * секунду определяет язык последних двух секунд речи. Пока звучит не язык собеседника —
  * например, русский владельца или перевод, попавший в микрофон, — куски не переводятся.
  *
@@ -122,20 +122,19 @@ class LanguageGuard private constructor(
         private const val MIN_VOICED_SHARE = 0.4f
         private const val VOICED_DB = -45f
         private const val FULL_SCALE = 32768f
-        const val ENCODER = "tiny-encoder.int8.onnx"
-        const val DECODER = "tiny-decoder.int8.onnx"
+        /** Модель встроена в приложение (assets/langid, кладётся при сборке). */
+        const val ENCODER = "langid/tiny-encoder.int8.onnx"
+        const val DECODER = "langid/tiny-decoder.int8.onnx"
 
-        /** null — модели нет на телефоне или она не загрузилась. */
-        fun open(dir: File, now: () -> Long = System::currentTimeMillis): LanguageGuard? {
-            val encoder = File(dir, ENCODER)
-            val decoder = File(dir, DECODER)
-            if (!encoder.isFile || !decoder.isFile) return null
+        /** null — модель не загрузилась (например, нет нативной библиотеки). */
+        fun open(assets: AssetManager, now: () -> Long = System::currentTimeMillis): LanguageGuard? {
             return try {
                 val lid = SpokenLanguageIdentification(
+                    assetManager = assets,
                     config = SpokenLanguageIdentificationConfig(
                         whisper = SpokenLanguageIdentificationWhisperConfig(
-                            encoder = encoder.path,
-                            decoder = decoder.path
+                            encoder = ENCODER,
+                            decoder = DECODER
                         ),
                         numThreads = 2
                     )
