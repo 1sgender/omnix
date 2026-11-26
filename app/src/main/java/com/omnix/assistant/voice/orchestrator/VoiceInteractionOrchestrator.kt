@@ -91,10 +91,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
         /** Перевод в ухо чуть быстрее обычной речи, чтобы не отставать от собеседника. */
         private const val LIVE_SPEECH_RATE = 1.15f
         /**
-         * Сколько после ответа OMNIX ещё слушает без «Омни» (владелец 2026-11-26: «выполняет и
-         * сразу выключается»). Отсчёт продлевается, пока человек говорит.
+         * Сколько после ответа OMNIX ждёт, что человек заговорит без «Омни» (владелец
+         * 2026-11-26: «выполняет и сразу выключается», но 10 с — много). Пока человек говорит,
+         * отсчёт продлевается: фраза слушается до конца.
          */
-        private const val FOLLOW_UP_WINDOW_MS = 10_000L
+        private const val FOLLOW_UP_WINDOW_MS = 5_000L
         private const val FOLLOW_UP_RESTART_MS = 200L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
@@ -704,7 +705,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                     _assistantState.value = VoiceAssistantState.Listening
                                 } else if (listening) {
                                     speechRecognizerManager.stopListening()
-                                    processUserQuery(cleaned)
+                                    if (current == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                                        !isAddressedFollowUp(event.partialText, cleaned)
+                                    ) {
+                                        startStandbyMode()
+                                    } else {
+                                        processUserQuery(cleaned)
+                                    }
                                 }
                             }
                         }
@@ -755,7 +762,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         // который возвращает null при пустом результате — не дёргаем
                         // processUserQuery с сырым wake-word.
                         val query = WakeWordExtractor.extractQuery(text, wakeKeywords)
-                        if (query != null) {
+                        if (query != null &&
+                            _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                            !isAddressedFollowUp(text, query)
+                        ) {
+                            // Фраза в окне продолжения сказана не OMNIX — молча ждём «Омни».
+                            startStandbyMode()
+                        } else if (query != null) {
                             processUserQuery(query)
                         } else {
                             // Прозвучало только имя ассистента — переходим в LISTENING
@@ -1386,6 +1399,17 @@ class VoiceInteractionOrchestrator @Inject constructor(
         wakeWordEngine.stop()
         speechRecognizerManager.startListening()
         armFollowUpWindow()
+    }
+
+    /**
+     * Фраза в окне продолжения (без обязательного «Омни») адресована OMNIX: есть «Омни» или
+     * она похожа на вопрос, команду или продолжение разговора ([FollowUpAddressee]).
+     */
+    private fun isAddressedFollowUp(raw: String, query: String): Boolean {
+        val addressed = WakeWordExtractor.containsWakeWord(raw, wakeKeywords) ||
+            FollowUpAddressee.isForAssistant(query)
+        if (!addressed) Log.d(TAG, "follow-up ignored: not addressed to the assistant (chars=${query.length})")
+        return addressed
     }
 
     /** (Пере)запускает отсчёт окна продолжения; по его истечении — ожидание «Омни». */
