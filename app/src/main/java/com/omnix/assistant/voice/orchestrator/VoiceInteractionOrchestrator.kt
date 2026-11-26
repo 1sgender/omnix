@@ -6,6 +6,7 @@ import android.media.ToneGenerator
 import com.omnix.assistant.voice.audio.Haptics
 import com.omnix.assistant.voice.audio.SoftChime
 import android.media.AudioManager
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import com.omnix.assistant.core.request.RequestIds
 import com.omnix.assistant.agent.decision.PrivacyClassification
@@ -19,7 +20,11 @@ import com.omnix.assistant.agent.executor.ConfirmationOwner
 import com.omnix.assistant.agent.executor.ToolExecutor
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolExecutionResult
+import com.omnix.assistant.agent.translator.LiveEarSession
+import com.omnix.assistant.agent.translator.LiveInterpretCommand
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
+import com.omnix.assistant.agent.translator.TranslationLanguages
+import com.omnix.assistant.core.locale.AppLanguage
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.crash.CrashCapture
 import com.omnix.assistant.core.result.Resource
@@ -82,6 +87,9 @@ class VoiceInteractionOrchestrator @Inject constructor(
          * считать фразу законченной. Было 1,2 с и обрезало речь на паузе-раздумье.
          */
         private const val SILENCE_AFTER_PARTIAL_MS = 2_400L
+
+        /** Перевод в ухо чуть быстрее обычной речи, чтобы не отставать от собеседника. */
+        private const val LIVE_SPEECH_RATE = 1.15f
         private const val FOLLOW_UP_WINDOW_MS = 8000L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
@@ -169,6 +177,16 @@ class VoiceInteractionOrchestrator @Inject constructor(
      * отменяет предыдущий — «последний побеждает». Без этого параллельные
      * переводы могут завершиться в неправильном порядке и перекрыться в TTS. */
     private var translationJob: Job? = null
+
+    /**
+     * Синхронный перевод в ухо: сессия (куски перевода по ходу речи), язык собеседника и
+     * флаг «распознавание ещё не запущено» (стартует после фразы о включении режима).
+     */
+    private var liveSession: LiveEarSession? = null
+    private var liveSessionViewJob: Job? = null
+    private var liveSourceLang: String = LiveInterpretCommand.DEFAULT_SOURCE
+    private var liveTargetLang: String = "ru"
+    private var liveListenPending = false
 
     private val _serviceActive = MutableStateFlow(false)
 
@@ -490,6 +508,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
+        stopLiveSession()
         confirmationTimeoutJob = null
         silenceJob?.cancel()
         silenceJob = null
@@ -523,21 +542,74 @@ class VoiceInteractionOrchestrator @Inject constructor(
         wakeWordEngine.start()
     }
 
-    fun startLiveEarInterpreter() {
+    /**
+     * Синхронный перевод в ухо: собеседник говорит на [sourceLang], перевод на язык приложения
+     * звучит кусками по ходу его речи (не дожидаясь конца фразы).
+     *
+     * Звук идёт обычным путём (A2DP): слушает микрофон телефона, а не наушника — наушник в ухе
+     * владельца слышит его самого, а не собеседника. Без наушника перевод только на экране:
+     * голос из динамика микрофон услышал бы и стал «переводить» обратно.
+     */
+    fun startLiveEarInterpreter(sourceLang: String = liveSourceLang) {
         silenceJob?.cancel()
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
-        // CR-22: на всякий случай сбрасываем предыдущий перевод, если кто-то
-        // вошёл в переводчик, пока старый ещё жив.
         translationJob?.cancel()
         translationJob = null
+        stopLiveSession()
         wakeWordEngine.stop()
+        speechRecognizerManager.stopListening()
+
+        liveSourceLang = sourceLang
+        val appLang = AppLanguage.current().code
+        liveTargetLang = if (appLang != sourceLang) appLang else if (sourceLang == "ru") "en" else "ru"
+        val source = sourceLang
+        val target = liveTargetLang
+        val session = LiveEarSession(
+            scope = scope,
+            translate = { fragment, previous -> translatorEngine.translateFragment(fragment, previous, source, target) },
+            speak = { text ->
+                if (bluetoothAudioRouter.isHeadsetConnected()) {
+                    textToSpeechManager.speak(text, LIVE_SPEECH_RATE, speechPitch, TextToSpeech.QUEUE_ADD)
+                }
+            },
+            describeFailure = translatorEngine::describeFailure
+        )
+        liveSession = session
+        liveSessionViewJob = scope.launch {
+            session.view.collect { view ->
+                _lastQuery.value = view.source
+                _lastAnswer.value = view.error ?: view.translation
+            }
+        }
 
         _currentMode.value = OrchestratorMode.LIVE_EAR_INTERPRETER
-        val msg = context.getString(R.string.rezhim_perevodchika_aktivirovan)
+        bluetoothAudioRouter.routeAudioToSpeaker()
+        val msg = context.getString(
+            if (bluetoothAudioRouter.isHeadsetConnected()) R.string.live_ear_started else R.string.live_ear_started_no_headset,
+            TranslationLanguages.displayName(sourceLang)
+        )
         _assistantState.value = VoiceAssistantState.Speaking(msg)
-        bluetoothAudioRouter.routeAudioToEarbud()
+        liveListenPending = true
         textToSpeechManager.speak(msg, speechRate, speechPitch)
+    }
+
+    /** Язык распознавания речи собеседника (локаль Android, например en-US). */
+    private fun liveRecognitionTag(): String =
+        TranslationLanguages.SUPPORTED.firstOrNull { it.code == liveSourceLang }?.localeTag ?: "en-US"
+
+    private fun startLiveListening() {
+        liveListenPending = false
+        wakeWordEngine.stop()
+        speechRecognizerManager.startListening(liveRecognitionTag(), continuous = true)
+    }
+
+    private fun stopLiveSession() {
+        liveSession?.stop()
+        liveSession = null
+        liveSessionViewJob?.cancel()
+        liveSessionViewJob = null
+        liveListenPending = false
     }
 
     /** OBSERVABILITY: request id текущей голосовой реплики. */
@@ -602,6 +674,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
             speechRecognizerManager.speechState.collectLatest { event ->
                 when (event) {
                     is SpeechRecognitionEvent.PartialResult -> {
+                        if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
+                            _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
+                            liveSession?.onPartial(event.partialText)
+                            return@collectLatest
+                        }
                         if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
                             val cleaned = WakeWordExtractor.extractQuery(AsrPostProcessor.process(event.partialText), wakeKeywords)
@@ -644,36 +721,16 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             return@collectLatest
                         }
 
-                        // 🎧 НЕПРЕРЫВНЫЙ СИНХРОННЫЙ ПЕРЕВОДЧИК В УХО (Full-Duplex Continuous Stream)
+                        // Синхронный перевод в ухо: остаток фразы уходит в перевод, сессия
+                        // распознавания перезапускается сама (continuous).
                         if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
+                            if (LiveInterpretCommand.isStop(text)) {
+                                handleCancel()
+                                return@collectLatest
+                            }
                             _privacyClassification.value =
                                 PrivacyClassifier.classifySafely(PrivacyContent(text))
-                            // CR-22: сериализация «последний побеждает».
-                            // Отменяем предыдущий in-flight перевод (и его TTS),
-                            // чтобы не озвучивать устаревшую фразу собеседника
-                            // поверх актуальной. Без этого два близких FinalResult
-                            // (например, после длинной паузы) порождали параллельные
-                            // translateStructured, которые могли завершиться в
-                            // любом порядке.
-                            translationJob?.cancel()
-                            val captureEpoch = sessionEpoch.get()
-                            translationJob = scope.launch(Dispatchers.IO) {
-                                val result = translatorEngine.translateStructured(
-                                    text = text,
-                                    sourceLang = "auto",
-                                    targetLang = "ru"
-                                )
-                                // Устарело — пользователь ушёл в другой режим
-                                // или сервис остановлен — не озвучиваем.
-                                if (_currentMode.value != OrchestratorMode.LIVE_EAR_INTERPRETER ||
-                                    sessionEpoch.get() != captureEpoch
-                                ) return@launch
-                                val spoken = translatorEngine.describeFailure(result)
-                                _lastAnswer.value = spoken
-                                bluetoothAudioRouter.routeAudioToEarbud()
-                                // Прерываем предыдущий TTS тоже (FLUSH, а не ADD).
-                                textToSpeechManager.speak(spoken, speechRate, speechPitch)
-                            }
+                            liveSession?.onFinal(text)
                             return@collectLatest
                         }
 
@@ -705,7 +762,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             // В режиме переводчика продолжаем слушать дальше
                             delay(500)
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
-                                speechRecognizerManager.startListening()
+                                startLiveListening()
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
@@ -762,8 +819,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
         _privacyClassification.value = quickClassification
 
         // Команда активации режима синхронного переводчика
-        if (clean.lowercase().contains("переводчик") || clean.lowercase().contains("синхронный перевод") || clean.lowercase().contains("переводи собеседника")) {
-            startLiveEarInterpreter()
+        LiveInterpretCommand.parse(clean)?.let { source ->
+            startLiveEarInterpreter(source)
             return
         }
 
@@ -1266,9 +1323,10 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 speechRecognizerManager.startListening()
                             }
                             OrchestratorMode.LIVE_EAR_INTERPRETER -> {
-                                // После нашёптывания перевода в ухо мгновенно продолжаем слушать собеседника!
-                                wakeWordEngine.stop()
-                                speechRecognizerManager.startListening()
+                                // Распознавание идёт параллельно с переводом в ухо и не
+                                // перезапускается после каждого куска (иначе терялись бы слова).
+                                // Запускаем его один раз — после фразы о включении режима.
+                                if (liveListenPending) startLiveListening()
                             }
                             OrchestratorMode.STANDBY_WAKE_WORD -> resumeWakeWordAfterSpeech()
                             else -> Unit
@@ -1427,6 +1485,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         // CR-22: отменяем in-flight перевод при любом останове.
         translationJob?.cancel()
         translationJob = null
+        stopLiveSession()
 
         sessionEpoch.incrementAndGet()
         aiJob?.cancel()
