@@ -97,6 +97,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
          */
         private const val FOLLOW_UP_WINDOW_MS = 5_000L
         private const val FOLLOW_UP_RESTART_MS = 200L
+        private const val LISTEN_TICK_MS = 100L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
         /** Паузы перед повторным запуском движка фразы после его ошибки. */
@@ -784,6 +785,18 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                                 startLiveListening()
                             }
+                        } else if ((_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION ||
+                                _currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) &&
+                            FollowUpWindow.isQuietError(event.errorCode)
+                        ) {
+                            // Ждём «да/нет»: распознаватель закрылся на паузе или шуме (часто —
+                            // на хвосте своего же вопроса). Без перезапуска «да» уже никто не
+                            // слышал, и через 10 с звучало «время ожидания истекло».
+                            val waitingMode = _currentMode.value
+                            scope.launch {
+                                delay(FOLLOW_UP_RESTART_MS)
+                                if (_currentMode.value == waitingMode) speechRecognizerManager.startListening()
+                            }
                         } else if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
                             FollowUpWindow.isQuietError(event.errorCode)
                         ) {
@@ -959,7 +972,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                                 confirmationTimeoutJob?.cancel()
                                 confirmationTimeoutJob = scope.launch {
-                                    delay(CONFIRMATION_TIMEOUT_MS)
+                                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                                     // CR-07: таймер подтверждения тоже уважает эпоху.
                                     if (sessionEpoch.get() != captureEpoch) return@launch
                                     if (_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION) {
@@ -1014,7 +1027,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         // Таймаут — как у tool-confirmation: N секунд и авто-отказ.
                         confirmationTimeoutJob?.cancel()
                         confirmationTimeoutJob = scope.launch {
-                            delay(CONFIRMATION_TIMEOUT_MS)
+                            awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                             if (sessionEpoch.get() != captureEpoch) return@launch
                             if (_currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) {
                                 val timeoutMsg = context.getString(R.string.cloud_consent_timeout)
@@ -1163,7 +1176,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                 confirmationTimeoutJob?.cancel()
                 confirmationTimeoutJob = scope.launch {
-                    delay(CONFIRMATION_TIMEOUT_MS)
+                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                     if (_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION) {
                         val timeoutMsg = context.getString(R.string.vremya_ozhidaniya_isteklo)
                         _lastAnswer.value = timeoutMsg
@@ -1311,7 +1324,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                 confirmationTimeoutJob?.cancel()
                 confirmationTimeoutJob = scope.launch {
-                    delay(CONFIRMATION_TIMEOUT_MS)
+                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                     if (sessionEpoch.get() != consentCaptureEpoch) return@launch
                     if (_currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) {
                         val timeoutMsg = context.getString(R.string.cloud_consent_timeout)
@@ -1410,6 +1423,20 @@ class VoiceInteractionOrchestrator @Inject constructor(
             FollowUpAddressee.isForAssistant(query)
         if (!addressed) Log.d(TAG, "follow-up ignored: not addressed to the assistant (chars=${query.length})")
         return addressed
+    }
+
+    /**
+     * Ждёт [ms] времени, когда OMNIX молчит и слушает ответ. Пока звучит его собственный
+     * вопрос («Позвонить маме? Подтвердите»), время не идёт: раньше 10 с считались с начала
+     * вопроса, и на «да» оставалось несколько секунд (отчёт владельца 2026-11-26:
+     * «Время ожидания истекло. Операция отменена»).
+     */
+    private suspend fun awaitListeningTime(ms: Long) {
+        var listened = 0L
+        while (listened < ms) {
+            delay(LISTEN_TICK_MS)
+            if (textToSpeechManager.ttsState.value !is TtsState.Speaking) listened += LISTEN_TICK_MS
+        }
     }
 
     /** (Пере)запускает отсчёт окна продолжения; по его истечении — ожидание «Омни». */
