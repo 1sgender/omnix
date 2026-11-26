@@ -260,6 +260,8 @@ class MainActivity : ComponentActivity() {
                                 value = offlinePack.isInstalled()
                             }
                             var packPromptDismissed by rememberSaveable { mutableStateOf(false) }
+                            // Свой голос OMNIX — основной: качается сам по Wi-Fi при подходящем языке.
+                            LaunchedEffect(Unit) { offlinePack.ensurePrimaryVoice() }
                             if (modelState is LocalModelState.Loading) {
                                 // Первый запрос: модель грузится в память. Спокойный
                                 // экран загрузки на весь период Loading — навграф

@@ -152,7 +152,9 @@ class SpeechRecognizerManager @Inject constructor(
             currentLanguageTag = languageTag
 
             // Туркменского у распознавателя Android нет: фраза уходит на сервер (Whisper).
-            if (SpeechLanguage.usesServerRecognition()) {
+            // Явно заданный другой язык (речь собеседника в синхронном переводе) слушает Android:
+            // серверный путь не даёт промежуточного текста.
+            if (SpeechLanguage.usesServerRecognition() && languageTag == SpeechLanguage.recognitionTag()) {
                 startServerListening(continuous)
                 return
             }

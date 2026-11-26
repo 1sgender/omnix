@@ -38,7 +38,8 @@
     <string name="oshibka_svyazi_s_ai">Couldn’t reach the AI</string>
     <string name="podklyuchite_naushniki">Connect headphones</string>
     <string name="provodnye_naushniki">Wired headphones</string>
-    <string name="rezhim_perevodchika_aktivirovan">Live interpreter mode is on. Listening for the other speaker.</string>
+    <string name="live_ear_started">Listening to the other speaker (%1$s) and translating into your earbud. Say «stop» to exit.</string>
+    <string name="live_ear_started_no_headset">No earbud connected: the translation of %1$s speech is on screen only.</string>
     <string name="slushayu_prodolzhenie_dialoga">Listening for more…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Background wake word recognition and spoken replies</string>
     <string name="ya_ne_rasslyshal_zapros">I didn’t hear the request.</string>

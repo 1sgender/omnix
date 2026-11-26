@@ -86,7 +86,52 @@ class LlmTranslationProvider @Inject constructor(
             3. Сохраняй исходный разговорный тон и смысл для мгновенного озвучивания в наушник.
         """.trimIndent()
 
-        when (val result = aiRepository.generateResponse(text, systemPrompt, emptyList())) {
+        ask(text, systemPrompt, sourceLang, targetLang)
+    }
+
+    override suspend fun translateFragment(
+        fragment: String,
+        previous: String,
+        sourceLang: String,
+        targetLang: String
+    ): TranslationResult = withContext(Dispatchers.IO) {
+        if (previous.isBlank()) return@withContext translate(fragment, sourceLang, targetLang)
+        if (!supports(sourceLang, targetLang)) {
+            return@withContext TranslationResult.Unsupported(sourceLang, targetLang)
+        }
+        if (!networkMonitor.isCurrentlyOnline()) {
+            return@withContext TranslationResult.NetworkRequired("Нет подключения к интернету")
+        }
+        pairBlocked()?.let { return@withContext TranslationResult.NetworkRequired(it) }
+        // C-02: та же граница приватности, что и у целой фразы (контекст тоже уходит в облако).
+        if (PrivacyClassifier.classifySafely(PrivacyContent("$previous $fragment")).level.isCloudRestricted) {
+            return@withContext TranslationResult.Error(
+                "Перевод заблокирован: текст содержит приватные данные"
+            )
+        }
+        val targetName = TranslationLanguages.displayName(targetLang)
+        val sourceName = if (sourceLang == "auto") "исходного языка" else TranslationLanguages.displayName(sourceLang)
+        val systemPrompt = """
+            Ты — синхронный переводчик OMNIX: человек ещё говорит, перевод звучит в наушник по кускам.
+            Язык речи: $sourceName. Язык перевода: $targetName.
+            Начало речи (оригинал, уже переведено и озвучено): «$previous».
+            Переведи ТОЛЬКО новый кусок речи так, чтобы он естественно продолжал уже сказанный перевод.
+
+            Строгие правила:
+            1. Верни ТОЛЬКО перевод нового куска, без повторения уже переведённого.
+            2. Кусок может обрываться на середине мысли — переводи то, что есть, ничего не додумывай.
+            3. Без пояснений, кавычек и комментариев; разговорный тон, коротко.
+        """.trimIndent()
+        ask(fragment, systemPrompt, sourceLang, targetLang)
+    }
+
+    private suspend fun ask(
+        text: String,
+        systemPrompt: String,
+        sourceLang: String,
+        targetLang: String
+    ): TranslationResult {
+        return when (val result = aiRepository.generateResponse(text, systemPrompt, emptyList())) {
             is Resource.Success -> {
                 val cleaned = result.data.trim().replace(Regex("^[\"']|[\"']$"), "")
                 if (cleaned.isBlank()) {
@@ -137,6 +182,28 @@ class LiveTranslatorEngine @Inject constructor(
         text: String,
         sourceLang: String = "auto",
         targetLang: String = "ru"
+    ): TranslationResult = runProviders(text, sourceLang, targetLang) { provider, clean ->
+        provider.translate(clean, sourceLang, targetLang)
+    }
+
+    /**
+     * Кусок речи, которая ещё продолжается (синхронный перевод в ухо). [previous] — уже
+     * прозвучавшее начало, чтобы перевод продолжал его. Квота считается по куску.
+     */
+    suspend fun translateFragment(
+        fragment: String,
+        previous: String,
+        sourceLang: String,
+        targetLang: String
+    ): TranslationResult = runProviders(fragment, sourceLang, targetLang) { provider, clean ->
+        provider.translateFragment(clean, previous.trim(), sourceLang, targetLang)
+    }
+
+    private suspend fun runProviders(
+        text: String,
+        sourceLang: String,
+        targetLang: String,
+        call: suspend (TranslationProvider, String) -> TranslationResult
     ): TranslationResult {
         val clean = text.trim()
         if (clean.isEmpty()) return TranslationResult.Error("Пустой текст")
@@ -175,7 +242,7 @@ class LiveTranslatorEngine @Inject constructor(
                 continue
             }
 
-            when (val result = provider.translate(clean, sourceLang, targetLang)) {
+            when (val result = call(provider, clean)) {
                 is TranslationResult.Success -> {
                     gate?.tryConsume(ClientQuotaFeature.TRANSLATION_UNITS, units)
                     return result

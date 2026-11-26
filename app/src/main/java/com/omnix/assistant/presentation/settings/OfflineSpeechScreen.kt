@@ -89,7 +89,7 @@ internal fun OfflineSpeechScreen(
 
     var wifiOnly by rememberSaveable { mutableStateOf(true) }
 
-    val speechParts = listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.TK_ASR)
+    val speechParts = listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.RU_VOICE, OfflineSpeechModels.TK_ASR)
     val allInstalled = localInstalled &&
         speechParts.filter { it.isPublished }.all { states[it.id] == OfflineModelState.Installed }
     val busy = localState is LocalModelState.Downloading ||
@@ -191,7 +191,8 @@ private fun LocalAiRow(state: LocalModelState, installed: Boolean, viewModel: Of
 }
 
 private fun speechMb(): Int =
-    listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.TK_ASR).filter { it.isPublished }.sumOf { it.approxSizeMb }
+    listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.RU_VOICE, OfflineSpeechModels.TK_ASR)
+        .filter { it.isPublished }.sumOf { it.approxSizeMb }
 
 @Composable
 private fun ModelRow(
