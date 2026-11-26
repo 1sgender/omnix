@@ -104,6 +104,11 @@
     <string name="omnix_devices_battery">PİL</string>
     <string name="omnix_devices_translate_title">Çeviri kulaklığa</string>
     <string name="omnix_devices_translate_sub">Karşınızdaki kişi sizin dilinizde duyulur</string>
+    <string name="omnix_devices_live_mic_title">Canlı çeviride mikrofon</string>
+    <string name="omnix_devices_live_mic_sub">«İkisi» en iyisi: sizin sesiniz ve kulağınızdaki çeviri ayıklanır.</string>
+    <string name="omnix_devices_live_mic_phone">Telefon</string>
+    <string name="omnix_devices_live_mic_earbud">Kulaklık</string>
+    <string name="omnix_devices_live_mic_both">İkisi</string>
     <string name="omnix_devices_find">Kulaklığı bağla</string>
     <string name="omnix_devices_disconnect">Bluetooth ayarları</string>
     <string name="omnix_chat_title">Omnix</string>

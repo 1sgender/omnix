@@ -151,6 +151,11 @@
     <string name="omnix_devices_battery">BATTERY</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
+    <string name="omnix_devices_live_mic_title">Microphone in live translation</string>
+    <string name="omnix_devices_live_mic_sub">Both is best: your voice and the translation in your ear are filtered out.</string>
+    <string name="omnix_devices_live_mic_phone">Phone</string>
+    <string name="omnix_devices_live_mic_earbud">Earbud</string>
+    <string name="omnix_devices_live_mic_both">Both</string>
     <string name="omnix_devices_find">Connect headphones</string>
     <string name="omnix_devices_disconnect">Bluetooth settings</string>
 

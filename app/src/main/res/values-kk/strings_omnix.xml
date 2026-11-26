@@ -104,6 +104,11 @@
     <string name="omnix_devices_battery">БАТАРЕЯ</string>
     <string name="omnix_devices_translate_title">Аударма құлаққапқа</string>
     <string name="omnix_devices_translate_sub">Әңгімелесуші сіздің тіліңізде естіледі</string>
+    <string name="omnix_devices_live_mic_title">Тірі аудармадағы микрофон</string>
+    <string name="omnix_devices_live_mic_sub">«Екеуі» ең жақсысы: сіздің дауысыңыз бен құлақтағы аударма алынып тасталады.</string>
+    <string name="omnix_devices_live_mic_phone">Телефон</string>
+    <string name="omnix_devices_live_mic_earbud">Құлаққап</string>
+    <string name="omnix_devices_live_mic_both">Екеуі</string>
     <string name="omnix_devices_find">Құлаққапты қосу</string>
     <string name="omnix_devices_disconnect">Bluetooth параметрлері</string>
     <string name="omnix_chat_title">Omnix</string>

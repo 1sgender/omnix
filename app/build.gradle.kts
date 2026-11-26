@@ -488,6 +488,36 @@ abstract class DownloadVerified : DefaultTask() {
     }
 }
 
+/**
+ * Фильтр языка синхронного перевода (встроенный, решение владельца 2026-11-26): из архива
+ * Whisper tiny берутся только int8-кодер и декодер, в assets/langid.
+ */
+abstract class ExtractLangIdModel : DefaultTask() {
+    @get:InputFile
+    abstract val archive: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @get:Inject
+    abstract val fs: FileSystemOperations
+
+    @get:Inject
+    abstract val archives: ArchiveOperations
+
+    @TaskAction
+    fun extract() {
+        fs.sync {
+            from(archives.tarTree(archives.bzip2(archive.get().asFile))) {
+                include("*/tiny-encoder.int8.onnx", "*/tiny-decoder.int8.onnx")
+                eachFile { path = "langid/$name" }
+            }
+            includeEmptyDirs = false
+            into(outputDir)
+        }
+    }
+}
+
 /** Достаёт из архива модели только то, что нужно приложению, в assets/wakeword/phrase. */
 abstract class ExtractWakePhraseModel : DefaultTask() {
     @get:InputFile
@@ -536,9 +566,22 @@ val downloadWakePhraseModel = tasks.register<DownloadVerified>("downloadWakePhra
     sha256.set("6ba68a01ff3c5445aaf2d61e9b97b026f1149dcc9049d11af3f44f55176341d8")
     output.set(layout.buildDirectory.file("third-party/wake-phrase-ru-vosk-int8-2025-08-16.tar.bz2"))
 }
+// Фильтр языка синхронного перевода: Whisper tiny (OpenAI, MIT) в ONNX int8 от sherpa-onnx
+// (Apache-2.0), только определение языка. Хэш архива сверен с загруженным релизом.
+val downloadLangIdModel = tasks.register<DownloadVerified>("downloadLangIdModel") {
+    url.set("https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2")
+    sha256.set("c46116994e539aa165266d96b325252728429c12535eb9d8b6a2b10f129e66b1")
+    output.set(layout.buildDirectory.file("third-party/sherpa-onnx-whisper-tiny.tar.bz2"))
+}
 
 androidComponents {
     onVariants { variant ->
+        val extractLangId = tasks.register<ExtractLangIdModel>(
+            "extract${variant.name.replaceFirstChar(Char::uppercase)}LangIdModel"
+        ) {
+            archive.set(downloadLangIdModel.flatMap { it.output })
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(extractLangId, ExtractLangIdModel::outputDir)
         val extract = tasks.register<ExtractWakePhraseModel>("extract${variant.name.replaceFirstChar(Char::uppercase)}WakePhraseModel") {
             archive.set(downloadWakePhraseModel.flatMap { it.output })
         }

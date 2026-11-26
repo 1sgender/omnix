@@ -150,6 +150,11 @@
     <string name="omnix_devices_battery">ZARÝAD</string>
     <string name="omnix_devices_translate_title">Gulaklyga terjime</string>
     <string name="omnix_devices_translate_sub">Gürrüňdeş siziň diliňizde eşidilýär</string>
+    <string name="omnix_devices_live_mic_title">Göni terjimede mikrofon</string>
+    <string name="omnix_devices_live_mic_sub">«Ikisi» iň gowusy: siziň sesiňiz we gulakdaky terjime aýrylýar.</string>
+    <string name="omnix_devices_live_mic_phone">Telefon</string>
+    <string name="omnix_devices_live_mic_earbud">Gulakçyn</string>
+    <string name="omnix_devices_live_mic_both">Ikisi</string>
     <string name="omnix_devices_find">Gulaklyklary birikdir</string>
     <string name="omnix_devices_disconnect">Bluetooth sazlamalary</string>
 
