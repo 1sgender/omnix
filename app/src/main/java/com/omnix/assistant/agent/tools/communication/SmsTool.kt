@@ -83,10 +83,10 @@ class SmsTool @Inject constructor(
     }
 
     override suspend fun execute(arguments: JsonObject): ToolExecutionResult {
-        val recipient = arguments["recipient"]?.jsonPrimitive?.contentOrNull?.trim().orEmpty()
-        val message = arguments["message"]?.jsonPrimitive?.contentOrNull?.trim().orEmpty()
+        val recipient = MessageArgs.recipient(arguments)
+        val message = MessageArgs.message(arguments)
 
-        if (recipient.isEmpty()) return ToolExecutionResult.failure("Не указан получатель сообщения", "MISSING_RECIPIENT")
+        if (recipient.isEmpty()) return ToolExecutionResult.failure("Не понял, кому отправить SMS. Назовите имя контакта или номер", "MISSING_RECIPIENT")
         if (message.isEmpty()) return ToolExecutionResult.failure("Не указан текст сообщения", "MISSING_MESSAGE")
         if (message.length > MAX_MESSAGE_CHARS) {
             return ToolExecutionResult.failure(
