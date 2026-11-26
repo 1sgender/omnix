@@ -8,6 +8,13 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (SMS recipient lost after confirmation)
+
+- «Отправить Осману сообщение «Привет»?» → «Да» → «Отправить контакту…» → `MISSING_RECIPIENT`: облачная
+  модель называла поля вызова иначе (`contact`, `to`, `text`…), и получатель терялся. Единое чтение
+  `MessageArgs` (запасные имена полей) в `SmsTool`, `CallTool` и `ActionPolicyEngine`; текст ошибки
+  теперь человеческий. Юнит-тесты `MessageArgsTest`.
+
 ### Added (Russian offline voice)
 
 - Русский голос OMNIX без интернета (необязательная загрузка ~65 МБ в «Офлайн-режим»): Piper (VITS)
