@@ -25,6 +25,9 @@
     <string name="provodnye_naushniki">Kablolu kulaklık</string>
     <string name="live_ear_started">Karşı tarafı (%1$s) dinliyorum ve kulaklığa çeviriyorum. Çıkmak için «stop» deyin.</string>
     <string name="live_ear_started_no_headset">Kulaklık bağlı değil: %1$s konuşmanın çevirisi yalnızca ekranda.</string>
+    <string name="live_ear_dual_unavailable">Bu telefon iki mikrofonu aynı anda dinleyemiyor. Telefondan dinliyorum.</string>
+    <string name="live_ear_earbud_unavailable">Kulaklık mikrofonu kullanılamıyor. Telefondan dinliyorum.</string>
+    <string name="live_ear_own_audio_unsupported">Tanıyıcı uygulamanın sesini kabul etmedi. Doğrudan telefon mikrofonuyla dinliyorum.</string>
     <string name="slushayu_prodolzhenie_dialoga">Devamını dinliyorum…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Arka planda uyandırma sözcüğü tanıma ve sesli yanıtlar</string>
     <string name="ya_ne_rasslyshal_zapros">İsteği duyamadım.</string>

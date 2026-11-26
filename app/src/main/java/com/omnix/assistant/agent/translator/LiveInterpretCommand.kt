@@ -35,6 +35,34 @@ object LiveInterpretCommand {
         return LANGUAGES.firstOrNull { (root, _) -> q.contains(root) }?.second ?: DEFAULT_SOURCE
     }
 
+    /**
+     * Микрофон, названный в команде: «переводчик через наушник», «через телефон»,
+     * «обоими микрофонами», «with both mics», «gulakçyn bilen». null — не назван (берётся настройка).
+     * «Переводи в наушник» — это про звук перевода, а не про микрофон, поэтому нужен предлог/слово «микрофон».
+     */
+    fun parseMic(text: String): com.omnix.assistant.voice.live.LiveMicMode? {
+        val q = text.lowercase()
+        return when {
+            BOTH_MIC.any { q.contains(it) } -> com.omnix.assistant.voice.live.LiveMicMode.BOTH
+            EARBUD_MIC.any { q.contains(it) } -> com.omnix.assistant.voice.live.LiveMicMode.EARBUD
+            PHONE_MIC.any { q.contains(it) } -> com.omnix.assistant.voice.live.LiveMicMode.PHONE
+            else -> null
+        }
+    }
+
+    private val BOTH_MIC = listOf(
+        "оба микрофона", "обоими", "два микрофона", "двумя микрофонами", "both mic", "two mic",
+        "ikisi bilen", "iki mikrofon"
+    )
+    private val EARBUD_MIC = listOf(
+        "через наушник", "микрофон наушника", "микрофоном наушника", "earbud mic", "through the earbud",
+        "with the earbud", "gulakçyn bilen", "gulakçynyň mikrofony"
+    )
+    private val PHONE_MIC = listOf(
+        "через телефон", "микрофон телефона", "микрофоном телефона", "phone mic", "through the phone",
+        "with the phone", "telefon bilen", "telefonyň mikrofony"
+    )
+
     /** Слова выхода из режима на языке собеседника и на своём. */
     private val STOP_WORDS = setOf(
         "стоп", "хватит", "отмена", "выйти", "стоп перевод", "stop", "stop translating", "stop translation",

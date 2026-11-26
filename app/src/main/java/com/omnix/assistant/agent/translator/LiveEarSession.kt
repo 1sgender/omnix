@@ -26,7 +26,10 @@ class LiveEarSession(
     private val speak: (String) -> Unit,
     private val describeFailure: (TranslationResult) -> String,
     private val pauseMs: Long = DEFAULT_PAUSE_MS,
-    chunkWords: Int = LiveChunker.DEFAULT_CHUNK_WORDS
+    chunkWords: Int = LiveChunker.DEFAULT_CHUNK_WORDS,
+    /** Отсекает собственный перевод, попавший обратно в микрофон; null — без проверки. */
+    private val echoGuard: EchoGuard? = EchoGuard(),
+    private val now: () -> Long = System::currentTimeMillis
 ) {
     /** Что показывать на экране: живой оригинал и накопленный перевод. */
     data class View(
@@ -66,7 +69,16 @@ class LiveEarSession(
         worker.cancel()
     }
 
+    /** Сколько кусков отброшено как эхо собственного перевода. */
+    @Volatile
+    var echoDropped: Int = 0
+        private set
+
     private fun enqueue(piece: String) {
+        if (echoGuard?.isEcho(piece, now()) == true) {
+            echoDropped++
+            return
+        }
         queue.trySend(piece)
     }
 
@@ -84,6 +96,7 @@ class LiveEarSession(
             if (result is TranslationResult.Success) {
                 val text = result.translatedText.trim()
                 _view.update { it.copy(translation = tail(it.translation, text), error = null) }
+                echoGuard?.onSpoken(text, now())
                 speak(text)
             } else {
                 _view.update { it.copy(error = describeFailure(result)) }
