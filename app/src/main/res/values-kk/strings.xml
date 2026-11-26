@@ -28,6 +28,7 @@
     <string name="live_ear_dual_unavailable">Бұл телефон екі микрофонды бірден тыңдай алмайды. Телефон арқылы тыңдап тұрмын.</string>
     <string name="live_ear_earbud_unavailable">Құлаққап микрофоны қолжетімсіз. Телефон арқылы тыңдап тұрмын.</string>
     <string name="live_ear_own_audio_unsupported">Танығыш қолданбаның дыбысын қабылдамады. Телефон микрофонымен тікелей тыңдап тұрмын.</string>
+    <string name="live_ear_lang_guard_downloading">Тіл сүзгісі Wi-Fi арқылы жүктелуде; дайын болғанша естілгеннің бәрі аударылады.</string>
     <string name="slushayu_prodolzhenie_dialoga">Жалғасын тыңдап тұрмын…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Фонда шақыру сөзін тану және дауыстық жауаптар</string>
     <string name="ya_ne_rasslyshal_zapros">Сұрауды естімедім.</string>

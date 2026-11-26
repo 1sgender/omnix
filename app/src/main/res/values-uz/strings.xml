@@ -28,6 +28,7 @@
     <string name="live_ear_dual_unavailable">Bu telefon ikki mikrofonni bir vaqtda tinglay olmaydi. Telefon orqali tinglayapman.</string>
     <string name="live_ear_earbud_unavailable">Quloqchin mikrofoni mavjud emas. Telefon orqali tinglayapman.</string>
     <string name="live_ear_own_audio_unsupported">Taniydigan dastur ilova ovozini qabul qilmadi. To‘g‘ridan-to‘g‘ri telefon mikrofoni bilan tinglayapman.</string>
+    <string name="live_ear_lang_guard_downloading">Til filtri Wi-Fi orqali yuklanmoqda; tayyor bo‘lguncha eshitilgan hamma narsa tarjima qilinadi.</string>
     <string name="slushayu_prodolzhenie_dialoga">Davomini tinglayapman…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Fonda chaqiruv soʻzini tanish va ovozli javoblar</string>
     <string name="ya_ne_rasslyshal_zapros">Soʻrovni eshitmadim.</string>

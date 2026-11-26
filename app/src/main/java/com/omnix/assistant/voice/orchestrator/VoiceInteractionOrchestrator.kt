@@ -82,7 +82,9 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private val getSettingsUseCase: GetSettingsUseCase,
     private val toolExecutor: ToolExecutor,
     private val translatorEngine: LiveTranslatorEngine,
-    private val latencyMetrics: VoiceLatencyMetrics
+    private val latencyMetrics: VoiceLatencyMetrics,
+    /** Фильтр языка синхронного перевода (модель качается по Wi-Fi); null — в тестах. */
+    private val speechModels: com.omnix.assistant.voice.offline.OfflineSpeechModelStore? = null
 ) {
     companion object {
         private const val TAG = "VoiceOrchestrator"
@@ -202,6 +204,10 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private var liveCaptureJob: Job? = null
     private var liveWatchdogJob: Job? = null
     private var liveTtsJob: Job? = null
+
+    /** Фильтр языка (модель на телефоне); null — модели нет, куски не фильтруются. */
+    @Volatile
+    private var liveGuard: com.omnix.assistant.voice.live.LanguageGuard? = null
 
     /** Перевод озвучивается потоком звонка (наушник в режиме гарнитуры). */
     @Volatile
@@ -603,7 +609,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     )
                 }
             },
-            describeFailure = translatorEngine::describeFailure
+            describeFailure = translatorEngine::describeFailure,
+            isForeign = { liveGuard?.isForeign(source) == true }
         )
         liveSession = session
         liveSessionViewJob = scope.launch {
@@ -653,6 +660,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         val feeder = PcmPipeFeeder()
         liveCapture = capture
         liveFeeder = feeder
+        ensureLanguageGuardModel()
         liveTtsJob = scope.launch {
             // Во время перевода в ухо смеситель отсекает наушник строже (эхо перевода).
             textToSpeechManager.ttsState.collect { capture.mixer.ttsActive = it is TtsState.Speaking }
@@ -660,12 +668,20 @@ class VoiceInteractionOrchestrator @Inject constructor(
         liveCaptureJob = scope.launch {
             feeder.start()
             // Открытие микрофонов не прерывается на полпути: иначе запись осталась бы открытой.
-            val started = withContext(NonCancellable + Dispatchers.IO) { capture.start(requested) { feeder.push(it) } }
+            val guard = withContext(NonCancellable + Dispatchers.IO) { openLanguageGuard() }
+            val started = withContext(NonCancellable + Dispatchers.IO) {
+                capture.start(requested) { frame ->
+                    feeder.push(frame)
+                    guard?.push(frame)
+                }
+            }
             if (_currentMode.value != OrchestratorMode.LIVE_EAR_INTERPRETER || liveCapture !== capture) {
                 withContext(NonCancellable + Dispatchers.IO) { capture.stop() }
                 feeder.stop()
+                guard?.release()
                 return@launch
             }
+            liveGuard = guard
             if (started == null) {
                 // Свой захват не открылся: распознаватель слушает сам.
                 stopLiveCapture()
@@ -740,7 +756,30 @@ class VoiceInteractionOrchestrator @Inject constructor(
         )
     }
 
+    /** Модель фильтра языка: если её нет — качаем по Wi-Fi (один раз за запуск сообщаем). */
+    private fun ensureLanguageGuardModel() {
+        val store = speechModels ?: return
+        val model = com.omnix.assistant.voice.offline.OfflineSpeechModels.LANG_ID
+        if (store.isInstalled(model) || store.isBusy(model)) return
+        store.download(model, overMetered = false)
+        if (!languageGuardNoticeShown) {
+            languageGuardNoticeShown = true
+            announceLive(R.string.live_ear_lang_guard_downloading)
+        }
+    }
+
+    private var languageGuardNoticeShown = false
+
+    private fun openLanguageGuard(): com.omnix.assistant.voice.live.LanguageGuard? {
+        val store = speechModels ?: return null
+        val model = com.omnix.assistant.voice.offline.OfflineSpeechModels.LANG_ID
+        if (!store.isInstalled(model)) return null
+        return com.omnix.assistant.voice.live.LanguageGuard.open(store.dirOf(model))
+    }
+
     private fun stopLiveCapture() {
+        liveGuard?.release()
+        liveGuard = null
         liveWatchdogJob?.cancel()
         liveWatchdogJob = null
         liveCaptureJob?.cancel()

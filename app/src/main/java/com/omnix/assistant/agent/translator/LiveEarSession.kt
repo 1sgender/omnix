@@ -29,7 +29,13 @@ class LiveEarSession(
     chunkWords: Int = LiveChunker.DEFAULT_CHUNK_WORDS,
     /** Отсекает собственный перевод, попавший обратно в микрофон; null — без проверки. */
     private val echoGuard: EchoGuard? = EchoGuard(),
-    private val now: () -> Long = System::currentTimeMillis
+    private val now: () -> Long = System::currentTimeMillis,
+    /**
+     * Фильтр языка: true — сейчас звучит не язык собеседника. Такой кусок ждёт [recheckMs] и
+     * проверяется снова (собеседник мог только что заговорить), потом отбрасывается.
+     */
+    private val isForeign: () -> Boolean = { false },
+    private val recheckMs: Long = DEFAULT_RECHECK_MS
 ) {
     /** Что показывать на экране: живой оригинал и накопленный перевод. */
     data class View(
@@ -69,6 +75,11 @@ class LiveEarSession(
         worker.cancel()
     }
 
+    /** Сколько кусков отброшено фильтром языка. */
+    @Volatile
+    var foreignDropped: Int = 0
+        private set
+
     /** Сколько кусков отброшено как эхо собственного перевода. */
     @Volatile
     var echoDropped: Int = 0
@@ -89,6 +100,14 @@ class LiveEarSession(
                 while (true) {
                     val more = queue.tryReceive().getOrNull() ?: break
                     append(' ').append(more)
+                }
+            }
+            if (isForeign()) {
+                // Порядок сохраняется: следующие куски ждут в очереди.
+                delay(recheckMs)
+                if (isForeign()) {
+                    foreignDropped++
+                    continue
                 }
             }
             val result = translate(piece, previousContext())
@@ -122,6 +141,9 @@ class LiveEarSession(
 
         /** Сколько слов уже сказанного даём переводчику как контекст. */
         const val CONTEXT_WORDS = 30
+
+        /** Сколько ждать перед повторной проверкой языка подозрительного куска. */
+        const val DEFAULT_RECHECK_MS = 1_200L
 
         /** Хвост перевода на экране. */
         const val SCREEN_CHARS = 400

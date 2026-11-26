@@ -43,6 +43,7 @@
     <string name="live_ear_dual_unavailable">Bu telefon iki mikrofony birden diňläp bilenok. Telefon arkaly diňleýärin.</string>
     <string name="live_ear_earbud_unavailable">Gulakçynyň mikrofony elýeterli däl. Telefon arkaly diňleýärin.</string>
     <string name="live_ear_own_audio_unsupported">Tanaýjy programmanyň sesini kabul etmedi. Telefonyň mikrofony bilen gönüden-göni diňleýärin.</string>
+    <string name="live_ear_lang_guard_downloading">Dil süzgüji Wi-Fi arkaly ýüklenýär; taýyn bolýança eşidilenleriň hemmesi terjime edilýär.</string>
     <string name="slushayu_prodolzhenie_dialoga">Söhbetiň dowamyny diňleýärin…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Fonda oýandyryş sözüni tanamak we sesli jogaplar</string>
     <string name="ya_ne_rasslyshal_zapros">Haýyşy eşitmedim.</string>

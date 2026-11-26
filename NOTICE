@@ -81,6 +81,12 @@ Russian voice (optional download)
   The dataset authors do not endorse this application. The voice weights are
   not distributed with this repository; the app downloads them on request.
 
+Live translation language filter (optional download)
+-----------------------------------------------------
+- Whisper tiny — OpenAI — MIT License; ONNX export and int8 quantization by
+  k2-fsa/sherpa-onnx — Apache License 2.0. Used only to identify the spoken
+  language; downloaded by the app on request, not part of this repository.
+
 Server dependencies
 -------------------
 - PostgreSQL JDBC Driver — PostgreSQL Global Development Group — BSD-2-Clause

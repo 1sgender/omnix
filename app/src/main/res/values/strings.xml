@@ -43,6 +43,7 @@
     <string name="live_ear_dual_unavailable">This phone can\'t listen to two microphones at once. Listening through the phone.</string>
     <string name="live_ear_earbud_unavailable">The earbud microphone is unavailable. Listening through the phone.</string>
     <string name="live_ear_own_audio_unsupported">The recognizer did not accept the app\'s audio. Listening directly through the phone microphone.</string>
+    <string name="live_ear_lang_guard_downloading">The language filter is downloading over Wi-Fi; until then everything heard is translated.</string>
     <string name="slushayu_prodolzhenie_dialoga">Listening for more…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Background wake word recognition and spoken replies</string>
     <string name="ya_ne_rasslyshal_zapros">I didn’t hear the request.</string>
