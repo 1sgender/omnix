@@ -153,4 +153,30 @@ class ScenarioMatcherTest {
     fun `keyword index is populated`() {
         assertTrue(ScenarioMatcher.keywordCount() >= 40)
     }
+
+    @Test
+    fun `content requests with scenario words are not scenarios`() {
+        listOf(
+            "отправь мне несколько очень запоминающих презентаций проекта за всю историю любого проекта питчинга который захватывает",
+            "найди презентацию про стартапы",
+            "расскажи про встречу в Женеве",
+            "что такое экономика",
+            "покажи фото автомобиля",
+            "отмени будильник",
+            "запиши встречу на завтра"
+        ).forEach { phrase ->
+            assertNull("'$phrase'", ScenarioMatcher.match(phrase.lowercase()))
+        }
+    }
+
+    @Test
+    fun `scenario words inside other words do not match`() {
+        listOf("персонаж из фильма", "наушники сони", "демократия", "следующая песня")
+            .forEach { phrase -> assertNull("'$phrase'", ScenarioMatcher.match(phrase)) }
+    }
+
+    @Test
+    fun `diagnostics still works with a request verb`() {
+        assertEquals(ScenarioId.DIAGNOSTICS, ScenarioMatcher.match("покажи статус телефона"))
+    }
 }

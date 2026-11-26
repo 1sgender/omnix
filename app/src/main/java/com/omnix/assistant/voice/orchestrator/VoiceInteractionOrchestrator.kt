@@ -97,7 +97,14 @@ class VoiceInteractionOrchestrator @Inject constructor(
         private const val LIVE_SPEECH_RATE = 1.15f
         private const val LIVE_WATCHDOG_TICK_MS = 1_000L
         private const val LIVE_WATCHDOG_VOICED_MS = 5_000L
-        private const val FOLLOW_UP_WINDOW_MS = 8000L
+        /**
+         * Сколько после ответа OMNIX ждёт, что человек заговорит без «Омни» (владелец
+         * 2026-11-26: «выполняет и сразу выключается», но 10 с — много). Пока человек говорит,
+         * отсчёт продлевается: фраза слушается до конца.
+         */
+        private const val FOLLOW_UP_WINDOW_MS = 5_000L
+        private const val FOLLOW_UP_RESTART_MS = 200L
+        private const val LISTEN_TICK_MS = 100L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
         /** Паузы перед повторным запуском движка фразы после его ошибки. */
@@ -853,6 +860,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
                             val cleaned = WakeWordExtractor.extractQuery(AsrPostProcessor.process(event.partialText), wakeKeywords)
                                 ?: event.partialText
+                            // Человек говорит в окне продолжения — не обрываем его на середине.
+                            if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) armFollowUpWindow()
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
                             _lastQuery.value = cleaned
 
@@ -867,7 +876,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                     _assistantState.value = VoiceAssistantState.Listening
                                 } else if (listening) {
                                     speechRecognizerManager.stopListening()
-                                    processUserQuery(cleaned)
+                                    if (current == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                                        !isAddressedFollowUp(event.partialText, cleaned)
+                                    ) {
+                                        startStandbyMode()
+                                    } else {
+                                        processUserQuery(cleaned)
+                                    }
                                 }
                             }
                         }
@@ -919,7 +934,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         // который возвращает null при пустом результате — не дёргаем
                         // processUserQuery с сырым wake-word.
                         val query = WakeWordExtractor.extractQuery(text, wakeKeywords)
-                        if (query != null) {
+                        if (query != null &&
+                            _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                            !isAddressedFollowUp(text, query)
+                        ) {
+                            // Фраза в окне продолжения сказана не OMNIX — молча ждём «Омни».
+                            startStandbyMode()
+                        } else if (query != null) {
                             processUserQuery(query)
                         } else {
                             // Прозвучало только имя ассистента — переходим в LISTENING
@@ -934,6 +955,31 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             delay(500)
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                                 restartLiveRecognizer()
+                            }
+                        } else if ((_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION ||
+                                _currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) &&
+                            FollowUpWindow.isQuietError(event.errorCode)
+                        ) {
+                            // Ждём «да/нет»: распознаватель закрылся на паузе или шуме (часто —
+                            // на хвосте своего же вопроса). Без перезапуска «да» уже никто не
+                            // слышал, и через 10 с звучало «время ожидания истекло».
+                            val waitingMode = _currentMode.value
+                            scope.launch {
+                                delay(FOLLOW_UP_RESTART_MS)
+                                if (_currentMode.value == waitingMode) speechRecognizerManager.startListening()
+                            }
+                        } else if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                            FollowUpWindow.isQuietError(event.errorCode)
+                        ) {
+                            // Окно продолжения: распознаватель Android сам закрывает сессию после
+                            // нескольких секунд тишины или шума. Это не конец разговора — слушаем
+                            // снова, пока не истечёт окно (его закрывает таймер).
+                            _assistantState.value = VoiceAssistantState.Listening
+                            scope.launch {
+                                delay(FOLLOW_UP_RESTART_MS)
+                                if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
+                                    speechRecognizerManager.startListening()
+                                }
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
@@ -1097,7 +1143,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                                 confirmationTimeoutJob?.cancel()
                                 confirmationTimeoutJob = scope.launch {
-                                    delay(CONFIRMATION_TIMEOUT_MS)
+                                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                                     // CR-07: таймер подтверждения тоже уважает эпоху.
                                     if (sessionEpoch.get() != captureEpoch) return@launch
                                     if (_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION) {
@@ -1152,7 +1198,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         // Таймаут — как у tool-confirmation: N секунд и авто-отказ.
                         confirmationTimeoutJob?.cancel()
                         confirmationTimeoutJob = scope.launch {
-                            delay(CONFIRMATION_TIMEOUT_MS)
+                            awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                             if (sessionEpoch.get() != captureEpoch) return@launch
                             if (_currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) {
                                 val timeoutMsg = context.getString(R.string.cloud_consent_timeout)
@@ -1301,7 +1347,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                 confirmationTimeoutJob?.cancel()
                 confirmationTimeoutJob = scope.launch {
-                    delay(CONFIRMATION_TIMEOUT_MS)
+                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                     if (_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION) {
                         val timeoutMsg = context.getString(R.string.vremya_ozhidaniya_isteklo)
                         _lastAnswer.value = timeoutMsg
@@ -1449,7 +1495,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                 confirmationTimeoutJob?.cancel()
                 confirmationTimeoutJob = scope.launch {
-                    delay(CONFIRMATION_TIMEOUT_MS)
+                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                     if (sessionEpoch.get() != consentCaptureEpoch) return@launch
                     if (_currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) {
                         val timeoutMsg = context.getString(R.string.cloud_consent_timeout)
@@ -1532,10 +1578,40 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun openContinuousConversationWindow() {
         if (!isServiceActive) return
         _currentMode.value = OrchestratorMode.CONTINUOUS_CONVERSATION
-        _assistantState.value = VoiceAssistantState.Idle
+        // На экране видно, что OMNIX ещё слушает и можно говорить без «Омни».
+        _assistantState.value = VoiceAssistantState.Listening
         wakeWordEngine.stop()
         speechRecognizerManager.startListening()
+        armFollowUpWindow()
+    }
 
+    /**
+     * Фраза в окне продолжения (без обязательного «Омни») адресована OMNIX: есть «Омни» или
+     * она похожа на вопрос, команду или продолжение разговора ([FollowUpAddressee]).
+     */
+    private fun isAddressedFollowUp(raw: String, query: String): Boolean {
+        val addressed = WakeWordExtractor.containsWakeWord(raw, wakeKeywords) ||
+            FollowUpAddressee.isForAssistant(query)
+        if (!addressed) Log.d(TAG, "follow-up ignored: not addressed to the assistant (chars=${query.length})")
+        return addressed
+    }
+
+    /**
+     * Ждёт [ms] времени, когда OMNIX молчит и слушает ответ. Пока звучит его собственный
+     * вопрос («Позвонить маме? Подтвердите»), время не идёт: раньше 10 с считались с начала
+     * вопроса, и на «да» оставалось несколько секунд (отчёт владельца 2026-11-26:
+     * «Время ожидания истекло. Операция отменена»).
+     */
+    private suspend fun awaitListeningTime(ms: Long) {
+        var listened = 0L
+        while (listened < ms) {
+            delay(LISTEN_TICK_MS)
+            if (textToSpeechManager.ttsState.value !is TtsState.Speaking) listened += LISTEN_TICK_MS
+        }
+    }
+
+    /** (Пере)запускает отсчёт окна продолжения; по его истечении — ожидание «Омни». */
+    private fun armFollowUpWindow() {
         followUpWindowJob?.cancel()
         followUpWindowJob = scope.launch {
             delay(FOLLOW_UP_WINDOW_MS)
