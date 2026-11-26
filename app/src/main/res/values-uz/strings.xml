@@ -23,7 +23,11 @@
     <string name="oshibka_svyazi_s_ai">Sunʼiy intellektga ulanib boʻlmadi</string>
     <string name="podklyuchite_naushniki">Quloqchinni ulang</string>
     <string name="provodnye_naushniki">Simli quloqchin</string>
-    <string name="rezhim_perevodchika_aktivirovan">Jonli tarjimon rejimi yoqildi. Suhbatdoshni tinglayapman.</string>
+    <string name="live_ear_started">Suhbatdoshni (%1$s) tinglayapman va quloqchinga tarjima qilyapman. Chiqish uchun «stop» deng.</string>
+    <string name="live_ear_started_no_headset">Quloqchin ulanmagan: %1$s nutq tarjimasi faqat ekranda.</string>
+    <string name="live_ear_dual_unavailable">Bu telefon ikki mikrofonni bir vaqtda tinglay olmaydi. Telefon orqali tinglayapman.</string>
+    <string name="live_ear_earbud_unavailable">Quloqchin mikrofoni mavjud emas. Telefon orqali tinglayapman.</string>
+    <string name="live_ear_own_audio_unsupported">Taniydigan dastur ilova ovozini qabul qilmadi. To‘g‘ridan-to‘g‘ri telefon mikrofoni bilan tinglayapman.</string>
     <string name="slushayu_prodolzhenie_dialoga">Davomini tinglayapman…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Fonda chaqiruv soʻzini tanish va ovozli javoblar</string>
     <string name="ya_ne_rasslyshal_zapros">Soʻrovni eshitmadim.</string>

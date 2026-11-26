@@ -23,7 +23,11 @@
     <string name="oshibka_svyazi_s_ai">Жасанды интеллектке қосылу мүмкін болмады</string>
     <string name="podklyuchite_naushniki">Құлаққапты қосыңыз</string>
     <string name="provodnye_naushniki">Сымды құлаққап</string>
-    <string name="rezhim_perevodchika_aktivirovan">Тірі аудармашы режимі қосулы. Әңгімелесушіні тыңдап тұрмын.</string>
+    <string name="live_ear_started">Әңгімелесушіні (%1$s) тыңдап, құлаққапқа аударып тұрмын. Шығу үшін «stop» деңіз.</string>
+    <string name="live_ear_started_no_headset">Құлаққап қосылмаған: %1$s сөзінің аудармасы тек экранда.</string>
+    <string name="live_ear_dual_unavailable">Бұл телефон екі микрофонды бірден тыңдай алмайды. Телефон арқылы тыңдап тұрмын.</string>
+    <string name="live_ear_earbud_unavailable">Құлаққап микрофоны қолжетімсіз. Телефон арқылы тыңдап тұрмын.</string>
+    <string name="live_ear_own_audio_unsupported">Танығыш қолданбаның дыбысын қабылдамады. Телефон микрофонымен тікелей тыңдап тұрмын.</string>
     <string name="slushayu_prodolzhenie_dialoga">Жалғасын тыңдап тұрмын…</string>
     <string name="fonovoe_raspoznavanie_klyuchevogo_slova">Фонда шақыру сөзін тану және дауыстық жауаптар</string>
     <string name="ya_ne_rasslyshal_zapros">Сұрауды естімедім.</string>

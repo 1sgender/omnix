@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,6 +73,9 @@ fun DevicesScreen(
     translatorToHeadphones: Boolean = true,
     capabilities: List<CapabilityGroupUi> = emptyList(),
     onTranslatorToHeadphonesChange: (Boolean) -> Unit = {},
+    /** Микрофон синхронного перевода: телефон, наушник или оба. */
+    liveMicMode: com.omnix.assistant.voice.live.LiveMicMode = com.omnix.assistant.voice.live.LiveMicMode.DEFAULT,
+    onLiveMicModeChange: (com.omnix.assistant.voice.live.LiveMicMode) -> Unit = {},
     onFind: () -> Unit = {},
     onOpenSystemBluetooth: () -> Unit = {},
     onRequestPermissions: (List<String>) -> Unit = {},
@@ -107,6 +111,12 @@ fun DevicesScreen(
         SwitchGroup(
             translatorToHeadphones = translatorToHeadphones,
             onTranslatorToHeadphonesChange = onTranslatorToHeadphonesChange,
+            modifier = Modifier.padding(top = 12.dp)
+        )
+
+        LiveMicGroup(
+            mode = liveMicMode,
+            onChange = onLiveMicModeChange,
             modifier = Modifier.padding(top = 12.dp)
         )
 
@@ -284,6 +294,62 @@ private fun SwitchGroup(
             checked = translatorToHeadphones,
             onChange = onTranslatorToHeadphonesChange
         )
+    }
+}
+
+/** Микрофон синхронного перевода: три варианта, выбранный залит фирменным цветом. */
+@Composable
+private fun LiveMicGroup(
+    mode: com.omnix.assistant.voice.live.LiveMicMode,
+    onChange: (com.omnix.assistant.voice.live.LiveMicMode) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = OmnixTheme.colors
+    val options = listOf(
+        com.omnix.assistant.voice.live.LiveMicMode.PHONE to R.string.omnix_devices_live_mic_phone,
+        com.omnix.assistant.voice.live.LiveMicMode.EARBUD to R.string.omnix_devices_live_mic_earbud,
+        com.omnix.assistant.voice.live.LiveMicMode.BOTH to R.string.omnix_devices_live_mic_both
+    )
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(BorderStroke(1.dp, colors.border), RoundedCornerShape(20.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.omnix_devices_live_mic_title),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 15.sp),
+            color = colors.textPrimary
+        )
+        Text(
+            text = stringResource(R.string.omnix_devices_live_mic_sub),
+            style = TextStyle(fontFamily = OmnixSans, fontSize = 12.sp),
+            color = colors.textSecondary
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEach { (option, label) ->
+                val selected = option == mode
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (selected) colors.accentBrand else colors.textPrimary.copy(alpha = 0.06f))
+                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onChange(option) }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(label),
+                        style = TextStyle(fontFamily = OmnixSans, fontWeight = FontWeight.Medium, fontSize = 14.sp),
+                        color = if (selected) colors.background else colors.textPrimary,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
     }
 }
 

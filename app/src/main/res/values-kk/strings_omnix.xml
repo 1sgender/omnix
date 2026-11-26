@@ -104,6 +104,11 @@
     <string name="omnix_devices_battery">БАТАРЕЯ</string>
     <string name="omnix_devices_translate_title">Аударма құлаққапқа</string>
     <string name="omnix_devices_translate_sub">Әңгімелесуші сіздің тіліңізде естіледі</string>
+    <string name="omnix_devices_live_mic_title">Тірі аудармадағы микрофон</string>
+    <string name="omnix_devices_live_mic_sub">«Екеуі» ең жақсысы: сіздің дауысыңыз бен құлақтағы аударма алынып тасталады.</string>
+    <string name="omnix_devices_live_mic_phone">Телефон</string>
+    <string name="omnix_devices_live_mic_earbud">Құлаққап</string>
+    <string name="omnix_devices_live_mic_both">Екеуі</string>
     <string name="omnix_devices_find">Құлаққапты қосу</string>
     <string name="omnix_devices_disconnect">Bluetooth параметрлері</string>
     <string name="omnix_chat_title">Omnix</string>
@@ -557,7 +562,7 @@
     <string name="omnix_offline_title">Офлайн режим</string>
     <string name="omnix_offline_hint">Интернетсіз істейтін құрылғыдағы ЖИ, дауыс және сөйлеуді тану. Бір рет жүктеп алыңыз.</string>
     <string name="omnix_offline_tk_voice">OMNIX түрікмен дауысы</string>
-    <string name="omnix_offline_ru_voice">OMNIX орыс дауысы (қалауыңызша)</string>
+    <string name="omnix_offline_ru_voice">OMNIX орыс дауысы</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Түрікмен сөзін тану</string>
     <string name="omnix_offline_ru_asr">Орыс сөзін тану</string>

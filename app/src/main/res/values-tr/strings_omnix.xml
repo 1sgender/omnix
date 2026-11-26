@@ -104,6 +104,11 @@
     <string name="omnix_devices_battery">PİL</string>
     <string name="omnix_devices_translate_title">Çeviri kulaklığa</string>
     <string name="omnix_devices_translate_sub">Karşınızdaki kişi sizin dilinizde duyulur</string>
+    <string name="omnix_devices_live_mic_title">Canlı çeviride mikrofon</string>
+    <string name="omnix_devices_live_mic_sub">«İkisi» en iyisi: sizin sesiniz ve kulağınızdaki çeviri ayıklanır.</string>
+    <string name="omnix_devices_live_mic_phone">Telefon</string>
+    <string name="omnix_devices_live_mic_earbud">Kulaklık</string>
+    <string name="omnix_devices_live_mic_both">İkisi</string>
     <string name="omnix_devices_find">Kulaklığı bağla</string>
     <string name="omnix_devices_disconnect">Bluetooth ayarları</string>
     <string name="omnix_chat_title">Omnix</string>
@@ -557,7 +562,7 @@
     <string name="omnix_offline_title">Çevrimdışı mod</string>
     <string name="omnix_offline_hint">İnternetsiz çalışan cihaz içi yapay zekâ, ses ve konuşma tanıma. Bir kez indirin.</string>
     <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
-    <string name="omnix_offline_ru_voice">OMNIX Rusça sesi (isteğe bağlı)</string>
+    <string name="omnix_offline_ru_voice">OMNIX Rusça sesi</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Türkmence konuşma tanıma</string>
     <string name="omnix_offline_ru_asr">Rusça konuşma tanıma</string>

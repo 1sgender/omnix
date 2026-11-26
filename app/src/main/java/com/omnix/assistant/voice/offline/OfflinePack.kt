@@ -4,6 +4,7 @@ import com.omnix.assistant.agent.localai.LocalModelManager
 import com.omnix.assistant.agent.localai.LocalModelSpec
 import com.omnix.assistant.agent.localai.LocalModelState
 import com.omnix.assistant.agent.localai.downloader.ModelDownloadPolicy
+import com.omnix.assistant.core.locale.AppLanguage
 import com.omnix.assistant.data.preferences.SettingsDataStore
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,7 +26,8 @@ class OfflinePack @Inject constructor(
 ) {
     /** Голос и распознавание, которые входят в пакет (только опубликованные). */
     val speechParts: List<OfflineSpeechModel>
-        get() = listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.TK_ASR).filter { it.isPublished }
+        get() = listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.RU_VOICE, OfflineSpeechModels.TK_ASR)
+            .filter { it.isPublished }
 
     /** Полный размер пакета, МБ — для кнопки и вопроса при запуске. */
     val totalSizeMb: Int
@@ -51,5 +53,19 @@ class OfflinePack @Inject constructor(
             localModel.ensureModel()
         }
         speechParts.filterNot { speech.isInstalled(it) }.forEach { speech.download(it, overMetered) }
+    }
+
+    /**
+     * Свой голос OMNIX — основной, а не «по желанию» (решение владельца 2026-11-26): при
+     * русском языке приложения голос качается сам, только по Wi-Fi, без вопроса. Пока он не
+     * на телефоне, говорит системный голос. Повторный вызов во время загрузки ничего не делает.
+     */
+    fun ensurePrimaryVoice() {
+        val voice = when (AppLanguage.current()) {
+            AppLanguage.RU -> OfflineSpeechModels.RU_VOICE
+            else -> return
+        }
+        if (!voice.isPublished || speech.isInstalled(voice) || speech.isBusy(voice)) return
+        speech.download(voice, overMetered = false)
     }
 }

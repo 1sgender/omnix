@@ -104,6 +104,11 @@
     <string name="omnix_devices_battery">BATAREYA</string>
     <string name="omnix_devices_translate_title">Tarjima quloqchinga</string>
     <string name="omnix_devices_translate_sub">Suhbatdosh sizning tilingizda eshitiladi</string>
+    <string name="omnix_devices_live_mic_title">Jonli tarjimada mikrofon</string>
+    <string name="omnix_devices_live_mic_sub">«Ikkalasi» eng yaxshisi: sizning ovozingiz va quloqdagi tarjima chiqarib tashlanadi.</string>
+    <string name="omnix_devices_live_mic_phone">Telefon</string>
+    <string name="omnix_devices_live_mic_earbud">Quloqchin</string>
+    <string name="omnix_devices_live_mic_both">Ikkalasi</string>
     <string name="omnix_devices_find">Quloqchinni ulash</string>
     <string name="omnix_devices_disconnect">Bluetooth sozlamalari</string>
     <string name="omnix_chat_title">Omnix</string>
@@ -557,7 +562,7 @@
     <string name="omnix_offline_title">Oflayn rejim</string>
     <string name="omnix_offline_hint">Internetsiz ishlaydigan qurilmadagi sunʻiy intellekt, ovoz va nutqni aniqlash. Bir marta yuklab oling.</string>
     <string name="omnix_offline_tk_voice">OMNIX turkman ovozi</string>
-    <string name="omnix_offline_ru_voice">OMNIX rus ovozi (ixtiyoriy)</string>
+    <string name="omnix_offline_ru_voice">OMNIX rus ovozi</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Turkman nutqini aniqlash</string>
     <string name="omnix_offline_ru_asr">Rus nutqini aniqlash</string>

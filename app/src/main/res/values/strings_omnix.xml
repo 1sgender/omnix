@@ -151,6 +151,11 @@
     <string name="omnix_devices_battery">BATTERY</string>
     <string name="omnix_devices_translate_title">Translation to headphones</string>
     <string name="omnix_devices_translate_sub">The other person sounds in your language</string>
+    <string name="omnix_devices_live_mic_title">Microphone in live translation</string>
+    <string name="omnix_devices_live_mic_sub">Both is best: your voice and the translation in your ear are filtered out.</string>
+    <string name="omnix_devices_live_mic_phone">Phone</string>
+    <string name="omnix_devices_live_mic_earbud">Earbud</string>
+    <string name="omnix_devices_live_mic_both">Both</string>
     <string name="omnix_devices_find">Connect headphones</string>
     <string name="omnix_devices_disconnect">Bluetooth settings</string>
 
@@ -635,7 +640,7 @@
     <string name="omnix_offline_title">Offline mode</string>
     <string name="omnix_offline_hint">On-device AI, voice and speech recognition that work without internet. Download once.</string>
     <string name="omnix_offline_tk_voice">Turkmen voice OMNIX</string>
-    <string name="omnix_offline_ru_voice">Russian voice OMNIX (optional)</string>
+    <string name="omnix_offline_ru_voice">Russian voice OMNIX</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Turkmen speech recognition</string>
     <string name="omnix_offline_ru_asr">Russian speech recognition</string>

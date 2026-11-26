@@ -49,6 +49,18 @@ interface TranslationProvider {
     suspend fun isAvailable(): Boolean
 
     suspend fun translate(text: String, sourceLang: String, targetLang: String): TranslationResult
+
+    /**
+     * Кусок речи, которая ещё продолжается (синхронный перевод в ухо). [previous] — уже
+     * переведённое начало фразы, чтобы перевод продолжался, а не начинался заново.
+     * По умолчанию кусок переводится сам по себе.
+     */
+    suspend fun translateFragment(
+        fragment: String,
+        previous: String,
+        sourceLang: String,
+        targetLang: String
+    ): TranslationResult = translate(fragment, sourceLang, targetLang)
 }
 
 data class SupportedLanguage(
