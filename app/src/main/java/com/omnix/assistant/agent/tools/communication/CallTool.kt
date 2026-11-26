@@ -68,7 +68,7 @@ class CallTool @Inject constructor(
     }
 
     override suspend fun execute(arguments: JsonObject): ToolExecutionResult {
-        val recipient = arguments["recipient"]?.jsonPrimitive?.contentOrNull?.trim().orEmpty()
+        val recipient = MessageArgs.recipient(arguments)
         if (recipient.isEmpty()) {
             return ToolExecutionResult.failure("Не указан номер или имя контакта", "MISSING_RECIPIENT")
         }
