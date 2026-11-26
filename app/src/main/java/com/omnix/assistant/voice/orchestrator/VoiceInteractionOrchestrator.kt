@@ -6,6 +6,7 @@ import android.media.ToneGenerator
 import com.omnix.assistant.voice.audio.Haptics
 import com.omnix.assistant.voice.audio.SoftChime
 import android.media.AudioManager
+import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import com.omnix.assistant.core.request.RequestIds
@@ -25,6 +26,10 @@ import com.omnix.assistant.agent.translator.LiveInterpretCommand
 import com.omnix.assistant.agent.translator.LiveTranslatorEngine
 import com.omnix.assistant.agent.translator.TranslationLanguages
 import com.omnix.assistant.core.locale.AppLanguage
+import com.omnix.assistant.voice.live.LiveAudioCapture
+import com.omnix.assistant.voice.live.LiveMicMode
+import com.omnix.assistant.voice.live.LiveMicSettings
+import com.omnix.assistant.voice.live.PcmPipeFeeder
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.crash.CrashCapture
 import com.omnix.assistant.core.result.Resource
@@ -90,6 +95,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
         /** Перевод в ухо чуть быстрее обычной речи, чтобы не отставать от собеседника. */
         private const val LIVE_SPEECH_RATE = 1.15f
+        private const val LIVE_WATCHDOG_TICK_MS = 1_000L
+        private const val LIVE_WATCHDOG_VOICED_MS = 5_000L
         private const val FOLLOW_UP_WINDOW_MS = 8000L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
@@ -187,6 +194,26 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private var liveSourceLang: String = LiveInterpretCommand.DEFAULT_SOURCE
     private var liveTargetLang: String = "ru"
     private var liveListenPending = false
+
+    /** Микрофон, названный в команде («переводчик через наушник»); null — из настройки. */
+    private var liveMicOverride: LiveMicMode? = null
+    private var liveCapture: LiveAudioCapture? = null
+    private var liveFeeder: PcmPipeFeeder? = null
+    private var liveCaptureJob: Job? = null
+    private var liveWatchdogJob: Job? = null
+    private var liveTtsJob: Job? = null
+
+    /** Фильтр языка (встроенная модель); null — не загрузился, куски не фильтруются. */
+    @Volatile
+    private var liveGuard: com.omnix.assistant.voice.live.LanguageGuard? = null
+
+    /** Перевод озвучивается потоком звонка (наушник в режиме гарнитуры). */
+    @Volatile
+    private var liveSpeakViaCall = false
+
+    /** Распознаватель уже прислал хоть что-то в этой сессии перевода. */
+    @Volatile
+    private var liveHeardSomething = false
 
     private val _serviceActive = MutableStateFlow(false)
 
@@ -550,7 +577,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
      * владельца слышит его самого, а не собеседника. Без наушника перевод только на экране:
      * голос из динамика микрофон услышал бы и стал «переводить» обратно.
      */
-    fun startLiveEarInterpreter(sourceLang: String = liveSourceLang) {
+    fun startLiveEarInterpreter(sourceLang: String = liveSourceLang, mic: LiveMicMode? = liveMicOverride) {
         silenceJob?.cancel()
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
@@ -561,6 +588,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         speechRecognizerManager.stopListening()
 
         liveSourceLang = sourceLang
+        liveMicOverride = mic
         val appLang = AppLanguage.current().code
         liveTargetLang = if (appLang != sourceLang) appLang else if (sourceLang == "ru") "en" else "ru"
         val source = sourceLang
@@ -570,10 +598,17 @@ class VoiceInteractionOrchestrator @Inject constructor(
             translate = { fragment, previous -> translatorEngine.translateFragment(fragment, previous, source, target) },
             speak = { text ->
                 if (bluetoothAudioRouter.isHeadsetConnected()) {
-                    textToSpeechManager.speak(text, LIVE_SPEECH_RATE, speechPitch, TextToSpeech.QUEUE_ADD)
+                    textToSpeechManager.speak(
+                        text,
+                        LIVE_SPEECH_RATE,
+                        speechPitch,
+                        TextToSpeech.QUEUE_ADD,
+                        stream = if (liveSpeakViaCall) AudioManager.STREAM_VOICE_CALL else null
+                    )
                 }
             },
-            describeFailure = translatorEngine::describeFailure
+            describeFailure = translatorEngine::describeFailure,
+            isForeign = { liveGuard?.isForeign(source) == true }
         )
         liveSession = session
         liveSessionViewJob = scope.launch {
@@ -598,10 +633,143 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun liveRecognitionTag(): String =
         TranslationLanguages.SUPPORTED.firstOrNull { it.code == liveSourceLang }?.localeTag ?: "en-US"
 
+    /**
+     * Запуск распознавания речи собеседника. На Android 13+ звук берётся своим захватом
+     * ([LiveAudioCapture]: телефон, наушник или оба) и подаётся распознавателю каналом; на
+     * старых версиях распознаватель слушает сам (микрофон наушника — через режим гарнитуры).
+     */
     private fun startLiveListening() {
         liveListenPending = false
         wakeWordEngine.stop()
-        speechRecognizerManager.startListening(liveRecognitionTag(), continuous = true)
+        stopLiveCapture()
+        liveHeardSomething = false
+        val requested = liveMicOverride ?: LiveMicSettings.get(context)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            val earbud = requested == LiveMicMode.EARBUD && bluetoothAudioRouter.isHeadsetConnected()
+            if (earbud) bluetoothAudioRouter.routeAudioToEarbud() else bluetoothAudioRouter.routeAudioToSpeaker()
+            liveSpeakViaCall = earbud
+            if (requested == LiveMicMode.BOTH && bluetoothAudioRouter.isHeadsetConnected()) {
+                announceLive(R.string.live_ear_dual_unavailable)
+            }
+            speechRecognizerManager.startListening(liveRecognitionTag(), continuous = true)
+            return
+        }
+        val capture = LiveAudioCapture(context, bluetoothAudioRouter)
+        val feeder = PcmPipeFeeder()
+        liveCapture = capture
+        liveFeeder = feeder
+        liveTtsJob = scope.launch {
+            // Во время перевода в ухо смеситель отсекает наушник строже (эхо перевода).
+            textToSpeechManager.ttsState.collect { capture.mixer.ttsActive = it is TtsState.Speaking }
+        }
+        liveCaptureJob = scope.launch {
+            feeder.start()
+            // Открытие микрофонов не прерывается на полпути: иначе запись осталась бы открытой.
+            val guard = withContext(NonCancellable + Dispatchers.IO) { openLanguageGuard() }
+            val started = withContext(NonCancellable + Dispatchers.IO) {
+                capture.start(requested) { frame ->
+                    feeder.push(frame)
+                    guard?.push(frame)
+                }
+            }
+            if (_currentMode.value != OrchestratorMode.LIVE_EAR_INTERPRETER || liveCapture !== capture) {
+                withContext(NonCancellable + Dispatchers.IO) { capture.stop() }
+                feeder.stop()
+                guard?.release()
+                return@launch
+            }
+            liveGuard = guard
+            if (started == null) {
+                // Свой захват не открылся: распознаватель слушает сам.
+                stopLiveCapture()
+                speechRecognizerManager.startListening(liveRecognitionTag(), continuous = true)
+                return@launch
+            }
+            liveSpeakViaCall = capture.speaksThroughHeadset
+            if (started.fellBack && requested != LiveMicMode.PHONE && bluetoothAudioRouter.isHeadsetConnected()) {
+                announceLive(
+                    if (requested == LiveMicMode.BOTH) R.string.live_ear_dual_unavailable else R.string.live_ear_earbud_unavailable
+                )
+            }
+            speechRecognizerManager.startListening(
+                liveRecognitionTag(),
+                continuous = true,
+                audioSource = { feeder.newSession() }
+            )
+            startLiveWatchdog(capture)
+        }
+    }
+
+    /**
+     * Если распознаватель не принимает наш звук (не все движки поддерживают
+     * EXTRA_AUDIO_SOURCE), он молчит, хотя человек говорит. Через несколько секунд речи без
+     * единого слова переключаемся на прямой микрофон телефона и честно говорим об этом.
+     */
+    private fun startLiveWatchdog(capture: LiveAudioCapture) {
+        liveWatchdogJob?.cancel()
+        liveWatchdogJob = scope.launch {
+            while (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER && liveCapture === capture) {
+                delay(LIVE_WATCHDOG_TICK_MS)
+                if (liveHeardSomething) return@launch
+                if (capture.voicedMs >= LIVE_WATCHDOG_VOICED_MS) {
+                    Log.w(TAG, "recognizer ignores own audio source — falling back to direct microphone")
+                    stopLiveCapture()
+                    liveSpeakViaCall = false
+                    announceLive(R.string.live_ear_own_audio_unsupported)
+                    speechRecognizerManager.startListening(liveRecognitionTag(), continuous = true)
+                    return@launch
+                }
+            }
+        }
+    }
+
+    /**
+     * Ошибка распознавателя: перезапускаем только его, а захват звука (и режим гарнитуры)
+     * не трогаем — звук за время перезапуска ждёт в очереди канала.
+     */
+    private fun restartLiveRecognizer() {
+        val feeder = liveFeeder
+        if (liveCapture != null && feeder != null) {
+            speechRecognizerManager.startListening(
+                liveRecognitionTag(),
+                continuous = true,
+                audioSource = { feeder.newSession() }
+            )
+        } else {
+            speechRecognizerManager.startListening(liveRecognitionTag(), continuous = true)
+        }
+    }
+
+    /** Короткое сообщение в режиме перевода: на экран и голосом (тем же путём, что и перевод). */
+    private fun announceLive(resId: Int) {
+        val msg = context.getString(resId)
+        _lastAnswer.value = msg
+        textToSpeechManager.speak(
+            msg,
+            speechRate,
+            speechPitch,
+            TextToSpeech.QUEUE_ADD,
+            stream = if (liveSpeakViaCall) AudioManager.STREAM_VOICE_CALL else null
+        )
+    }
+
+    private fun openLanguageGuard(): com.omnix.assistant.voice.live.LanguageGuard? =
+        com.omnix.assistant.voice.live.LanguageGuard.open(context.assets)
+
+    private fun stopLiveCapture() {
+        liveGuard?.release()
+        liveGuard = null
+        liveWatchdogJob?.cancel()
+        liveWatchdogJob = null
+        liveCaptureJob?.cancel()
+        liveCaptureJob = null
+        liveTtsJob?.cancel()
+        liveTtsJob = null
+        liveCapture?.stop()
+        liveCapture = null
+        liveFeeder?.stop()
+        liveFeeder = null
+        liveSpeakViaCall = false
     }
 
     private fun stopLiveSession() {
@@ -610,6 +778,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         liveSessionViewJob?.cancel()
         liveSessionViewJob = null
         liveListenPending = false
+        stopLiveCapture()
     }
 
     /** OBSERVABILITY: request id текущей голосовой реплики. */
@@ -675,6 +844,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                 when (event) {
                     is SpeechRecognitionEvent.PartialResult -> {
                         if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
+                            liveHeardSomething = true
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
                             liveSession?.onPartial(event.partialText)
                             return@collectLatest
@@ -728,6 +898,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 handleCancel()
                                 return@collectLatest
                             }
+                            liveHeardSomething = true
                             _privacyClassification.value =
                                 PrivacyClassifier.classifySafely(PrivacyContent(text))
                             liveSession?.onFinal(text)
@@ -762,7 +933,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             // В режиме переводчика продолжаем слушать дальше
                             delay(500)
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
-                                startLiveListening()
+                                restartLiveRecognizer()
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
@@ -820,7 +991,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
         // Команда активации режима синхронного переводчика
         LiveInterpretCommand.parse(clean)?.let { source ->
-            startLiveEarInterpreter(source)
+            startLiveEarInterpreter(source, LiveInterpretCommand.parseMic(clean))
             return
         }
 

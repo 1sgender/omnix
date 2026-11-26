@@ -104,6 +104,11 @@
     <string name="omnix_devices_battery">BATAREYA</string>
     <string name="omnix_devices_translate_title">Tarjima quloqchinga</string>
     <string name="omnix_devices_translate_sub">Suhbatdosh sizning tilingizda eshitiladi</string>
+    <string name="omnix_devices_live_mic_title">Jonli tarjimada mikrofon</string>
+    <string name="omnix_devices_live_mic_sub">«Ikkalasi» eng yaxshisi: sizning ovozingiz va quloqdagi tarjima chiqarib tashlanadi.</string>
+    <string name="omnix_devices_live_mic_phone">Telefon</string>
+    <string name="omnix_devices_live_mic_earbud">Quloqchin</string>
+    <string name="omnix_devices_live_mic_both">Ikkalasi</string>
     <string name="omnix_devices_find">Quloqchinni ulash</string>
     <string name="omnix_devices_disconnect">Bluetooth sozlamalari</string>
     <string name="omnix_chat_title">Omnix</string>

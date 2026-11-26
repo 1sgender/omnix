@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
@@ -231,9 +234,17 @@ fun OmnixNavGraph(
                 val headphoneSettings: SettingsViewModel = hiltViewModel()
                 val headphoneState by headphoneSettings.uiState.collectAsStateWithLifecycle()
                 val devicesContext = LocalContext.current
+                var liveMic by remember {
+                    mutableStateOf(com.omnix.assistant.voice.live.LiveMicSettings.get(devicesContext))
+                }
                 DevicesScreen(
                     clip = uiState.clip,
                     translatorToHeadphones = headphoneState.translatorToHeadphones,
+                    liveMicMode = liveMic,
+                    onLiveMicModeChange = {
+                        liveMic = it
+                        com.omnix.assistant.voice.live.LiveMicSettings.set(devicesContext, it)
+                    },
                     capabilities = capabilities,
                     onTranslatorToHeadphonesChange = headphoneSettings::onTranslatorToHeadphonesChanged,
                     onFind = omnixViewModel::refreshHeadphones,

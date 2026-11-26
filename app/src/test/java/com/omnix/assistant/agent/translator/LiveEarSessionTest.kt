@@ -95,4 +95,45 @@ class LiveEarSessionTest {
         assertEquals("Для перевода нужен интернет", session.view.value.error)
         session.stop()
     }
+
+    @Test
+    fun `foreign piece waits and is dropped if language stays foreign`() = runTest {
+        val asked = mutableListOf<String>()
+        val session = LiveEarSession(
+            scope = backgroundScope,
+            translate = { fragment, _ -> asked += fragment; ok(fragment) },
+            speak = {},
+            describeFailure = { "fail" },
+            isForeign = { true },
+            recheckMs = 1_000
+        )
+        session.onFinal("privet kak dela")
+        runCurrent()
+        advanceTimeBy(1_001)
+        runCurrent()
+        assertTrue(asked.isEmpty())
+        assertEquals(1, session.foreignDropped)
+        session.stop()
+    }
+
+    @Test
+    fun `foreign piece passes if partner language appears on recheck`() = runTest {
+        var foreign = true
+        val asked = mutableListOf<String>()
+        val session = LiveEarSession(
+            scope = backgroundScope,
+            translate = { fragment, _ -> asked += fragment; ok(fragment) },
+            speak = {},
+            describeFailure = { "fail" },
+            isForeign = { foreign },
+            recheckMs = 1_000
+        )
+        session.onFinal("hello my friend")
+        runCurrent()
+        foreign = false
+        advanceTimeBy(1_001)
+        runCurrent()
+        assertEquals(listOf("hello my friend"), asked)
+        session.stop()
+    }
 }

@@ -5,8 +5,10 @@ import com.omnix.assistant.R
 import com.omnix.assistant.voice.offline.LocalSpeechRecognizer
 import android.content.Context
 import android.content.Intent
+import android.media.AudioFormat
 import android.os.Build
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -73,6 +75,9 @@ class SpeechRecognizerManager @Inject constructor(
          * Ниже значения, которые распознаватель получает в EXTRA_SPEECH_INPUT_*.
          */
         const val COMPLETE_SILENCE_MS = 2_200L
+
+        /** Частота нашего звука для EXTRA_AUDIO_SOURCE (как у LiveAudioCapture). */
+        private const val AUDIO_SOURCE_RATE = 16_000
         const val POSSIBLY_COMPLETE_SILENCE_MS = 1_800L
     }
 
@@ -106,6 +111,16 @@ class SpeechRecognizerManager @Inject constructor(
     private var isContinuousMode = false
     private var currentLanguageTag = SpeechLanguage.recognitionTag()
 
+    /**
+     * Свой источник звука (синхронный перевод, Android 13+): на каждую сессию распознавания
+     * даёт новый канал с нашим звуком вместо микрофона. null — распознаватель слушает сам.
+     */
+    @Volatile
+    private var audioSourceProvider: (() -> ParcelFileDescriptor?)? = null
+
+    /** Наш конец канала текущей сессии: закрываем, когда сессия сменилась. */
+    private var currentAudioSource: ParcelFileDescriptor? = null
+
     private val exceptionHandler = CoroutineExceptionHandler { _, t ->
         if (t is CancellationException) throw t
         Log.e(TAG, "uncaught exception in stt scope", t)
@@ -134,7 +149,11 @@ class SpeechRecognizerManager @Inject constructor(
     }
 
     /** Язык по умолчанию — язык приложения (решение владельца: 6 языков). */
-    fun startListening(languageTag: String = SpeechLanguage.recognitionTag(), continuous: Boolean = false) {
+    fun startListening(
+        languageTag: String = SpeechLanguage.recognitionTag(),
+        continuous: Boolean = false,
+        audioSource: (() -> ParcelFileDescriptor?)? = null
+    ) {
         synchronized(startMutex) {
             if (disposed.get()) return
 
@@ -150,11 +169,12 @@ class SpeechRecognizerManager @Inject constructor(
 
             isContinuousMode = continuous
             currentLanguageTag = languageTag
+            audioSourceProvider = audioSource
 
             // Туркменского у распознавателя Android нет: фраза уходит на сервер (Whisper).
             // Явно заданный другой язык (речь собеседника в синхронном переводе) слушает Android:
             // серверный путь не даёт промежуточного текста.
-            if (SpeechLanguage.usesServerRecognition() && languageTag == SpeechLanguage.recognitionTag()) {
+            if (audioSource == null && SpeechLanguage.usesServerRecognition() && languageTag == SpeechLanguage.recognitionTag()) {
                 startServerListening(continuous)
                 return
             }
@@ -191,6 +211,13 @@ class SpeechRecognizerManager @Inject constructor(
                         RecognizerIntent.EXTRA_BIASING_STRINGS,
                         ArrayList(hints.cachedBiasing())
                     )
+                    audioSource?.invoke()?.let { pfd ->
+                        currentAudioSource = pfd
+                        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, pfd)
+                        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, 1)
+                        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
+                        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, AUDIO_SOURCE_RATE)
+                    }
                 }
             }
 
@@ -261,6 +288,7 @@ class SpeechRecognizerManager @Inject constructor(
     fun stopListening() {
         synchronized(startMutex) {
             isContinuousMode = false
+            audioSourceProvider = null
             restartJob?.cancel()
             restartJob = null
             cancelCurrentRecognitionLocked()
@@ -300,6 +328,8 @@ class SpeechRecognizerManager @Inject constructor(
         // Инкремент поколения: все долетевшие callbacks от текущей сессии
         // будут молча проигнорированы.
         generation.incrementAndGet()
+        currentAudioSource?.let { runCatching { it.close() } }
+        currentAudioSource = null
         val rec = recognizer ?: return
         try {
             // stopListening может бросить если recognizer не слушает.
@@ -424,7 +454,7 @@ class SpeechRecognizerManager @Inject constructor(
             restartJob = null
             // Синхронный перезапуск; не трогаем сам recognizer — только
             // startListening на текущем экземпляре.
-            startListening(currentLanguageTag, continuous = true)
+            startListening(currentLanguageTag, continuous = true, audioSource = audioSourceProvider)
         }
     }
 
