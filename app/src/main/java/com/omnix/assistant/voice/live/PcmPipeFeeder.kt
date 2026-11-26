@@ -1,5 +1,6 @@
 package com.omnix.assistant.voice.live
 
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.system.ErrnoException
 import android.system.Os
@@ -44,7 +45,10 @@ class PcmPipeFeeder {
     /** Канал для новой сессии распознавания: читающий конец отдаётся распознавателю. */
     fun newSession(): ParcelFileDescriptor? = try {
         val (read, write) = ParcelFileDescriptor.createPipe()
-        Os.fcntlInt(write.fileDescriptor, OsConstants.F_SETFL, OsConstants.O_NONBLOCK)
+        // Неблокирующая запись (Android 11+). Сам канал используется только с Android 13.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Os.fcntlInt(write.fileDescriptor, OsConstants.F_SETFL, OsConstants.O_NONBLOCK)
+        }
         val old = writeEnd
         writeEnd = write
         old?.let { runCatching { it.close() } }

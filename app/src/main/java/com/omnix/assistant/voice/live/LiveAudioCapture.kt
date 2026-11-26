@@ -7,6 +7,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.os.Build
 import android.util.Log
 import com.omnix.assistant.voice.audio.BluetoothAudioRouter
 
@@ -222,7 +223,8 @@ class LiveAudioCapture(
         audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).firstOrNull { isEarbud(it) }
 
     private fun isEarbud(device: AudioDeviceInfo): Boolean =
-        device.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO || device.type == AudioDeviceInfo.TYPE_BLE_HEADSET
+        device.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && device.type == AudioDeviceInfo.TYPE_BLE_HEADSET)
 
     companion object {
         private const val TAG = "LiveAudioCapture"
