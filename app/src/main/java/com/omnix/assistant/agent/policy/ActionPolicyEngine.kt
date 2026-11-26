@@ -3,6 +3,7 @@ package com.omnix.assistant.agent.policy
 import com.omnix.assistant.agent.core.OmniTool
 import com.omnix.assistant.agent.model.ToolCall
 import com.omnix.assistant.agent.model.ToolRisk
+import com.omnix.assistant.agent.tools.communication.MessageArgs
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -92,7 +93,7 @@ class ActionPolicyEngine @Inject constructor(
             }
 
             ActionCategory.CALL -> {
-                val recipient = call.arguments["recipient"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                val recipient = MessageArgs.recipient(call.arguments)
                 val trusted = TrustedContactMatcher.isTrusted(recipient, settings.trustedContacts)
                 val mustConfirm = when (settings.callPolicy) {
                     CallConfirmationPolicy.ALWAYS -> true
@@ -115,9 +116,8 @@ class ActionPolicyEngine @Inject constructor(
             }
 
             ActionCategory.MESSAGE -> {
-                val recipient = call.arguments["recipient"]?.jsonPrimitive?.contentOrNull.orEmpty()
-                val message = call.arguments["message"]?.jsonPrimitive?.contentOrNull
-                    ?: call.arguments["text"]?.jsonPrimitive?.contentOrNull
+                val recipient = MessageArgs.recipient(call.arguments)
+                val message = MessageArgs.message(call.arguments).ifEmpty { null }
                 val amount = MoneyAmountDetector.findAmount(message)
                 val trusted = TrustedContactMatcher.isTrusted(recipient, settings.trustedContacts)
                 val mustConfirm = when (settings.messagingPolicy) {

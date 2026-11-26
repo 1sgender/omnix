@@ -21,6 +21,12 @@ must be added only when the repository owner creates an actual release.
   переводил только целые фразы. Юнит-тесты на нарезку, команду и очередь.
 - Свой русский голос OMNIX стал основным: при русском языке приложения качается сам по Wi-Fi
   (`OfflinePack.ensurePrimaryVoice`), входит в офлайн-пакет; подпись «по желанию» убрана.
+### Fixed (SMS recipient lost after confirmation)
+
+- «Отправить Осману сообщение «Привет»?» → «Да» → «Отправить контакту…» → `MISSING_RECIPIENT`: облачная
+  модель называла поля вызова иначе (`contact`, `to`, `text`…), и получатель терялся. Единое чтение
+  `MessageArgs` (запасные имена полей) в `SmsTool`, `CallTool` и `ActionPolicyEngine`; текст ошибки
+  теперь человеческий. Юнит-тесты `MessageArgsTest`.
 
 ### Added (Russian offline voice)
 
