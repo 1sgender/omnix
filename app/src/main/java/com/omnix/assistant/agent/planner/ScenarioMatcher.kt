@@ -18,21 +18,25 @@ enum class ScenarioId(val priority: Int) {
 }
 
 /**
- * Матчер сценариев на основе ХЕШ-ТАБЛИЦЫ ключевых слов (пункт аудита #6 — HIGH).
+ * Матчер сценариев по ключевым словам (пункт аудита #6 — HIGH).
  *
- * Заменяет последовательную цепочку из 15+ `q.contains(...)` в planForGoal:
- *  - все ключевые слова собраны в [keywordIndex]: Map<подстрока, ScenarioId>;
- *  - за ОДИН проход по словарю находятся все совпавшие сценарии;
- *  - побеждает сценарий с наименьшим приоритетом (сохраняет порядок исходных if);
- *  - комбинированные условия (оба слова обязательны) — в [compositeConditions].
- *
- * Для специфичных корней используется contains(); неоднозначные одиночные слова
- * («отчёт», «состояние», «статус») заменены явными фразами, чтобы аналитические
- * запросы не запускали диагностику телефона.
+ * Сценарий — это короткая команда переключения режима телефона («я ухожу», «спокойной ночи»,
+ * «подготовь презентацию»), а не любой запрос, где встретилось слово. Раньше ключ искался как
+ * кусок строки где угодно, и «отправь мне несколько запоминающихся презентаций…» включало
+ * «Режим презентации» с «Не беспокоить» (отчёт владельца 2026-11-26), «персона»/«Сони» давали «сон».
+ * Поэтому:
+ *  - фраза из одного слова-ключа совпадает с НАЧАЛОМ слова запроса, фраза из нескольких слов —
+ *    с началом слова и дальше подряд ([keywordIndex]); короткие корни — только целым словом
+ *    ([exactWords]);
+ *  - длинный запрос (больше [MAX_SCENARIO_WORDS] слов) и запрос, начинающийся с глагола-просьбы
+ *    к ИИ («найди», «отправь», «расскажи»…), сценарием не считаются (кроме диагностики:
+ *    «покажи статус телефона»);
+ *  - неоднозначные слова — только вместе с командным словом ([compositeConditions]).
+ * Побеждает сценарий с наименьшим приоритетом (порядок исходных if).
  */
 object ScenarioMatcher {
 
-    /** Хеш-таблица: ключевое слово (подстрока) → сценарий. */
+    /** Ключ (начало слова или фраза с начала слова) → сценарий. */
     private val keywordIndex: Map<String, ScenarioId> = buildMap {
         // 1. «Я ухожу» / «Выхожу из дома» / «На выход»
         put("я ухожу", ScenarioId.LEAVING_HOME)
@@ -40,17 +44,19 @@ object ScenarioMatcher {
         put("вышел из дома", ScenarioId.LEAVING_HOME)
         put("на выход", ScenarioId.LEAVING_HOME)
         put("ухожу на работу", ScenarioId.LEAVING_HOME)
+        put("ухожу из дома", ScenarioId.LEAVING_HOME)
         put("выхожу из офиса", ScenarioId.LEAVING_HOME)
 
         // 2. «Я пришёл домой» / «Я дома» / «Вернулся»
         put("я пришел", ScenarioId.COMING_HOME)
+        put("я пришёл", ScenarioId.COMING_HOME)
         put("я дома", ScenarioId.COMING_HOME)
         put("вернулся домой", ScenarioId.COMING_HOME)
         put("пришёл домой", ScenarioId.COMING_HOME)
+        put("пришел домой", ScenarioId.COMING_HOME)
         put("дома уже", ScenarioId.COMING_HOME)
 
         // 3. «Подготовь ко сну» / «Режим сна» / «Спокойной ночи»
-        put("сон", ScenarioId.SLEEP)
         put("ко сну", ScenarioId.SLEEP)
         put("режим сна", ScenarioId.SLEEP)
         put("спать", ScenarioId.SLEEP)
@@ -64,27 +70,32 @@ object ScenarioMatcher {
         put("просыпа", ScenarioId.MORNING)
         put("утренний режим", ScenarioId.MORNING)
         put("проснулся", ScenarioId.MORNING)
+        put("проснулась", ScenarioId.MORNING)
 
         // 5. «Режим совещания» / «Я на встрече» / «Митинг»
-        put("совещани", ScenarioId.MEETING)
-        put("встреч", ScenarioId.MEETING)
+        put("на совещани", ScenarioId.MEETING)
+        put("режим совещани", ScenarioId.MEETING)
+        put("на встрече", ScenarioId.MEETING)
+        put("иду на встречу", ScenarioId.MEETING)
         put("митинг", ScenarioId.MEETING)
         put("на собрании", ScenarioId.MEETING)
-        put("переговор", ScenarioId.MEETING)
+        put("переговорн", ScenarioId.MEETING)
 
         // 6. «Подготовь к поездке» / «Еду на машине» / «Навигация»
-        put("поездк", ScenarioId.DRIVING)
-        put("еду ", ScenarioId.DRIVING)
+        put("в поездк", ScenarioId.DRIVING)
+        put("к поездк", ScenarioId.DRIVING)
         put("за рулём", ScenarioId.DRIVING)
         put("за рулем", ScenarioId.DRIVING)
         put("в машин", ScenarioId.DRIVING)
+        put("на машин", ScenarioId.DRIVING)
         put("автомобил", ScenarioId.DRIVING)
 
         // 7. «Режим экономии» / «Батарея садится» / «Экономь заряд»
-        put("эконом", ScenarioId.POWER_SAVING)
+        put("режим эконом", ScenarioId.POWER_SAVING)
         put("батарея садится", ScenarioId.POWER_SAVING)
         put("мало заряда", ScenarioId.POWER_SAVING)
         put("экономь", ScenarioId.POWER_SAVING)
+        put("сэкономь заряд", ScenarioId.POWER_SAVING)
         put("сохрани заряд", ScenarioId.POWER_SAVING)
 
         // 8. «Статус системы» / «Что с телефоном» / «Диагностика».
@@ -98,52 +109,95 @@ object ScenarioMatcher {
         put("диагностик", ScenarioId.DIAGNOSTICS)
         put("что с телефоном", ScenarioId.DIAGNOSTICS)
         put("проверь всё", ScenarioId.DIAGNOSTICS)
+        put("проверь телефон", ScenarioId.DIAGNOSTICS)
 
-        // 9. «Подготовь презентацию» / «Демо режим»
-        put("презентац", ScenarioId.PRESENTATION)
-        put("демо", ScenarioId.PRESENTATION)
+        // 9. «Режим презентации» / «Демо режим» — само слово «презентация» только вместе с
+        // командным словом (см. compositeConditions): «найди презентации» — просьба к ИИ.
+        put("режим презентац", ScenarioId.PRESENTATION)
+        put("демо режим", ScenarioId.PRESENTATION)
+        put("демо-режим", ScenarioId.PRESENTATION)
 
-        // 10. «Отмени всё» / «Верни как было» / «Обычный режим»
-        put("отмени", ScenarioId.RESET)
+        // 10. «Отмени всё» / «Верни как было» / «Обычный режим» — «отмени будильник» сюда не относится.
+        put("отмени всё", ScenarioId.RESET)
+        put("отмени все", ScenarioId.RESET)
         put("верни как было", ScenarioId.RESET)
         put("обычный режим", ScenarioId.RESET)
         put("стандартный режим", ScenarioId.RESET)
-        put("сброс", ScenarioId.RESET)
+        put("сброс настроек", ScenarioId.RESET)
+        put("сбрось настройки", ScenarioId.RESET)
     }
 
-    /** Комбинированные условия: оба слова обязаны присутствовать. */
-    private val compositeConditions: List<Pair<ScenarioId, Pair<String, String>>> = listOf(
-        ScenarioId.MORNING to ("утро" to "режим"),
-        ScenarioId.PRESENTATION to ("показ" to "режим")
+    /** Короткие слова — только целиком («сон», а не «персона»/«Сони»). */
+    private val exactWords: Map<String, ScenarioId> = mapOf(
+        "сон" to ScenarioId.SLEEP,
+        "еду" to ScenarioId.DRIVING,
+        "демо" to ScenarioId.PRESENTATION
     )
 
+    /** Комбинированные условия: оба слова (начала слов) обязаны присутствовать. */
+    private val compositeConditions: List<Pair<ScenarioId, Pair<String, String>>> = listOf(
+        ScenarioId.MORNING to ("утро" to "режим"),
+        ScenarioId.PRESENTATION to ("показ" to "режим"),
+        ScenarioId.PRESENTATION to ("подготов" to "презентац"),
+        ScenarioId.PRESENTATION to ("включи" to "презентац")
+    )
+
+    /** Начало просьбы к ИИ: это вопрос или задание, а не переключение режима. */
+    private val CONTENT_VERBS = setOf(
+        "найди", "поищи", "отправь", "пришли", "скинь", "расскажи", "напиши", "покажи", "объясни",
+        "создай", "придумай", "подбери", "сравни", "проанализируй", "перескажи", "дай", "составь",
+        "переведи", "нарисуй", "опиши", "приведи", "посоветуй", "какие", "какой", "какая", "что",
+        "почему", "зачем", "как", "где", "кто", "сколько", "send", "find", "show", "tell", "write",
+        "explain", "create", "give", "list", "what", "why", "how", "who", "where"
+    )
+
+    private const val MAX_SCENARIO_WORDS = 7
+
+    private val SPLIT = Regex("[\\s,.!?;:«»\"()]+")
+
     /**
-     * Находит сценарий по запросу (О(1) словарь + проход по ключам).
+     * Находит сценарий по запросу.
      *
      * @return сценарий с наименьшим приоритетом (порядок исходных if) или null.
      */
     fun match(query: String): ScenarioId? {
+        val words = query.lowercase().split(SPLIT).filter { it.isNotEmpty() }
+        if (words.isEmpty() || words.size > MAX_SCENARIO_WORDS) return null
+        val joined = words.joinToString(" ")
+        val contentRequest = words.first() in CONTENT_VERBS
+
         var best: ScenarioId? = null
+        fun consider(scenario: ScenarioId) {
+            if (contentRequest && scenario != ScenarioId.DIAGNOSTICS) return
+            val current = best
+            if (current == null || scenario.priority < current.priority) best = scenario
+        }
 
-        // 1. Одиночные ключи — один проход по словарю.
         for ((keyword, scenario) in keywordIndex) {
-            if (query.contains(keyword) && (best == null || scenario.priority < best.priority)) {
-                best = scenario
-            }
+            if (startsAtWord(joined, keyword)) consider(scenario)
         }
-
-        // 2. Комбинированные условия.
+        for (word in words) {
+            exactWords[word]?.let(::consider)
+        }
         for ((scenario, pair) in compositeConditions) {
-            if (query.contains(pair.first) && query.contains(pair.second) &&
-                (best == null || scenario.priority < best.priority)
-            ) {
-                best = scenario
+            if (words.any { it.startsWith(pair.first) } && words.any { it.startsWith(pair.second) }) {
+                consider(scenario)
             }
         }
-
         return best
     }
 
+    /** [keyword] встречается в [text], начиная с начала слова. */
+    private fun startsAtWord(text: String, keyword: String): Boolean {
+        var from = 0
+        while (true) {
+            val i = text.indexOf(keyword, from)
+            if (i < 0) return false
+            if (i == 0 || text[i - 1] == ' ') return true
+            from = i + 1
+        }
+    }
+
     /** Количество ключевых слов (для диагностики/тестов). */
-    fun keywordCount(): Int = keywordIndex.size
+    fun keywordCount(): Int = keywordIndex.size + exactWords.size
 }
