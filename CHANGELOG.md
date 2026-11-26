@@ -8,6 +8,13 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (voice follow-up window)
+
+- После ответа OMNIX снова «выключался» через 2–5 с: распознаватель Android закрывал сессию на тишине
+  или шуме, и на эту «ошибку» помощник уходил в ожидание «Омни». Теперь в окне продолжения тишина и
+  шум (`FollowUpWindow.isQuietError`) только перезапускают распознавание, окно — 10 с и продлевается,
+  пока человек говорит (длинную фразу не обрывает), на экране видно «слушаю». Юнит-тест.
+
 ### Added (live ear interpreter, primary Russian voice)
 
 - Синхронный перевод в ухо («переводчик», «переводи с английского», «translate from English»,

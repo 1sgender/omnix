@@ -90,7 +90,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
         /** Перевод в ухо чуть быстрее обычной речи, чтобы не отставать от собеседника. */
         private const val LIVE_SPEECH_RATE = 1.15f
-        private const val FOLLOW_UP_WINDOW_MS = 8000L
+        /**
+         * Сколько после ответа OMNIX ещё слушает без «Омни» (владелец 2026-11-26: «выполняет и
+         * сразу выключается»). Отсчёт продлевается, пока человек говорит.
+         */
+        private const val FOLLOW_UP_WINDOW_MS = 10_000L
+        private const val FOLLOW_UP_RESTART_MS = 200L
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
         /** Паузы перед повторным запуском движка фразы после его ошибки. */
@@ -683,6 +688,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
                             val cleaned = WakeWordExtractor.extractQuery(AsrPostProcessor.process(event.partialText), wakeKeywords)
                                 ?: event.partialText
+                            // Человек говорит в окне продолжения — не обрываем его на середине.
+                            if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) armFollowUpWindow()
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
                             _lastQuery.value = cleaned
 
@@ -763,6 +770,19 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             delay(500)
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                                 startLiveListening()
+                            }
+                        } else if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                            FollowUpWindow.isQuietError(event.errorCode)
+                        ) {
+                            // Окно продолжения: распознаватель Android сам закрывает сессию после
+                            // нескольких секунд тишины или шума. Это не конец разговора — слушаем
+                            // снова, пока не истечёт окно (его закрывает таймер).
+                            _assistantState.value = VoiceAssistantState.Listening
+                            scope.launch {
+                                delay(FOLLOW_UP_RESTART_MS)
+                                if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
+                                    speechRecognizerManager.startListening()
+                                }
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
@@ -1361,10 +1381,15 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun openContinuousConversationWindow() {
         if (!isServiceActive) return
         _currentMode.value = OrchestratorMode.CONTINUOUS_CONVERSATION
-        _assistantState.value = VoiceAssistantState.Idle
+        // На экране видно, что OMNIX ещё слушает и можно говорить без «Омни».
+        _assistantState.value = VoiceAssistantState.Listening
         wakeWordEngine.stop()
         speechRecognizerManager.startListening()
+        armFollowUpWindow()
+    }
 
+    /** (Пере)запускает отсчёт окна продолжения; по его истечении — ожидание «Омни». */
+    private fun armFollowUpWindow() {
         followUpWindowJob?.cancel()
         followUpWindowJob = scope.launch {
             delay(FOLLOW_UP_WINDOW_MS)
