@@ -237,7 +237,7 @@ class OfflineVoice @Inject constructor(
                     .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                     .build()
             )
-            .setBufferSizeInBytes(maxOf(minBuffer, sampleRate))
+            .setBufferSizeInBytes(trackBufferBytes(minBuffer, sampleRate))
             .setTransferMode(AudioTrack.MODE_STREAM)
             .build()
     }
@@ -245,16 +245,27 @@ class OfflineVoice @Inject constructor(
     /** Параметры синтеза одного голоса. */
     private data class Tuning(val noiseScale: Float, val noiseScaleW: Float, val lengthScale: Float)
 
-    private companion object {
-        const val TAG = "OfflineVoice"
+    internal companion object {
+        private const val TAG = "OfflineVoice"
+        private const val BYTES_PER_FLOAT = 4
+
+        /**
+         * Буфер вывода: не меньше системного минимума и ~0,25 с звука, кратный размеру отсчёта
+         * (float, моно = 4 байта). Раньше было `sampleRate` байт: при 22050 Гц (русский голос)
+         * это не кратно 4, и Android отказывал «Invalid audio buffer size» — OMNIX молчал.
+         */
+        fun trackBufferBytes(minBuffer: Int, sampleRate: Int): Int {
+            val wanted = maxOf(minBuffer, sampleRate)
+            return (wanted + BYTES_PER_FLOAT - 1) / BYTES_PER_FLOAT * BYTES_PER_FLOAT
+        }
 
         // Настройки чёткости «D» туркменского голоса, выбранные владельцем 2026-11-06.
-        val TK_TUNING = Tuning(noiseScale = 0.3f, noiseScaleW = 0.5f, lengthScale = 1.15f)
+        private val TK_TUNING = Tuning(noiseScale = 0.3f, noiseScaleW = 0.5f, lengthScale = 1.15f)
 
         // Русский голос: те же шумы, чуть быстрее (проверено на примерах 2026-11-25).
-        val RU_TUNING = Tuning(noiseScale = 0.3f, noiseScaleW = 0.5f, lengthScale = 1.1f)
-        const val THREADS = 2
-        const val MAX_DRAIN_MS = 15_000
-        const val DRAIN_POLL_MS = 120L
+        private val RU_TUNING = Tuning(noiseScale = 0.3f, noiseScaleW = 0.5f, lengthScale = 1.1f)
+        private const val THREADS = 2
+        private const val MAX_DRAIN_MS = 15_000
+        private const val DRAIN_POLL_MS = 120L
     }
 }
