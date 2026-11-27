@@ -8,6 +8,14 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (CI: Maven Central rate limiting)
+
+- Настоящая причина падений CI 26–27.11: repo.maven.apache.org отвечал раннерам GitHub 429 Too Many
+  Requests (общие IP), отсюда «Plugin com.google.dagger.hilt.android was not found», «Could not resolve
+  guava» и т. п.; повторы помогали лишь отчасти. Теперь первым источником стоит официальное зеркало
+  Maven Central у Google для библиотек (`settings.gradle.kts`; для плагинов портал Gradle остаётся
+  первым — маркеры плагинов там другие файлы), прежние — запасные;
+  контрольные суммы по-прежнему проверяет verification-metadata.xml.
 ### Changed (Turkmen recognition only on the phone)
 
 - Туркменская речь больше не уходит в облако: только модель на телефоне (решение владельца
