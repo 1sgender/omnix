@@ -62,19 +62,23 @@ object OfflineSpeechModels {
     )
 
     /**
-     * Туркменское распознавание речи: Omnilingual ASR CTC 300M v2 (Meta, Apache-2.0), int8, готовая
-     * сборка sherpa-onnx. Одна проходка по звуку, без пословной генерации, поэтому не «выдумывает»
-     * фразы, как делал наш дообученный Whisper. На тестовых записях расходится с большой MMS на 5,9%
-     * по буквам. Язык задавать не нужно.
+     * Туркменское распознавание речи: whisper-base-turkmen-v3 (derkar00, CC BY-NC 4.0 — только
+     * некоммерческое использование; автор разрешил владельцу, до продажи подписок заменить или
+     * получить другую лицензию). Переведена в sherpa-onnx: кодировщик fp32, декодер int8.
+     * Замер 27.11 на записи с подтверждённым текстом: WER 36,7% / CER 10,4% против 39,3% / 9,9% у
+     * прежней Omnilingual 300M, пакет 192 МБ вместо 270 МБ. Текст модели проходит [WhisperText].
      */
     val TK_ASR = OfflineSpeechModel(
-        id = "tk-asr-omni",
-        dirName = "tk-asr-omni",
-        url = "https://omnix.144.31.14.236.sslip.io/models/tk-asr-omni.zip",
-        sizeBytes = 283_219_492L,
-        sha256 = "4b73dd64edd5432168bf04da87d04c36a243a98b652e095c5c70669e02bb4724",
-        requiredFiles = listOf("model.int8.onnx", "tokens.txt")
+        id = "tk-asr-whisper-v3",
+        dirName = "tk-asr-whisper-v3",
+        url = "https://omnix.144.31.14.236.sslip.io/models/tk-asr-whisper-v3.zip",
+        sizeBytes = 201_610_887L,
+        sha256 = "90ab86439d195b914b0302357f7be389e38d112b29e13ba85b0910f4049e1de3",
+        requiredFiles = listOf("encoder.onnx", "decoder.int8.onnx", "tokens.txt")
     )
+
+    /** Папки прежних туркменских моделей: удаляются, когда новая уже на телефоне. */
+    val LEGACY_DIRS: List<String> = listOf("tk-asr-omni")
 
     /**
      * Русское распознавание речи «улучшенное»: GigaAM v3 CTC (SberDevices, MIT), int8, сборка

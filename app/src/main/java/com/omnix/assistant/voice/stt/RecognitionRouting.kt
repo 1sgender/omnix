@@ -9,6 +9,9 @@ package com.omnix.assistant.voice.stt
  */
 object RecognitionRouting {
 
+    /** Распознаётся только на телефоне, звук в облако не уходит (решение владельца 2026-11-27). */
+    const val LANG_ON_DEVICE_ONLY = "tk"
+
     /** Языки OMNIX, на которые разрешено переключиться по определению языка. */
     val SUPPORTED = setOf("ru", "tk", "en", "tr", "uz", "kk")
 
@@ -38,9 +41,9 @@ object RecognitionRouting {
     /**
      * Можно ли заменять ответ телефона ответом сервера. Туркменский — нет: замер 27.11 на записи
      * с подтверждённым текстом — сервер (Whisper large-v3) WER 122% / CER 45%, телефон
-     * (Omnilingual 300M) WER 39% / CER 10%; переспрос только испортил бы результат.
+     * (Omnilingual 300M) WER 39% / CER 10%, теперь whisper-base-turkmen-v3 — 37% / 10%.
      */
-    fun serverCanImprove(language: String): Boolean = language != "tk"
+    fun serverCanImprove(language: String): Boolean = language != LANG_ON_DEVICE_ONLY
 
     /** Текст подозрительно короткий для такой длинной фразы — стоит переспросить у сервера. */
     fun looksIncomplete(text: String, durationMs: Long): Boolean {

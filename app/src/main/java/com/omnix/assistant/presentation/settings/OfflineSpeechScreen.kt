@@ -162,6 +162,12 @@ internal fun OfflineSpeechScreen(
             style = OmnixTheme.typography.caption,
             color = OmnixTheme.colors.textSecondary
         )
+        Spacer(Modifier.height(OmnixTheme.spacing.xs))
+        Text(
+            text = stringResource(R.string.omnix_offline_tk_asr_credit),
+            style = OmnixTheme.typography.caption,
+            color = OmnixTheme.colors.textSecondary
+        )
     }
 }
 
