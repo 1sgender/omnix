@@ -4,8 +4,12 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioFormat
+import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.media.audiofx.AcousticEchoCanceler
+import android.media.audiofx.AudioEffect
+import android.media.audiofx.NoiseSuppressor
 import android.os.Process
 import android.os.SystemClock
 import android.util.Log
@@ -80,6 +84,9 @@ class NeuralWakeWordEngine @Inject constructor(
 
         /** С какой вероятностью фильтр должен узнать хозяина. */
         private const val VERIFIER_ACCEPT = 0.5f
+
+        /** Как часто проверять, играет ли музыка: 25 кадров по 80 мс ≈ 2 с. */
+        private const val MEDIA_CHECK_CHUNKS = 25
 
         /** Разметка «я / не я» принимается в течение минуты после срабатывания. */
         private const val LABEL_MAX_AGE_MS = 60_000L
@@ -336,13 +343,17 @@ class NeuralWakeWordEngine @Inject constructor(
             return
         }
 
-        val record = createAudioRecord()
-        if (record == null || record.state != AudioRecord.STATE_INITIALIZED) {
-            record?.release()
+        // Играет музыка или видео: слушаем с эхоподавлением, чтобы «Омни» не тонул в звуке телефона.
+        var withEchoCancel = mediaPlaying()
+        val firstRecord = createAudioRecord(withEchoCancel)
+        if (firstRecord == null || firstRecord.state != AudioRecord.STATE_INITIALIZED) {
+            firstRecord?.release()
             report(WakeWordEngineError.MicrophoneUnavailable)
             endRun(run)
             return
         }
+        var record: AudioRecord = firstRecord
+        var effects = if (withEchoCancel) attachEchoEffects(record.audioSessionId) else emptyList()
 
         // Компоненты кадра — на цикл: шумовой пол и окно мёртвого сигнала
         // перенабатываются с каждого входа в STANDBY (акустика могла
@@ -372,7 +383,35 @@ class NeuralWakeWordEngine @Inject constructor(
             val chunk = ShortArray(OpenWakeWordPipeline.CHUNK_SAMPLES)
             var chunkIndex = 0L
             var readErrorsInRow = 0
+            var mediaCheck = 0
             while (running.get() && generation.get() == run) {
+                // Раз в ~2 с: началась или кончилась музыка — переоткрываем микрофон с/без эхоподавления.
+                if (++mediaCheck >= MEDIA_CHECK_CHUNKS) {
+                    mediaCheck = 0
+                    val nowMedia = mediaPlaying()
+                    if (nowMedia != withEchoCancel) {
+                        val next = createAudioRecord(nowMedia)
+                        if (next != null && next.state == AudioRecord.STATE_INITIALIZED) {
+                            effects.forEach { runCatching { it.release() } }
+                            runCatching { record.stop() }
+                            record.release()
+                            record = next
+                            withEchoCancel = nowMedia
+                            effects = if (nowMedia) attachEchoEffects(record.audioSessionId) else emptyList()
+                            try {
+                                record.startRecording()
+                            } catch (e: SecurityException) {
+                                Log.e(TAG, "startRecording denied after switch", e)
+                                report(WakeWordEngineError.PermissionDenied)
+                                endRun(run)
+                                break
+                            }
+                            Log.i(TAG, "wake microphone switched: echoCancel=$nowMedia")
+                        } else {
+                            next?.release()
+                        }
+                    }
+                }
                 val read = record.read(chunk, 0, chunk.size)
                 if (read < 0) {
                     // Раньше ошибка чтения молча повторялась без паузы: движок
@@ -470,6 +509,7 @@ class NeuralWakeWordEngine @Inject constructor(
                 }
             }
         } finally {
+            effects.forEach { runCatching { it.release() } }
             try {
                 record.stop()
             } catch (_: Exception) {
@@ -565,7 +605,24 @@ class NeuralWakeWordEngine @Inject constructor(
         }
     }
 
-    private fun createAudioRecord(): AudioRecord? {
+    /** Звучит ли сейчас музыка или видео (любое приложение). */
+    private fun mediaPlaying(): Boolean =
+        runCatching { (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager).isMusicActive }.getOrDefault(false)
+
+    /** Эхоподавление и шумоподавление сессии записи (без автоусиления — оно мешало бы детектору). */
+    private fun attachEchoEffects(sessionId: Int): List<AudioEffect> {
+        if (sessionId <= 0) return emptyList()
+        val list = ArrayList<AudioEffect>(2)
+        if (AcousticEchoCanceler.isAvailable()) {
+            runCatching { AcousticEchoCanceler.create(sessionId)?.apply { enabled = true } }.getOrNull()?.let(list::add)
+        }
+        if (NoiseSuppressor.isAvailable()) {
+            runCatching { NoiseSuppressor.create(sessionId)?.apply { enabled = true } }.getOrNull()?.let(list::add)
+        }
+        return list
+    }
+
+    private fun createAudioRecord(echoCancel: Boolean = false): AudioRecord? {
         return try {
             val minBuf = AudioRecord.getMinBufferSize(
                 SAMPLE_RATE,
@@ -574,7 +631,8 @@ class NeuralWakeWordEngine @Inject constructor(
             )
             if (minBuf <= 0) return null
             AudioRecord(
-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                // Источник голосовой связи включает обработку под эхоподавление (музыка телефона).
+                if (echoCancel) MediaRecorder.AudioSource.VOICE_COMMUNICATION else MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 SAMPLE_RATE,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
