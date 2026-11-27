@@ -17,6 +17,9 @@ import com.omnix.assistant.voice.wakeword.oww.OrtOwwSessions
 import com.omnix.assistant.voice.wakeword.phrase.PhraseFrameDetector
 import com.omnix.assistant.voice.wakeword.phrase.WakeEngineKind
 import com.omnix.assistant.voice.wakeword.phrase.WakePhrase
+import com.omnix.assistant.voice.wakeword.personal.PersonalWakeStore
+import com.omnix.assistant.voice.wakeword.personal.PersonalWakeVerifier
+import com.omnix.assistant.voice.wakeword.personal.WakeFeatures
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
@@ -66,13 +69,24 @@ import kotlinx.coroutines.sync.withLock
 class NeuralWakeWordEngine @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settings: SettingsDataStore,
+    private val personal: PersonalWakeStore,
 ) : WakeWordEngine {
 
     companion object {
         private const val TAG = "NeuralWakeWord"
+
+        /** Порог детектора, когда личный фильтр обучен. */
+        private const val VERIFIED_STAGE_THRESHOLD = 0.5f
+
+        /** С какой вероятностью фильтр должен узнать хозяина. */
+        private const val VERIFIER_ACCEPT = 0.5f
+
+        /** Разметка «я / не я» принимается в течение минуты после срабатывания. */
+        private const val LABEL_MAX_AGE_MS = 60_000L
         private const val SAMPLE_RATE = 16000
         /** Хвост аудио для метрик/будущего локального STT: 640 мс. */
         private const val RING_SAMPLES = (SAMPLE_RATE * 640) / 1000
+        private const val LABEL_RING_SAMPLES = SAMPLE_RATE * 2
         /** Период debug-лога скоров (каждый N-й чанк), чтобы не спамить. */
         private const val DEBUG_LOG_EVERY_CHUNK = 25
         /** Ошибок чтения микрофона подряд до остановки (~1 с с паузами). */
@@ -94,6 +108,32 @@ class NeuralWakeWordEngine @Inject constructor(
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + exceptionHandler)
+
+    /** Личный фильтр «Омни» (учится на срабатываниях хозяина); null — ещё мало примеров. */
+    @Volatile
+    private var personalVerifier: PersonalWakeVerifier? = null
+
+    /** Последнее срабатывание: время, признаки и звук — для разметки «я / не я». */
+    private class LastDetection(val atMs: Long, val features: FloatArray, val audio: ShortArray)
+
+    @Volatile
+    private var lastDetection: LastDetection? = null
+
+    /** Срабатываний, отсечённых личным фильтром (для журнала). */
+    @Volatile
+    var personalRejects: Long = 0
+        private set
+
+    override fun labelLastDetection(wasReal: Boolean) {
+        val d = lastDetection ?: return
+        lastDetection = null
+        if (SystemClock.elapsedRealtime() - d.atMs > LABEL_MAX_AGE_MS) return
+        scope.launch {
+            if (wasReal) personal.addPositive(d.features, d.audio) else personal.addNegative(d.features, d.audio)
+            personalVerifier = personal.verifier()
+            Log.i(TAG, "wake labeled real=$wasReal; filter=${personalVerifier != null}")
+        }
+    }
     private val running = AtomicBoolean(false)
 
     /**
@@ -115,6 +155,9 @@ class NeuralWakeWordEngine @Inject constructor(
 
     private val policy = DetectionPolicy()
     private val ring = AudioRingBuffer(RING_SAMPLES)
+
+    /** Последние 2 с звука — пример «я / не я» для выгрузки и переобучения. */
+    private val labelRing = AudioRingBuffer(LABEL_RING_SAMPLES)
     private val metrics = WakeWordMetrics()
 
     // Живёт на уровне движка: переиспользуется между start/stop (owner
@@ -306,6 +349,7 @@ class NeuralWakeWordEngine @Inject constructor(
         // сменить комнату/устройство).
         val noise = NoiseAdaptiveThreshold()
         val dead = DeadSignalDetector()
+        personalVerifier = if (config.engine == WakeEngineKind.LEGACY_OMNI) personal.verifier() else null
         val nearMiss = if (config.nearMissCapture && config.engine == WakeEngineKind.LEGACY_OMNI) {
             (recorder ?: NearMissRecorder(config.nearMissMinScore).also { recorder = it })
         } else {
@@ -363,6 +407,7 @@ class NeuralWakeWordEngine @Inject constructor(
                 noise.update(rms)
 
                 ring.write(chunk, 0, read)
+                labelRing.write(chunk, 0, read)
                 if (nearMiss != null) nearMissRing.write(chunk, 0, read)
                 // Пайплайн сам добирает 1280-сэмпловые чанки из потока.
                 val result = try {
@@ -383,8 +428,18 @@ class NeuralWakeWordEngine @Inject constructor(
                 } else {
                     baseThreshold
                 }
-                effectiveThreshold = threshold
-                val fired = policy.observe(result.score, threshold)
+                // Личный фильтр обучен: детектор ставим чувствительнее (ловит почти любое «Омни»),
+                // а лишнее отсекает фильтр по голосу хозяина.
+                val verifier = personalVerifier
+                val stageThreshold = if (verifier != null) minOf(threshold, VERIFIED_STAGE_THRESHOLD) else threshold
+                effectiveThreshold = stageThreshold
+                var fired = policy.observe(result.score, stageThreshold)
+                val summary = if (fired) result.features?.let { WakeFeatures.summarize(it) } else null
+                if (fired && verifier != null && summary != null && verifier.probability(summary) < VERIFIER_ACCEPT) {
+                    fired = false
+                    personalRejects++
+                    if (debugLogging) Log.d(TAG, "WAKE rejected by personal filter score=${result.score}")
+                }
                 metrics.recordFrame(result.score, fired, result.melMs, result.embMs, result.clfMs)
                 if (debugLogging && chunkIndex % DEBUG_LOG_EVERY_CHUNK == 0L) {
                     Log.d(
@@ -396,6 +451,9 @@ class NeuralWakeWordEngine @Inject constructor(
                 }
                 if (fired) {
                     val onset = ring.snapshotLast(RING_SAMPLES)
+                    if (summary != null) {
+                        lastDetection = LastDetection(SystemClock.elapsedRealtime(), summary, labelRing.snapshotLast(LABEL_RING_SAMPLES))
+                    }
                     if (debugLogging) {
                         Log.d(TAG, "WAKE score=${result.score} onsetSamples=${onset.size}")
                     }
@@ -421,6 +479,7 @@ class NeuralWakeWordEngine @Inject constructor(
             // накопленный звук сбрасываем — без stale-фич после STT.
             p.reset()
             ring.clear()
+            labelRing.clear()
             nearMissRing.clear()
             policy.reset()
         }

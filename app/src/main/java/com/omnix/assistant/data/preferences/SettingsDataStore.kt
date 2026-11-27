@@ -25,7 +25,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
  * 0.5 откалиброван под omni_v0.2fp (training/OMNI_V0.2FP_REPORT.md); прежний
  * дефолт 0.35 подходил только модели omni_v0.1.
  */
-internal const val DEFAULT_WAKE_WORD_THRESHOLD = 0.5f
+internal const val DEFAULT_WAKE_WORD_THRESHOLD = 0.8f
 
 /** Клампы порога: даже «максимальная чувствительность» не вырождается в
  * порог 0 (= срабатывает на каждый кадр), «минимальная» — в 1 (никогда). */
@@ -48,7 +48,7 @@ internal fun resolveWakeWordThreshold(stored: Float?): Float =
     (stored ?: DEFAULT_WAKE_WORD_THRESHOLD).coerceIn(MIN_WAKE_WORD_THRESHOLD, MAX_WAKE_WORD_THRESHOLD)
 
 /** Имя ключа порога. Версионировано: смена модели с другим масштабом скоров = новое имя. */
-internal const val WAKEWORD_THRESHOLD_KEY_NAME = "wakeword.threshold.v02fp"
+internal const val WAKEWORD_THRESHOLD_KEY_NAME = "wakeword.threshold.v02fp.default08"
 
 /**
  * Near-miss захват (данные v0.2). Семантика (решение владельца 2026-09-26 —
@@ -89,7 +89,9 @@ class SettingsDataStore @Inject constructor(
         val WAKEWORD_DEBUG = booleanPreferencesKey("wakeword.debug_logging")
         val WAKEWORD_NEAR_MISS_CAPTURE = booleanPreferencesKey("wakeword.near_miss_capture")
         /** Тест движков админом: фраза sherpa-onnx (по умолчанию) или прежняя модель «Omni». */
-        val WAKEWORD_ENGINE = stringPreferencesKey("wakeword.engine")
+        // v2 (2026-11-27): по умолчанию — обученная модель «Омни»; прежний выбор «фраза»
+        // (тогдашнее умолчание) намеренно не читается.
+        val WAKEWORD_ENGINE = stringPreferencesKey("wakeword.engine.v2")
         val WAKEWORD_PHRASE = stringPreferencesKey("wakeword.phrase")
         val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
         val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")

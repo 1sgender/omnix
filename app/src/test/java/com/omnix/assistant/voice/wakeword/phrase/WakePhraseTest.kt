@@ -22,7 +22,7 @@ class WakePhraseTest {
     fun `stored choices survive a round trip and unknown values fall back to defaults`() {
         WakeEngineKind.entries.forEach { assertEquals(it, WakeEngineKind.fromStorageKey(it.storageKey)) }
         WakePhrase.entries.forEach { assertEquals(it, WakePhrase.fromStorageKey(it.storageKey)) }
-        assertEquals(WakeEngineKind.PHRASE, WakeEngineKind.fromStorageKey(null))
+        assertEquals(WakeEngineKind.LEGACY_OMNI, WakeEngineKind.fromStorageKey(null))
         assertEquals(WakeEngineKind.PHRASE, WakeEngineKind.fromStorageKey("jarvis"))
         assertEquals(WakePhrase.ALL, WakePhrase.fromStorageKey(null))
         assertEquals(WakePhrase.ALL, WakePhrase.fromStorageKey("hey_omni"))
