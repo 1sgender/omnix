@@ -30,6 +30,12 @@ class RecognitionRoutingTest {
     }
 
     @Test
+    fun `server never overrides turkmen recognized on the phone`() {
+        assertFalse(RecognitionRouting.serverCanImprove("tk"))
+        assertTrue(RecognitionRouting.serverCanImprove("ru"))
+    }
+
+    @Test
     fun `too little text for a long phrase looks incomplete`() {
         assertTrue(RecognitionRouting.looksIncomplete("да", 3_000))
         assertFalse(RecognitionRouting.looksIncomplete("позвони маме и скажи что я опоздаю", 3_000))

@@ -79,7 +79,9 @@ class ServerSpeechCapture @Inject constructor(
         if (local.isReady(hint)) {
             localText = local.transcribe(samples, hint)?.trim()
             val text = localText
-            if (text != null && text.length >= MIN_TEXT_CHARS && !RecognitionRouting.looksIncomplete(text, durationMs)) {
+            if (text != null && text.length >= MIN_TEXT_CHARS &&
+                (!RecognitionRouting.looksIncomplete(text, durationMs) || !RecognitionRouting.serverCanImprove(hint))
+            ) {
                 return Outcome.Heard(text)
             }
         }

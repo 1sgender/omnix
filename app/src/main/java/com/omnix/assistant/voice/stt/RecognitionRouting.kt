@@ -35,6 +35,13 @@ object RecognitionRouting {
         return if (d in SUPPORTED) d else appHint
     }
 
+    /**
+     * Можно ли заменять ответ телефона ответом сервера. Туркменский — нет: замер 27.11 на записи
+     * с подтверждённым текстом — сервер (Whisper large-v3) WER 122% / CER 45%, телефон
+     * (Omnilingual 300M) WER 39% / CER 10%; переспрос только испортил бы результат.
+     */
+    fun serverCanImprove(language: String): Boolean = language != "tk"
+
     /** Текст подозрительно короткий для такой длинной фразы — стоит переспросить у сервера. */
     fun looksIncomplete(text: String, durationMs: Long): Boolean {
         if (durationMs < MIN_CHECK_MS) return false

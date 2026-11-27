@@ -64,6 +64,9 @@ class OfflinePack @Inject constructor(
         // Голос и улучшенное распознавание без интернета (GigaAM): основные для языка, а не «по желанию».
         val models = when (AppLanguage.current()) {
             AppLanguage.RU -> listOf(OfflineSpeechModels.RU_VOICE, OfflineSpeechModels.RU_ASR)
+            // Туркменский: без модели на телефоне фразы уходили бы на сервер, а он туркменский почти
+            // не понимает (замер 27.11: WER 122%).
+            AppLanguage.TK -> listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.TK_ASR)
             else -> return
         }
         models.filter { it.isPublished && !speech.isInstalled(it) && !speech.isBusy(it) }
