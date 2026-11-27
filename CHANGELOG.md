@@ -13,7 +13,8 @@ must be added only when the repository owner creates an actual release.
 - Настоящая причина падений CI 26–27.11: repo.maven.apache.org отвечал раннерам GitHub 429 Too Many
   Requests (общие IP), отсюда «Plugin com.google.dagger.hilt.android was not found», «Could not resolve
   guava» и т. п.; повторы помогали лишь отчасти. Теперь первым источником стоит официальное зеркало
-  Maven Central у Google (`settings.gradle.kts`, и для плагинов, и для библиотек), прежние — запасные;
+  Maven Central у Google для библиотек (`settings.gradle.kts`; для плагинов портал Gradle остаётся
+  первым — маркеры плагинов там другие файлы), прежние — запасные;
   контрольные суммы по-прежнему проверяет verification-metadata.xml.
 
 ### Changed (wake word «Омни» by default, personal learning)
