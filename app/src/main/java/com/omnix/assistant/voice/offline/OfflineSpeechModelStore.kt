@@ -110,6 +110,16 @@ class OfflineSpeechModelStore @Inject constructor(
     fun isBusy(model: OfflineSpeechModel): Boolean =
         _states.value[model.id].let { it is OfflineModelState.Downloading || it is OfflineModelState.Installing }
 
+    /** Удаляет папки прежних версий моделей ([OfflineSpeechModels.LEGACY_DIRS]). */
+    fun removeLegacy() {
+        scope.launch {
+            OfflineSpeechModels.LEGACY_DIRS.forEach { name ->
+                File(root, name).takeIf { it.exists() }?.deleteRecursively()
+                File(root, "$name.zip").takeIf { it.exists() }?.let { ModelFileIntegrity.deleteWithMarker(it) }
+            }
+        }
+    }
+
     /** Удаляет модель с телефона. */
     fun remove(model: OfflineSpeechModel) {
         synchronized(jobs) {

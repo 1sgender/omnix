@@ -29,6 +29,7 @@
     <string name="vy_nichego_ne_skazali">Siz hiç zat aýtmadyňyz.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Nauşnik aýryldy. Garaşylýar…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">Düşünmedim. Hawa ýa ýok diýiň.</string>
+    <string name="tk_model_downloading">Türkmen dilini tanaýan model telefona ýüklenýär (Wi‑Fi arkaly). Birnäçe minutdan gaýtadan synanyşyň.</string>
     <string name="ne_udalos_otkryt_mikrofon">Mikrofony açmak başarmady</string>
     <string name="net_podklyucheniya_k_internetu">Internet baglanyşygy ýok.</string>
     <string name="net_razresheniya_na_mikrofon">Mikrofona rugsat ýok.</string>

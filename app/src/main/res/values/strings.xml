@@ -29,6 +29,7 @@
     <string name="vy_nichego_ne_skazali">You didn’t say anything.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Headphones disconnected. Waiting…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">I didn’t catch that. Say yes or no.</string>
+    <string name="tk_model_downloading">Turkmen speech recognition is downloading to the phone (Wi‑Fi). Please try again in a few minutes.</string>
     <string name="ne_udalos_otkryt_mikrofon">Couldn’t open the microphone</string>
     <string name="net_podklyucheniya_k_internetu">No internet connection.</string>
     <string name="net_razresheniya_na_mikrofon">No microphone permission.</string>

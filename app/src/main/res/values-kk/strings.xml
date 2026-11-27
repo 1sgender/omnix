@@ -14,6 +14,7 @@
     <string name="vy_nichego_ne_skazali">Сіз ештеңе айтпадыңыз.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Құлаққап ажыратылды. Күтуде…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">Түсінбедім. Иә немесе жоқ деңіз.</string>
+    <string name="tk_model_downloading">Түрікмен тілін тану моделі телефонға жүктелуде (Wi‑Fi арқылы). Бірнеше минуттан кейін қайталаңыз.</string>
     <string name="ne_udalos_otkryt_mikrofon">Микрофон ашылмады</string>
     <string name="net_podklyucheniya_k_internetu">Интернет байланысы жоқ.</string>
     <string name="net_razresheniya_na_mikrofon">Микрофонға рұқсат жоқ.</string>
