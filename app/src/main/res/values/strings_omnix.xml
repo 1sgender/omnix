@@ -641,7 +641,7 @@
     <string name="omnix_wake_training_title">Omni training</string>
     <string name="omnix_wake_training_hint">Teach OMNIX to recognise your voice. It also learns by itself: a command right after «Omni» means it was you; silence means a false wake.</string>
     <string name="omnix_wake_training_filter_on">Personal filter is on: «me» samples — %1$d, «not me» — %2$d.</string>
-    <string name="omnix_wake_training_filter_off">«Me» samples: %1$d. %2$d more and the personal filter turns on.</string>
+    <string name="omnix_wake_training_filter_off">«Me» samples: %1$d. Still needed for the personal filter: %2$d.</string>
     <string name="omnix_wake_training_record_header">Say «Omni»</string>
     <string name="omnix_wake_training_record">Record «Omni» (%1$d / %2$d)</string>
     <string name="omnix_wake_training_recording">Say «Omni»… (%1$d / %2$d)</string>
@@ -650,7 +650,7 @@
     <string name="omnix_wake_training_background_header">Background check</string>
     <string name="omnix_wake_training_background_hint">For 30 minutes OMNIX listens to everyday life (talk, TV) without waking. Everything it would have woken on becomes a «not me» sample. Don\'t say «Omni» during this time.</string>
     <string name="omnix_wake_training_background_start">Start background check</string>
-    <string name="omnix_wake_training_background_stop">Stop (%1$d min passed, %2$d wakes)</string>
+    <string name="omnix_wake_training_background_stop">Stop (minutes: %1$d, wakes: %2$d)</string>
     <string name="omnix_wake_training_error">The microphone is busy. Close other recording apps and try again.</string>
     <string name="omnix_wake_training_data_header">Recordings</string>
     <string name="omnix_wake_training_share">Share recordings for retraining</string>
