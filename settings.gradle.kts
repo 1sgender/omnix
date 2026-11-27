@@ -1,7 +1,14 @@
+// Официальное зеркало Maven Central у Google — первым: repo.maven.apache.org отвечает раннерам
+// GitHub Actions 429 Too Many Requests (общие IP), из-за этого CI падал на скачивании Hilt, Guava
+// и других библиотек. Артефакты те же (контрольные суммы проверяет verification-metadata.xml),
+// mavenCentral() и портал плагинов остаются запасными.
+val mavenCentralMirror = "https://maven-central.storage-download.googleapis.com/maven2/"
+
 pluginManagement {
     repositories {
-        gradlePluginPortal()
+        maven("https://maven-central.storage-download.googleapis.com/maven2/") { name = "MavenCentralGoogleMirror" }
         google()
+        gradlePluginPortal()
         mavenCentral()
     }
 }
@@ -9,6 +16,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        maven(mavenCentralMirror) { name = "MavenCentralGoogleMirror" }
         mavenCentral()
     }
 }

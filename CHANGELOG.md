@@ -8,6 +8,14 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (CI: Maven Central rate limiting)
+
+- Настоящая причина падений CI 26–27.11: repo.maven.apache.org отвечал раннерам GitHub 429 Too Many
+  Requests (общие IP), отсюда «Plugin com.google.dagger.hilt.android was not found», «Could not resolve
+  guava» и т. п.; повторы помогали лишь отчасти. Теперь первым источником стоит официальное зеркало
+  Maven Central у Google (`settings.gradle.kts`, и для плагинов, и для библиотек), прежние — запасные;
+  контрольные суммы по-прежнему проверяет verification-metadata.xml.
+
 ### Changed (wake word «Омни» by default, personal learning)
 
 - «Омни» поверх музыки и видео: пока звучит медиа (любое приложение), детектор слушает источником
