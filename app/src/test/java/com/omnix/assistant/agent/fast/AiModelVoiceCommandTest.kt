@@ -16,6 +16,16 @@ class AiModelVoiceCommandTest {
     }
 
     @Test
+    fun `model noun right after the preposition`() {
+        // Не распознавалось до 2026-11-27: после «на» ожидалось сразу имя модели.
+        assertSwitch(AiModelChoice.PRO, listOf("переключись на модель Pro", "перейди на про-модель"))
+        assertSwitch(AiModelChoice.CLOUD, listOf("переключись на модель флеш", "переключи на flash-модель"))
+        assertSwitch(AiModelChoice.ON_DEVICE, listOf("переключись на модель локальную"))
+        assertNull(AiModelVoiceCommand.parse("переключись на модель"))
+        assertNull(AiModelVoiceCommand.parse("переключи на режим авто"))
+    }
+
+    @Test
     fun `switch to pro in several languages`() {
         assertSwitch(
             AiModelChoice.PRO,

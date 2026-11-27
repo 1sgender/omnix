@@ -8,6 +8,15 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (model switching)
+
+- «Локально» не включалось на S24 Ultra (12 ГБ): проверка требовала, чтобы свободно было не меньше
+  нужного прямо сейчас (журнал телефона 2026-11-27: available 2943 MB < 3072 MB для Qwen 1.5B), а
+  Android держит память занятой фоновыми приложениями и освобождает её по требованию. Теперь при
+  памяти телефона с тройным запасом и без сигнала нехватки модель загружается (`LocalMemoryCheck`).
+- Голосом не переключалось «переключись на модель Pro», «на про-модель», «на flash-модель» —
+  слово «модель» сразу после «на» и через дефис теперь понимается. Юнит-тесты.
+
 ### Changed (Turkmen recognition only on the phone)
 
 - Туркменская речь больше не уходит в облако: только модель на телефоне (решение владельца

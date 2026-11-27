@@ -50,7 +50,8 @@ object AiModelVoiceCommand {
 
     /** «переключи(сь)/перейди/поставь/смени [модель] на|в <имя> [модель]». */
     private val SWITCH_RU = Regex(
-        "^(?:давай )?(?:переключи(?:сь)?|перейди|поставь|смени)(?: (?:модель|режим|ии))? (?:на|в) (\\p{L}+)" +
+        "^(?:давай )?(?:переключи(?:сь)?|перейди|поставь|смени)(?: (?:модель|режим|ии))? (?:на|в)" +
+            "(?: (?:модель|ии))? (\\p{L}+)" +
             "(?: (?:модель|режим|ии))?$"
     )
 
@@ -121,6 +122,9 @@ object AiModelVoiceCommand {
     private val PUNCTUATION = Regex("[,.!?«»\":;…]")
     private val SPACES = Regex("\\s+")
 
+    /** «про-модель», «flash-модель» → «про модель». */
+    private val HYPHEN_NOUN = Regex("-(?=(?:модел|model))")
+
     /** Слово «модель/ИИ» в любой из форм: признак, что речь именно о модели ассистента. */
     private val MODEL_NOUN = Regex("(?:^| )(?:модель|ии|model|ai)(?: |$)")
 
@@ -146,6 +150,7 @@ object AiModelVoiceCommand {
         val q = text.lowercase()
             .replace(APOSTROPHES, "")
             .replace(PUNCTUATION, " ")
+            .replace(HYPHEN_NOUN, " ")
             .replace(SPACES, " ")
             .trim()
             .replace(LEADING_WAKE, "")
