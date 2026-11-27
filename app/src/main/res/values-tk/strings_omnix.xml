@@ -318,10 +318,10 @@
     <string name="omnix_admin_answer_cloud">Bulut</string>
     <string name="omnix_admin_wake_title">Çagyryş sözlerini synag (admin)</string>
     <string name="omnix_admin_wake_body">Öz telefonyňyzda deňeşdiriň. Indiki diňlemek başlanda üýtgär.</string>
-    <string name="omnix_admin_wake_all">«Omni», «Omniks», «Okeý, Omni» — adaty</string>
+    <string name="omnix_admin_wake_all">«Omni», «Omniks», «Okeý, Omni» — söz düzümi (ätiýaçlyk)</string>
     <string name="omnix_admin_wake_okay_omni">«Okeý, Omni» — täze hereketlendiriji</string>
     <string name="omnix_admin_wake_omni">«Omni» — täze hereketlendiriji</string>
-    <string name="omnix_admin_wake_legacy">«Omni» — öňki model</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — öwredilen model + şahsy süzgüç (esasy)</string>
     <string name="omnix_ai_model_checking">Barlaýaryn…</string>
     <string name="omnix_ai_model_downloading">Ýüklenýär: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Ýüklenmedik — düwme aşakda</string>
@@ -636,6 +636,23 @@
 
     <!-- Офлайн-голос (2026-11-09) -->
     <string name="omnix_offline_title">Oflaýn tertip</string>
+    <string name="omnix_wake_training_title">«Omni» türgenleşigi</string>
+    <string name="omnix_wake_training_hint">OMNIX-e siziň sesiňizi tanamagy öwrediň. Ol özbaşdak hem öwrenýär: «Omni»-den soň derrew buýruk gelse — bu sizdiňiz, dymyşlyk bolsa — ýalňyş işledi.</string>
+    <string name="omnix_wake_training_filter_on">Şahsy süzgüç açyk: «men» mysallary — %1$d, «men däl» — %2$d.</string>
+    <string name="omnix_wake_training_filter_off">«Men» mysallary: %1$d. Ýene %2$d — we şahsy süzgüç açylar.</string>
+    <string name="omnix_wake_training_record_header">«Omni» diýiň</string>
+    <string name="omnix_wake_training_record">«Omni» ýazdyrmak (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_recording">«Omni» diýiň… (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_accepted">Ýazyldy. Ýene başgaça aýdyň: pesräk, gaty, uzakdan.</string>
+    <string name="omnix_wake_training_rejected">«Omni»-ni eşitmedim. Ýene azajyk gatyrak aýdyň.</string>
+    <string name="omnix_wake_training_background_header">Fon barlagy</string>
+    <string name="omnix_wake_training_background_hint">30 minut OMNIX adaty durmuşy (gürrüňler, TW) diňleýär we hiç zat açmaýar. Ol nämä işlejek bolsa, «men däl» mysalyna öwrüler. Bu wagt «Omni» diýmäň.</string>
+    <string name="omnix_wake_training_background_start">Fon barlagyny başlamak</string>
+    <string name="omnix_wake_training_background_stop">Togtatmak (%1$d min geçdi, %2$d gezek işledi)</string>
+    <string name="omnix_wake_training_error">Mikrofon meşgul. Ýazgy edýän beýleki programmalary ýapyp, gaýtadan synanyşyň.</string>
+    <string name="omnix_wake_training_data_header">Ýazgylar</string>
+    <string name="omnix_wake_training_share">Gaýtadan öwretmek üçin ýazgylary paýlaşmak</string>
+    <string name="omnix_wake_training_reset">Şahsy öwrenişi arassalamak</string>
     <string name="omnix_offline_hint">Internetsiz işleýän ýerli emeli aň, ses we söz tanamak. Bir gezek ýükläp alyň.</string>
     <string name="omnix_offline_tk_voice">OMNIX türkmen sesi</string>
     <string name="omnix_offline_ru_voice">OMNIX rus sesi</string>

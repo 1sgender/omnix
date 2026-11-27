@@ -222,6 +222,15 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private var liveWatchdogJob: Job? = null
     private var liveTtsJob: Job? = null
 
+    /**
+     * Срабатывание «Омни» ждёт разметки для личного фильтра: команда прозвучала — настоящее,
+     * тишина — ложное (из этого фильтр учится узнавать хозяина).
+     */
+    private var wakeLabelPending = false
+
+    /** Музыка и видео на паузе, пока идёт разговор с OMNIX (от «Омни» до возврата в ожидание). */
+    private val interactionFocus by lazy { com.omnix.assistant.voice.audio.InteractionAudioFocus(context) }
+
     // ── Перебивание (barge-in): пока OMNIX говорит, человек может его перебить. ──
     /** Текст, который сейчас озвучивается и который можно перебить; null — перебивать нельзя. */
     private var bargeInArmedText: String? = null
@@ -562,6 +571,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
     }
 
     fun startStandbyMode() {
+        interactionFocus.release()
         if (!isServiceActive) return
 
         if (isHeadsetOnlyMode && !bluetoothAudioRouter.isHeadsetConnected()) {
@@ -574,6 +584,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
         confirmationTimeoutJob?.cancel()
         stopLiveSession()
         disarmBargeIn()
+        // Разговор окончен — музыка и видео продолжают играть.
+        interactionFocus.release()
         confirmationTimeoutJob = null
         silenceJob?.cancel()
         silenceJob = null
@@ -841,6 +853,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
         wakeDetectedAtMs = detection.timestampMs
         _currentMode.value = OrchestratorMode.LISTENING_USER_QUERY
         _assistantState.value = VoiceAssistantState.Listening
+        wakeLabelPending = true
+        interactionFocus.hold()
         playWakeChime()
         Log.i(
             TAG,
@@ -860,6 +874,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
         if (!isServiceActive) return
         when (_currentMode.value) {
             OrchestratorMode.STANDBY_WAKE_WORD -> {
+                wakeLabelPending = false
+                interactionFocus.hold()
                 playWakeChime()
                 switchToSpeechRecognition()
             }
@@ -1027,6 +1043,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
+                            if (wakeLabelPending && _currentMode.value == OrchestratorMode.LISTENING_USER_QUERY &&
+                                FollowUpWindow.isQuietError(event.errorCode)
+                            ) {
+                                // После «Омни» тишина — вероятно, ложное включение.
+                                wakeLabelPending = false
+                                wakeWordEngine.labelLastDetection(false)
+                            }
                             // Субтитр распознавания убираем сразу. Отложенный возврат в
                             // standby идёт отдельной корутиной: collectLatest отменял
                             // блок с delay при любом новом событии распознавателя, и
@@ -1067,6 +1090,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
             )
         }
         val clean = query.trim()
+        if (wakeLabelPending && clean.isNotBlank()) {
+            // После «Омни» прозвучала команда — срабатывание было настоящим.
+            wakeLabelPending = false
+            wakeWordEngine.labelLastDetection(true)
+        }
         if (clean.isBlank()) {
             _privacyClassification.value =
                 PrivacyClassification.unknown(PrivacyReason.EMPTY_INPUT)
@@ -1931,6 +1959,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
     }
 
     fun stopAll() {
+        interactionFocus.release()
         disarmBargeIn()
         silenceJob?.cancel()
         followUpWindowJob?.cancel()

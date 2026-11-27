@@ -29,7 +29,8 @@ class SettingsDataStoreInstrumentedTest {
         assertEquals(AppConstants.DEFAULT_SPEECH_PITCH, store.speechPitchFlow.first())
         assertEquals(AppConstants.DEFAULT_MODEL, store.selectedModelFlow.first())
         assertEquals(false, store.isHeadsetOnlyModeFlow.first())
-        assertEquals(0.5f, store.wakeWordSensitivityFlow.first())
+        // Чувствительность = 1 - порог; порог по умолчанию 0.8 (обученная модель «Омни»).
+        assertEquals(0.2f, store.wakeWordSensitivityFlow.first(), 1e-4f)
     }
 
     @Test
@@ -72,14 +73,15 @@ class SettingsDataStoreInstrumentedTest {
         assertEquals(AppConstants.DEFAULT_SPEECH_PITCH, store.speechPitchFlow.first())
         assertEquals(AppConstants.DEFAULT_MODEL, store.selectedModelFlow.first())
         assertEquals(false, store.isHeadsetOnlyModeFlow.first())
-        assertEquals(0.5f, store.wakeWordSensitivityFlow.first())
+        // Чувствительность = 1 - порог; порог по умолчанию 0.8 (обученная модель «Омни»).
+        assertEquals(0.2f, store.wakeWordSensitivityFlow.first(), 1e-4f)
     }
 
     @Test
     fun wakeSensitivitySliderDrivesEngineThreshold() = runBlocking {
         // Регрессия аудита: слайдер «чувствительность» раньше писал legacy-ключ
         // wake_word_sensitivity, который движок не читал — настройка была
-        // мёртвой. Теперь слайдер и движок делят один ключ wakeword.threshold.v02fp.
+        // мёртвой. Теперь слайдер и движок делят один ключ порога (WAKEWORD_THRESHOLD_KEY_NAME).
         val store = SettingsDataStore(context)
 
         store.setWakeWordSensitivity(0.8f)
@@ -94,7 +96,7 @@ class SettingsDataStoreInstrumentedTest {
         assertEquals(0.95f, store.wakeWordConfig.first().threshold, 1e-4f)
 
         store.resetDefaults()
-        assertEquals(0.5f, store.wakeWordConfig.first().threshold, 1e-4f)
-        assertEquals(0.5f, store.wakeWordSensitivityFlow.first(), 1e-4f)
+        assertEquals(0.8f, store.wakeWordConfig.first().threshold, 1e-4f)
+        assertEquals(0.2f, store.wakeWordSensitivityFlow.first(), 1e-4f)
     }
 }

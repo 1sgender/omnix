@@ -19,7 +19,7 @@ class ResolveWakeWordThresholdTest {
     @Test
     fun `нет значения под новым ключом — дефолт под omni_v0_2fp`() {
         assertEquals(DEFAULT_WAKE_WORD_THRESHOLD, resolveWakeWordThreshold(null), 0f)
-        assertEquals(0.5f, DEFAULT_WAKE_WORD_THRESHOLD, 0f)
+        assertEquals(0.8f, DEFAULT_WAKE_WORD_THRESHOLD, 0f)
     }
 
     @Test
@@ -27,7 +27,7 @@ class ResolveWakeWordThresholdTest {
         // Новое имя ключа не должно совпадать со старым: иначе у пользователей с
         // порогом 0.35 (рабочая точка omni_v0.1) модель v0.2fp срабатывала бы
         // на лишние слова.
-        assertEquals("wakeword.threshold.v02fp", WAKEWORD_THRESHOLD_KEY_NAME)
+        assertEquals("wakeword.threshold.v02fp.default08", WAKEWORD_THRESHOLD_KEY_NAME)
     }
 
     @Test
