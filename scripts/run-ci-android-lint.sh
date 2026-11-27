@@ -6,7 +6,7 @@ LOG_FILE="$LOG_DIR/lint-gradle.log"
 mkdir -p "$LOG_DIR"
 
 set +e
-bash ./gradlew :app:lintDevDebug \
+bash scripts/ci-gradle-retry.sh bash ./gradlew :app:lintDevDebug \
   --stacktrace --no-daemon --no-parallel --max-workers=2 \
   2>&1 | tee "$LOG_FILE"
 status=${PIPESTATUS[0]}

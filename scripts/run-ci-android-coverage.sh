@@ -6,8 +6,10 @@ LOG_FILE="$LOG_DIR/instrumentation-gradle.log"
 mkdir -p "$LOG_DIR"
 
 # Сбои загрузки плагинов/зависимостей (инфраструктура сети) не должны валить
-# сборку main: до 3 попыток, только если в логе именно такая ошибка.
-INFRA_RE='UnknownPluginException|Could not resolve|could not resolve plugin artifact|was not found in any of the following sources|Could not GET|Could not HEAD|Read timed out|Connection reset|Remote host terminated|TLS handshake'
+# сборку main: до CI_RETRY_ATTEMPTS попыток (по умолчанию 6) с паузами 30, 60, 90… с,
+# только если в логе именно такая ошибка.
+INFRA_RE='UnknownPluginException|Could not resolve|could not resolve plugin artifact|was not found in any of the following sources|Could not GET|Could not HEAD|Could not download|Read timed out|Connect timed out|Connection reset|Remote host terminated|TLS handshake|Temporary failure in name resolution'
+ATTEMPTS=${CI_RETRY_ATTEMPTS:-6}
 attempt=1
 while true; do
   set +e
@@ -16,12 +18,13 @@ while true; do
     2>&1 | tee "$LOG_FILE"
   status=${PIPESTATUS[0]}
   set -e
-  if [[ $status -eq 0 || $attempt -ge 3 ]] || ! grep -qE "$INFRA_RE" "$LOG_FILE"; then
+  if [[ $status -eq 0 || $attempt -ge $ATTEMPTS ]] || ! grep -qE "$INFRA_RE" "$LOG_FILE"; then
     break
   fi
-  echo "::warning::Сбой загрузки зависимостей, повтор $((attempt + 1)) из 3"
+  pause=$((attempt * 30))
+  echo "::warning::Сбой загрузки зависимостей (сеть раннера), повтор $((attempt + 1)) из $ATTEMPTS через ${pause} с"
   attempt=$((attempt + 1))
-  sleep 20
+  sleep "$pause"
 done
 
 if [[ $status -eq 0 ]]; then
