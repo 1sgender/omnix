@@ -24,6 +24,7 @@
     <string name="vy_nichego_ne_skazali">Вы ничего не сказали.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Наушники отключены. Ожидание…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">Не понял. Скажите да или нет.</string>
+    <string name="tk_model_downloading">Туркменское распознавание скачивается на телефон (по Wi‑Fi). Попробуйте через несколько минут.</string>
     <string name="ne_udalos_otkryt_mikrofon">Не удалось открыть микрофон</string>
     <string name="net_podklyucheniya_k_internetu">Нет подключения к интернету.</string>
     <string name="net_razresheniya_na_mikrofon">Нет разрешения на микрофон.</string>

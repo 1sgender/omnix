@@ -6,7 +6,7 @@ import com.omnix.assistant.agent.tools.communication.NameTranslit
  * Пост-коррекция по словарю подсказок для распознавания на телефоне (sherpa-onnx).
  *
  * Почему не «hotwords» в декодере: sherpa-onnx умеет контекстное смещение только у
- * трансдьюсеров с modified_beam_search. Наши модели — CTC (туркменская Omnilingual,
+ * трансдьюсеров с modified_beam_search. Наши модели — CTC или Whisper (туркменская whisper-base-turkmen-v3,
  * русская GigaAM v3), у них hotwords не поддерживаются вовсе; потоковый Vosk (запасной
  * русский) работает жадным поиском и без BPE-словаря подсказок. Поэтому подсказки
  * применяются ПОСЛЕ декодера: слово, которое стоит на месте имени и звучит как имя
