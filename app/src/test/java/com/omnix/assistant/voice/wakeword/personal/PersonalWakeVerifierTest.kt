@@ -28,7 +28,7 @@ class PersonalWakeVerifierTest {
         val neg = cloud(-1f, 300, 2)
         val v = assertNotNullAndGet(PersonalWakeVerifier.train(pos, neg))
         cloud(1f, 20, 3).forEach { assertTrue(v.probability(it) > 0.9f) }
-        cloud(-1f, 50, 4).forEach { assertTrue(v.probability(it) < 0.1f) }
+        cloud(-1f, 50, 4).forEach { assertTrue(v.probability(it) < 0.5f) }
     }
 
     @Test

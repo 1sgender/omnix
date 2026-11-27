@@ -66,6 +66,7 @@ class PersonalWakeVerifier internal constructor(
     companion object {
         private const val MAGIC = 0x4F4D4E31 // "OMN1"
         private const val MIN_SCALE = 1e-4f
+        private const val MAX_POSITIVE_WEIGHT = 4f
 
         fun fromBytes(bytes: ByteArray): PersonalWakeVerifier? = try {
             val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
@@ -105,7 +106,8 @@ class PersonalWakeVerifier internal constructor(
 
             val xs = all.map { v -> FloatArray(dim) { i -> (v[i] - mean[i]) / scale[i] } }
             val ys = FloatArray(all.size) { if (it < positives.size) 1f else 0f }
-            val posWeight = negatives.size.toFloat() / positives.size
+            // Вес примеров «я» ограничен: иначе фильтр начинает пропускать и чужое.
+            val posWeight = (negatives.size.toFloat() / positives.size).coerceAtMost(MAX_POSITIVE_WEIGHT)
             val w = FloatArray(dim)
             var b = 0f
             val grad = FloatArray(dim)
