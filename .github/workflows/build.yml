@@ -125,13 +125,13 @@ jobs:
       - name: Test Android dev and verify JVM coverage
         shell: bash
         run: |
-          bash ./gradlew :app:jacocoDevDebugCoverageVerification \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:jacocoDevDebugCoverageVerification \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
       - name: Run Android and server static analysis
         shell: bash
         run: |
-          bash ./gradlew phase3StaticAnalysis \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew phase3StaticAnalysis \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
       - name: Lint Android dev
@@ -145,7 +145,7 @@ jobs:
       - name: Build Android dev app and instrumentation APKs
         shell: bash
         run: |
-          bash ./gradlew :app:assembleDevDebug :app:assembleDevDebugAndroidTest \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:assembleDevDebug :app:assembleDevDebugAndroidTest \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
       # Room пишет схему БД в app/schemas при компиляции. Новая или изменённая
@@ -175,7 +175,7 @@ jobs:
       - name: R8 release smoke (staging, unsigned)
         shell: bash
         run: |
-          bash ./gradlew :app:assembleStagingRelease \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:assembleStagingRelease \
             --stacktrace --no-daemon --no-parallel --max-workers=2
 
       # Нативный код ONNX Runtime и MediaPipe ищет Java-классы по имени. Если R8
@@ -192,7 +192,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash ./gradlew :app:bundleDevDebug \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:bundleDevDebug \
             --stacktrace --no-daemon --no-parallel --max-workers=2
           AAB=$(find app/build/outputs/bundle -name '*.aab' | head -n 1)
           [ -n "$AAB" ] || { echo "::error::AAB не собран"; exit 1; }
@@ -203,13 +203,13 @@ jobs:
       - name: OMNIX benchmark regression
         shell: bash
         run: |
-          bash ./gradlew :app:testDevDebugUnitTest --tests '*BenchmarkRegressionTest*' \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:testDevDebugUnitTest --tests '*BenchmarkRegressionTest*' \
             --stacktrace --no-daemon
 
       - name: Test OMNIX API server
         shell: bash
         run: |
-          bash ./gradlew :server:test :server:jacocoTestCoverageVerification \
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :server:test :server:jacocoTestCoverageVerification \
             :server:build --stacktrace --no-daemon
 
       - name: Upload test quality reports
@@ -233,7 +233,8 @@ jobs:
         shell: bash
         run: |
           bash ./deploy/verify-production-config.sh
-          docker build --file deploy/server.Dockerfile --tag omnix-server:ci .
+          # Сеть раннера: при сбое загрузки зависимостей внутри образа — повтор (scripts/ci-gradle-retry.sh).
+          bash scripts/ci-gradle-retry.sh docker build --file deploy/server.Dockerfile --tag omnix-server:ci .
 
       - name: Upload OMNIX APK artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
