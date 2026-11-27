@@ -7,7 +7,7 @@ import com.k2fsa.sherpa.onnx.OfflineModelConfig
 import com.k2fsa.sherpa.onnx.OfflineNemoEncDecCtcModelConfig
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
 import com.k2fsa.sherpa.onnx.OfflineRecognizerConfig
-import com.k2fsa.sherpa.onnx.OfflineOmnilingualAsrCtcModelConfig
+import com.k2fsa.sherpa.onnx.OfflineWhisperModelConfig
 import com.k2fsa.sherpa.onnx.OnlineModelConfig
 import com.k2fsa.sherpa.onnx.OnlineRecognizer
 import com.k2fsa.sherpa.onnx.OnlineRecognizerConfig
@@ -24,8 +24,8 @@ import javax.inject.Singleton
 
 /**
  * Распознавание речи на телефоне, без интернета (sherpa-onnx):
- *  - туркменский — Omnilingual ASR CTC 300M (Meta), скачивается отдельным пакетом
- *    ([OfflineSpeechModels.TK_ASR]);
+ *  - туркменский — whisper-base-turkmen-v3, скачивается отдельным пакетом
+ *    ([OfflineSpeechModels.TK_ASR]), только на телефоне, в облако не уходит;
  *  - русский — если скачана улучшенная модель GigaAM v3 ([OfflineSpeechModels.RU_ASR]), то она;
  *    иначе маленькая потоковая модель Vosk, она уже лежит в APK ради слова вызова.
  *
@@ -89,7 +89,7 @@ class LocalSpeechRecognizer @Inject constructor(
         try {
             stream.acceptWaveform(samples, SAMPLE_RATE)
             recognizer.decode(stream)
-            return recognizer.getResult(stream).text
+            return WhisperText.clean(recognizer.getResult(stream).text)
         } finally {
             stream.release()
         }
@@ -101,9 +101,16 @@ class LocalSpeechRecognizer @Inject constructor(
         val config = OfflineRecognizerConfig(
             featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = FEATURE_DIM),
             modelConfig = OfflineModelConfig(
-                omnilingual = OfflineOmnilingualAsrCtcModelConfig(
-                    model = "${dir.path}/model.int8.onnx"
+                // Модель обучена с началом <|startoftranscript|><|notimestamps|>, без языка и задачи
+                // (это записано в метаданных пакета), поэтому язык пустой.
+                whisper = OfflineWhisperModelConfig(
+                    encoder = "${dir.path}/encoder.onnx",
+                    decoder = "${dir.path}/decoder.int8.onnx",
+                    language = "",
+                    task = "transcribe",
+                    tailPaddings = -1
                 ),
+                modelType = "whisper",
                 tokens = "${dir.path}/tokens.txt",
                 numThreads = THREADS,
                 provider = "cpu"

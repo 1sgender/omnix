@@ -14,6 +14,7 @@
     <string name="vy_nichego_ne_skazali">Hiçbir şey söylemediniz.</string>
     <string name="naushniki_otklyucheny_ozhidanie">Kulaklık bağlantısı kesildi. Bekleniyor…</string>
     <string name="ne_ponyal_skazhite_da_ili_net">Anlayamadım. Evet ya da hayır deyin.</string>
+    <string name="tk_model_downloading">Türkmence konuşma tanıma telefona indiriliyor (Wi‑Fi). Birkaç dakika sonra tekrar deneyin.</string>
     <string name="ne_udalos_otkryt_mikrofon">Mikrofon açılamadı</string>
     <string name="net_podklyucheniya_k_internetu">İnternet bağlantısı yok.</string>
     <string name="net_razresheniya_na_mikrofon">Mikrofon izni yok.</string>

@@ -153,7 +153,7 @@ jobs:
       - name: Verify dependency locks and checksums
         shell: bash
         run: |
-          bash ./gradlew :app:dependencies --write-locks --no-daemon
+          bash scripts/ci-gradle-retry.sh bash ./gradlew :app:dependencies --write-locks --no-daemon
           git diff --exit-code -- '**/gradle.lockfile' 'gradle/verification-metadata.xml'
 
       - name: Build signed ${{ env.RELEASE_ENV }} release
@@ -162,7 +162,7 @@ jobs:
           OMNIX_REQUIRE_SIGNED_RELEASE: 'true'
         run: |
           if [ "${{ env.RELEASE_ENV }}" = "prod" ]; then
-            bash ./gradlew :app:bundleProdRelease :app:assembleProdRelease \
+            bash scripts/ci-gradle-retry.sh bash ./gradlew :app:bundleProdRelease :app:assembleProdRelease \
               -POMNIX_VERSION_CODE="${{ github.run_number }}" \
               --stacktrace --no-daemon
           else
@@ -171,7 +171,7 @@ jobs:
               https://*) ;;
               *) echo "::error::staging api_url must be https, got: $API_URL"; exit 1 ;;
             esac
-            bash ./gradlew :app:bundleStagingRelease :app:assembleStagingRelease \
+            bash scripts/ci-gradle-retry.sh bash ./gradlew :app:bundleStagingRelease :app:assembleStagingRelease \
               -POMNIX_STAGING_API_BASE_URL="$API_URL" \
               -POMNIX_VERSION_CODE="${{ github.run_number }}" \
               --stacktrace --no-daemon

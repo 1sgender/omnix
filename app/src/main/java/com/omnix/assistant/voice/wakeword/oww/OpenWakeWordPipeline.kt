@@ -23,6 +23,8 @@ class OpenWakeWordPipeline(
         val melMs: Long,
         val embMs: Long,
         val clfMs: Long,
+        /** Окно признаков [16][96], по которому посчитан скор; null — детектор без признаков (фраза). */
+        val features: List<FloatArray>? = null,
     )
 
     companion object {
@@ -111,7 +113,7 @@ class OpenWakeWordPipeline(
         if (featureBuffer.size < FEATURE_FRAMES) return null
         val feats = Array(1) { featureBuffer.takeLast(FEATURE_FRAMES).toTypedArray() }
         val s = classifier.score(feats)
-        return FrameResult(s, t1 - t0, t2 - t1, nowMs() - t2)
+        return FrameResult(s, t1 - t0, t2 - t1, nowMs() - t2, feats[0].asList())
     }
 
     /** Полный сброс контекста (рестарт движка после STT — без stale-фич). */

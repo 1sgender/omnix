@@ -263,10 +263,10 @@
     <string name="omnix_admin_answer_cloud">Bulut</string>
     <string name="omnix_admin_wake_title">Chaqiruv iborasini sinash (admin)</string>
     <string name="omnix_admin_wake_body">Telefoningizda solishtiring. OMNIX keyingi safar tinglashni boshlaganda qoʻllanadi.</string>
-    <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okey Omni” — standart</string>
+    <string name="omnix_admin_wake_all">«Omni», «Omniks», «Okey, Omni» — ibora dvigateli (zaxira)</string>
     <string name="omnix_admin_wake_okay_omni">“Okey Omni” — yangi dvigatel</string>
     <string name="omnix_admin_wake_omni">“Omni” — yangi dvigatel</string>
-    <string name="omnix_admin_wake_legacy">“Omni” — oldingi model</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — o‘qitilgan model + shaxsiy filtr (asosiy)</string>
     <string name="omnix_ai_model_checking">Tekshirilmoqda…</string>
     <string name="omnix_ai_model_downloading">Yuklanmoqda: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Yuklab olinmagan — tugma pastda</string>
@@ -560,9 +560,27 @@
 
     <!-- Офлайн-голос (2026-11-09) -->
     <string name="omnix_offline_title">Oflayn rejim</string>
+    <string name="omnix_wake_training_title">«Omni» mashqi</string>
+    <string name="omnix_wake_training_hint">OMNIX\'ga aynan sizning ovozingizni tanishni o‘rgating. U o‘zi ham o‘rganadi: «Omni»dan keyin darhol buyruq kelsa — bu siz edingiz, jimlik bo‘lsa — noto‘g‘ri uyg‘onish.</string>
+    <string name="omnix_wake_training_filter_on">Shaxsiy filtr yoqilgan: «men» namunalari — %1$d, «men emas» — %2$d.</string>
+    <string name="omnix_wake_training_filter_off">«Men» namunalari: %1$d. Yana %2$d ta — va shaxsiy filtr yoqiladi.</string>
+    <string name="omnix_wake_training_record_header">«Omni» deng</string>
+    <string name="omnix_wake_training_record">«Omni» yozish (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_recording">«Omni» deng… (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_accepted">Yozildi. Yana boshqacha ayting: sekinroq, balandroq, uzoqdan.</string>
+    <string name="omnix_wake_training_rejected">«Omni»ni eshitmadim. Biroz balandroq qaytadan ayting.</string>
+    <string name="omnix_wake_training_background_header">Fon tekshiruvi</string>
+    <string name="omnix_wake_training_background_hint">30 daqiqa OMNIX oddiy hayotni (suhbatlar, TV) tinglaydi va hech narsani yoqmaydi. U uyg‘onadigan hamma narsa «men emas» namunasiga aylanadi. Bu vaqtda «Omni» demang.</string>
+    <string name="omnix_wake_training_background_start">Fon tekshiruvini boshlash</string>
+    <string name="omnix_wake_training_background_stop">To‘xtatish (%1$d daq o‘tdi, %2$d marta uyg‘ondi)</string>
+    <string name="omnix_wake_training_error">Mikrofon band. Yozib olayotgan boshqa ilovalarni yopib, qaytadan urinib ko‘ring.</string>
+    <string name="omnix_wake_training_data_header">Yozuvlar</string>
+    <string name="omnix_wake_training_share">Qayta o‘qitish uchun yozuvlarni ulashish</string>
+    <string name="omnix_wake_training_reset">Shaxsiy o‘qitishni tiklash</string>
     <string name="omnix_offline_hint">Internetsiz ishlaydigan qurilmadagi sunʻiy intellekt, ovoz va nutqni aniqlash. Bir marta yuklab oling.</string>
     <string name="omnix_offline_tk_voice">OMNIX turkman ovozi</string>
     <string name="omnix_offline_ru_voice">OMNIX rus ovozi</string>
+    <string name="omnix_offline_tk_asr_credit">Turkmen speech recognition: whisper-base-turkmen-v3 by derkar00 (huggingface.co/derkar00/whisper-base-turkmen-v3), CC BY-NC 4.0, https://creativecommons.org/licenses/by-nc/4.0/ . Changes: converted to ONNX, decoder quantized.</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Turkman nutqini aniqlash</string>
     <string name="omnix_offline_ru_asr">Rus nutqini aniqlash</string>

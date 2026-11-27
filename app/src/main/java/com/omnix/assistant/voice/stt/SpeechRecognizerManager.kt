@@ -174,7 +174,9 @@ class SpeechRecognizerManager @Inject constructor(
             // Туркменского у распознавателя Android нет: фраза уходит на сервер (Whisper).
             // Явно заданный другой язык (речь собеседника в синхронном переводе) слушает Android:
             // серверный путь не даёт промежуточного текста.
-            if (audioSource == null && SpeechLanguage.usesServerRecognition() && languageTag == SpeechLanguage.recognitionTag()) {
+            if (audioSource == null && languageTag == SpeechLanguage.recognitionTag() &&
+                SpeechLanguage.usesServerRecognition(online = isOnline())
+            ) {
                 startServerListening(continuous)
                 return
             }
@@ -235,6 +237,13 @@ class SpeechRecognizerManager @Inject constructor(
         }
     }
 
+    /** Есть ли сейчас интернет (для выбора распознавателя русского). */
+    private fun isOnline(): Boolean = runCatching {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        cm.getNetworkCapabilities(cm.activeNetwork)
+            ?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+    }.getOrDefault(true)
+
     /** Одна фраза через сервер: слушаем сами, отправляем в Whisper, отдаём как обычный результат. */
     private fun startServerListening(continuous: Boolean, languageHint: String = SpeechLanguage.serverHint()) {
         val session = generation.incrementAndGet()
@@ -264,6 +273,11 @@ class SpeechRecognizerManager @Inject constructor(
                             context.getString(R.string.vy_nichego_ne_skazali), SpeechRecognizer.ERROR_SPEECH_TIMEOUT
                         )
                     }
+                }
+                ServerSpeechCapture.Outcome.OnDeviceModelMissing -> {
+                    _speechState.value = SpeechRecognitionEvent.RecognitionError(
+                        context.getString(R.string.tk_model_downloading), -1
+                    )
                 }
                 ServerSpeechCapture.Outcome.MicrophoneBusy -> {
                     _speechState.value = SpeechRecognitionEvent.RecognitionError(

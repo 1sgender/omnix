@@ -40,12 +40,13 @@ object SpeechLanguage {
     const val SERVER_HINT_RU = "ru"
 
     /**
-     * Свой захват микрофона (без системного «бипа» Android): сначала модель на телефоне,
-     * затем сервер. Туркменского у Android-распознавателя нет; русский берём сами,
-     * чтобы он работал без интернета (решение владельца 2026-11-17).
+     * Свой захват микрофона: сначала модель на телефоне, затем сервер. Туркменского у
+     * Android-распознавателя нет — он всегда так. Русский — только без интернета: с интернетом
+     * распознаватель Google быстрее (слова на экране по ходу речи) и точнее маленькой модели на
+     * телефоне, которая давала мусор (отчёт владельца 2026-11-27, заменяет решение 2026-11-17).
      */
-    fun usesServerRecognition(language: AppLanguage = AppLanguage.current()): Boolean =
-        language == AppLanguage.TK || language == AppLanguage.RU
+    fun usesServerRecognition(language: AppLanguage = AppLanguage.current(), online: Boolean = true): Boolean =
+        language == AppLanguage.TK || (language == AppLanguage.RU && !online)
 
     /** Код языка для распознавания на телефоне и сервере. */
     fun serverHint(language: AppLanguage = AppLanguage.current()): String =

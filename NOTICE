@@ -81,6 +81,17 @@ Russian voice (optional download)
   The dataset authors do not endorse this application. The voice weights are
   not distributed with this repository; the app downloads them on request.
 
+Turkmen speech recognition (download, non-commercial licence)
+--------------------------------------------------------------
+- whisper-base-turkmen-v3 by derkar00,
+  https://huggingface.co/derkar00/whisper-base-turkmen-v3 , licensed under
+  CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/), used with the
+  author's permission. NON-COMMERCIAL: must be replaced or relicensed before
+  OMNIX is sold or offered with paid subscriptions. Base model: OpenAI Whisper
+  base (MIT). Changes: converted to ONNX for sherpa-onnx (decoder quantized to
+  int8); tokens.txt re-encoded to keep partial UTF-8 bytes. Weights are not
+  stored in this repository; the app downloads them.
+
 Live translation language filter (bundled in the app)
 ------------------------------------------------------
 - Whisper tiny — OpenAI — MIT License; ONNX export and int8 quantization by

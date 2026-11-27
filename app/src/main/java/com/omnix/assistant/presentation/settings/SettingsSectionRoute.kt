@@ -202,6 +202,7 @@ fun SettingsSectionRoute(
         )
 
         SECTION_OFFLINE_SPEECH -> OfflineSpeechScreen(modifier = modifier, onBack = onBack)
+        SECTION_WAKE_TRAINING -> WakeTrainingScreen(modifier = modifier, onBack = onBack)
 
         SECTION_YANDEX_MUSIC -> YandexMusicScreen(modifier = modifier, onBack = onBack)
 

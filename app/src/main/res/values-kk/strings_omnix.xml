@@ -263,10 +263,10 @@
     <string name="omnix_admin_answer_cloud">Бұлт</string>
     <string name="omnix_admin_wake_title">Шақыру сөзін сынау (әкімші)</string>
     <string name="omnix_admin_wake_body">Телефоныңызда салыстырыңыз. OMNIX келесі рет тыңдай бастағанда қолданылады.</string>
-    <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — әдепкі</string>
+    <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — сөз тіркесі қозғалтқышы (қосалқы)</string>
     <string name="omnix_admin_wake_okay_omni">«Окей, Омни» — жаңа қозғалтқыш</string>
     <string name="omnix_admin_wake_omni">«Омни» — жаңа қозғалтқыш</string>
-    <string name="omnix_admin_wake_legacy">«Омни» — бұрынғы модель</string>
+    <string name="omnix_admin_wake_legacy">«Омни» — үйретілген модель + жеке сүзгі (әдепкі)</string>
     <string name="omnix_ai_model_checking">Тексерілуде…</string>
     <string name="omnix_ai_model_downloading">Жүктелуде: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Жүктелмеген — түйме төменде</string>
@@ -560,9 +560,27 @@
 
     <!-- Офлайн-голос (2026-11-09) -->
     <string name="omnix_offline_title">Офлайн режим</string>
+    <string name="omnix_wake_training_title">«Омни» жаттығуы</string>
+    <string name="omnix_wake_training_hint">OMNIX-ті дәл сіздің дауысыңызды тануға үйретіңіз. Ол өзі де үйренеді: «Омни»-ден кейін бірден бұйрық келсе — бұл сіз, үнсіздік болса — жалған ояну.</string>
+    <string name="omnix_wake_training_filter_on">Жеке сүзгі қосулы: «мен» үлгілері — %1$d, «мен емес» — %2$d.</string>
+    <string name="omnix_wake_training_filter_off">«Мен» үлгілері: %1$d. Тағы %2$d — және жеке сүзгі қосылады.</string>
+    <string name="omnix_wake_training_record_header">«Омни» деңіз</string>
+    <string name="omnix_wake_training_record">«Омни» жазу (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_recording">«Омни» деңіз… (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_accepted">Жазылды. Тағы басқаша айтыңыз: ақырын, қатты, алыстан.</string>
+    <string name="omnix_wake_training_rejected">«Омни»-ді естімедім. Сәл қаттырақ қайта айтыңыз.</string>
+    <string name="omnix_wake_training_background_header">Фондық тексеру</string>
+    <string name="omnix_wake_training_background_hint">30 минут OMNIX күнделікті өмірді (әңгімелер, ТД) тыңдайды және ештеңені қоспайды. Ол оянатын нәрсенің бәрі «мен емес» үлгісі болады. Бұл уақытта «Омни» демеңіз.</string>
+    <string name="omnix_wake_training_background_start">Фондық тексеруді бастау</string>
+    <string name="omnix_wake_training_background_stop">Тоқтату (%1$d мин өтті, %2$d рет оянды)</string>
+    <string name="omnix_wake_training_error">Микрофон бос емес. Жазатын басқа қолданбаларды жауып, қайталап көріңіз.</string>
+    <string name="omnix_wake_training_data_header">Жазбалар</string>
+    <string name="omnix_wake_training_share">Қайта үйрету үшін жазбаларды бөлісу</string>
+    <string name="omnix_wake_training_reset">Жеке үйретуді тазалау</string>
     <string name="omnix_offline_hint">Интернетсіз істейтін құрылғыдағы ЖИ, дауыс және сөйлеуді тану. Бір рет жүктеп алыңыз.</string>
     <string name="omnix_offline_tk_voice">OMNIX түрікмен дауысы</string>
     <string name="omnix_offline_ru_voice">OMNIX орыс дауысы</string>
+    <string name="omnix_offline_tk_asr_credit">Turkmen speech recognition: whisper-base-turkmen-v3 by derkar00 (huggingface.co/derkar00/whisper-base-turkmen-v3), CC BY-NC 4.0, https://creativecommons.org/licenses/by-nc/4.0/ . Changes: converted to ONNX, decoder quantized.</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Түрікмен сөзін тану</string>
     <string name="omnix_offline_ru_asr">Орыс сөзін тану</string>
