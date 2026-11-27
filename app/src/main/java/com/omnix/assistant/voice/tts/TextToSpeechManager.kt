@@ -259,35 +259,40 @@ class TextToSpeechManager @Inject constructor(
             speakMutex.withLock {
                 // Собственный офлайн-голос OMNIX (туркменский): системный движок не нужен.
                 if (offlineVoice.canSpeak(AppLanguage.current())) {
-                    speakOffline(text, speechRate, queueMode, stream)
+                    speakOffline(text, speechRate, pitch, queueMode, stream)
                     return@withLock
                 }
-                val engine = tts
-                if (engine != null && _isInitialized.value && _ttsState.value !is TtsState.Initializing) {
-                    speakInternal(text, speechRate, pitch, queueMode, stream)
-                    return@withLock
-                }
-                // Движок не готов — сохраняем текст (последний вызов «выигрывает»),
-                // (ре)стартуем init, после чего drainPendingUtterance() произнесёт его.
-                Log.w(TAG, "TTS not ready — buffering utterance and (re)initializing")
-                pendingUtterance = PendingUtterance(
-                    text = text,
-                    speechRate = speechRate.coerceIn(0.5f, 2.0f),
-                    pitch = pitch.coerceIn(0.5f, 2.0f),
-                    queueMode = queueMode,
-                    stream = stream
-                )
-                if (_ttsState.value == TtsState.Error || _ttsState.value == TtsState.Idle || tts == null) {
-                    initializeTts()
-                }
+                speakWithSystemLocked(text, speechRate, pitch, queueMode, stream)
             }
+        }
+    }
+
+    /** Системный голос Android. Вызывать под [speakMutex]. */
+    private fun speakWithSystemLocked(text: String, speechRate: Float, pitch: Float, queueMode: Int, stream: Int?) {
+        val engine = tts
+        if (engine != null && _isInitialized.value && _ttsState.value !is TtsState.Initializing) {
+            speakInternal(text, speechRate, pitch, queueMode, stream)
+            return
+        }
+        // Движок не готов — сохраняем текст (последний вызов «выигрывает»),
+        // (ре)стартуем init, после чего drainPendingUtterance() произнесёт его.
+        Log.w(TAG, "TTS not ready — buffering utterance and (re)initializing")
+        pendingUtterance = PendingUtterance(
+            text = text,
+            speechRate = speechRate.coerceIn(0.5f, 2.0f),
+            pitch = pitch.coerceIn(0.5f, 2.0f),
+            queueMode = queueMode,
+            stream = stream
+        )
+        if (_ttsState.value == TtsState.Error || _ttsState.value == TtsState.Idle || tts == null) {
+            initializeTts()
         }
     }
 
     /** Число фраз офлайн-голоса, поставленных и ещё не завершённых. */
     private val offlineActive = java.util.concurrent.atomic.AtomicInteger(0)
 
-    private fun speakOffline(text: String, speechRate: Float, queueMode: Int, stream: Int?) {
+    private fun speakOffline(text: String, speechRate: Float, pitch: Float, queueMode: Int, stream: Int?) {
         acquireFocusIfNeeded()
         activeUtterances.incrementAndGet()
         offlineActive.incrementAndGet()
@@ -307,6 +312,20 @@ class TextToSpeechManager @Inject constructor(
                         _ttsState.value = if (completed) TtsState.Done else TtsState.Ready
                     }
                     onUtteranceFinished()
+                }
+
+                override fun onUnavailable() {
+                    // Свой голос не сказал ни звука — эту фразу (и следующие) говорит системный.
+                    Log.w(TAG, "offline voice unavailable, falling back to system voice")
+                    if (offlineActive.decrementAndGet() <= 0) offlineActive.set(0)
+                    scope.launch {
+                        speakMutex.withLock {
+                            if (!disposed.get()) {
+                                speakWithSystemLocked(text, speechRate, pitch, TextToSpeech.QUEUE_ADD, stream)
+                            }
+                        }
+                        onUtteranceFinished()
+                    }
                 }
             }
         )

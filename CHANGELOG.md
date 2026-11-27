@@ -8,6 +8,14 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (OMNIX went silent with its own voice)
+
+- Если свой голос OMNIX (русский или туркменский) не загрузился, упал или не выдал ни одного
+  отсчёта звука, фраза пропадала — OMNIX молчал (отчёт владельца 2026-11-27). Теперь та же фраза
+  сразу звучит системным голосом, а сломавшийся голос до перезапуска приложения не используется;
+  причина пишется в журнал (`OfflineVoice`). Проверено: пакет русского голоса с сервера на ПК
+  синтезирует нормально (sherpa-onnx 1.13.8).
+
 ### Fixed (speech recognition quality and speed)
 
 - Русский давал мусор и был медленным: с 2026-11-17 русская фраза всегда сначала шла в модель на

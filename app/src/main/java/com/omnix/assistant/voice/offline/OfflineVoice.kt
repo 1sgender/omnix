@@ -31,8 +31,14 @@ class OfflineVoice @Inject constructor(
     interface Listener {
         fun onStart()
 
-        /** [completed] false — фраза оборвана (flush/stop) или произошла ошибка. */
+        /** [completed] false — фраза оборвана (flush/stop). */
         fun onFinished(completed: Boolean)
+
+        /**
+         * Голос не смог произнести фразу (модель не загрузилась, ошибка синтеза, ни одного
+         * отсчёта звука). Фразу нужно сказать системным голосом; [onFinished] не вызывается.
+         */
+        fun onUnavailable()
     }
 
     private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "omnix-offline-voice") }
@@ -46,8 +52,12 @@ class OfflineVoice @Inject constructor(
     @Volatile
     private var track: AudioTrack? = null
 
-    /** Голос установлен и умеет говорить на языке [language]. */
+    /** Языки, голос которых сломался в этом запуске: до перезапуска говорит системный голос. */
+    private val broken: MutableSet<AppLanguage> = ConcurrentHashMap.newKeySet()
+
+    /** Голос установлен, умеет говорить на языке [language] и не ломался в этом запуске. */
     fun canSpeak(language: AppLanguage): Boolean {
+        if (language in broken) return false
         val model = modelFor(language) ?: return false
         return store.isInstalled(model)
     }
@@ -72,16 +82,23 @@ class OfflineVoice @Inject constructor(
                 listener.onFinished(false)
                 return@execute
             }
-            val completed = try {
+            val result = try {
                 synthesizeAndPlay(language, text, speed, voiceCall, gen, listener)
             } catch (e: Exception) {
                 Log.e(TAG, "offline voice failed", e)
-                false
+                markBroken(language)
+                Played.FAILED
             } catch (e: UnsatisfiedLinkError) {
                 Log.e(TAG, "sherpa native library missing", e)
-                false
+                markBroken(language)
+                Played.FAILED
             }
-            listener.onFinished(completed)
+            // Голос молчал, а фразу никто не отменял — её скажет системный голос.
+            if (result == Played.FAILED && gen == generation.get()) {
+                listener.onUnavailable()
+            } else {
+                listener.onFinished(result == Played.COMPLETED)
+            }
         }
     }
 
@@ -98,6 +115,11 @@ class OfflineVoice @Inject constructor(
             engines.values.forEach { it.release() }
             engines.clear()
         }
+    }
+
+    private fun markBroken(language: AppLanguage) {
+        broken.add(language)
+        engines.remove(language)?.let { runCatching { it.release() } }
     }
 
     private fun stopTrack() {
@@ -133,7 +155,8 @@ class OfflineVoice @Inject constructor(
             ?.also { engines[language] = it }
     }
 
-    /** @return true, если фраза доиграна до конца. */
+    private enum class Played { COMPLETED, INTERRUPTED, FAILED }
+
     private fun synthesizeAndPlay(
         language: AppLanguage,
         text: String,
@@ -141,9 +164,17 @@ class OfflineVoice @Inject constructor(
         voiceCall: Boolean,
         gen: Int,
         listener: Listener
-    ): Boolean {
-        val engine = engine(language) ?: return false
+    ): Played {
+        val engine = engine(language) ?: run {
+            markBroken(language)
+            return Played.FAILED
+        }
         val audioTrack = buildTrack(engine.sampleRate(), voiceCall)
+        if (audioTrack.state != AudioTrack.STATE_INITIALIZED) {
+            Log.e(TAG, "offline voice: audio output not initialized")
+            audioTrack.release()
+            return Played.FAILED
+        }
         // Русский голос обучен на любительских записях: срезаем гул и шипение.
         val filter = if (language == AppLanguage.RU) VoicePostFilter(engine.sampleRate()) else null
         track = audioTrack
@@ -160,10 +191,14 @@ class OfflineVoice @Inject constructor(
                 audioTrack.write(clean, 0, clean.size, AudioTrack.WRITE_BLOCKING)
                 1
             }
-            if (gen != generation.get()) return false
+            if (gen != generation.get()) return Played.INTERRUPTED
+            if (!started) {
+                Log.e(TAG, "offline voice produced no audio for ${text.length} chars")
+                return Played.FAILED
+            }
             // Дать буферу доиграть, но не дольше разумного.
             waitForPlayback(audioTrack, gen)
-            return started && gen == generation.get()
+            return if (gen == generation.get()) Played.COMPLETED else Played.INTERRUPTED
         } finally {
             runCatching { audioTrack.stop() }
             audioTrack.release()
