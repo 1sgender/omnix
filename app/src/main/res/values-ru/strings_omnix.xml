@@ -317,10 +317,10 @@
     <string name="omnix_admin_answer_cloud">Облако</string>
     <string name="omnix_admin_wake_title">Тест фразы вызова (админ)</string>
     <string name="omnix_admin_wake_body">Сравните на своём телефоне. Сменится при следующем запуске прослушивания.</string>
-    <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — по умолчанию</string>
+    <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — движок фраз (запасной)</string>
     <string name="omnix_admin_wake_okay_omni">«Окей, Омни» — новый движок</string>
     <string name="omnix_admin_wake_omni">«Омни» — новый движок</string>
-    <string name="omnix_admin_wake_legacy">«Omni» — прежняя модель</string>
+    <string name="omnix_admin_wake_legacy">«Омни» — обученная модель + личный фильтр (по умолчанию)</string>
     <string name="omnix_ai_model_checking">Проверяю…</string>
     <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>
@@ -637,6 +637,23 @@
 
     <!-- Офлайн-голос (2026-11-09) -->
     <string name="omnix_offline_title">Офлайн-режим</string>
+    <string name="omnix_wake_training_title">Тренировка «Омни»</string>
+    <string name="omnix_wake_training_hint">Научите OMNIX узнавать именно ваш голос. Он учится и сам: если после «Омни» сразу звучит команда — это были вы, если тишина — ложное включение.</string>
+    <string name="omnix_wake_training_filter_on">Личный фильтр включён: примеров «я» — %1$d, «не я» — %2$d.</string>
+    <string name="omnix_wake_training_filter_off">Примеров «я»: %1$d. Ещё %2$d — и включится личный фильтр.</string>
+    <string name="omnix_wake_training_record_header">Скажите «Омни»</string>
+    <string name="omnix_wake_training_record">Записать «Омни» (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_recording">Говорите «Омни»… (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_accepted">Записано. Скажите ещё раз по-другому: тише, громче, издалека.</string>
+    <string name="omnix_wake_training_rejected">Не расслышал «Омни». Скажите ещё раз чуть громче.</string>
+    <string name="omnix_wake_training_background_header">Проверка фона</string>
+    <string name="omnix_wake_training_background_hint">30 минут OMNIX слушает обычную жизнь (разговоры, ТВ) и ничего не включает. Всё, на что он сработал бы, станет примером «не я». В это время не говорите «Омни».</string>
+    <string name="omnix_wake_training_background_start">Начать проверку фона</string>
+    <string name="omnix_wake_training_background_stop">Остановить (прошло %1$d мин, срабатываний %2$d)</string>
+    <string name="omnix_wake_training_error">Микрофон занят. Закройте другие приложения с записью и попробуйте снова.</string>
+    <string name="omnix_wake_training_data_header">Записи</string>
+    <string name="omnix_wake_training_share">Поделиться записями для дообучения</string>
+    <string name="omnix_wake_training_reset">Сбросить личное обучение</string>
     <string name="omnix_offline_hint">Локальный ИИ, голос и распознавание речи, которые работают без интернета. Скачайте один раз.</string>
     <string name="omnix_offline_tk_voice">Туркменский голос OMNIX</string>
     <string name="omnix_offline_ru_voice">Русский голос OMNIX</string>

@@ -10,14 +10,18 @@ package com.omnix.assistant.voice.wakeword.phrase
  * произношений, ни одного ложного срабатывания.
  */
 enum class WakeEngineKind(val storageKey: String) {
-    /** sherpa-onnx keyword spotter на русской потоковой модели. */
+    /** sherpa-onnx keyword spotter на русской потоковой модели («Окей, Омни»). */
     PHRASE("phrase"),
 
-    /** Прежняя модель «Omni» (openWakeWord) — только для сравнения админом. */
+    /**
+     * Обученная модель «Омни» (openWakeWord omni_v0.2fp) + личный фильтр по голосу хозяина —
+     * по умолчанию с 2026-11-27: на 269 живых «Омни» владельца (вне обучения) отклик 96% против
+     * 30% у фразы, которая слышит «Омни» как «он» / «он не» / «помни».
+     */
     LEGACY_OMNI("legacy_omni");
 
     companion object {
-        fun fromStorageKey(raw: String?): WakeEngineKind = entries.firstOrNull { it.storageKey == raw } ?: PHRASE
+        fun fromStorageKey(raw: String?): WakeEngineKind = entries.firstOrNull { it.storageKey == raw } ?: LEGACY_OMNI
     }
 }
 

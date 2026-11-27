@@ -263,10 +263,10 @@
     <string name="omnix_admin_answer_cloud">Bulut</string>
     <string name="omnix_admin_wake_title">Uyandırma ifadesi testi (yönetici)</string>
     <string name="omnix_admin_wake_body">Telefonunuzda karşılaştırın. OMNIX bir sonraki dinlemeye başladığında uygulanır.</string>
-    <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okey Omni” — varsayılan</string>
+    <string name="omnix_admin_wake_all">«Omni», «Omnix», «Tamam Omni» — ifade motoru (yedek)</string>
     <string name="omnix_admin_wake_okay_omni">“Okey Omni” — yeni motor</string>
     <string name="omnix_admin_wake_omni">“Omni” — yeni motor</string>
-    <string name="omnix_admin_wake_legacy">“Omni” — önceki model</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — eğitilmiş model + kişisel filtre (varsayılan)</string>
     <string name="omnix_ai_model_checking">Kontrol ediliyor…</string>
     <string name="omnix_ai_model_downloading">İndiriliyor: %%%1$d</string>
     <string name="omnix_ai_model_not_downloaded">İndirilmedi — düğme aşağıda</string>
@@ -560,6 +560,23 @@
 
     <!-- Офлайн-голос (2026-11-09) -->
     <string name="omnix_offline_title">Çevrimdışı mod</string>
+    <string name="omnix_wake_training_title">«Omni» eğitimi</string>
+    <string name="omnix_wake_training_hint">OMNIX\'e sesinizi tanımayı öğretin. Kendi kendine de öğrenir: «Omni»den hemen sonra komut gelirse sizsiniz, sessizlik olursa yanlış uyanmadır.</string>
+    <string name="omnix_wake_training_filter_on">Kişisel filtre açık: «ben» örnekleri — %1$d, «ben değil» — %2$d.</string>
+    <string name="omnix_wake_training_filter_off">«Ben» örnekleri: %1$d. %2$d tane daha ve kişisel filtre açılır.</string>
+    <string name="omnix_wake_training_record_header">«Omni» deyin</string>
+    <string name="omnix_wake_training_record">«Omni» kaydet (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_recording">«Omni» deyin… (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_accepted">Kaydedildi. Bir de farklı söyleyin: daha sessiz, daha yüksek, uzaktan.</string>
+    <string name="omnix_wake_training_rejected">«Omni»yi duymadım. Biraz daha yüksek sesle tekrar söyleyin.</string>
+    <string name="omnix_wake_training_background_header">Arka plan kontrolü</string>
+    <string name="omnix_wake_training_background_hint">OMNIX 30 dakika günlük hayatı (konuşmalar, TV) dinler ve hiçbir şeyi açmaz. Uyanacağı her şey «ben değil» örneği olur. Bu sürede «Omni» demeyin.</string>
+    <string name="omnix_wake_training_background_start">Arka plan kontrolünü başlat</string>
+    <string name="omnix_wake_training_background_stop">Durdur (%1$d dk geçti, %2$d uyanma)</string>
+    <string name="omnix_wake_training_error">Mikrofon meşgul. Kayıt yapan diğer uygulamaları kapatıp tekrar deneyin.</string>
+    <string name="omnix_wake_training_data_header">Kayıtlar</string>
+    <string name="omnix_wake_training_share">Yeniden eğitim için kayıtları paylaş</string>
+    <string name="omnix_wake_training_reset">Kişisel eğitimi sıfırla</string>
     <string name="omnix_offline_hint">İnternetsiz çalışan cihaz içi yapay zekâ, ses ve konuşma tanıma. Bir kez indirin.</string>
     <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
     <string name="omnix_offline_ru_voice">OMNIX Rusça sesi</string>

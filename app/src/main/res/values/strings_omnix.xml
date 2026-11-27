@@ -319,10 +319,10 @@
     <string name="omnix_admin_answer_cloud">Cloud</string>
     <string name="omnix_admin_wake_title">Wake phrase testing (admin)</string>
     <string name="omnix_admin_wake_body">Compare on your phone. Applies the next time OMNIX starts listening.</string>
-    <string name="omnix_admin_wake_all">“Omni”, “Omnix”, “Okay Omni” — default</string>
+    <string name="omnix_admin_wake_all">«Omni», «Omnix», «Okay Omni» — phrase engine (backup)</string>
     <string name="omnix_admin_wake_okay_omni">“Okay Omni” — new engine</string>
     <string name="omnix_admin_wake_omni">“Omni” — new engine</string>
-    <string name="omnix_admin_wake_legacy">“Omni” — previous model</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — trained model + personal filter (default)</string>
     <string name="omnix_ai_model_checking">Checking…</string>
     <string name="omnix_ai_model_downloading">Downloading: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Not downloaded — the button is below</string>
@@ -638,6 +638,23 @@
 
     <!-- Офлайн-голос (2026-11-09) -->
     <string name="omnix_offline_title">Offline mode</string>
+    <string name="omnix_wake_training_title">Omni training</string>
+    <string name="omnix_wake_training_hint">Teach OMNIX to recognise your voice. It also learns by itself: a command right after «Omni» means it was you; silence means a false wake.</string>
+    <string name="omnix_wake_training_filter_on">Personal filter is on: «me» samples — %1$d, «not me» — %2$d.</string>
+    <string name="omnix_wake_training_filter_off">«Me» samples: %1$d. Still needed for the personal filter: %2$d.</string>
+    <string name="omnix_wake_training_record_header">Say «Omni»</string>
+    <string name="omnix_wake_training_record">Record «Omni» (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_recording">Say «Omni»… (%1$d / %2$d)</string>
+    <string name="omnix_wake_training_accepted">Saved. Say it again differently: quieter, louder, from further away.</string>
+    <string name="omnix_wake_training_rejected">Didn\'t hear «Omni». Say it again a little louder.</string>
+    <string name="omnix_wake_training_background_header">Background check</string>
+    <string name="omnix_wake_training_background_hint">For 30 minutes OMNIX listens to everyday life (talk, TV) without waking. Everything it would have woken on becomes a «not me» sample. Don\'t say «Omni» during this time.</string>
+    <string name="omnix_wake_training_background_start">Start background check</string>
+    <string name="omnix_wake_training_background_stop">Stop (minutes: %1$d, wakes: %2$d)</string>
+    <string name="omnix_wake_training_error">The microphone is busy. Close other recording apps and try again.</string>
+    <string name="omnix_wake_training_data_header">Recordings</string>
+    <string name="omnix_wake_training_share">Share recordings for retraining</string>
+    <string name="omnix_wake_training_reset">Reset personal training</string>
     <string name="omnix_offline_hint">On-device AI, voice and speech recognition that work without internet. Download once.</string>
     <string name="omnix_offline_tk_voice">Turkmen voice OMNIX</string>
     <string name="omnix_offline_ru_voice">Russian voice OMNIX</string>

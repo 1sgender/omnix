@@ -21,9 +21,9 @@ data class WakeWordConfig(
     val modelAssetPath: String = "wakeword/omni_v0.2fp.onnx",
     val melAssetPath: String = "wakeword/melspectrogram.onnx",
     val embeddingAssetPath: String = "wakeword/embedding_model.onnx",
-    // 0.5: рабочая точка omni_v0.2fp (training/OMNI_V0.2FP_REPORT.md);
-    // регулируется настройкой WAKEWORD_THRESHOLD.
-    val threshold: Float = 0.5f,
+    // 0.8 (2026-11-27): на 269 живых «Омни» владельца (вне обучения) отклик 96%; ложные держит
+    // личный фильтр (personal/). Регулируется настройкой WAKEWORD_THRESHOLD.
+    val threshold: Float = 0.8f,
     /** Сколько подряд фреймов (по 80 мс) выше порога нужно для срабатывания (oWW 'patience'). */
     val patienceFrames: Int = 2,
     val cooldownMs: Long = 2000L,
@@ -46,7 +46,7 @@ data class WakeWordConfig(
      * модель «Omni» — только для сравнения админом. Поля выше (порог, шумовой
      * буст, near-miss, пути моделей) относятся к прежней модели.
      */
-    val engine: WakeEngineKind = WakeEngineKind.PHRASE,
+    val engine: WakeEngineKind = WakeEngineKind.LEGACY_OMNI,
     val phrase: WakePhrase = WakePhrase.ALL,
 )
 
@@ -114,4 +114,11 @@ interface WakeWordEngine {
      * должен доживаться до подтверждения в новой.
      */
     fun resetDetectionSeries()
+
+    /**
+     * Чем оказалось последнее срабатывание: [wasReal] true — человек сразу дал команду
+     * («Омни» был настоящим), false — после него тишина (ложное включение). Из этого
+     * учится личный фильтр. По умолчанию ничего не делает.
+     */
+    fun labelLastDetection(wasReal: Boolean) = Unit
 }

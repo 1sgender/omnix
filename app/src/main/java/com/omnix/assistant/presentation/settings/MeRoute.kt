@@ -15,6 +15,7 @@ import com.omnix.assistant.presentation.components.OmnixGlobeLineIcon
 import com.omnix.assistant.presentation.components.OmnixHeadphonesLineIcon
 import com.omnix.assistant.presentation.components.OmnixLockLineIcon
 import com.omnix.assistant.presentation.components.OmnixMemoryLineIcon
+import com.omnix.assistant.presentation.components.OmnixMicLineIcon
 import com.omnix.assistant.presentation.components.OmnixSparkLineIcon
 import com.omnix.assistant.presentation.components.OmnixTranslatorLineIcon
 import com.omnix.assistant.presentation.design.OmnixAppearance
@@ -136,6 +137,13 @@ fun MeRoute(
                         label = stringResource(R.string.omnix_offline_title),
                         value = "",
                         destination = OmnixDestination.SettingsSection(SECTION_OFFLINE_SPEECH)
+                    ),
+                    // «Омни» учится узнавать голос хозяина: тренировка, проверка фона, выгрузка записей.
+                    MeRow(
+                        icon = OmnixMicLineIcon,
+                        label = stringResource(R.string.omnix_wake_training_title),
+                        value = "",
+                        destination = OmnixDestination.SettingsSection(SECTION_WAKE_TRAINING)
                     ),
                     // Необязательная служба специальных возможностей: мастер включения.
                     MeRow(
