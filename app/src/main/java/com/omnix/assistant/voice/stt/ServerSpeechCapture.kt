@@ -31,6 +31,8 @@ class ServerSpeechCapture @Inject constructor(
     private val local: LocalSpeechRecognizer,
     /** Язык фразы по звуку: человек мог сказать её не на языке интерфейса. */
     private val languageDetector: SpokenLanguageDetector,
+    /** Пакеты моделей: туркменская модель докачивается, если её ещё нет. */
+    private val modelStore: com.omnix.assistant.voice.offline.OfflineSpeechModelStore,
     /** V012: серверное распознавание — облачная функция, только с подключённой парой OMNIX. */
     private val pairAccess: com.omnix.assistant.agent.decision.CloudPairAccess =
         com.omnix.assistant.agent.decision.CloudPairAccess.OPEN
@@ -40,6 +42,8 @@ class ServerSpeechCapture @Inject constructor(
         data class Heard(val text: String) : Outcome
         data object Silence : Outcome
         data object MicrophoneBusy : Outcome
+        /** Туркменская модель ещё не на телефоне; её загрузка уже запущена. */
+        data object OnDeviceModelMissing : Outcome
         data class Failed(val message: String) : Outcome
     }
 
@@ -67,13 +71,29 @@ class ServerSpeechCapture @Inject constructor(
     /**
      * Офлайн прежде всего (решение владельца 2026-11-09): если на телефоне есть модель
      * для языка, фраза распознаётся без интернета. Не услышала или модели нет — сервер.
+     * Туркменский — никогда не сервер: только модель на телефоне.
      */
-    private suspend fun recognizeOnPhoneThenServer(samples: ShortArray, languageHint: String, prompt: String?): Outcome {
+    private suspend fun recognizeOnPhoneThenServer(
+        samples: ShortArray,
+        languageHint: String,
+        prompt: String?,
+        detectLanguage: Boolean = true
+    ): Outcome {
         val durationMs = samples.size * 1000L / SAMPLE_RATE
         // Сказал по-туркменски при русском интерфейсе (или наоборот) — распознаём на языке фразы.
-        val detected = runCatching { languageDetector.detect(samples, SAMPLE_RATE) }.getOrNull()
+        val detected = if (detectLanguage) runCatching { languageDetector.detect(samples, SAMPLE_RATE) }.getOrNull() else null
         val hint = RecognitionRouting.effectiveLanguage(languageHint, detected)
         if (hint != languageHint) Log.i(TAG, "phrase language $detected -> recognizing as $hint")
+
+        // Туркменский — только на телефоне (решение владельца 2026-11-27): сервер его почти не
+        // понимает, а звук не должен уходить в облако.
+        if (hint == RecognitionRouting.LANG_ON_DEVICE_ONLY) {
+            if (local.isReady(hint)) return recognizeOnPhoneOnly(samples, hint)
+            modelStore.download(com.omnix.assistant.voice.offline.OfflineSpeechModels.TK_ASR, overMetered = false)
+            // Язык определился сам, а интерфейс другой — распознаём на языке интерфейса, как раньше.
+            if (languageHint == hint) return Outcome.OnDeviceModelMissing
+            return recognizeOnPhoneThenServer(samples, languageHint, prompt, detectLanguage = false)
+        }
 
         var localText: String? = null
         if (local.isReady(hint)) {
@@ -97,6 +117,11 @@ class ServerSpeechCapture @Inject constructor(
             is Resource.Error -> fallback ?: Outcome.Failed(stt.message.orEmpty())
             else -> fallback ?: Outcome.Silence
         }
+    }
+
+    private suspend fun recognizeOnPhoneOnly(samples: ShortArray, language: String): Outcome {
+        val text = local.transcribe(samples, language)?.trim()
+        return if (text == null || text.length < MIN_TEXT_CHARS) Outcome.Silence else Outcome.Heard(text)
     }
 
     private sealed interface Captured {

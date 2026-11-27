@@ -580,6 +580,7 @@
     <string name="omnix_offline_hint">İnternetsiz çalışan cihaz içi yapay zekâ, ses ve konuşma tanıma. Bir kez indirin.</string>
     <string name="omnix_offline_tk_voice">OMNIX Türkmen sesi</string>
     <string name="omnix_offline_ru_voice">OMNIX Rusça sesi</string>
+    <string name="omnix_offline_tk_asr_credit">Turkmen speech recognition: whisper-base-turkmen-v3 by derkar00 (huggingface.co/derkar00/whisper-base-turkmen-v3), CC BY-NC 4.0, https://creativecommons.org/licenses/by-nc/4.0/ . Changes: converted to ONNX, decoder quantized.</string>
     <string name="omnix_offline_ru_voice_credit">Russian voice: trained on the SOVA Dataset (Virtual Assistant, LLC, sova.ai), CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ . Changes: one speaker selected, audio normalised, Piper (VITS) model fine-tuned.</string>
     <string name="omnix_offline_tk_asr">Türkmence konuşma tanıma</string>
     <string name="omnix_offline_ru_asr">Rusça konuşma tanıma</string>

@@ -71,5 +71,7 @@ class OfflinePack @Inject constructor(
         }
         models.filter { it.isPublished && !speech.isInstalled(it) && !speech.isBusy(it) }
             .forEach { speech.download(it, overMetered = false) }
+        // Новая туркменская модель на месте — прежняя (270 МБ) больше не нужна.
+        if (speech.isInstalled(OfflineSpeechModels.TK_ASR)) speech.removeLegacy()
     }
 }

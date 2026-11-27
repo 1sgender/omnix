@@ -274,6 +274,11 @@ class SpeechRecognizerManager @Inject constructor(
                         )
                     }
                 }
+                ServerSpeechCapture.Outcome.OnDeviceModelMissing -> {
+                    _speechState.value = SpeechRecognitionEvent.RecognitionError(
+                        context.getString(R.string.tk_model_downloading), -1
+                    )
+                }
                 ServerSpeechCapture.Outcome.MicrophoneBusy -> {
                     _speechState.value = SpeechRecognitionEvent.RecognitionError(
                         context.getString(R.string.ne_udalos_otkryt_mikrofon), -1
