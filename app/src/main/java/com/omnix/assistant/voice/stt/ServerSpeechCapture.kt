@@ -29,6 +29,8 @@ import kotlin.math.sqrt
 class ServerSpeechCapture @Inject constructor(
     private val api: OmnixApiClient,
     private val local: LocalSpeechRecognizer,
+    /** Язык фразы по звуку: человек мог сказать её не на языке интерфейса. */
+    private val languageDetector: SpokenLanguageDetector,
     /** V012: серверное распознавание — облачная функция, только с подключённой парой OMNIX. */
     private val pairAccess: com.omnix.assistant.agent.decision.CloudPairAccess =
         com.omnix.assistant.agent.decision.CloudPairAccess.OPEN
@@ -67,18 +69,33 @@ class ServerSpeechCapture @Inject constructor(
      * для языка, фраза распознаётся без интернета. Не услышала или модели нет — сервер.
      */
     private suspend fun recognizeOnPhoneThenServer(samples: ShortArray, languageHint: String, prompt: String?): Outcome {
-        if (local.isReady(languageHint)) {
-            val text = local.transcribe(samples, languageHint)
-            if (text != null && text.length >= MIN_TEXT_CHARS) return Outcome.Heard(text)
+        val durationMs = samples.size * 1000L / SAMPLE_RATE
+        // Сказал по-туркменски при русском интерфейсе (или наоборот) — распознаём на языке фразы.
+        val detected = runCatching { languageDetector.detect(samples, SAMPLE_RATE) }.getOrNull()
+        val hint = RecognitionRouting.effectiveLanguage(languageHint, detected)
+        if (hint != languageHint) Log.i(TAG, "phrase language $detected -> recognizing as $hint")
+
+        var localText: String? = null
+        if (local.isReady(hint)) {
+            localText = local.transcribe(samples, hint)?.trim()
+            val text = localText
+            if (text != null && text.length >= MIN_TEXT_CHARS &&
+                (!RecognitionRouting.looksIncomplete(text, durationMs) || !RecognitionRouting.serverCanImprove(hint))
+            ) {
+                return Outcome.Heard(text)
+            }
         }
-        pairAccess.blockedMessage(com.omnix.assistant.agent.decision.CloudUse.FULL)?.let { return Outcome.Failed(it) }
-        return when (val stt = api.transcribe(PcmWav.encode(samples, SAMPLE_RATE), languageHint, prompt)) {
+        // Модель на телефоне не справилась (или её нет) — переспрашиваем сервер; без сервера
+        // отдаём то, что услышал телефон.
+        val fallback = localText?.takeIf { it.length >= MIN_TEXT_CHARS }?.let { Outcome.Heard(it) }
+        pairAccess.blockedMessage(com.omnix.assistant.agent.decision.CloudUse.FULL)?.let { return fallback ?: Outcome.Failed(it) }
+        return when (val stt = api.transcribe(PcmWav.encode(samples, SAMPLE_RATE), hint, prompt)) {
             is Resource.Success -> {
                 val text = stt.data.text.trim()
-                if (text.length < MIN_TEXT_CHARS) Outcome.Silence else Outcome.Heard(text)
+                if (text.length < MIN_TEXT_CHARS) fallback ?: Outcome.Silence else Outcome.Heard(text)
             }
-            is Resource.Error -> Outcome.Failed(stt.message.orEmpty())
-            else -> Outcome.Silence
+            is Resource.Error -> fallback ?: Outcome.Failed(stt.message.orEmpty())
+            else -> fallback ?: Outcome.Silence
         }
     }
 

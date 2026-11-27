@@ -27,7 +27,9 @@ class AppLanguageTest {
     @Test
     fun `turkmen and russian use own capture, not the Android recogniser`() {
         assertEquals(true, SpeechLanguage.usesServerRecognition(AppLanguage.TK))
-        assertEquals(true, SpeechLanguage.usesServerRecognition(AppLanguage.RU))
+        // Русский: с интернетом — распознаватель Google, без интернета — модель на телефоне.
+        assertEquals(false, SpeechLanguage.usesServerRecognition(AppLanguage.RU, online = true))
+        assertEquals(true, SpeechLanguage.usesServerRecognition(AppLanguage.RU, online = false))
         assertEquals("ru", SpeechLanguage.serverHint(AppLanguage.RU))
         assertEquals("tk", SpeechLanguage.serverHint(AppLanguage.TK))
         assertEquals(false, SpeechLanguage.usesServerRecognition(AppLanguage.UZ))

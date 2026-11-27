@@ -61,11 +61,15 @@ class OfflinePack @Inject constructor(
      * на телефоне, говорит системный голос. Повторный вызов во время загрузки ничего не делает.
      */
     fun ensurePrimaryVoice() {
-        val voice = when (AppLanguage.current()) {
-            AppLanguage.RU -> OfflineSpeechModels.RU_VOICE
+        // Голос и улучшенное распознавание без интернета (GigaAM): основные для языка, а не «по желанию».
+        val models = when (AppLanguage.current()) {
+            AppLanguage.RU -> listOf(OfflineSpeechModels.RU_VOICE, OfflineSpeechModels.RU_ASR)
+            // Туркменский: без модели на телефоне фразы уходили бы на сервер, а он туркменский почти
+            // не понимает (замер 27.11: WER 122%).
+            AppLanguage.TK -> listOf(OfflineSpeechModels.TK_VOICE, OfflineSpeechModels.TK_ASR)
             else -> return
         }
-        if (!voice.isPublished || speech.isInstalled(voice) || speech.isBusy(voice)) return
-        speech.download(voice, overMetered = false)
+        models.filter { it.isPublished && !speech.isInstalled(it) && !speech.isBusy(it) }
+            .forEach { speech.download(it, overMetered = false) }
     }
 }
