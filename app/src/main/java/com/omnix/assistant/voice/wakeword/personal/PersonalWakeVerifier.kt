@@ -26,7 +26,7 @@ object WakeFeatures {
         }
         val n = window.size.coerceAtLeast(1)
         for (d in 0 until EMB) {
-            out[d] /= n
+            out[d] = out[d] / n.toFloat()
             out[EMB + d] = if (max[d] == Float.NEGATIVE_INFINITY) 0f else max[d]
         }
         return out
@@ -97,7 +97,8 @@ class PersonalWakeVerifier internal constructor(
             val all = positives + negatives
             val mean = FloatArray(dim)
             all.forEach { v -> for (i in 0 until dim) mean[i] += v[i] }
-            for (i in 0 until dim) mean[i] /= all.size
+            val count = all.size.toFloat()
+            for (i in 0 until dim) mean[i] = mean[i] / count
             val scale = FloatArray(dim)
             all.forEach { v -> for (i in 0 until dim) { val d = v[i] - mean[i]; scale[i] += d * d } }
             for (i in 0 until dim) scale[i] = sqrt(scale[i] / all.size).coerceAtLeast(MIN_SCALE)
