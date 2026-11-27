@@ -754,12 +754,16 @@ class MediaPipeModelManager @Inject constructor(
         val info = ActivityManager.MemoryInfo()
         am.getMemoryInfo(info)
 
-        if (info.lowMemory) return false
-
         val availableMb = info.availMem / (1024 * 1024)
-        val enough = availableMb >= spec.minRuntimeMemoryMb
+        val totalMb = info.totalMem / (1024 * 1024)
+        val enough = com.omnix.assistant.agent.localai.LocalMemoryCheck.enough(
+            totalMb = totalMb,
+            availableMb = availableMb,
+            lowMemory = info.lowMemory,
+            requiredMb = spec.minRuntimeMemoryMb.toLong()
+        )
         if (!enough) {
-            Log.w(TAG, "available RAM = ${availableMb}MB < required ${spec.minRuntimeMemoryMb}MB")
+            Log.w(TAG, "RAM total=${totalMb}MB available=${availableMb}MB low=${info.lowMemory} < required ${spec.minRuntimeMemoryMb}MB")
         }
         return enough
     }

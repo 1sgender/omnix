@@ -8,6 +8,16 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (OMNIX went silent with its own voice)
+
+- Русский свой голос молчал на каждой фразе (отчёт владельца 2026-11-27, журнал телефона S24 Ultra):
+  `AudioTrack` — «Invalid audio buffer size»: буфер задавался в `sampleRate` байт, при 22050 Гц это
+  не кратно размеру отсчёта float (4 байта). Теперь буфер округляется до кратного 4 (юнит-тест).
+- Если свой голос OMNIX (русский или туркменский) не загрузился, упал или не выдал ни одного
+  отсчёта звука, фраза пропадала — OMNIX молчал. Теперь та же фраза
+  сразу звучит системным голосом, а сломавшийся голос до перезапуска приложения не используется;
+  причина пишется в журнал (`OfflineVoice`). Проверено: пакет русского голоса с сервера на ПК
+  синтезирует нормально (sherpa-onnx 1.13.8).
 ### Fixed (CI: Maven Central rate limiting)
 
 - Настоящая причина падений CI 26–27.11: repo.maven.apache.org отвечал раннерам GitHub 429 Too Many
@@ -16,6 +26,15 @@ must be added only when the repository owner creates an actual release.
   Maven Central у Google для библиотек (`settings.gradle.kts`; для плагинов портал Gradle остаётся
   первым — маркеры плагинов там другие файлы), прежние — запасные;
   контрольные суммы по-прежнему проверяет verification-metadata.xml.
+### Fixed (model switching)
+
+- «Локально» не включалось на S24 Ultra (12 ГБ): проверка требовала, чтобы свободно было не меньше
+  нужного прямо сейчас (журнал телефона 2026-11-27: available 2943 MB < 3072 MB для Qwen 1.5B), а
+  Android держит память занятой фоновыми приложениями и освобождает её по требованию. Теперь при
+  памяти телефона с тройным запасом и без сигнала нехватки модель загружается (`LocalMemoryCheck`).
+- Голосом не переключалось «переключись на модель Pro», «на про-модель», «на flash-модель» —
+  слово «модель» сразу после «на» и через дефис теперь понимается. Юнит-тесты.
+
 ### Changed (Turkmen recognition only on the phone)
 
 - Туркменская речь больше не уходит в облако: только модель на телефоне (решение владельца
