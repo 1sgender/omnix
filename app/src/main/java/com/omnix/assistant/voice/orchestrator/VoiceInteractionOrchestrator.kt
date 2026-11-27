@@ -30,6 +30,10 @@ import com.omnix.assistant.voice.live.LiveAudioCapture
 import com.omnix.assistant.voice.live.LiveMicMode
 import com.omnix.assistant.voice.live.LiveMicSettings
 import com.omnix.assistant.voice.live.PcmPipeFeeder
+import com.omnix.assistant.voice.bargein.BargeInListener
+import com.omnix.assistant.voice.bargein.BargeInPhrases
+import com.omnix.assistant.voice.bargein.ResumePoint
+import com.omnix.assistant.agent.translator.EchoGuard
 import com.omnix.assistant.core.confirmation.ConfirmationIntent
 import com.omnix.assistant.core.crash.CrashCapture
 import com.omnix.assistant.core.result.Resource
@@ -97,7 +101,19 @@ class VoiceInteractionOrchestrator @Inject constructor(
         private const val LIVE_SPEECH_RATE = 1.15f
         private const val LIVE_WATCHDOG_TICK_MS = 1_000L
         private const val LIVE_WATCHDOG_VOICED_MS = 5_000L
-        private const val FOLLOW_UP_WINDOW_MS = 8000L
+        /**
+         * Сколько после ответа OMNIX ждёт, что человек заговорит без «Омни» (владелец
+         * 2026-11-26: «выполняет и сразу выключается», но 10 с — много). Пока человек говорит,
+         * отсчёт продлевается: фраза слушается до конца.
+         */
+        private const val FOLLOW_UP_WINDOW_MS = 5_000L
+        private const val FOLLOW_UP_RESTART_MS = 200L
+        private const val LISTEN_TICK_MS = 100L
+        /** Начало своей фразы не слушаем: щелчок старта синтеза — не человек. */
+        private const val BARGE_IN_START_DELAY_MS = 300L
+        /** Сколько ждать слов после перебивания, прежде чем продолжить свою фразу. */
+        private const val BARGE_IN_LISTEN_MS = 4_000L
+        private const val MAX_FALSE_BARGE_INS = 2
         private const val CONFIRMATION_TIMEOUT_MS = 10000L
 
         /** Паузы перед повторным запуском движка фразы после его ошибки. */
@@ -110,6 +126,9 @@ class VoiceInteractionOrchestrator @Inject constructor(
          * от ПРЕДЫДУЩЕГО распознавания и приводит к двойной обработке команд,
          * «оживающим» ответам и несанкционированным AI/TTS вызовам.
          */
+        /** Где OMNIX можно перебить: обычный ответ и вопрос-подтверждение. */
+        private val BARGE_IN_MODES = setOf(OrchestratorMode.TTS_SPEAKING, OrchestratorMode.AWAITING_CONFIRMATION)
+
         private val ALLOWED_FINAL_RESULT_MODES = setOf(
             OrchestratorMode.LISTENING_USER_QUERY,
             OrchestratorMode.CONTINUOUS_CONVERSATION,
@@ -202,6 +221,24 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private var liveCaptureJob: Job? = null
     private var liveWatchdogJob: Job? = null
     private var liveTtsJob: Job? = null
+
+    // ── Перебивание (barge-in): пока OMNIX говорит, человек может его перебить. ──
+    /** Текст, который сейчас озвучивается и который можно перебить; null — перебивать нельзя. */
+    private var bargeInArmedText: String? = null
+    private var speakingStartedAt = 0L
+    private var bargeInListener: BargeInListener? = null
+    /** Пишется с главного потока, читается потоком записи. */
+    @Volatile
+    private var bargeInFeeder: PcmPipeFeeder? = null
+    private var bargeInStartJob: Job? = null
+    private var bargeInTimeoutJob: Job? = null
+    /** Перебили — ждём, что скажет человек (эхо/тишина → продолжаем свою фразу). */
+    private var bargeInPending = false
+    private var bargeInText = ""
+    private var bargeInSpokenMs = 0L
+    private var bargeInEcho: EchoGuard? = null
+    /** Ложных перебиваний в текущем ответе: после двух перебивание для него выключается. */
+    private var falseBargeIns = 0
 
     /** Фильтр языка (встроенная модель); null — не загрузился, куски не фильтруются. */
     @Volatile
@@ -536,6 +573,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
         stopLiveSession()
+        disarmBargeIn()
         confirmationTimeoutJob = null
         silenceJob?.cancel()
         silenceJob = null
@@ -843,6 +881,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
             speechRecognizerManager.speechState.collectLatest { event ->
                 when (event) {
                     is SpeechRecognitionEvent.PartialResult -> {
+                        if (bargeInPending) bargeInTimeoutJob?.cancel()
                         if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                             liveHeardSomething = true
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
@@ -853,6 +892,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
                             val cleaned = WakeWordExtractor.extractQuery(AsrPostProcessor.process(event.partialText), wakeKeywords)
                                 ?: event.partialText
+                            // Человек говорит в окне продолжения — не обрываем его на середине.
+                            if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) armFollowUpWindow()
                             _assistantState.value = VoiceAssistantState.Recognizing(event.partialText)
                             _lastQuery.value = cleaned
 
@@ -867,7 +908,15 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                     _assistantState.value = VoiceAssistantState.Listening
                                 } else if (listening) {
                                     speechRecognizerManager.stopListening()
-                                    processUserQuery(cleaned)
+                                    if (bargeInPending && handleBargeInUtterance(cleaned)) {
+                                        // Перебивание оказалось эхом/«стоп» — обработано.
+                                    } else if (current == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                                        !isAddressedFollowUp(event.partialText, cleaned)
+                                    ) {
+                                        startStandbyMode()
+                                    } else {
+                                        processUserQuery(cleaned)
+                                    }
                                 }
                             }
                         }
@@ -885,6 +934,12 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         silenceJob?.cancel()
                         followUpWindowJob?.cancel()
                         val text = event.recognizedText.trim()
+                        if (bargeInPending && _currentMode.value == OrchestratorMode.LISTENING_USER_QUERY &&
+                            handleBargeInUtterance(text)
+                        ) {
+                            return@collectLatest
+                        }
+                        finishBargeInCapture()
 
                         if (text.lowercase() in listOf("стоп", "хватит", "отмена", "джарвис стоп", "выйти")) {
                             handleCancel()
@@ -919,7 +974,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         // который возвращает null при пустом результате — не дёргаем
                         // processUserQuery с сырым wake-word.
                         val query = WakeWordExtractor.extractQuery(text, wakeKeywords)
-                        if (query != null) {
+                        if (query != null &&
+                            _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                            !isAddressedFollowUp(text, query)
+                        ) {
+                            // Фраза в окне продолжения сказана не OMNIX — молча ждём «Омни».
+                            startStandbyMode()
+                        } else if (query != null) {
                             processUserQuery(query)
                         } else {
                             // Прозвучало только имя ассистента — переходим в LISTENING
@@ -929,11 +990,40 @@ class VoiceInteractionOrchestrator @Inject constructor(
                     }
                     is SpeechRecognitionEvent.RecognitionError -> {
                         silenceJob?.cancel()
-                        if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
+                        finishBargeInCapture()
+                        if (bargeInPending && _currentMode.value == OrchestratorMode.LISTENING_USER_QUERY) {
+                            // Перебили, но слов нет (шум, эхо) — продолжаем свою фразу.
+                            resumeAfterFalseBargeIn()
+                        } else if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                             // В режиме переводчика продолжаем слушать дальше
                             delay(500)
                             if (_currentMode.value == OrchestratorMode.LIVE_EAR_INTERPRETER) {
                                 restartLiveRecognizer()
+                            }
+                        } else if ((_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION ||
+                                _currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) &&
+                            FollowUpWindow.isQuietError(event.errorCode)
+                        ) {
+                            // Ждём «да/нет»: распознаватель закрылся на паузе или шуме (часто —
+                            // на хвосте своего же вопроса). Без перезапуска «да» уже никто не
+                            // слышал, и через 10 с звучало «время ожидания истекло».
+                            val waitingMode = _currentMode.value
+                            scope.launch {
+                                delay(FOLLOW_UP_RESTART_MS)
+                                if (_currentMode.value == waitingMode) speechRecognizerManager.startListening()
+                            }
+                        } else if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION &&
+                            FollowUpWindow.isQuietError(event.errorCode)
+                        ) {
+                            // Окно продолжения: распознаватель Android сам закрывает сессию после
+                            // нескольких секунд тишины или шума. Это не конец разговора — слушаем
+                            // снова, пока не истечёт окно (его закрывает таймер).
+                            _assistantState.value = VoiceAssistantState.Listening
+                            scope.launch {
+                                delay(FOLLOW_UP_RESTART_MS)
+                                if (_currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
+                                    speechRecognizerManager.startListening()
+                                }
                             }
                         } else if (_currentMode.value == OrchestratorMode.LISTENING_USER_QUERY ||
                             _currentMode.value == OrchestratorMode.CONTINUOUS_CONVERSATION) {
@@ -1093,11 +1183,13 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 _currentMode.value = OrchestratorMode.AWAITING_CONFIRMATION
                                 _assistantState.value = VoiceAssistantState.Speaking(pendingConfirmationPrompt)
 
+                                falseBargeIns = 0
+                                armBargeIn(pendingConfirmationPrompt)
                                 textToSpeechManager.speak(pendingConfirmationPrompt, speechRate, speechPitch)
 
                                 confirmationTimeoutJob?.cancel()
                                 confirmationTimeoutJob = scope.launch {
-                                    delay(CONFIRMATION_TIMEOUT_MS)
+                                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                                     // CR-07: таймер подтверждения тоже уважает эпоху.
                                     if (sessionEpoch.get() != captureEpoch) return@launch
                                     if (_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION) {
@@ -1127,6 +1219,8 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                 _assistantState.value = VoiceAssistantState.Speaking(answer)
                                 // §13: стрим уже озвучил ответ — целиком не повторяем.
                                 if (streamedSentences.get() == 0) {
+                                    falseBargeIns = 0
+                                    armBargeIn(answer)
                                     textToSpeechManager.speak(answer, speechRate, speechPitch)
                                 }
                             }
@@ -1152,7 +1246,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
                         // Таймаут — как у tool-confirmation: N секунд и авто-отказ.
                         confirmationTimeoutJob?.cancel()
                         confirmationTimeoutJob = scope.launch {
-                            delay(CONFIRMATION_TIMEOUT_MS)
+                            awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                             if (sessionEpoch.get() != captureEpoch) return@launch
                             if (_currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) {
                                 val timeoutMsg = context.getString(R.string.cloud_consent_timeout)
@@ -1301,7 +1395,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                 confirmationTimeoutJob?.cancel()
                 confirmationTimeoutJob = scope.launch {
-                    delay(CONFIRMATION_TIMEOUT_MS)
+                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                     if (_currentMode.value == OrchestratorMode.AWAITING_CONFIRMATION) {
                         val timeoutMsg = context.getString(R.string.vremya_ozhidaniya_isteklo)
                         _lastAnswer.value = timeoutMsg
@@ -1402,7 +1496,9 @@ class VoiceInteractionOrchestrator @Inject constructor(
                                     _lastAnswer.value = pendingConfirmationPrompt
                                     _currentMode.value = OrchestratorMode.AWAITING_CONFIRMATION
                                     _assistantState.value = VoiceAssistantState.Speaking(pendingConfirmationPrompt)
-                                    textToSpeechManager.speak(pendingConfirmationPrompt, speechRate, speechPitch)
+                                    falseBargeIns = 0
+                                armBargeIn(pendingConfirmationPrompt)
+                                textToSpeechManager.speak(pendingConfirmationPrompt, speechRate, speechPitch)
                                 }
                                 is PromptExecutionResult.DirectAnswer -> {
                                     _lastAnswer.value = execution.text
@@ -1449,7 +1545,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
 
                 confirmationTimeoutJob?.cancel()
                 confirmationTimeoutJob = scope.launch {
-                    delay(CONFIRMATION_TIMEOUT_MS)
+                    awaitListeningTime(CONFIRMATION_TIMEOUT_MS)
                     if (sessionEpoch.get() != consentCaptureEpoch) return@launch
                     if (_currentMode.value == OrchestratorMode.AWAITING_PRIVACY_CONSENT) {
                         val timeoutMsg = context.getString(R.string.cloud_consent_timeout)
@@ -1470,6 +1566,11 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun observeTtsEngine() {
         scope.launch {
             textToSpeechManager.ttsState.collectLatest { ttsState ->
+                when (ttsState) {
+                    is TtsState.Speaking -> onSpeechStartedForBargeIn()
+                    is TtsState.Done, is TtsState.Ready, is TtsState.Error -> onSpeechStoppedForBargeIn()
+                    else -> Unit
+                }
                 when (ttsState) {
                     is TtsState.Speaking -> {
                         // Self-voice guard (think-phase): собственное аудио OMNIX
@@ -1532,10 +1633,190 @@ class VoiceInteractionOrchestrator @Inject constructor(
     private fun openContinuousConversationWindow() {
         if (!isServiceActive) return
         _currentMode.value = OrchestratorMode.CONTINUOUS_CONVERSATION
-        _assistantState.value = VoiceAssistantState.Idle
+        // На экране видно, что OMNIX ещё слушает и можно говорить без «Омни».
+        _assistantState.value = VoiceAssistantState.Listening
         wakeWordEngine.stop()
         speechRecognizerManager.startListening()
+        armFollowUpWindow()
+    }
 
+    /**
+     * Фраза в окне продолжения (без обязательного «Омни») адресована OMNIX: есть «Омни» или
+     * она похожа на вопрос, команду или продолжение разговора ([FollowUpAddressee]).
+     */
+    private fun isAddressedFollowUp(raw: String, query: String): Boolean {
+        val addressed = WakeWordExtractor.containsWakeWord(raw, wakeKeywords) ||
+            FollowUpAddressee.isForAssistant(query)
+        if (!addressed) Log.d(TAG, "follow-up ignored: not addressed to the assistant (chars=${query.length})")
+        return addressed
+    }
+
+    /**
+     * Ждёт [ms] времени, когда OMNIX молчит и слушает ответ. Пока звучит его собственный
+     * вопрос («Позвонить маме? Подтвердите»), время не идёт: раньше 10 с считались с начала
+     * вопроса, и на «да» оставалось несколько секунд (отчёт владельца 2026-11-26:
+     * «Время ожидания истекло. Операция отменена»).
+     */
+    private suspend fun awaitListeningTime(ms: Long) {
+        var listened = 0L
+        while (listened < ms) {
+            delay(LISTEN_TICK_MS)
+            if (textToSpeechManager.ttsState.value !is TtsState.Speaking) listened += LISTEN_TICK_MS
+        }
+    }
+
+    /** Следующую фразу OMNIX ([text]) можно перебить. */
+    private fun armBargeIn(text: String) {
+        bargeInArmedText = text.takeIf { it.isNotBlank() && falseBargeIns < MAX_FALSE_BARGE_INS }
+        speakingStartedAt = 0L
+    }
+
+    /** OMNIX начал говорить: через мгновение начинаем слушать, не перебивают ли его. */
+    private fun onSpeechStartedForBargeIn() {
+        val mode = _currentMode.value
+        if (bargeInArmedText == null || bargeInListener != null) return
+        if (mode != OrchestratorMode.TTS_SPEAKING && mode != OrchestratorMode.AWAITING_CONFIRMATION) return
+        speakingStartedAt = latencyMetrics.nowMs()
+        bargeInStartJob?.cancel()
+        bargeInStartJob = scope.launch {
+            delay(BARGE_IN_START_DELAY_MS)
+            val now = _currentMode.value
+            if (bargeInArmedText == null ||
+                (now != OrchestratorMode.TTS_SPEAKING && now != OrchestratorMode.AWAITING_CONFIRMATION)
+            ) return@launch
+            val listener = BargeInListener(
+                onBargeIn = { preRoll -> scope.launch { onBargeIn(preRoll) } },
+                onFrameAfterTrigger = { frame -> bargeInFeeder?.push(frame) }
+            )
+            val opened = withContext(Dispatchers.IO) { listener.start() }
+            if (!opened) return@launch
+            if (bargeInArmedText == null || _currentMode.value !in BARGE_IN_MODES) {
+                withContext(Dispatchers.IO) { listener.stop() }
+                return@launch
+            }
+            bargeInListener = listener
+        }
+    }
+
+    /** OMNIX договорил (или его остановили): слушать перебивание больше не нужно. */
+    private fun onSpeechStoppedForBargeIn() {
+        // После перебивания запись продолжает кормить распознаватель — её не трогаем.
+        if (bargeInPending || bargeInFeeder != null) return
+        bargeInStartJob?.cancel()
+        bargeInArmedText = null
+        stopBargeInListener()
+    }
+
+    /**
+     * Человек перебил: OMNIX сразу замолкает и слушает. Последняя секунда звука уходит в
+     * распознаватель вместе с продолжением (Android 13+), чтобы не потерять начало фразы.
+     */
+    private fun onBargeIn(preRoll: List<ShortArray>) {
+        val mode = _currentMode.value
+        val text = bargeInArmedText
+        if (text == null || mode !in BARGE_IN_MODES) {
+            stopBargeInListener()
+            return
+        }
+        Log.i(TAG, "barge-in: user interrupted in mode=$mode")
+        bargeInSpokenMs = if (speakingStartedAt > 0) latencyMetrics.nowMs() - speakingStartedAt else 0L
+        bargeInText = text
+        bargeInArmedText = null
+        bargeInPending = mode == OrchestratorMode.TTS_SPEAKING
+        bargeInEcho = EchoGuard().also { it.onSpoken(text, System.currentTimeMillis()) }
+        textToSpeechManager.stop()
+        if (mode == OrchestratorMode.TTS_SPEAKING) _currentMode.value = OrchestratorMode.LISTENING_USER_QUERY
+        _assistantState.value = VoiceAssistantState.Listening
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val feeder = PcmPipeFeeder().also { it.start() }
+            preRoll.forEach(feeder::push)
+            bargeInFeeder = feeder
+            speechRecognizerManager.startListening(audioSource = { feeder.newSession() })
+        } else {
+            stopBargeInListener()
+            speechRecognizerManager.startListening()
+        }
+        if (bargeInPending) {
+            bargeInTimeoutJob?.cancel()
+            bargeInTimeoutJob = scope.launch {
+                delay(BARGE_IN_LISTEN_MS)
+                if (bargeInPending && _currentMode.value == OrchestratorMode.LISTENING_USER_QUERY) {
+                    speechRecognizerManager.stopListening()
+                    resumeAfterFalseBargeIn()
+                }
+            }
+        }
+    }
+
+    /**
+     * Что сказал перебивший: «стоп» — замолчать и ждать; совпадает с собственной фразой OMNIX
+     * (эхо) или пусто — продолжить с прерванного предложения; иначе — обычный новый запрос.
+     * @return true — обработано здесь.
+     */
+    private fun handleBargeInUtterance(text: String): Boolean {
+        bargeInTimeoutJob?.cancel()
+        val t = text.trim()
+        when {
+            t.isEmpty() -> resumeAfterFalseBargeIn()
+            BargeInPhrases.isStop(t) -> {
+                endBargeIn()
+                openContinuousConversationWindow()
+            }
+            bargeInEcho?.isEcho(t, System.currentTimeMillis()) == true -> resumeAfterFalseBargeIn()
+            else -> {
+                endBargeIn()
+                return false
+            }
+        }
+        return true
+    }
+
+    /** Ложное перебивание: продолжаем с начала прерванного предложения. */
+    private fun resumeAfterFalseBargeIn() {
+        val text = bargeInText
+        val spoken = bargeInSpokenMs
+        endBargeIn()
+        falseBargeIns++
+        val rest = ResumePoint.remainder(text, spoken, speechRate)
+        if (rest.isBlank()) {
+            openContinuousConversationWindow()
+            return
+        }
+        Log.i(TAG, "barge-in was not speech — resuming answer")
+        _currentMode.value = OrchestratorMode.TTS_SPEAKING
+        _assistantState.value = VoiceAssistantState.Speaking(rest)
+        armBargeIn(rest)
+        textToSpeechManager.speak(rest, speechRate, speechPitch)
+    }
+
+    private fun endBargeIn() {
+        bargeInPending = false
+        bargeInTimeoutJob?.cancel()
+        bargeInEcho = null
+        finishBargeInCapture()
+    }
+
+    /** Звук после перебивания больше не нужен распознавателю. */
+    private fun finishBargeInCapture() {
+        stopBargeInListener()
+        bargeInFeeder?.stop()
+        bargeInFeeder = null
+    }
+
+    private fun stopBargeInListener() {
+        bargeInListener?.stop()
+        bargeInListener = null
+    }
+
+    private fun disarmBargeIn() {
+        bargeInStartJob?.cancel()
+        bargeInArmedText = null
+        endBargeIn()
+    }
+
+    /** (Пере)запускает отсчёт окна продолжения; по его истечении — ожидание «Омни». */
+    private fun armFollowUpWindow() {
         followUpWindowJob?.cancel()
         followUpWindowJob = scope.launch {
             delay(FOLLOW_UP_WINDOW_MS)
@@ -1552,6 +1833,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
      * pending-состояния чистятся.
      */
     private fun cancelInFlightInteraction() {
+        disarmBargeIn()
         silenceJob?.cancel()
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
@@ -1649,6 +1931,7 @@ class VoiceInteractionOrchestrator @Inject constructor(
     }
 
     fun stopAll() {
+        disarmBargeIn()
         silenceJob?.cancel()
         followUpWindowJob?.cancel()
         confirmationTimeoutJob?.cancel()
