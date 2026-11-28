@@ -46,7 +46,7 @@ data class WakeWordConfig(
      * модель «Omni» — только для сравнения админом. Поля выше (порог, шумовой
      * буст, near-miss, пути моделей) относятся к прежней модели.
      */
-    val engine: WakeEngineKind = WakeEngineKind.LEGACY_OMNI,
+    val engine: WakeEngineKind = WakeEngineKind.PHRASE,
     val phrase: WakePhrase = WakePhrase.ALL,
 )
 

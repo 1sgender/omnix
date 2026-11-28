@@ -8,6 +8,29 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (614 crashed on every answer spoken with the own voice)
+
+- Журнал телефона 28.11: `NoSuchMethodError: no non-static method "Le4/y;.invoke([F)Ljava/lang/Integer;"`
+  в `OfflineTts.generateWithCallback` — нативная библиотека вызывает метод нашей лямбды по имени, а R8 в
+  релизе его переименовал; процесс падал целиком (в Java не перехватывается): OMNIX молчал, субтитры
+  висели. До 614 это скрывала ошибка буфера AudioTrack. Теперь без обратного вызова: `SpeechChunks`
+  делит ответ на предложения, каждое синтезируется `generate()` и сразу играет; «стоп» обрывает звук
+  кусками по ~0,2 с. Юнит-тесты.
+
+### Fixed (wake word: false triggers in 614)
+
+- 614 сделал умолчанием обученную модель «Омни» (omni_v0.2fp, порог 0.8) — владелец: «очень много
+  ложных срабатываний на шум, невозможно пользоваться». Замер 28.11 (241 фраза владельца, 16 мин речи,
+  9 мин шума): на 0.8 ловит 161/241 при ~160 ложных в час на речи; повышение порога режет и отклик.
+  Умолчание снова «фраза» (sherpa KWS, как в 593); ключ выбора `wakeword.engine.v3`, чтобы все
+  вернулись к ней. Обученная модель остаётся в выборе для сравнения.
+### Fixed (CI: hung Docker build blocked the release)
+
+- Сборка образа сервера в main 27.11 39 мин висела без вывода (сеть внутри Docker), задача упёрлась
+  в часовой лимит, подписанный релиз пропустился. `ci-gradle-retry.sh` получил
+  `CI_RETRY_ATTEMPT_TIMEOUT`: зависшая попытка обрывается и повторяется; для сборки образа — 12 мин,
+  3 попытки (обычно образ собирается за ~3 мин).
+
 ### Fixed (OMNIX went silent with its own voice)
 
 - Русский свой голос молчал на каждой фразе (отчёт владельца 2026-11-27, журнал телефона S24 Ultra):
