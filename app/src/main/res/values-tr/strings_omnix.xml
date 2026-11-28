@@ -266,7 +266,8 @@
     <string name="omnix_admin_wake_all">«Omni», «Omnix», «Tamam Omni» — ifade motoru (yedek)</string>
     <string name="omnix_admin_wake_okay_omni">“Okey Omni” — yeni motor</string>
     <string name="omnix_admin_wake_omni">“Omni” — yeni motor</string>
-    <string name="omnix_admin_wake_legacy">«Omni» — eğitilmiş model + kişisel filtre (varsayılan)</string>
+    <string name="omnix_admin_wake_two_stage">«Omni» — iki aşama: model + GigaAM kontrolü (varsayılan)</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — yalnızca eğitilmiş model</string>
     <string name="omnix_ai_model_checking">Kontrol ediliyor…</string>
     <string name="omnix_ai_model_downloading">İndiriliyor: %%%1$d</string>
     <string name="omnix_ai_model_not_downloaded">İndirilmedi — düğme aşağıda</string>

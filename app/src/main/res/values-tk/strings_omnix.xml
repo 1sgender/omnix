@@ -321,7 +321,8 @@
     <string name="omnix_admin_wake_all">«Omni», «Omniks», «Okeý, Omni» — söz düzümi (ätiýaçlyk)</string>
     <string name="omnix_admin_wake_okay_omni">«Okeý, Omni» — täze hereketlendiriji</string>
     <string name="omnix_admin_wake_omni">«Omni» — täze hereketlendiriji</string>
-    <string name="omnix_admin_wake_legacy">«Omni» — öwredilen model + şahsy süzgüç (esasy)</string>
+    <string name="omnix_admin_wake_two_stage">«Omni» — iki basgançak: model + GigaAM barlagy (esasy)</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — diňe öwredilen model</string>
     <string name="omnix_ai_model_checking">Barlaýaryn…</string>
     <string name="omnix_ai_model_downloading">Ýüklenýär: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Ýüklenmedik — düwme aşakda</string>

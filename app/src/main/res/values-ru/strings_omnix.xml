@@ -320,7 +320,8 @@
     <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — движок фраз (запасной)</string>
     <string name="omnix_admin_wake_okay_omni">«Окей, Омни» — новый движок</string>
     <string name="omnix_admin_wake_omni">«Омни» — новый движок</string>
-    <string name="omnix_admin_wake_legacy">«Омни» — обученная модель + личный фильтр (по умолчанию)</string>
+    <string name="omnix_admin_wake_two_stage">«Омни» — две ступени: модель + проверка GigaAM (по умолчанию)</string>
+    <string name="omnix_admin_wake_legacy">«Омни» — только обученная модель</string>
     <string name="omnix_ai_model_checking">Проверяю…</string>
     <string name="omnix_ai_model_downloading">Скачивается: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Не скачана — кнопка ниже</string>

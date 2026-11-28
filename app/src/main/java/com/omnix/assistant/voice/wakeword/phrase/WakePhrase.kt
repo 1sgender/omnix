@@ -18,10 +18,21 @@ enum class WakeEngineKind(val storageKey: String) {
      * Была умолчанием в 614 и вернулась в выбор по желанию 2026-11-28: владелец — «много ложных
      * срабатываний, невозможно пользоваться». Замер: на пороге 0.8 ~160 ложных в час на речи.
      */
-    LEGACY_OMNI("legacy_omni");
+    LEGACY_OMNI("legacy_omni"),
+
+    /**
+     * Две ступени (по умолчанию с 2026-11-28): обученная модель «Омни» с чутким порогом находит
+     * кандидата, GigaAM на телефоне проверяет ~2 с звука вокруг (voice/wakeword/verify). Замер на
+     * звуке комнаты владельца: 0 ложных в час против 557 у одной модели; ловит больше «Омни», чем
+     * фраза. Пока GigaAM не скачана — слушает [PHRASE].
+     */
+    TWO_STAGE("two_stage");
+
+    /** Детектор — openWakeWord (модель «Омни»), а не фраза. */
+    val usesOww: Boolean get() = this != PHRASE
 
     companion object {
-        fun fromStorageKey(raw: String?): WakeEngineKind = entries.firstOrNull { it.storageKey == raw } ?: PHRASE
+        fun fromStorageKey(raw: String?): WakeEngineKind = entries.firstOrNull { it.storageKey == raw } ?: TWO_STAGE
     }
 }
 

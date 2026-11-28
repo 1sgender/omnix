@@ -89,9 +89,9 @@ class SettingsDataStore @Inject constructor(
         val WAKEWORD_DEBUG = booleanPreferencesKey("wakeword.debug_logging")
         val WAKEWORD_NEAR_MISS_CAPTURE = booleanPreferencesKey("wakeword.near_miss_capture")
         /** Тест движков админом: фраза sherpa-onnx (по умолчанию) или прежняя модель «Omni». */
-        // v3 (2026-11-28): умолчание снова «фраза» — обученная модель «Омни» давала слишком много
-        // ложных срабатываний (614). Выбор v2 намеренно не читается, чтобы все вернулись к фразе.
-        val WAKEWORD_ENGINE = stringPreferencesKey("wakeword.engine.v3")
+        // v4 (2026-11-28): умолчание — две ступени (модель «Омни» + проверка GigaAM). v3 (фраза после
+        // ложных срабатываний 614) намеренно не читается, чтобы все перешли на две ступени.
+        val WAKEWORD_ENGINE = stringPreferencesKey("wakeword.engine.v4")
         val WAKEWORD_PHRASE = stringPreferencesKey("wakeword.phrase")
         val LOCAL_MODEL_CONSENT = stringPreferencesKey("local_model_consent")
         val LOCAL_MODEL_DOWNLOAD_ID = longPreferencesKey("local_model_download_id")

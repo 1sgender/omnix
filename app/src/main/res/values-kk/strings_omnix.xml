@@ -266,7 +266,8 @@
     <string name="omnix_admin_wake_all">«Омни», «Омникс», «Окей, Омни» — сөз тіркесі қозғалтқышы (қосалқы)</string>
     <string name="omnix_admin_wake_okay_omni">«Окей, Омни» — жаңа қозғалтқыш</string>
     <string name="omnix_admin_wake_omni">«Омни» — жаңа қозғалтқыш</string>
-    <string name="omnix_admin_wake_legacy">«Омни» — үйретілген модель + жеке сүзгі (әдепкі)</string>
+    <string name="omnix_admin_wake_two_stage">«Омни» — екі саты: модель + GigaAM тексеруі (әдепкі)</string>
+    <string name="omnix_admin_wake_legacy">«Омни» — тек үйретілген модель</string>
     <string name="omnix_ai_model_checking">Тексерілуде…</string>
     <string name="omnix_ai_model_downloading">Жүктелуде: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Жүктелмеген — түйме төменде</string>

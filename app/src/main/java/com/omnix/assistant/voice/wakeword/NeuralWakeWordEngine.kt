@@ -74,6 +74,8 @@ class NeuralWakeWordEngine @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settings: SettingsDataStore,
     private val personal: PersonalWakeStore,
+    /** Вторая ступень «Омни»: проверка окна звука моделью GigaAM. */
+    private val verifier: com.omnix.assistant.voice.wakeword.verify.WakeVerifier,
 ) : WakeWordEngine {
 
     companion object {
@@ -101,6 +103,16 @@ class NeuralWakeWordEngine @Inject constructor(
         private const val READ_ERROR_PAUSE_MS = 20L
         /** Порог для фразы: детектор отдаёт скор 0 или 1. */
         private const val PHRASE_THRESHOLD = 0.5f
+
+        /** Звук для второй ступени: 3 с (окно проверки 2,1 с с запасом). */
+        private const val VERIFY_RING_SAMPLES = SAMPLE_RATE * 3
+        private const val VERIFY_WINDOW_SAMPLES = SAMPLE_RATE *
+            (com.omnix.assistant.voice.wakeword.verify.WakeVerifier.WINDOW_BEFORE_MS +
+                com.omnix.assistant.voice.wakeword.verify.WakeVerifier.WINDOW_AFTER_MS) / 1000
+
+        /** Сколько кадров по 80 мс дослушать после срабатывания детектора до проверки. */
+        private const val VERIFY_AFTER_CHUNKS =
+            (com.omnix.assistant.voice.wakeword.verify.WakeVerifier.WINDOW_AFTER_MS + 79) / 80
     }
 
     // Любая ошибка движка (ONNX Runtime, нативная библиотека, AudioRecord)
@@ -132,6 +144,8 @@ class NeuralWakeWordEngine @Inject constructor(
         private set
 
     override fun labelLastDetection(wasReal: Boolean) {
+        // Умная защита: серия срабатываний без команды делает проверку строгой на 10 минут.
+        if (wasReal) verifier.burst.onConfirmed() else verifier.burst.onUnconfirmed(SystemClock.elapsedRealtime())
         val d = lastDetection ?: return
         lastDetection = null
         if (SystemClock.elapsedRealtime() - d.atMs > LABEL_MAX_AGE_MS) return
@@ -165,6 +179,14 @@ class NeuralWakeWordEngine @Inject constructor(
 
     /** Последние 2 с звука — пример «я / не я» для выгрузки и переобучения. */
     private val labelRing = AudioRingBuffer(LABEL_RING_SAMPLES)
+
+    /** Последние 3 с звука — окно для второй ступени (проверка GigaAM). */
+    private val verifyRing = AudioRingBuffer(VERIFY_RING_SAMPLES)
+
+    /** Срабатываний детектора, отсечённых второй ступенью (для журнала). */
+    @Volatile
+    var verifierRejects: Long = 0
+        private set
     private val metrics = WakeWordMetrics()
 
     // Живёт на уровне движка: переиспользуется между start/stop (owner
@@ -296,12 +318,21 @@ class NeuralWakeWordEngine @Inject constructor(
             return
         }
 
-        val config = try {
+        val stored = try {
             settings.wakeWordConfig.first()
         } catch (e: Exception) {
             Log.e(TAG, "wakeword config read failed", e)
             WakeWordConfig()
         }
+        // Две ступени возможны только с GigaAM на телефоне; пока она качается — слушает фраза.
+        val config = if (stored.engine == WakeEngineKind.TWO_STAGE && !verifier.isReady()) {
+            verifier.requestModel()
+            Log.i(TAG, "two-stage wake: GigaAM not on the phone yet, listening with the phrase engine")
+            stored.copy(engine = WakeEngineKind.PHRASE)
+        } else {
+            stored
+        }
+        val twoStage = config.engine == WakeEngineKind.TWO_STAGE
         if (!config.enabled) {
             Log.i(TAG, "wakeword disabled in settings")
             lastProblem = "disabled in settings"
@@ -361,7 +392,12 @@ class NeuralWakeWordEngine @Inject constructor(
         val noise = NoiseAdaptiveThreshold()
         val dead = DeadSignalDetector()
         personalVerifier = if (config.engine == WakeEngineKind.LEGACY_OMNI) personal.verifier() else null
-        val nearMiss = if (config.nearMissCapture && config.engine == WakeEngineKind.LEGACY_OMNI) {
+        // Вторая ступень: срабатывание детектора ждёт VERIFY_AFTER_CHUNKS кадров, затем проверка.
+        var pendingChunks = -1
+        var pendingScore = 0f
+        var pendingSummary: FloatArray? = null
+        val verifying = AtomicBoolean(false)
+        val nearMiss = if (config.nearMissCapture && config.engine.usesOww) {
             (recorder ?: NearMissRecorder(config.nearMissMinScore).also { recorder = it })
         } else {
             null
@@ -447,6 +483,7 @@ class NeuralWakeWordEngine @Inject constructor(
 
                 ring.write(chunk, 0, read)
                 labelRing.write(chunk, 0, read)
+                if (twoStage) verifyRing.write(chunk, 0, read)
                 if (nearMiss != null) nearMissRing.write(chunk, 0, read)
                 // Пайплайн сам добирает 1280-сэмпловые чанки из потока.
                 val result = try {
@@ -458,6 +495,12 @@ class NeuralWakeWordEngine @Inject constructor(
                     break
                 }
                 chunkIndex++
+                if (twoStage && pendingChunks >= 0 && --pendingChunks < 0) {
+                    launchVerification(
+                        run, verifyRing.snapshotLast(VERIFY_WINDOW_SAMPLES), labelRing.snapshotLast(LABEL_RING_SAMPLES),
+                        pendingScore, pendingSummary, verifying
+                    )
+                }
                 if (result == null) continue
 
                 // Динамический порог: базовый + буст по SNR (owner review п.2b).
@@ -466,6 +509,17 @@ class NeuralWakeWordEngine @Inject constructor(
                     noise.effectiveThreshold(config.threshold, rms)
                 } else {
                     baseThreshold
+                }
+                if (twoStage) {
+                    // Чуткий детектор только предлагает кандидата; решает вторая ступень.
+                    val candidate = policy.observe(result.score, baseThreshold)
+                    metrics.recordFrame(result.score, false, result.melMs, result.embMs, result.clfMs)
+                    if (candidate && pendingChunks < 0 && !verifying.get()) {
+                        pendingChunks = VERIFY_AFTER_CHUNKS
+                        pendingScore = result.score
+                        pendingSummary = result.features?.let { WakeFeatures.summarize(it) }
+                    }
+                    continue
                 }
                 // Личный фильтр обучен: детектор ставим чувствительнее (ловит почти любое «Омни»),
                 // а лишнее отсекает фильтр по голосу хозяина.
@@ -520,15 +574,62 @@ class NeuralWakeWordEngine @Inject constructor(
             p.reset()
             ring.clear()
             labelRing.clear()
+            verifyRing.clear()
             nearMissRing.clear()
             policy.reset()
         }
     }
 
+    /**
+     * Проверка кандидата GigaAM вне аудиопотока (детектор слушает дальше). Принято — срабатывание
+     * уходит в [detections] как обычно; нет — считаем в [verifierRejects]. Пока идёт проверка,
+     * новые кандидаты не берутся. Звук снимается в потоке микрофона (кольцевые буферы не
+     * потокобезопасны) и передаётся сюда готовым.
+     */
+    private fun launchVerification(
+        run: Int,
+        window: ShortArray,
+        labelAudio: ShortArray,
+        score: Float,
+        summary: FloatArray?,
+        verifying: AtomicBoolean
+    ) {
+        if (!verifying.compareAndSet(false, true)) return
+        scope.launch {
+            try {
+                val now = SystemClock.elapsedRealtime()
+                val strict = mediaPlaying() || verifier.burst.strict(now)
+                val checked = verifier.verify(window, strict)
+                if (!checked.accepted) {
+                    verifierRejects++
+                    return@launch
+                }
+                if (!running.get() || generation.get() != run) return@launch
+                if (summary != null) {
+                    lastDetection = LastDetection(SystemClock.elapsedRealtime(), summary, labelAudio)
+                }
+                _detections.emit(
+                    WakeWordDetection(
+                        wakeWord = activeWakeWord,
+                        score = score,
+                        timestampMs = SystemClock.elapsedRealtime(),
+                        inferenceLatencyMs = 0,
+                    ),
+                )
+            } finally {
+                verifying.set(false)
+            }
+        }
+    }
+
     private fun applyConfig(config: WakeWordConfig) {
         val phrase = config.engine == WakeEngineKind.PHRASE
-        // Фраза: скор кадра 0/1, одного кадра достаточно.
-        val threshold = if (phrase) PHRASE_THRESHOLD else config.threshold
+        // Фраза: скор кадра 0/1, одного кадра достаточно. Две ступени: чуткий порог детектора.
+        val threshold = when {
+            phrase -> PHRASE_THRESHOLD
+            config.engine == WakeEngineKind.TWO_STAGE -> com.omnix.assistant.voice.wakeword.verify.WakeVerifier.STAGE1_THRESHOLD
+            else -> config.threshold
+        }
         baseThreshold = threshold
         effectiveThreshold = threshold
         policy.threshold = threshold
@@ -554,7 +655,8 @@ class NeuralWakeWordEngine @Inject constructor(
         detector = null
         val fresh = when (config.engine) {
             WakeEngineKind.PHRASE -> PhraseFrameDetector(context.assets, config.phrase)
-            WakeEngineKind.LEGACY_OMNI -> OwwFrameDetector(OrtOwwSessions(context.assets, config).also { it.open() })
+            WakeEngineKind.LEGACY_OMNI, WakeEngineKind.TWO_STAGE ->
+                OwwFrameDetector(OrtOwwSessions(context.assets, config).also { it.open() })
         }
         detector = fresh
         detectorKey = key
@@ -651,7 +753,8 @@ class NeuralWakeWordEngine @Inject constructor(
         val msg = e.message ?: return null
         val paths = when (config.engine) {
             WakeEngineKind.PHRASE -> PhraseFrameDetector.ASSETS
-            WakeEngineKind.LEGACY_OMNI -> listOf(config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath)
+            WakeEngineKind.LEGACY_OMNI, WakeEngineKind.TWO_STAGE ->
+                listOf(config.modelAssetPath, config.melAssetPath, config.embeddingAssetPath)
         }
         return paths.firstOrNull { msg.contains(it) }
     }
