@@ -15,6 +15,12 @@ must be added only when the repository owner creates an actual release.
   9 мин шума): на 0.8 ловит 161/241 при ~160 ложных в час на речи; повышение порога режет и отклик.
   Умолчание снова «фраза» (sherpa KWS, как в 593); ключ выбора `wakeword.engine.v3`, чтобы все
   вернулись к ней. Обученная модель остаётся в выборе для сравнения.
+### Fixed (CI: hung Docker build blocked the release)
+
+- Сборка образа сервера в main 27.11 39 мин висела без вывода (сеть внутри Docker), задача упёрлась
+  в часовой лимит, подписанный релиз пропустился. `ci-gradle-retry.sh` получил
+  `CI_RETRY_ATTEMPT_TIMEOUT`: зависшая попытка обрывается и повторяется; для сборки образа — 12 мин,
+  3 попытки (обычно образ собирается за ~3 мин).
 
 ### Fixed (OMNIX went silent with its own voice)
 
