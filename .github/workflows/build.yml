@@ -234,7 +234,7 @@ jobs:
         run: |
           bash ./deploy/verify-production-config.sh
           # Сеть раннера: при сбое загрузки зависимостей внутри образа — повтор (scripts/ci-gradle-retry.sh).
-          bash scripts/ci-gradle-retry.sh docker build --file deploy/server.Dockerfile --tag omnix-server:ci .
+          CI_RETRY_ATTEMPT_TIMEOUT=720 CI_RETRY_ATTEMPTS=3 bash scripts/ci-gradle-retry.sh docker build --file deploy/server.Dockerfile --tag omnix-server:ci .
 
       - name: Upload OMNIX APK artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

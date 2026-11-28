@@ -111,7 +111,7 @@ class AiModelViewModel @Inject constructor(
     /** Тест фразы вызова (админ): чем и что слушать сейчас. */
     val wakeListening: StateFlow<Pair<WakeEngineKind, WakePhrase>> = settings.wakeWordConfig
         .map { it.engine to it.phrase }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), WakeEngineKind.LEGACY_OMNI to WakePhrase.ALL)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), WakeEngineKind.PHRASE to WakePhrase.ALL)
 
     fun setWakeListening(engine: WakeEngineKind, phrase: WakePhrase) {
         viewModelScope.launch { settings.setWakeListening(engine, phrase) }

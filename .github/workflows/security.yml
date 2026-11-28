@@ -119,7 +119,7 @@ jobs:
         run: |
           mkdir -p artifacts
           # Сеть раннера: при сбое загрузки зависимостей внутри образа — повтор (scripts/ci-gradle-retry.sh).
-          bash scripts/ci-gradle-retry.sh docker build --file deploy/server.Dockerfile --tag omnix-server:security .
+          CI_RETRY_ATTEMPT_TIMEOUT=720 CI_RETRY_ATTEMPTS=3 bash scripts/ci-gradle-retry.sh docker build --file deploy/server.Dockerfile --tag omnix-server:security .
 
       - name: Scan final image (blocking)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
