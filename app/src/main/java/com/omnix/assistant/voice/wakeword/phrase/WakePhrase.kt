@@ -14,14 +14,14 @@ enum class WakeEngineKind(val storageKey: String) {
     PHRASE("phrase"),
 
     /**
-     * Обученная модель «Омни» (openWakeWord omni_v0.2fp) + личный фильтр по голосу хозяина —
-     * по умолчанию с 2026-11-27: на 269 живых «Омни» владельца (вне обучения) отклик 96% против
-     * 30% у фразы, которая слышит «Омни» как «он» / «он не» / «помни».
+     * Обученная модель «Омни» (openWakeWord omni_v0.2fp) + личный фильтр по голосу хозяина.
+     * Была умолчанием в 614 и вернулась в выбор по желанию 2026-11-28: владелец — «много ложных
+     * срабатываний, невозможно пользоваться». Замер: на пороге 0.8 ~160 ложных в час на речи.
      */
     LEGACY_OMNI("legacy_omni");
 
     companion object {
-        fun fromStorageKey(raw: String?): WakeEngineKind = entries.firstOrNull { it.storageKey == raw } ?: LEGACY_OMNI
+        fun fromStorageKey(raw: String?): WakeEngineKind = entries.firstOrNull { it.storageKey == raw } ?: PHRASE
     }
 }
 

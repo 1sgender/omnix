@@ -8,6 +8,14 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (wake word: false triggers in 614)
+
+- 614 сделал умолчанием обученную модель «Омни» (omni_v0.2fp, порог 0.8) — владелец: «очень много
+  ложных срабатываний на шум, невозможно пользоваться». Замер 28.11 (241 фраза владельца, 16 мин речи,
+  9 мин шума): на 0.8 ловит 161/241 при ~160 ложных в час на речи; повышение порога режет и отклик.
+  Умолчание снова «фраза» (sherpa KWS, как в 593); ключ выбора `wakeword.engine.v3`, чтобы все
+  вернулись к ней. Обученная модель остаётся в выборе для сравнения.
+
 ### Fixed (OMNIX went silent with its own voice)
 
 - Русский свой голос молчал на каждой фразе (отчёт владельца 2026-11-27, журнал телефона S24 Ultra):

@@ -10,9 +10,9 @@ import java.io.File
 class WakePhraseTest {
 
     @Test
-    fun `new installs listen with the trained Omni model, phrase keywords stay valid`() {
+    fun `new installs listen for Omni, Omnix and Okay Omni on the phrase engine`() {
         val config = WakeWordConfig()
-        assertEquals(WakeEngineKind.LEGACY_OMNI, config.engine)
+        assertEquals(WakeEngineKind.PHRASE, config.engine)
         assertEquals(WakePhrase.ALL, config.phrase)
         val labels = WakePhrase.ALL.keywords.split("/").map { it.trim().split(" ").last() }.toSet()
         assertEquals(setOf("@OKAY_OMNI", "@OMNI", "@OMNIX"), labels)
@@ -22,8 +22,8 @@ class WakePhraseTest {
     fun `stored choices survive a round trip and unknown values fall back to defaults`() {
         WakeEngineKind.entries.forEach { assertEquals(it, WakeEngineKind.fromStorageKey(it.storageKey)) }
         WakePhrase.entries.forEach { assertEquals(it, WakePhrase.fromStorageKey(it.storageKey)) }
-        assertEquals(WakeEngineKind.LEGACY_OMNI, WakeEngineKind.fromStorageKey(null))
-        assertEquals(WakeEngineKind.LEGACY_OMNI, WakeEngineKind.fromStorageKey("jarvis"))
+        assertEquals(WakeEngineKind.PHRASE, WakeEngineKind.fromStorageKey(null))
+        assertEquals(WakeEngineKind.PHRASE, WakeEngineKind.fromStorageKey("jarvis"))
         assertEquals(WakePhrase.ALL, WakePhrase.fromStorageKey(null))
         assertEquals(WakePhrase.ALL, WakePhrase.fromStorageKey("hey_omni"))
     }
