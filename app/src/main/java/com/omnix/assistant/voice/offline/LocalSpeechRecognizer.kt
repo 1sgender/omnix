@@ -73,6 +73,27 @@ class LocalSpeechRecognizer @Inject constructor(
         }
     }
 
+    /** Улучшенная русская модель (GigaAM) на телефоне — ею проверяется слово вызова «Омни». */
+    fun gigaAmReady(): Boolean = store.isInstalled(OfflineSpeechModels.RU_ASR)
+
+    /**
+     * Текст окна звука только моделью GigaAM (без запасной Vosk, которая слышит «Омни» как «он»).
+     * null — модели нет или ошибка. Вторая ступень слова вызова, см. WakeVerifier.
+     */
+    suspend fun transcribeGigaAm(samples: ShortArray): String? = mutex.withLock {
+        withContext(dispatchers.default) {
+            try {
+                decodeRussianHq(FloatArray(samples.size) { samples[it] / PCM_SCALE })?.trim()
+            } catch (e: Exception) {
+                Log.e(TAG, "wake verification failed", e)
+                null
+            } catch (e: UnsatisfiedLinkError) {
+                Log.e(TAG, "sherpa native library missing", e)
+                null
+            }
+        }
+    }
+
     /** Освободить модели (нехватка памяти, удаление пакета). */
     suspend fun release() = mutex.withLock {
         turkmen?.release()

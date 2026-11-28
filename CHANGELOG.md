@@ -8,6 +8,24 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Changed (wake word: two stages by default, bad-model gate)
+
+- «Омни» в две ступени (`WakeEngineKind.TWO_STAGE`, по умолчанию; ключ `wakeword.engine.v4`): модель
+  omni_v0.2fp с чутким порогом 0.2 находит кандидата, движок дослушивает ~0,3 с и отдаёт окно 1,8+0,3 с
+  GigaAM на телефоне (`WakeVerifier`); `WakeTextRule` принимает «омни» и как GigaAM его пишет
+  («помни», «умни», «омнэ», «амни»), но не «они», «ани», «напомни». Замер 28.11 (звук комнаты
+  владельца 20,5 мин — фильм): одна модель 557 ложных в час, две ступени — 0; ловит 172/241 прежних и
+  36/96 новых «Омни» владельца (слово-фраза — около 21%). Пока GigaAM не скачана — слушает фраза;
+  GigaAM теперь качается по Wi-Fi при любом языке приложения.
+- Умная защита: 3 срабатывания без команды за 5 мин или играющее медиа — строгое правило (только
+  «омни»-подобные) на 10 мин (`WakeBurstGuard`); отметка «я / не я» после срабатывания (самообучение)
+  питает и её. Тихая отмена после «Омни» без команды уже была.
+- Защита от выпуска плохого слова вызова: `scripts/wake_gate.py` + воркфлоу `wake-gate` — на любое
+  изменение модели/порогов/правила прогоняет две ступени как в приложении (пороги и правило читаются
+  из кода) на закрытом наборе записей владельца и звуке комнаты; хуже `scripts/wake_gate_limits.json` —
+  PR красный. Набор не в репозитории (секреты `WAKE_GATE_TESTSET_URL`, `WAKE_GATE_TESTSET_SHA256`).
+- Юнит-тесты правила и защиты от серии.
+
 ### Fixed (614 crashed on every answer spoken with the own voice)
 
 - Журнал телефона 28.11: `NoSuchMethodError: no non-static method "Le4/y;.invoke([F)Ljava/lang/Integer;"`

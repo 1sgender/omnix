@@ -123,11 +123,12 @@ fun AdminWakeSection(
         Triple(WakeEngineKind.PHRASE, WakePhrase.ALL, stringResource(R.string.omnix_admin_wake_all)),
         Triple(WakeEngineKind.PHRASE, WakePhrase.OKAY_OMNI, stringResource(R.string.omnix_admin_wake_okay_omni)),
         Triple(WakeEngineKind.PHRASE, WakePhrase.OMNI, stringResource(R.string.omnix_admin_wake_omni)),
+        Triple(WakeEngineKind.TWO_STAGE, WakePhrase.ALL, stringResource(R.string.omnix_admin_wake_two_stage)),
         Triple(WakeEngineKind.LEGACY_OMNI, WakePhrase.ALL, stringResource(R.string.omnix_admin_wake_legacy)),
     )
     // Прежняя модель не зависит от фразы: отмечаем её по движку.
     fun isSelected(engine: WakeEngineKind, phrase: WakePhrase) =
-        engine == current.first && (engine == WakeEngineKind.LEGACY_OMNI || phrase == current.second)
+        engine == current.first && (engine.usesOww || phrase == current.second)
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(

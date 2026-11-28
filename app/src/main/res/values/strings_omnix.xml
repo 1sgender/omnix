@@ -322,7 +322,8 @@
     <string name="omnix_admin_wake_all">«Omni», «Omnix», «Okay Omni» — phrase engine (backup)</string>
     <string name="omnix_admin_wake_okay_omni">“Okay Omni” — new engine</string>
     <string name="omnix_admin_wake_omni">“Omni” — new engine</string>
-    <string name="omnix_admin_wake_legacy">«Omni» — trained model + personal filter (default)</string>
+    <string name="omnix_admin_wake_two_stage">«Omni» — two stages: model + GigaAM check (default)</string>
+    <string name="omnix_admin_wake_legacy">«Omni» — trained model only</string>
     <string name="omnix_ai_model_checking">Checking…</string>
     <string name="omnix_ai_model_downloading">Downloading: %1$d%%</string>
     <string name="omnix_ai_model_not_downloaded">Not downloaded — the button is below</string>

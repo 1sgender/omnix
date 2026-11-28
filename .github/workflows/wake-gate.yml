@@ -1,0 +1,55 @@
+name: Wake word gate
+
+# Защита от выпуска плохого слова вызова (2026-11-28, после 614: модель «Омни» срабатывала сотни раз
+# в час). Любое изменение модели, порогов или правила проверки прогоняется как в приложении на
+# закрытом наборе записей владельца и звуке его комнаты; хуже порогов — PR красный.
+# Набор — личные записи, в репозитории его нет: ссылка в секрете WAKE_GATE_TESTSET_URL.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'app/src/main/assets/wakeword/**'
+      - 'app/src/main/java/com/omnix/assistant/voice/wakeword/**'
+      - 'scripts/wake_gate.py'
+      - 'scripts/wake_gate_limits.json'
+      - '.github/workflows/wake-gate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wake-gate:
+    name: wake-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Python packages
+        run: |
+          python3 -m venv /tmp/venv
+          bash scripts/ci-gradle-retry.sh /tmp/venv/bin/pip install -q numpy==2.2.6 onnxruntime==1.20.1 sherpa-onnx==1.13.8
+
+      - name: Test set and GigaAM
+        env:
+          TESTSET_URL: ${{ secrets.WAKE_GATE_TESTSET_URL }}
+          TESTSET_SHA256: ${{ secrets.WAKE_GATE_TESTSET_SHA256 }}
+        run: |
+          if [ -z "$TESTSET_URL" ] || [ -z "$TESTSET_SHA256" ]; then
+            echo "::error::нет секретов WAKE_GATE_TESTSET_URL / WAKE_GATE_TESTSET_SHA256"
+            exit 1
+          fi
+          curl -fsSL --retry 5 --retry-all-errors -o /tmp/testset.zip "$TESTSET_URL"
+          echo "$TESTSET_SHA256  /tmp/testset.zip" | sha256sum -c - >/dev/null
+          unzip -q /tmp/testset.zip -d /tmp/testset
+          curl -fsSL --retry 5 --retry-all-errors -o /tmp/gigaam.zip https://omnix.144.31.14.236.sslip.io/models/ru-asr-gigaam.zip
+          echo "b2aa0122501e9cc93d80f0f3e3e9eb32803d851fbf3c76ea2762033c0e6bb355  /tmp/gigaam.zip" | sha256sum -c -
+          unzip -q /tmp/gigaam.zip -d /tmp/gigaam
+
+      - name: Gate
+        run: /tmp/venv/bin/python scripts/wake_gate.py --testset /tmp/testset --gigaam /tmp/gigaam
