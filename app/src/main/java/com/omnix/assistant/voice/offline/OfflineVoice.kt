@@ -181,15 +181,21 @@ class OfflineVoice @Inject constructor(
         var started = false
         try {
             audioTrack.play()
-            engine.generateWithCallback(text, 0, speed.coerceIn(0.5f, 2f)) { samples ->
-                if (gen != generation.get()) return@generateWithCallback 0
+            // Без generateWithCallback: нативная библиотека вызывала бы метод нашей лямбды по имени
+            // invoke([F)Ljava/lang/Integer;, а R8 в релизе его переименовывает — 614 падал целиком
+            // (NoSuchMethodError в JNI, не перехватывается) на первой же фразе. Синтезируем по
+            // предложению и сразу играем: ответ начинает звучать после первого предложения.
+            for (sentence in SpeechChunks.split(text)) {
+                if (gen != generation.get()) return Played.INTERRUPTED
+                val samples = engine.generate(sentence, 0, speed.coerceIn(0.5f, 2f)).samples
+                if (gen != generation.get()) return Played.INTERRUPTED
+                if (samples.isEmpty()) continue
                 if (!started) {
                     started = true
                     listener.onStart()
                 }
                 val clean = filter?.process(samples) ?: samples
-                audioTrack.write(clean, 0, clean.size, AudioTrack.WRITE_BLOCKING)
-                1
+                writeInterruptibly(audioTrack, clean, gen)
             }
             if (gen != generation.get()) return Played.INTERRUPTED
             if (!started) {
@@ -203,6 +209,17 @@ class OfflineVoice @Inject constructor(
             runCatching { audioTrack.stop() }
             audioTrack.release()
             if (track === audioTrack) track = null
+        }
+    }
+
+    /** Пишет звук кусками, чтобы «стоп» обрывал фразу сразу, а не после всего предложения. */
+    private fun writeInterruptibly(audioTrack: AudioTrack, samples: FloatArray, gen: Int) {
+        var offset = 0
+        while (offset < samples.size && gen == generation.get()) {
+            val n = minOf(WRITE_CHUNK, samples.size - offset)
+            val written = audioTrack.write(samples, offset, n, AudioTrack.WRITE_BLOCKING)
+            if (written <= 0) return
+            offset += written
         }
     }
 
@@ -267,5 +284,8 @@ class OfflineVoice @Inject constructor(
         private const val THREADS = 2
         private const val MAX_DRAIN_MS = 15_000
         private const val DRAIN_POLL_MS = 120L
+
+        /** ~0,2 с звука при 22050 Гц: шаг, с которым проверяется «стоп» во время записи. */
+        private const val WRITE_CHUNK = 4_096
     }
 }

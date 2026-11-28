@@ -8,6 +8,15 @@ versions or dates.
 The format is based on Keep a Changelog, but semantic-version release history
 must be added only when the repository owner creates an actual release.
 
+### Fixed (614 crashed on every answer spoken with the own voice)
+
+- Журнал телефона 28.11: `NoSuchMethodError: no non-static method "Le4/y;.invoke([F)Ljava/lang/Integer;"`
+  в `OfflineTts.generateWithCallback` — нативная библиотека вызывает метод нашей лямбды по имени, а R8 в
+  релизе его переименовал; процесс падал целиком (в Java не перехватывается): OMNIX молчал, субтитры
+  висели. До 614 это скрывала ошибка буфера AudioTrack. Теперь без обратного вызова: `SpeechChunks`
+  делит ответ на предложения, каждое синтезируется `generate()` и сразу играет; «стоп» обрывает звук
+  кусками по ~0,2 с. Юнит-тесты.
+
 ### Fixed (wake word: false triggers in 614)
 
 - 614 сделал умолчанием обученную модель «Омни» (omni_v0.2fp, порог 0.8) — владелец: «очень много
